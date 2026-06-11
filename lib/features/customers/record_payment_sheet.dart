@@ -86,10 +86,13 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
             receivedByMemberId: memberId,
           );
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: BsColors.danger),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).actionFailed),
+            backgroundColor: BsColors.danger,
+          ),
         );
       }
     } finally {
@@ -104,6 +107,13 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
     final customersAsync = widget.showCustomerPicker
         ? ref.watch(customerListProvider)
         : null;
+    final selectedCustomerAsync = _selectedCustomerId == null
+        ? null
+        : ref.watch(customerDetailProvider(_selectedCustomerId!));
+    final balanceDue = selectedCustomerAsync?.value?.balanceDue;
+    final amountValue = parseNpr(_amountController.text)?.value;
+    final overpayment =
+        balanceDue != null && amountValue != null && amountValue > balanceDue;
 
     return Material(
       child: Padding(
@@ -125,7 +135,7 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
               if (widget.showCustomerPicker)
                 customersAsync!.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (e, _) => Text(e.toString()),
+                  error: (e, _) => Text(l10n.loadingFailed),
                   data: (customers) =>               DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: l10n.selectCustomer),
                     initialValue: _selectedCustomerId,
@@ -140,6 +150,13 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                     onChanged: (v) => setState(() => _selectedCustomerId = v),
                   ),
                 ),
+              if (balanceDue != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${l10n.currentBalance}: ${formatNpr(Paisa(balanceDue), showPaisa: false)}',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ],
               const SizedBox(height: 12),
               Text(l10n.allocateToAccount),
               const SizedBox(height: 12),
@@ -147,7 +164,18 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                 controller: _amountController,
                 decoration: InputDecoration(labelText: l10n.paymentAmount),
                 keyboardType: TextInputType.number,
+                onChanged: (_) => setState(() {}),
               ),
+              if (overpayment) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.overpaymentWarning,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: BsColors.accent),
+                ),
+              ],
               const SizedBox(height: 12),
               DropdownButtonFormField<PaymentMethod>(
                 decoration: InputDecoration(labelText: l10n.paymentMethod),

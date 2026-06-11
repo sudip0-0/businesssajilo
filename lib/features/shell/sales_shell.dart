@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/utils/money.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
@@ -82,23 +83,48 @@ class _SalesShellState extends ConsumerState<SalesShell> {
       const BillListScreen(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          switch (_index) {
-            0 => l10n.dashboard,
-            1 => l10n.stock,
-            2 => l10n.orders,
-            3 => l10n.customers,
-            _ => l10n.billing,
-          },
+    return AdaptiveScaffold(
+      selectedIndex: _index,
+      onDestinationSelected: (i) => setState(() => _index = i),
+      titles: [
+        l10n.dashboard,
+        l10n.stock,
+        l10n.orders,
+        l10n.customers,
+        l10n.billing,
+      ],
+      destinations: [
+        NavigationDestination(
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: const Icon(Icons.home),
+          label: l10n.dashboard,
         ),
-        actions: const [
-          SyncBadgeAction(),
-          NotificationBellAction(),
-          LogoutAction(),
-        ],
-      ),
+        NavigationDestination(
+          icon: const Icon(Icons.inventory_2_outlined),
+          selectedIcon: const Icon(Icons.inventory_2),
+          label: l10n.stock,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.shopping_cart_outlined),
+          selectedIcon: const Icon(Icons.shopping_cart),
+          label: l10n.orders,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.storefront_outlined),
+          selectedIcon: const Icon(Icons.storefront),
+          label: l10n.customers,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.receipt_long_outlined),
+          selectedIcon: const Icon(Icons.receipt_long),
+          label: l10n.billing,
+        ),
+      ],
+      actions: const [
+        SyncBadgeAction(),
+        NotificationBellAction(),
+        LogoutAction(),
+      ],
       body: pages[_index],
       floatingActionButton: switch (_index) {
         3 => FloatingActionButton.extended(
@@ -134,32 +160,6 @@ class _SalesShellState extends ConsumerState<SalesShell> {
           ),
         _ => null,
       },
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.inventory_2_outlined),
-            label: l10n.stock,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            label: l10n.orders,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.storefront_outlined),
-            label: l10n.customers,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.receipt_long_outlined),
-            label: l10n.billing,
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../domain/enums.dart';
 import '../../domain/models/quote.dart';
@@ -10,6 +9,17 @@ import '../remote/supabase_provider.dart';
 final quotesRepositoryProvider = Provider<QuotesRepository>((ref) {
   return QuotesRepository(ref.watch(supabaseClientProvider));
 });
+
+/// Raised when the server rejects a quote (e.g. order not in a quotable
+/// state). Carries the server message for friendly UI mapping.
+class QuoteSendException implements Exception {
+  QuoteSendException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
 
 class QuoteLineInput {
   const QuoteLineInput({
@@ -62,6 +72,9 @@ class QuotesRepository {
     return quotes.where((q) => q.status == QuoteStatus.accepted).firstOrNull;
   }
 
+  /// Sends a quote via the transactional `send_quote` RPC. The server
+  /// validates line math, supersedes previous 'sent' quotes, and moves the
+  /// order to 'quoted'.
   Future<Quote> sendQuote({
     required String orderId,
     required String createdByMemberId,
@@ -69,41 +82,25 @@ class QuotesRepository {
     required List<QuoteLineInput> lines,
   }) async {
     final client = _requireClient();
-    final existing = await listForOrder(orderId);
-    final version = existing.isEmpty
-        ? 1
-        : existing.map((q) => q.version).reduce((a, b) => a > b ? a : b) + 1;
-    final quoteId = const Uuid().v4();
-
-    await client.from('quotes').insert({
-      'id': quoteId,
-      'order_id': orderId,
-      'version': version,
-      'status': QuoteStatus.sent.name,
-      'total': total,
-      'created_by': createdByMemberId,
-    });
-
-    if (lines.isNotEmpty) {
-      await client.from('quote_items').insert(
-            lines
-                .map(
-                  (line) => {
-                    'id': const Uuid().v4(),
-                    'quote_id': quoteId,
-                    'product_id': line.productId,
-                    'qty': line.qty,
-                    'rate': line.rate,
-                    'discount': line.discount,
-                    'line_total': line.lineTotal,
-                  },
-                )
-                .toList(),
-          );
+    final Map result;
+    try {
+      result = await client.rpc('send_quote', params: {
+        'p_order_id': orderId,
+        'p_items': lines
+            .map(
+              (line) => {
+                'product_id': line.productId,
+                'qty': line.qty,
+                'rate': line.rate,
+                'discount': line.discount,
+              },
+            )
+            .toList(),
+      }) as Map;
+    } on PostgrestException catch (e) {
+      throw QuoteSendException(e.message);
     }
-
-    final quotes = await listForOrder(orderId);
-    return quotes.firstWhere((q) => q.id == quoteId);
+    return get(result['id'] as String);
   }
 
   Future<Quote> accept(String quoteId, {String? comment}) async {

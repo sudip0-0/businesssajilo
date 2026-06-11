@@ -5,6 +5,10 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/providers/auth_provider.dart';
+import '../billing/providers.dart';
+import '../customers/providers.dart';
+import '../inventory/providers.dart';
+import '../orders/providers.dart' as orders;
 import 'dues_aging_screen.dart';
 import 'providers.dart';
 import 'sales_bar_chart.dart';
@@ -31,7 +35,16 @@ class OwnerDashboard extends ConsumerWidget {
     final wide = isWideLayout(context);
     final last7Async = ref.watch(last7DaySalesProvider);
 
-    return ListView(
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(last7DaySalesProvider);
+        ref.invalidate(todaysSalesProvider);
+        ref.invalidate(totalDuesProvider);
+        ref.invalidate(lowStockCountProvider);
+        ref.invalidate(orders.pendingOrdersCountProvider);
+      },
+      child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: [
         Text(
@@ -50,7 +63,10 @@ class OwnerDashboard extends ConsumerWidget {
           childAspectRatio: 1.4,
           children: stats
               .map(
-                (s) => Card(
+                (s) => Semantics(
+                  button: s.onTap != null,
+                  label: '${s.label}: ${s.value}',
+                  child: Card(
                   child: InkWell(
                     onTap: s.onTap,
                     borderRadius: BorderRadius.circular(12),
@@ -77,21 +93,28 @@ class OwnerDashboard extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  ),
                 ),
               )
               .toList(),
         ),
-        if (wide) ...[
-          const SizedBox(height: 24),
-          Text(l10n.last7DaysSales,
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          last7Async.when(
-            loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const SizedBox.shrink(),
-            data: (points) => SalesBarChart(points: points),
-          ),
-        ],
+        SizedBox(height: wide ? 24 : 16),
+        Text(l10n.last7DaysSales,
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        last7Async.when(
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) => const SizedBox.shrink(),
+          data: (points) => wide
+              ? SalesBarChart(points: points)
+              // Compact, scrollable chart on mobile.
+              : SizedBox(
+                  height: 160,
+                  child: SingleChildScrollView(
+                    child: SalesBarChart(points: points),
+                  ),
+                ),
+        ),
         const SizedBox(height: 16),
         Text(l10n.viewReport, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
@@ -134,6 +157,7 @@ class OwnerDashboard extends ConsumerWidget {
           ],
         ),
       ],
+      ),
     );
   }
 }

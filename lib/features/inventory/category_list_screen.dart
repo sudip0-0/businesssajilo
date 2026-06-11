@@ -43,10 +43,8 @@ class CategoryListScreen extends ConsumerWidget {
               subtitle: cat.nameNp != null ? Text(cat.nameNp!) : null,
               trailing: IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: () async {
-                  await ref.read(categoriesRepositoryProvider).delete(cat.id);
-                  ref.invalidate(categoryListProvider);
-                },
+                tooltip: l10n.delete,
+                onPressed: () => _deleteCategory(context, ref, cat),
               ),
               onTap: () => _editCategory(context, ref, cat),
             );
@@ -60,6 +58,39 @@ class CategoryListScreen extends ConsumerWidget {
         label: Text(l10n.addCategory),
       ),
     );
+  }
+
+  Future<void> _deleteCategory(
+    BuildContext context,
+    WidgetRef ref,
+    Category cat,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.confirmDeleteCategory),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(categoriesRepositoryProvider).delete(cat.id);
+      ref.invalidate(categoryListProvider);
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
+    }
   }
 
   Future<void> _addCategory(BuildContext context, WidgetRef ref) async {

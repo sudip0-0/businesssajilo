@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 import 'providers.dart';
@@ -25,6 +26,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
   final _openingBalanceController = TextEditingController();
   bool _loading = false;
   bool _initialized = false;
+  int _openingBalance = 0;
 
   @override
   void dispose() {
@@ -52,14 +54,18 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
             address: _addressController.text.trim().isEmpty
                 ? null
                 : _addressController.text.trim(),
-            openingBalance:
-                parseNpr(_openingBalanceController.text)?.value ?? 0,
+            // Opening balance is locked after creation; always send the
+            // stored value unchanged.
+            openingBalance: _openingBalance,
           );
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: BsColors.danger),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).actionFailed),
+            backgroundColor: BsColors.danger,
+          ),
         );
       }
     } finally {
@@ -76,7 +82,11 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       appBar: AppBar(title: Text(l10n.editCustomer)),
       body: customerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () =>
+              ref.invalidate(customerDetailProvider(widget.customerId)),
+        ),
         data: (customer) {
           if (!_initialized) {
             _shopNameController.text = customer.shopName;
@@ -88,6 +98,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
               showSymbol: false,
               showPaisa: false,
             );
+            _openingBalance = customer.openingBalance;
             _initialized = true;
           }
 
@@ -122,7 +133,12 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _openingBalanceController,
-                    decoration: InputDecoration(labelText: l10n.openingBalance),
+                    enabled: false,
+                    decoration: InputDecoration(
+                      labelText: l10n.openingBalance,
+                      helperText: l10n.openingBalanceLocked,
+                      helperMaxLines: 2,
+                    ),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 24),

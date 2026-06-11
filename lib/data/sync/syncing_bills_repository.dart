@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../local/app_database.dart';
@@ -56,20 +57,28 @@ class SyncingBillsRepository implements BillsRepository {
 
   @override
   Future<int> todaysSales() async {
-    final now = DateTime.now().toUtc();
-    final start = DateTime.utc(now.year, now.month, now.day);
+    final start = nptDayStartUtc();
     final bills = await _db.select(_db.localBills).get();
     return bills
-        .where((b) => !b.createdAt.isBefore(start))
+        .where((b) => !b.createdAt.toUtc().isBefore(start))
         .fold<int>(0, (sum, b) => sum + b.grandTotal);
   }
 
   @override
   Future<int> todaysBillCount() async {
-    final now = DateTime.now().toUtc();
-    final start = DateTime.utc(now.year, now.month, now.day);
+    final start = nptDayStartUtc();
     final bills = await _db.select(_db.localBills).get();
-    return bills.where((b) => !b.createdAt.isBefore(start)).length;
+    return bills.where((b) => !b.createdAt.toUtc().isBefore(start)).length;
+  }
+
+  @override
+  Future<List<Bill>> search(String query, {int limit = 50}) async {
+    final q = query.toLowerCase();
+    final all = await list();
+    return all
+        .where((b) => b.billNo.toLowerCase().contains(q))
+        .take(limit)
+        .toList();
   }
 
   @override
@@ -130,40 +139,28 @@ class SyncingBillsRepository implements BillsRepository {
         ),
       );
       itemRows.add({
-        'id': itemId,
-        'bill_id': billId,
         'product_id': line.productId,
         'name_snapshot': line.nameSnapshot,
         'qty': line.qty,
         'rate': line.rate,
         'discount': line.discount,
-        'line_total': line.lineTotal,
       });
     }
 
+    // Pushed via the transactional `create_bill` RPC (items included).
     await _db.enqueue(
       entityType: 'bill',
       entityId: billId,
       payload: {
         'id': billId,
         'customer_id': customerId,
-        'items_total': itemsTotal,
+        'order_id': null,
         'discount': discount,
-        'grand_total': grandTotal,
         'status': status.name,
-        'created_by': createdByMemberId,
         'device_prefix': meta.devicePrefix,
+        'items': itemRows,
       },
     );
-
-    if (itemRows.isNotEmpty) {
-      await _db.enqueue(
-        entityType: 'bill_items',
-        entityId: billId,
-        dependsOnId: billId,
-        payload: {'items': itemRows},
-      );
-    }
 
     if (customerId != null &&
         (status == BillStatus.paid || status == BillStatus.partial)) {

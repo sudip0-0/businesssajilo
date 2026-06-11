@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/bill_item.dart';
@@ -8,10 +9,9 @@ import '../repositories/bills_repository.dart';
 import '../repositories/payments_repository.dart';
 
 class SupabaseBillsRepository implements BillsRepository {
-  SupabaseBillsRepository(this._client, this._payments);
+  SupabaseBillsRepository(this._client, PaymentsRepository payments);
 
   final SupabaseClient? _client;
-  final PaymentsRepository _payments;
 
   @override
   Future<List<Bill>> list({int offset = 0, int? limit}) async {
@@ -24,6 +24,18 @@ class SupabaseBillsRepository implements BillsRepository {
       query = query.range(offset, offset + limit - 1);
     }
     final rows = await query;
+    return (rows as List).map(_mapBillRow).toList();
+  }
+
+  @override
+  Future<List<Bill>> search(String query, {int limit = 50}) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('bills')
+        .select('*, customers(shop_name)')
+        .ilike('bill_no', '%$query%')
+        .order('created_at', ascending: false)
+        .limit(limit);
     return (rows as List).map(_mapBillRow).toList();
   }
 
@@ -41,8 +53,7 @@ class SupabaseBillsRepository implements BillsRepository {
   @override
   Future<int> todaysSales() async {
     final client = _requireClient();
-    final now = DateTime.now().toUtc();
-    final start = DateTime.utc(now.year, now.month, now.day);
+    final start = nptDayStartUtc();
     final rows = await client
         .from('bills')
         .select('grand_total')
@@ -57,13 +68,12 @@ class SupabaseBillsRepository implements BillsRepository {
   @override
   Future<int> todaysBillCount() async {
     final client = _requireClient();
-    final now = DateTime.now().toUtc();
-    final start = DateTime.utc(now.year, now.month, now.day);
-    final rows = await client
+    final start = nptDayStartUtc();
+    final count = await client
         .from('bills')
-        .select('id')
+        .count(CountOption.exact)
         .gte('created_at', start.toIso8601String());
-    return (rows as List).length;
+    return count;
   }
 
   @override
@@ -78,56 +88,18 @@ class SupabaseBillsRepository implements BillsRepository {
     PaymentMethod paymentMethod = PaymentMethod.cash,
     String? paymentRefNote,
     int? paymentAmount,
-  }) async {
-    final client = _requireClient();
-    final billId = const Uuid().v4();
-
-    await client.from('bills').insert({
-      'id': billId,
-      'customer_id': ?customerId,
-      'items_total': itemsTotal,
-      'discount': discount,
-      'grand_total': grandTotal,
-      'status': status.name,
-      'created_by': createdByMemberId,
-    });
-
-    if (lines.isNotEmpty) {
-      await client.from('bill_items').insert(
-            lines
-                .map(
-                  (line) => {
-                    'id': const Uuid().v4(),
-                    'bill_id': billId,
-                    'product_id': line.productId,
-                    'name_snapshot': line.nameSnapshot,
-                    'qty': line.qty,
-                    'rate': line.rate,
-                    'discount': line.discount,
-                    'line_total': line.lineTotal,
-                  },
-                )
-                .toList(),
-          );
-    }
-
-    if (customerId != null &&
-        (status == BillStatus.paid || status == BillStatus.partial)) {
-      final amount =
-          status == BillStatus.paid ? grandTotal : (paymentAmount ?? 0);
-      if (amount > 0) {
-        await _payments.record(
-          customerId: customerId,
-          amount: amount,
-          method: paymentMethod,
-          refNote: paymentRefNote,
-          billId: billId,
-          receivedByMemberId: createdByMemberId,
-        );
-      }
-    }
-
-    return get(billId);
+  }) {
+    return _createViaRpc(
+      customerId: customerId,
+      orderId: null,
+      status: status,
+      discount: discount,
+      grandTotal: grandTotal,
+      lines: lines,
+      paymentMethod: paymentMethod,
+      paymentRefNote: paymentRefNote,
+      paymentAmount: paymentAmount,
+    );
   }
 
   @override
@@ -143,61 +115,75 @@ class SupabaseBillsRepository implements BillsRepository {
     PaymentMethod paymentMethod = PaymentMethod.cash,
     String? paymentRefNote,
     int? paymentAmount,
+  }) {
+    return _createViaRpc(
+      customerId: customerId,
+      orderId: orderId,
+      status: status,
+      discount: discount,
+      grandTotal: grandTotal,
+      lines: lines,
+      paymentMethod: paymentMethod,
+      paymentRefNote: paymentRefNote,
+      paymentAmount: paymentAmount,
+    );
+  }
+
+  /// Single transactional + idempotent server-side bill creation.
+  Future<Bill> _createViaRpc({
+    required String? customerId,
+    required String? orderId,
+    required BillStatus status,
+    required int discount,
+    required int grandTotal,
+    required List<BillLineInput> lines,
+    required PaymentMethod paymentMethod,
+    required String? paymentRefNote,
+    required int? paymentAmount,
   }) async {
     final client = _requireClient();
     final billId = const Uuid().v4();
 
-    await client.from('bills').insert({
-      'id': billId,
-      'customer_id': customerId,
-      'order_id': orderId,
-      'items_total': itemsTotal,
-      'discount': discount,
-      'grand_total': grandTotal,
-      'status': status.name,
-      'created_by': createdByMemberId,
-    });
-
-    if (lines.isNotEmpty) {
-      await client.from('bill_items').insert(
-            lines
-                .map(
-                  (line) => {
-                    'id': const Uuid().v4(),
-                    'bill_id': billId,
-                    'product_id': line.productId,
-                    'name_snapshot': line.nameSnapshot,
-                    'qty': line.qty,
-                    'rate': line.rate,
-                    'discount': line.discount,
-                    'line_total': line.lineTotal,
-                  },
-                )
-                .toList(),
-          );
-    }
-
-    if (status == BillStatus.paid || status == BillStatus.partial) {
-      final amount =
-          status == BillStatus.paid ? grandTotal : (paymentAmount ?? 0);
-      if (amount > 0) {
-        await _payments.record(
-          customerId: customerId,
-          amount: amount,
-          method: paymentMethod,
-          refNote: paymentRefNote,
-          billId: billId,
-          receivedByMemberId: createdByMemberId,
-        );
+    int? amount;
+    if (customerId != null || orderId != null) {
+      if (status == BillStatus.paid) {
+        amount = grandTotal;
+      } else if (status == BillStatus.partial) {
+        amount = paymentAmount ?? 0;
       }
     }
 
-    await client
-        .from('orders')
-        .update({'status': OrderStatus.billed.name})
-        .eq('id', orderId);
+    final payload = <String, dynamic>{
+      'id': billId,
+      'customer_id': customerId,
+      'order_id': orderId,
+      'discount': discount,
+      'status': status.name,
+      'items': lines
+          .map(
+            (line) => {
+              'product_id': line.productId,
+              'name_snapshot': line.nameSnapshot,
+              'qty': line.qty,
+              'rate': line.rate,
+              'discount': line.discount,
+            },
+          )
+          .toList(),
+      if (amount != null && amount > 0)
+        'payment': {
+          'amount': amount,
+          'method': paymentMethod.name,
+          'ref_note': paymentRefNote,
+        },
+    };
 
-    return get(billId);
+    final result = await client.rpc('create_bill', params: {'p': payload});
+    final billJson =
+        Map<String, dynamic>.from((result as Map)['bill'] as Map);
+    final bill = Bill.fromJson(billJson);
+    // Re-fetch with joined customer + items for display.
+    return get(bill.id);
   }
 
   Bill _mapBillRow(dynamic row) {

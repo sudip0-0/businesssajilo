@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -10,7 +11,15 @@ import '../local/app_database.dart';
 import 'sync_merge.dart';
 
 const _maxAttempts = 5;
+const _maxBackoff = Duration(minutes: 5);
 const _uuid = Uuid();
+
+Duration backoffForAttempts(int attempts) {
+  if (attempts <= 0) return Duration.zero;
+  final seconds = attempts >= 9 ? _maxBackoff.inSeconds : 1 << attempts;
+  final delay = Duration(seconds: seconds);
+  return delay > _maxBackoff ? _maxBackoff : delay;
+}
 
 class SyncService {
   SyncService({
@@ -32,6 +41,20 @@ class SyncService {
     _connectivitySub ??= _connectivity.onConnectivityChanged.listen((_) {
       unawaited(syncNow());
     });
+    // Initial sync is best-effort: a network failure must not break init.
+    try {
+      await syncNow();
+    } catch (e) {
+      debugPrint('Initial sync failed (will retry later): $e');
+    }
+  }
+
+  /// Number of terminally failed queue items.
+  Future<int> failedCount() => _db.failedCount();
+
+  /// Resets failed items and triggers a sync.
+  Future<void> retryFailed() async {
+    await _db.retryFailed();
     await syncNow();
   }
 
@@ -73,23 +96,32 @@ class SyncService {
   }
 
   Future<void> _bootstrap() async {
+    // Each table's watermark is committed right after its pull succeeds so a
+    // partial failure never skips data on the next attempt.
+    var ts = DateTime.now().toUtc();
     final categories = await _client.from('categories').select();
     for (final row in categories as List) {
       await _upsertCategory(row as Map<String, dynamic>);
     }
+    await _db.setWatermark('categories', ts);
 
+    ts = DateTime.now().toUtc();
     final products = await _client
         .from('products')
         .select('*, categories(name)');
     for (final row in products as List) {
       await _upsertProduct(row as Map<String, dynamic>);
     }
+    await _db.setWatermark('products', ts);
 
+    ts = DateTime.now().toUtc();
     final customers = await _client.from('customer_balances').select();
     for (final row in customers as List) {
       await _upsertCustomerBalance(row as Map<String, dynamic>);
     }
+    await _db.setWatermark('customers', ts);
 
+    ts = DateTime.now().toUtc();
     final bills = await _client
         .from('bills')
         .select('*, customers(shop_name), bill_items(*)')
@@ -97,35 +129,31 @@ class SyncService {
     for (final row in bills as List) {
       await _upsertRemoteBill(row as Map<String, dynamic>);
     }
+    await _db.setWatermark('bills', ts);
 
+    ts = DateTime.now().toUtc();
     final payments = await _client.from('payments').select();
     for (final row in payments as List) {
       await _upsertRemotePayment(row as Map<String, dynamic>, synced: true);
     }
+    await _db.setWatermark('payments', ts);
 
+    ts = DateTime.now().toUtc();
     final movements = await _client
         .from('stock_movements')
         .select('*, members(display_name)');
     for (final row in movements as List) {
       await _upsertRemoteMovement(row as Map<String, dynamic>, synced: true);
     }
-
-    final ts = DateTime.now().toUtc();
-    for (final table in [
-      'categories',
-      'products',
-      'customers',
-      'bills',
-      'payments',
-      'stock_movements',
-    ]) {
-      await _db.setWatermark(table, ts);
-    }
+    await _db.setWatermark('stock_movements', ts);
   }
 
   Future<void> _pullDelta() async {
+    // Per-table watermarks are committed right after each table's pull
+    // succeeds so a failure mid-way doesn't lose deltas for earlier tables.
     final catWatermark = await _db.watermark('categories');
     if (catWatermark != null) {
+      final ts = DateTime.now().toUtc();
       final rows = await _client
           .from('categories')
           .select()
@@ -133,10 +161,12 @@ class SyncService {
       for (final row in rows as List) {
         await _upsertCategory(row as Map<String, dynamic>);
       }
+      await _db.setWatermark('categories', ts);
     }
 
     final prodWatermark = await _db.watermark('products');
     if (prodWatermark != null) {
+      final ts = DateTime.now().toUtc();
       final rows = await _client
           .from('products')
           .select('*, categories(name)')
@@ -144,10 +174,12 @@ class SyncService {
       for (final row in rows as List) {
         await _upsertProduct(row as Map<String, dynamic>);
       }
+      await _db.setWatermark('products', ts);
     }
 
     final custWatermark = await _db.watermark('customers');
     if (custWatermark != null) {
+      final ts = DateTime.now().toUtc();
       final rows = await _client
           .from('customer_balances')
           .select()
@@ -155,21 +187,25 @@ class SyncService {
       for (final row in rows as List) {
         await _upsertCustomerBalance(row as Map<String, dynamic>);
       }
+      await _db.setWatermark('customers', ts);
     }
 
     final billWatermark = await _db.watermark('bills');
     if (billWatermark != null) {
+      final ts = DateTime.now().toUtc();
       final rows = await _client
           .from('bills')
           .select('*, customers(shop_name), bill_items(*)')
-          .gt('created_at', billWatermark.toIso8601String());
+          .gte('updated_at', billWatermark.toIso8601String());
       for (final row in rows as List) {
         await _upsertRemoteBill(row as Map<String, dynamic>);
       }
+      await _db.setWatermark('bills', ts);
     }
 
     final payWatermark = await _db.watermark('payments');
     if (payWatermark != null) {
+      final ts = DateTime.now().toUtc();
       final rows = await _client
           .from('payments')
           .select()
@@ -177,10 +213,12 @@ class SyncService {
       for (final row in rows as List) {
         await _upsertRemotePayment(row as Map<String, dynamic>, synced: true);
       }
+      await _db.setWatermark('payments', ts);
     }
 
     final movWatermark = await _db.watermark('stock_movements');
     if (movWatermark != null) {
+      final ts = DateTime.now().toUtc();
       final rows = await _client
           .from('stock_movements')
           .select('*, members(display_name)')
@@ -188,44 +226,36 @@ class SyncService {
       for (final row in rows as List) {
         await _upsertRemoteMovement(row as Map<String, dynamic>, synced: true);
       }
-    }
-
-    final ts = DateTime.now().toUtc();
-    for (final table in [
-      'categories',
-      'products',
-      'customers',
-      'bills',
-      'payments',
-      'stock_movements',
-    ]) {
-      await _db.setWatermark(table, ts);
+      await _db.setWatermark('stock_movements', ts);
     }
   }
 
   Future<void> _push() async {
     final queue = await _db.pendingQueue();
+    final unsynced = await _db.unsyncedQueue();
+    final blockedIds = unsynced.map((q) => q.entityId).toSet();
     final syncedIds = <String>{};
+    final now = DateTime.now().toUtc();
 
     for (final item in queue) {
-      if (item.attempts >= _maxAttempts) continue;
+      // Exponential backoff: skip until the item's backoff window elapsed.
+      if (item.nextAttemptAt != null && item.nextAttemptAt!.isAfter(now)) {
+        continue;
+      }
 
-      if (item.dependsOnId != null && !syncedIds.contains(item.dependsOnId)) {
-        final parentPending = queue.any(
-          (q) =>
-              q.entityId == item.dependsOnId &&
-              (q.status == 'pending' || q.status == 'failed'),
-        );
-        if (parentPending) continue;
+      if (item.dependsOnId != null &&
+          !syncedIds.contains(item.dependsOnId) &&
+          blockedIds.contains(item.dependsOnId)) {
+        continue;
       }
 
       try {
         final payload = jsonDecode(item.payloadJson) as Map<String, dynamic>;
         switch (item.entityType) {
           case 'bill':
-            await _pushBill(payload);
-            await _markBillSynced(item.entityId);
+            await _pushBill(item.entityId, payload);
           case 'bill_items':
+            // Legacy queue entries; bills now carry items via the RPC.
             await _pushBillItems(payload);
           case 'payment':
             await _pushPayment(payload);
@@ -238,24 +268,44 @@ class SyncService {
         await (_db.update(_db.syncQueue)..where((q) => q.id.equals(item.id)))
             .write(const SyncQueueCompanion(status: Value('synced')));
         syncedIds.add(item.entityId);
+        blockedIds.remove(item.entityId);
       } catch (e) {
+        final attempts = item.attempts + 1;
+        final terminal = attempts >= _maxAttempts;
         await (_db.update(_db.syncQueue)..where((q) => q.id.equals(item.id)))
             .write(
           SyncQueueCompanion(
-            status: const Value('failed'),
-            attempts: Value(item.attempts + 1),
+            status: Value(terminal ? 'failed' : 'pending'),
+            attempts: Value(attempts),
             lastError: Value(e.toString()),
+            nextAttemptAt: Value(
+              terminal
+                  ? null
+                  : DateTime.now().toUtc().add(backoffForAttempts(attempts)),
+            ),
           ),
         );
       }
     }
   }
 
-  Future<void> _pushBill(Map<String, dynamic> payload) async {
-    await _client.from('bills').upsert(
-      payload,
-      onConflict: 'id',
-      ignoreDuplicates: true,
+  /// Pushes a bill through the transactional `create_bill` RPC. The RPC is
+  /// idempotent on the bill id; replays return the existing bill. The
+  /// server-assigned `bill_no` finalizes the provisional local number.
+  Future<void> _pushBill(String billId, Map<String, dynamic> payload) async {
+    final result = await _client.rpc<dynamic>(
+      'create_bill',
+      params: {'p': payload},
+    );
+    final map = result as Map<String, dynamic>;
+    final bill = map['bill'] as Map<String, dynamic>?;
+    final serverBillNo = bill?['bill_no'] as String?;
+    await (_db.update(_db.localBills)..where((b) => b.id.equals(billId))).write(
+      LocalBillsCompanion(
+        syncStatus: const Value('synced'),
+        billNo:
+            serverBillNo != null ? Value(serverBillNo) : const Value.absent(),
+      ),
     );
   }
 
@@ -282,21 +332,6 @@ class SyncService {
       payload,
       onConflict: 'id',
       ignoreDuplicates: true,
-    );
-  }
-
-  Future<void> _markBillSynced(String billId) async {
-    final row = await _client
-        .from('bills')
-        .select('bill_no')
-        .eq('id', billId)
-        .maybeSingle();
-    final serverBillNo = row?['bill_no'] as String?;
-    await (_db.update(_db.localBills)..where((b) => b.id.equals(billId))).write(
-      LocalBillsCompanion(
-        syncStatus: const Value('synced'),
-        billNo: serverBillNo != null ? Value(serverBillNo) : const Value.absent(),
-      ),
     );
   }
 
@@ -417,12 +452,15 @@ class SyncService {
           ..where((b) => b.id.equals(billId)))
         .getSingleOrNull();
     if (local != null && local.syncStatus == 'pending') {
+      // Server already has this bill (idempotent replay) — adopt the final
+      // bill number and status but keep the local row otherwise.
       final serverBillNo = map['bill_no'] as String;
       await (_db.update(_db.localBills)..where((b) => b.id.equals(billId)))
           .write(
         LocalBillsCompanion(
           syncStatus: const Value('synced'),
           billNo: Value(serverBillNo),
+          status: Value(map['status'] as String),
         ),
       );
       return;

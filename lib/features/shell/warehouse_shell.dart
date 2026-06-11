@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/stock_in_picker_sheet.dart';
 import '../notifications/notification_bell_action.dart';
@@ -34,15 +35,15 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
       error: (_, _) => '—',
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_index == 0 ? l10n.stock : l10n.fulfillment),
-        actions: const [
-          SyncBadgeAction(),
-          NotificationBellAction(),
-          LogoutAction(),
-        ],
-      ),
+    return AdaptiveScaffold(
+      selectedIndex: _index,
+      onDestinationSelected: (i) => setState(() => _index = i),
+      titles: [l10n.stock, l10n.fulfillment],
+      actions: const [
+        SyncBadgeAction(),
+        NotificationBellAction(),
+        LogoutAction(),
+      ],
       body: _index == 0
           ? const ProductListScreen(canEdit: false, canManageStock: true)
           : Column(
@@ -51,7 +52,7 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    '$pendingCount ${l10n.fulfillmentQueue.toLowerCase()}',
+                    '$pendingCount · ${l10n.fulfillmentQueue}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -69,20 +70,18 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
               label: Text(l10n.stockIn),
             )
           : null,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.inventory_2_outlined),
-            label: l10n.stock,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.local_shipping_outlined),
-            label: l10n.fulfillment,
-          ),
-        ],
-      ),
+      destinations: [
+        NavigationDestination(
+          icon: const Icon(Icons.inventory_2_outlined),
+          selectedIcon: const Icon(Icons.inventory_2),
+          label: l10n.stock,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.local_shipping_outlined),
+          selectedIcon: const Icon(Icons.local_shipping),
+          label: l10n.fulfillment,
+        ),
+      ],
     );
   }
 }

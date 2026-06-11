@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../core/utils/bs_date.dart';
@@ -47,7 +48,10 @@ class ProductDetailScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text(e.toString())),
+        body: ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(productDetailProvider(productId)),
+        ),
       ),
       data: (product) => Scaffold(
         appBar: AppBar(
@@ -56,6 +60,7 @@ class ProductDetailScreen extends ConsumerWidget {
             if (canEditProduct)
               IconButton(
                 icon: const Icon(Icons.edit),
+                tooltip: l10n.editProduct,
                 onPressed: () async {
                   final saved = await Navigator.push<bool>(
                     context,
@@ -73,6 +78,7 @@ class ProductDetailScreen extends ConsumerWidget {
             if (canEditProduct)
               IconButton(
                 icon: const Icon(Icons.visibility_off_outlined),
+                tooltip: l10n.deactivateProduct,
                 onPressed: () => _deactivate(context, ref, product.id, l10n),
               ),
           ],
@@ -135,7 +141,7 @@ class ProductDetailScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             movementsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text(e.toString()),
+              error: (e, _) => Text(l10n.loadingFailed),
               data: (movements) => movements.isEmpty
                   ? Text(l10n.noMovements)
                   : Column(

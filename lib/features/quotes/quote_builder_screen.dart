@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
@@ -33,6 +34,12 @@ class _DraftLine {
 
   int get lineTotal =>
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
+
+  bool get discountValid => isValidLineDiscount(
+        qty: qty,
+        ratePaisa: rate,
+        discountPaisa: discount,
+      );
 
   void dispose() {
     rateController.dispose();
@@ -69,6 +76,13 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     final member = ref.read(authProvider).value?.member;
     if (member == null || _lines.isEmpty) return;
 
+    if (_lines.any((l) => !l.discountValid)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.discountExceedsLine)),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
     try {
       await ref.read(quotesRepositoryProvider).sendQuote(
@@ -93,10 +107,16 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
         );
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } on QuoteSendException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(e.message)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.actionFailed)),
         );
       }
     } finally {
@@ -133,7 +153,10 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
       appBar: AppBar(title: Text(l10n.sendQuote)),
       body: orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(orderDetailProvider(widget.orderId)),
+        ),
         data: (order) {
           if (!_initialized) {
             _initialized = true;
@@ -157,12 +180,25 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                             Text(line.name,
                                 style:
                                     Theme.of(context).textTheme.titleSmall),
+                            if (line.rate == 0)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Chip(
+                                  avatar: const Icon(
+                                    Icons.warning_amber_outlined,
+                                    size: 18,
+                                  ),
+                                  label: Text(l10n.rateMissing),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
                             Row(
                               children: [
                                 Text(l10n.quantity),
                                 const SizedBox(width: 8),
                                 QtyStepper(
                                   value: line.qty,
+                                  min: 1,
                                   onChanged: (v) =>
                                       setState(() => line.qty = v),
                                 ),
@@ -182,11 +218,13 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                               controller: line.discountController,
                               decoration: InputDecoration(
                                 labelText: l10n.lineDiscount,
+                                errorText: line.discountValid
+                                    ? null
+                                    : l10n.discountExceedsLine,
                               ),
                               keyboardType: TextInputType.number,
                               onChanged: (v) => setState(() {
-                                line.discount =
-                                    parseNpr(v)?.value ?? line.discount;
+                                line.discount = parseNpr(v)?.value ?? 0;
                               }),
                             ),
                             Align(

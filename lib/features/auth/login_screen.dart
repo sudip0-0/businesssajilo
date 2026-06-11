@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/auth_errors.dart';
 import 'providers/auth_provider.dart';
+
+final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _error;
 
   @override
@@ -49,6 +53,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final locale = ref.watch(localeProvider);
+    // Surface session-restore errors (e.g. deactivated account) too.
+    ref.listen(authProvider, (_, next) {
+      final error = next.error;
+      if (error != null && mounted) {
+        setState(() => _error = localizeAuthError(error, l10n));
+      }
+    });
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -73,27 +85,78 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 color: BsColors.primary,
                               ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.tagline,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(value: 'en', label: Text(l10n.english)),
+                          ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
+                        ],
+                        selected: {locale.languageCode},
+                        onSelectionChanged: (selected) {
+                          ref
+                              .read(localeProvider.notifier)
+                              .setLocale(Locale(selected.first));
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,
                       decoration: InputDecoration(labelText: l10n.email),
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return l10n.fieldRequired;
+                        }
+                        if (!emailRegex.hasMatch(v.trim())) {
+                          return l10n.invalidEmail;
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _passwordController,
-                      decoration: InputDecoration(labelText: l10n.password),
-                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? l10n.showPassword
+                              : l10n.hidePassword,
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
+                      ),
+                      obscureText: _obscurePassword,
                       autofillHints: const [AutofillHints.password],
                       validator: (v) =>
                           v == null || v.isEmpty ? l10n.fieldRequired : null,
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
-                      Text(_error!, style: const TextStyle(color: BsColors.danger)),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(color: BsColors.danger),
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 24),
                     FilledButton(

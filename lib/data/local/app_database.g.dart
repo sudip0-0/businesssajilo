@@ -99,6 +99,18 @@ class $SyncQueueTable extends SyncQueue
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _nextAttemptAtMeta = const VerificationMeta(
+    'nextAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextAttemptAt =
+      GeneratedColumn<DateTime>(
+        'next_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -121,6 +133,7 @@ class $SyncQueueTable extends SyncQueue
     status,
     attempts,
     lastError,
+    nextAttemptAt,
     createdAt,
   ];
   @override
@@ -192,6 +205,15 @@ class $SyncQueueTable extends SyncQueue
         lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
       );
     }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+        _nextAttemptAtMeta,
+        nextAttemptAt.isAcceptableOrUnknown(
+          data['next_attempt_at']!,
+          _nextAttemptAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -239,6 +261,10 @@ class $SyncQueueTable extends SyncQueue
         DriftSqlType.string,
         data['${effectivePrefix}last_error'],
       ),
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_attempt_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -261,6 +287,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final String status;
   final int attempts;
   final String? lastError;
+  final DateTime? nextAttemptAt;
   final DateTime createdAt;
   const SyncQueueData({
     required this.id,
@@ -271,6 +298,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     required this.status,
     required this.attempts,
     this.lastError,
+    this.nextAttemptAt,
     required this.createdAt,
   });
   @override
@@ -287,6 +315,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     map['attempts'] = Variable<int>(attempts);
     if (!nullToAbsent || lastError != null) {
       map['last_error'] = Variable<String>(lastError);
+    }
+    if (!nullToAbsent || nextAttemptAt != null) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -306,6 +337,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       lastError: lastError == null && nullToAbsent
           ? const Value.absent()
           : Value(lastError),
+      nextAttemptAt: nextAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAttemptAt),
       createdAt: Value(createdAt),
     );
   }
@@ -324,6 +358,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       status: serializer.fromJson<String>(json['status']),
       attempts: serializer.fromJson<int>(json['attempts']),
       lastError: serializer.fromJson<String?>(json['lastError']),
+      nextAttemptAt: serializer.fromJson<DateTime?>(json['nextAttemptAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -339,6 +374,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       'status': serializer.toJson<String>(status),
       'attempts': serializer.toJson<int>(attempts),
       'lastError': serializer.toJson<String?>(lastError),
+      'nextAttemptAt': serializer.toJson<DateTime?>(nextAttemptAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -352,6 +388,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     String? status,
     int? attempts,
     Value<String?> lastError = const Value.absent(),
+    Value<DateTime?> nextAttemptAt = const Value.absent(),
     DateTime? createdAt,
   }) => SyncQueueData(
     id: id ?? this.id,
@@ -362,6 +399,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     status: status ?? this.status,
     attempts: attempts ?? this.attempts,
     lastError: lastError.present ? lastError.value : this.lastError,
+    nextAttemptAt: nextAttemptAt.present
+        ? nextAttemptAt.value
+        : this.nextAttemptAt,
     createdAt: createdAt ?? this.createdAt,
   );
   SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
@@ -380,6 +420,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       status: data.status.present ? data.status.value : this.status,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -395,6 +438,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           ..write('status: $status, ')
           ..write('attempts: $attempts, ')
           ..write('lastError: $lastError, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -410,6 +454,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     status,
     attempts,
     lastError,
+    nextAttemptAt,
     createdAt,
   );
   @override
@@ -424,6 +469,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           other.status == this.status &&
           other.attempts == this.attempts &&
           other.lastError == this.lastError &&
+          other.nextAttemptAt == this.nextAttemptAt &&
           other.createdAt == this.createdAt);
 }
 
@@ -436,6 +482,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<String> status;
   final Value<int> attempts;
   final Value<String?> lastError;
+  final Value<DateTime?> nextAttemptAt;
   final Value<DateTime> createdAt;
   const SyncQueueCompanion({
     this.id = const Value.absent(),
@@ -446,6 +493,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.status = const Value.absent(),
     this.attempts = const Value.absent(),
     this.lastError = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   SyncQueueCompanion.insert({
@@ -457,6 +505,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.status = const Value.absent(),
     this.attempts = const Value.absent(),
     this.lastError = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : entityType = Value(entityType),
        entityId = Value(entityId),
@@ -470,6 +519,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     Expression<String>? status,
     Expression<int>? attempts,
     Expression<String>? lastError,
+    Expression<DateTime>? nextAttemptAt,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -481,6 +531,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       if (status != null) 'status': status,
       if (attempts != null) 'attempts': attempts,
       if (lastError != null) 'last_error': lastError,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -494,6 +545,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     Value<String>? status,
     Value<int>? attempts,
     Value<String?>? lastError,
+    Value<DateTime?>? nextAttemptAt,
     Value<DateTime>? createdAt,
   }) {
     return SyncQueueCompanion(
@@ -505,6 +557,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       status: status ?? this.status,
       attempts: attempts ?? this.attempts,
       lastError: lastError ?? this.lastError,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -536,6 +589,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     if (lastError.present) {
       map['last_error'] = Variable<String>(lastError.value);
     }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -553,7 +609,225 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
           ..write('status: $status, ')
           ..write('attempts: $attempts, ')
           ..write('lastError: $lastError, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
           ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncMetaTable extends SyncMeta
+    with TableInfo<$SyncMetaTable, SyncMetaData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncMetaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _metaKeyMeta = const VerificationMeta(
+    'metaKey',
+  );
+  @override
+  late final GeneratedColumn<String> metaKey = GeneratedColumn<String>(
+    'meta_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _metaValueMeta = const VerificationMeta(
+    'metaValue',
+  );
+  @override
+  late final GeneratedColumn<String> metaValue = GeneratedColumn<String>(
+    'meta_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [metaKey, metaValue];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_meta';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncMetaData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('meta_key')) {
+      context.handle(
+        _metaKeyMeta,
+        metaKey.isAcceptableOrUnknown(data['meta_key']!, _metaKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_metaKeyMeta);
+    }
+    if (data.containsKey('meta_value')) {
+      context.handle(
+        _metaValueMeta,
+        metaValue.isAcceptableOrUnknown(data['meta_value']!, _metaValueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_metaValueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {metaKey};
+  @override
+  SyncMetaData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetaData(
+      metaKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meta_key'],
+      )!,
+      metaValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meta_value'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncMetaTable createAlias(String alias) {
+    return $SyncMetaTable(attachedDatabase, alias);
+  }
+}
+
+class SyncMetaData extends DataClass implements Insertable<SyncMetaData> {
+  final String metaKey;
+  final String metaValue;
+  const SyncMetaData({required this.metaKey, required this.metaValue});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['meta_key'] = Variable<String>(metaKey);
+    map['meta_value'] = Variable<String>(metaValue);
+    return map;
+  }
+
+  SyncMetaCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetaCompanion(
+      metaKey: Value(metaKey),
+      metaValue: Value(metaValue),
+    );
+  }
+
+  factory SyncMetaData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetaData(
+      metaKey: serializer.fromJson<String>(json['metaKey']),
+      metaValue: serializer.fromJson<String>(json['metaValue']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'metaKey': serializer.toJson<String>(metaKey),
+      'metaValue': serializer.toJson<String>(metaValue),
+    };
+  }
+
+  SyncMetaData copyWith({String? metaKey, String? metaValue}) => SyncMetaData(
+    metaKey: metaKey ?? this.metaKey,
+    metaValue: metaValue ?? this.metaValue,
+  );
+  SyncMetaData copyWithCompanion(SyncMetaCompanion data) {
+    return SyncMetaData(
+      metaKey: data.metaKey.present ? data.metaKey.value : this.metaKey,
+      metaValue: data.metaValue.present ? data.metaValue.value : this.metaValue,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetaData(')
+          ..write('metaKey: $metaKey, ')
+          ..write('metaValue: $metaValue')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(metaKey, metaValue);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetaData &&
+          other.metaKey == this.metaKey &&
+          other.metaValue == this.metaValue);
+}
+
+class SyncMetaCompanion extends UpdateCompanion<SyncMetaData> {
+  final Value<String> metaKey;
+  final Value<String> metaValue;
+  final Value<int> rowid;
+  const SyncMetaCompanion({
+    this.metaKey = const Value.absent(),
+    this.metaValue = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncMetaCompanion.insert({
+    required String metaKey,
+    required String metaValue,
+    this.rowid = const Value.absent(),
+  }) : metaKey = Value(metaKey),
+       metaValue = Value(metaValue);
+  static Insertable<SyncMetaData> custom({
+    Expression<String>? metaKey,
+    Expression<String>? metaValue,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (metaKey != null) 'meta_key': metaKey,
+      if (metaValue != null) 'meta_value': metaValue,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncMetaCompanion copyWith({
+    Value<String>? metaKey,
+    Value<String>? metaValue,
+    Value<int>? rowid,
+  }) {
+    return SyncMetaCompanion(
+      metaKey: metaKey ?? this.metaKey,
+      metaValue: metaValue ?? this.metaValue,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (metaKey.present) {
+      map['meta_key'] = Variable<String>(metaKey.value);
+    }
+    if (metaValue.present) {
+      map['meta_value'] = Variable<String>(metaValue.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetaCompanion(')
+          ..write('metaKey: $metaKey, ')
+          ..write('metaValue: $metaValue, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -5689,6 +5963,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
+  late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
   late final $SyncWatermarksTable syncWatermarks = $SyncWatermarksTable(this);
   late final $DeviceMetaTable deviceMeta = $DeviceMetaTable(this);
   late final $LocalCategoriesTable localCategories = $LocalCategoriesTable(
@@ -5707,6 +5982,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     syncQueue,
+    syncMeta,
     syncWatermarks,
     deviceMeta,
     localCategories,
@@ -5729,6 +6005,7 @@ typedef $$SyncQueueTableCreateCompanionBuilder =
       Value<String> status,
       Value<int> attempts,
       Value<String?> lastError,
+      Value<DateTime?> nextAttemptAt,
       Value<DateTime> createdAt,
     });
 typedef $$SyncQueueTableUpdateCompanionBuilder =
@@ -5741,6 +6018,7 @@ typedef $$SyncQueueTableUpdateCompanionBuilder =
       Value<String> status,
       Value<int> attempts,
       Value<String?> lastError,
+      Value<DateTime?> nextAttemptAt,
       Value<DateTime> createdAt,
     });
 
@@ -5790,6 +6068,11 @@ class $$SyncQueueTableFilterComposer
 
   ColumnFilters<String> get lastError => $composableBuilder(
     column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5848,6 +6131,11 @@ class $$SyncQueueTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5893,6 +6181,11 @@ class $$SyncQueueTableAnnotationComposer
   GeneratedColumn<String> get lastError =>
       $composableBuilder(column: $table.lastError, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -5936,6 +6229,7 @@ class $$SyncQueueTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<int> attempts = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SyncQueueCompanion(
                 id: id,
@@ -5946,6 +6240,7 @@ class $$SyncQueueTableTableManager
                 status: status,
                 attempts: attempts,
                 lastError: lastError,
+                nextAttemptAt: nextAttemptAt,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -5958,6 +6253,7 @@ class $$SyncQueueTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<int> attempts = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => SyncQueueCompanion.insert(
                 id: id,
@@ -5968,6 +6264,7 @@ class $$SyncQueueTableTableManager
                 status: status,
                 attempts: attempts,
                 lastError: lastError,
+                nextAttemptAt: nextAttemptAt,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -5993,6 +6290,149 @@ typedef $$SyncQueueTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $SyncQueueTable, SyncQueueData>,
       ),
       SyncQueueData,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncMetaTableCreateCompanionBuilder =
+    SyncMetaCompanion Function({
+      required String metaKey,
+      required String metaValue,
+      Value<int> rowid,
+    });
+typedef $$SyncMetaTableUpdateCompanionBuilder =
+    SyncMetaCompanion Function({
+      Value<String> metaKey,
+      Value<String> metaValue,
+      Value<int> rowid,
+    });
+
+class $$SyncMetaTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncMetaTable> {
+  $$SyncMetaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get metaKey => $composableBuilder(
+    column: $table.metaKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metaValue => $composableBuilder(
+    column: $table.metaValue,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncMetaTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncMetaTable> {
+  $$SyncMetaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get metaKey => $composableBuilder(
+    column: $table.metaKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metaValue => $composableBuilder(
+    column: $table.metaValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncMetaTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncMetaTable> {
+  $$SyncMetaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get metaKey =>
+      $composableBuilder(column: $table.metaKey, builder: (column) => column);
+
+  GeneratedColumn<String> get metaValue =>
+      $composableBuilder(column: $table.metaValue, builder: (column) => column);
+}
+
+class $$SyncMetaTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncMetaTable,
+          SyncMetaData,
+          $$SyncMetaTableFilterComposer,
+          $$SyncMetaTableOrderingComposer,
+          $$SyncMetaTableAnnotationComposer,
+          $$SyncMetaTableCreateCompanionBuilder,
+          $$SyncMetaTableUpdateCompanionBuilder,
+          (
+            SyncMetaData,
+            BaseReferences<_$AppDatabase, $SyncMetaTable, SyncMetaData>,
+          ),
+          SyncMetaData,
+          PrefetchHooks Function()
+        > {
+  $$SyncMetaTableTableManager(_$AppDatabase db, $SyncMetaTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncMetaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncMetaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncMetaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> metaKey = const Value.absent(),
+                Value<String> metaValue = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncMetaCompanion(
+                metaKey: metaKey,
+                metaValue: metaValue,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String metaKey,
+                required String metaValue,
+                Value<int> rowid = const Value.absent(),
+              }) => SyncMetaCompanion.insert(
+                metaKey: metaKey,
+                metaValue: metaValue,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncMetaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncMetaTable,
+      SyncMetaData,
+      $$SyncMetaTableFilterComposer,
+      $$SyncMetaTableOrderingComposer,
+      $$SyncMetaTableAnnotationComposer,
+      $$SyncMetaTableCreateCompanionBuilder,
+      $$SyncMetaTableUpdateCompanionBuilder,
+      (
+        SyncMetaData,
+        BaseReferences<_$AppDatabase, $SyncMetaTable, SyncMetaData>,
+      ),
+      SyncMetaData,
       PrefetchHooks Function()
     >;
 typedef $$SyncWatermarksTableCreateCompanionBuilder =
@@ -8581,6 +9021,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$SyncQueueTableTableManager get syncQueue =>
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
+  $$SyncMetaTableTableManager get syncMeta =>
+      $$SyncMetaTableTableManager(_db, _db.syncMeta);
   $$SyncWatermarksTableTableManager get syncWatermarks =>
       $$SyncWatermarksTableTableManager(_db, _db.syncWatermarks);
   $$DeviceMetaTableTableManager get deviceMeta =>

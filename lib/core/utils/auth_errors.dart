@@ -1,7 +1,11 @@
+import '../../data/repositories/auth_repository.dart';
 import '../l10n/app_localizations.dart';
 
 /// Maps auth/API exceptions to localized user-facing messages.
 String localizeAuthError(Object error, AppLocalizations l10n) {
+  if (error is AccountDeactivatedException) {
+    return l10n.accountDeactivated;
+  }
   final msg = error.toString().toLowerCase();
   if (msg.contains('invalid login credentials') ||
       msg.contains('invalid email or password')) {

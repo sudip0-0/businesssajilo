@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,6 +31,9 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   String? _selectedBillId;
   PaginatedListState<Bill>? _pager;
   final _scrollController = ScrollController();
+  Timer? _searchDebounce;
+  List<Bill>? _searchResults;
+  bool _searching = false;
 
   @override
   void initState() {
@@ -52,17 +57,42 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
 
-  List<Bill> get _filtered {
-    final items = _pager?.items ?? [];
-    return items.where((b) {
-      if (_query.isEmpty) return true;
-      return b.billNo.toLowerCase().contains(_query) ||
-          (b.customerShopName?.toLowerCase().contains(_query) ?? false);
-    }).toList();
+  void _onQueryChanged(String value) {
+    _query = value.trim();
+    _searchDebounce?.cancel();
+    if (_query.isEmpty) {
+      setState(() {
+        _searchResults = null;
+        _searching = false;
+      });
+      return;
+    }
+    setState(() => _searching = true);
+    _searchDebounce = Timer(const Duration(milliseconds: 350), _runSearch);
+  }
+
+  Future<void> _runSearch() async {
+    final query = _query;
+    try {
+      final results =
+          await ref.read(billsRepositoryProvider).search(query);
+      if (!mounted || _query != query) return;
+      setState(() {
+        _searchResults = results;
+        _searching = false;
+      });
+    } catch (_) {
+      if (!mounted || _query != query) return;
+      setState(() {
+        _searchResults = const [];
+        _searching = false;
+      });
+    }
   }
 
   @override
@@ -79,7 +109,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
               hintText: l10n.filterBills,
               prefixIcon: const Icon(Icons.search),
             ),
-            onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+            onChanged: _onQueryChanged,
           ),
         ),
         Expanded(child: _buildListBody(l10n, pager)),
@@ -95,13 +125,37 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   }
 
   Widget _buildListBody(AppLocalizations l10n, PaginatedListState<Bill>? pager) {
+    if (_query.isNotEmpty) {
+      if (_searching && _searchResults == null) {
+        return const ListSkeleton();
+      }
+      final results = _searchResults ?? const <Bill>[];
+      if (results.isEmpty) {
+        return EmptyState(
+          icon: Icons.receipt_long_outlined,
+          message: l10n.noBills,
+        );
+      }
+      return ListView.separated(
+        itemCount: results.length,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final bill = results[index];
+          return _BillTile(
+            bill: bill,
+            selected: _selectedBillId == bill.id,
+            onTap: () => _selectBill(context, bill),
+          );
+        },
+      );
+    }
     if (pager == null || pager.initialLoading) {
       return const ListSkeleton();
     }
     if (pager.error != null && pager.items.isEmpty) {
       return ErrorState(onRetry: () => pager.refresh());
     }
-    final filtered = _filtered;
+    final filtered = pager.items;
     if (filtered.isEmpty) {
       return EmptyState(
         icon: Icons.receipt_long_outlined,
@@ -110,7 +164,9 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         onAction: () => _openForm(context),
       );
     }
-    return ListView.separated(
+    return RefreshIndicator(
+      onRefresh: () => pager.refresh(),
+      child: ListView.separated(
       controller: _scrollController,
       itemCount: filtered.length + (pager.hasMore ? 1 : 0),
       separatorBuilder: (_, _) => const Divider(height: 1),
@@ -135,6 +191,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
           onTap: () => _selectBill(context, bill),
         );
       },
+      ),
     );
   }
 

@@ -11,6 +11,17 @@ final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
   return OrdersRepository(ref.watch(supabaseClientProvider));
 });
 
+/// Raised when the server rejects an order status transition. The UI layer
+/// maps this to a localized 'invalid status change' message.
+class OrderStatusException implements Exception {
+  OrderStatusException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class OrderLineInput {
   const OrderLineInput({required this.productId, required this.qty});
 
@@ -58,23 +69,23 @@ class OrdersRepository {
   }
 
   Future<int> pendingCount() async {
-    final orders = await listForStaff(
-      statuses: [
-        OrderStatus.placed,
-        OrderStatus.quoted,
-        OrderStatus.accepted,
+    final client = _requireClient();
+    return client.from('orders').count(CountOption.exact).inFilter(
+      'status',
+      [
+        OrderStatus.placed.name,
+        OrderStatus.quoted.name,
+        OrderStatus.accepted.name,
       ],
     );
-    return orders.length;
   }
 
   Future<int> openQuotesCount() async {
     final client = _requireClient();
-    final rows = await client
+    return client
         .from('orders')
-        .select('id')
+        .count(CountOption.exact)
         .eq('status', OrderStatus.quoted.name);
-    return (rows as List).length;
   }
 
   Future<Order> get(String id) async {
@@ -124,10 +135,14 @@ class OrdersRepository {
 
   Future<Order> updateStatus(String id, OrderStatus status) async {
     final client = _requireClient();
-    await client
-        .from('orders')
-        .update({'status': status.name})
-        .eq('id', id);
+    try {
+      await client
+          .from('orders')
+          .update({'status': status.name})
+          .eq('id', id);
+    } on PostgrestException catch (e) {
+      throw OrderStatusException(e.message);
+    }
     return get(id);
   }
 

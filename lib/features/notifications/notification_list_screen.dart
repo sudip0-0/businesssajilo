@@ -6,6 +6,7 @@ import '../../core/ui/async_body.dart';
 import '../../core/ui/empty_state.dart';
 import '../../data/repositories/notifications_repository.dart';
 import '../../domain/models/notification_item.dart';
+import '../auth/providers/auth_provider.dart';
 import 'notification_labels.dart';
 import 'notification_navigation.dart';
 import 'providers.dart';
@@ -41,13 +42,16 @@ class NotificationListScreen extends ConsumerWidget {
             );
           }
 
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return _NotificationTile(item: item);
-            },
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(notificationListProvider),
+            child: ListView.separated(
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _NotificationTile(item: item);
+              },
+            ),
           );
         },
       ),
@@ -79,7 +83,8 @@ class _NotificationTile extends ConsumerWidget {
           await ref.read(notificationsRepositoryProvider).markRead(item.id);
         }
         if (context.mounted) {
-          openNotificationTarget(context, item);
+          final role = ref.read(authProvider).value?.member?.role;
+          openNotificationTarget(context, item, role: role);
         }
       },
     );

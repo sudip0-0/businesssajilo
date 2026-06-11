@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../domain/models/catalog_product.dart';
@@ -50,8 +52,11 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
           ),
           Expanded(
             child: catalogAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(e.toString())),
+              loading: () => const ListSkeleton(),
+              error: (e, _) => ErrorState(
+                message: l10n.loadingFailed,
+                onRetry: () => ref.invalidate(catalogListProvider),
+              ),
               data: (products) {
                 final filtered = products.where((p) {
                   if (_query.isEmpty) return true;
@@ -61,13 +66,23 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                 }).toList();
 
                 if (filtered.isEmpty) {
-                  return EmptyState(
-                    icon: Icons.storefront_outlined,
-                    message: l10n.emptyCatalog,
+                  return RefreshIndicator(
+                    onRefresh: () async => ref.invalidate(catalogListProvider),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        EmptyState(
+                          icon: Icons.storefront_outlined,
+                          message: l10n.emptyCatalog,
+                        ),
+                      ],
+                    ),
                   );
                 }
 
-                return ListView.separated(
+                return RefreshIndicator(
+                  onRefresh: () async => ref.invalidate(catalogListProvider),
+                  child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: filtered.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -103,6 +118,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                       ),
                     );
                   },
+                  ),
                 );
               },
             ),

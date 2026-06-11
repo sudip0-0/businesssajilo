@@ -9,6 +9,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(supabaseClientProvider));
 });
 
+/// Thrown when a Supabase user exists but has no active member row
+/// (deactivated by the business owner, or orphaned).
+class AccountDeactivatedException implements Exception {
+  const AccountDeactivatedException();
+
+  @override
+  String toString() => 'AccountDeactivatedException: account deactivated';
+}
+
 class AuthRepository {
   AuthRepository(this._client);
 
@@ -31,7 +40,16 @@ class AuthRepository {
         .eq('is_active', true)
         .maybeSingle();
 
-    if (row == null) return SessionState(user: user);
+    if (row == null) {
+      // Orphan session: auth user without an active member row. Sign out so
+      // the stale session cannot linger, and surface a distinct error.
+      try {
+        await client.auth.signOut();
+      } catch (_) {
+        // Best effort — offline sign-out failures shouldn't mask the cause.
+      }
+      throw const AccountDeactivatedException();
+    }
 
     return SessionState(
       user: user,

@@ -38,9 +38,31 @@ class OwnerShell extends ConsumerStatefulWidget {
 class _OwnerShellState extends ConsumerState<OwnerShell> {
   int _index = 0;
 
+  // Mobile bottom nav: Dashboard, Inventory, Customers, Billing, More.
+  static const _mobilePageIndexes = [0, 1, 2, 3];
+
+  void _openOrders(bool wide) {
+    if (wide) {
+      setState(() => _index = 4);
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => Scaffold(
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context).orders),
+            ),
+            body: const OrderQueueScreen(),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final wide = isWideLayout(context);
     final lowStockAsync = ref.watch(lowStockCountProvider);
     final totalDuesAsync = ref.watch(totalDuesProvider);
     final todaysSalesAsync = ref.watch(todaysSalesProvider);
@@ -48,7 +70,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
 
     final pages = [
       OwnerDashboard(
-        onOrdersTap: () => setState(() => _index = 4),
+        onOrdersTap: () => _openOrders(wide),
         stats: [
           (
             icon: Icons.payments,
@@ -99,7 +121,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               loading: () => '…',
               error: (_, _) => '—',
             ),
-            onTap: () => setState(() => _index = 4),
+            onTap: () => _openOrders(wide),
           ),
         ],
       ),
@@ -166,18 +188,57 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       ),
     ];
 
+    // Mobile reduces to 5 destinations with a "More" page; the wide rail
+    // keeps all 8 destinations.
+    final mobileDestinations = [
+      destinations[0],
+      destinations[1],
+      destinations[2],
+      destinations[3],
+      NavigationDestination(
+        icon: const Icon(Icons.more_horiz_outlined),
+        selectedIcon: const Icon(Icons.more_horiz),
+        label: l10n.more,
+      ),
+    ];
+    final mobileTitles = [
+      titles[0],
+      titles[1],
+      titles[2],
+      titles[3],
+      l10n.more,
+    ];
+
+    // _index == -1 marks the mobile-only "More" page; fall back to the
+    // dashboard if the layout becomes wide.
+    final wideIndex = _index < 0 ? 0 : _index;
+    final mobileIndex = _mobilePageIndexes.contains(_index)
+        ? _mobilePageIndexes.indexOf(_index)
+        : 4;
+    final effectiveIndex = wide ? wideIndex : mobileIndex;
+    final body = wide
+        ? pages[wideIndex]
+        : (mobileIndex < 4 ? pages[_index] : const _MorePage());
+
     return OwnerOnboardingOverlay(
       child: AdaptiveScaffold(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: destinations,
-        titles: titles,
+        selectedIndex: effectiveIndex,
+        onDestinationSelected: (i) => setState(() {
+          if (wide) {
+            _index = i;
+          } else {
+            // "More" is a virtual page; mark it with a sentinel index.
+            _index = i < 4 ? _mobilePageIndexes[i] : -1;
+          }
+        }),
+        destinations: wide ? destinations : mobileDestinations,
+        titles: wide ? titles : mobileTitles,
         actions: const [
           SyncBadgeAction(),
           NotificationBellAction(),
           LogoutAction(),
         ],
-        body: pages[_index],
+        body: body,
       floatingActionButton: switch (_index) {
         1 => FloatingActionButton.extended(
             onPressed: () async {
@@ -239,6 +300,63 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         _ => null,
       },
       ),
+    );
+  }
+}
+
+/// Mobile-only page listing the secondary owner destinations.
+class _MorePage extends StatelessWidget {
+  const _MorePage();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final items = [
+      (
+        icon: Icons.shopping_cart_outlined,
+        title: l10n.orders,
+        body: const OrderQueueScreen(),
+      ),
+      (
+        icon: Icons.people_outline,
+        title: l10n.staffManagement,
+        body: const StaffListScreen(),
+      ),
+      (
+        icon: Icons.assessment_outlined,
+        title: l10n.reports,
+        body: const ReportsHubScreen(),
+      ),
+      (
+        icon: Icons.settings_outlined,
+        title: l10n.settings,
+        body: const SettingsScreen(),
+      ),
+    ];
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: items.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Card(
+          child: ListTile(
+            leading: Icon(item.icon),
+            title: Text(item.title),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: Text(item.title)),
+                  body: item.body,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

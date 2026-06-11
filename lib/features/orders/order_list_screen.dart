@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/status_chip.dart';
+import '../../core/utils/bs_date.dart';
 import 'order_detail_screen.dart';
 import 'providers.dart';
 
@@ -20,25 +22,43 @@ class OrderListScreen extends ConsumerWidget {
         ? ref.watch(ownOrderListProvider)
         : ref.watch(staffOrderListProvider);
 
+    final provider = ownOnly ? ownOrderListProvider : staffOrderListProvider;
+
     return ordersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(e.toString())),
+      loading: () => const ListSkeleton(),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(provider),
+      ),
       data: (orders) {
         if (orders.isEmpty) {
-          return EmptyState(
-            icon: Icons.shopping_bag_outlined,
-            message: l10n.noOrders,
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(provider),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                EmptyState(
+                  icon: Icons.shopping_bag_outlined,
+                  message: l10n.noOrders,
+                ),
+              ],
+            ),
           );
         }
 
-        return ListView.separated(
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(provider),
+          child: ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: orders.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final order = orders[index];
             final dateStr = order.createdAt != null
-                ? DateFormat.MMMd().format(order.createdAt!.toLocal())
+                ? BsDate.both(
+                    order.createdAt!,
+                    locale: Localizations.localeOf(context),
+                  )
                 : '—';
             return Card(
               child: ListTile(
@@ -48,7 +68,7 @@ class OrderListScreen extends ConsumerWidget {
                       : (order.customerShopName ?? l10n.customers),
                 ),
                 subtitle: Text(
-                  '${order.items.length} ${l10n.orderItems.toLowerCase()}',
+                  '${order.items.length} · ${l10n.orderItems}',
                 ),
                 trailing: StatusChip(order.status),
                 onTap: () async {
@@ -58,13 +78,12 @@ class OrderListScreen extends ConsumerWidget {
                       builder: (_) => OrderDetailScreen(orderId: order.id),
                     ),
                   );
-                  ref.invalidate(
-                    ownOnly ? ownOrderListProvider : staffOrderListProvider,
-                  );
+                  ref.invalidate(provider);
                 },
               ),
             );
           },
+          ),
         );
       },
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/error_state.dart';
 import '../../domain/models/product.dart';
 import 'providers.dart';
 import 'stock_in_sheet.dart';
@@ -26,7 +27,10 @@ class StockInPickerSheet extends ConsumerWidget {
           Expanded(
             child: productsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(e.toString())),
+              error: (e, _) => ErrorState(
+                message: l10n.loadingFailed,
+                onRetry: () => ref.invalidate(productListProvider),
+              ),
               data: (products) => ListView.builder(
                 controller: scrollController,
                 itemCount: products.length,

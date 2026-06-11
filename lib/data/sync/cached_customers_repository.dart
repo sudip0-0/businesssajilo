@@ -45,17 +45,28 @@ class CachedCustomersRepository implements CustomersRepository {
   }
 
   @override
-  Future<List<LedgerEntry>> ledger(String customerId) async {
+  Future<List<LedgerEntry>> ledger(
+    String customerId, {
+    int offset = 0,
+    int? limit,
+  }) async {
     final client = _client;
     if (client == null) throw Exception('Supabase not configured');
-    final rows = await client
+    var query = client
         .from('customer_ledger_entries')
         .select()
         .eq('customer_id', customerId)
-        .order('occurred_at', ascending: true);
+        .order('occurred_at', ascending: true)
+        .order('entry_type', ascending: true)
+        .order('ref_id', ascending: true);
+    if (limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+    final rows = await query;
     final entries = (rows as List)
         .map((row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)))
         .toList();
+    if (limit != null) return entries;
     return withRunningBalance(entries);
   }
 

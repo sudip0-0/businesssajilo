@@ -68,40 +68,47 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   void _submit() {
     final l10n = AppLocalizations.of(context);
 
-    if (_status == BillStatus.partial) {
+    var status = _status;
+    if (status == BillStatus.partial) {
       final amount = parseNpr(_amountController.text);
       if (amount == null) {
         _showError(l10n.amountRequired);
         return;
       }
-      if (amount.value <= 0 || amount.value > widget.grandTotal) {
+      if (amount.value <= 0) {
         _showError(l10n.amountMustBePositive);
         return;
       }
+      if (amount.value > widget.grandTotal) {
+        _showError(l10n.amountExceedsTotal);
+        return;
+      }
+      // A "partial" payment covering the full amount is just a paid bill.
+      if (amount.value == widget.grandTotal) {
+        status = BillStatus.paid;
+      }
     }
 
-    if (!_walkIn && _customerId == null && _status != BillStatus.due) {
+    if (!_walkIn && _customerId == null && status != BillStatus.due) {
       _showError(l10n.selectCustomer);
       return;
     }
 
-    if (_walkIn && _status != BillStatus.paid) {
-      _showError(l10n.customerOptional);
+    if (_walkIn && status != BillStatus.paid) {
+      _showError(l10n.selectCustomerForCredit);
       return;
     }
 
-    final paymentAmount = _status == BillStatus.partial
-        ? parseNpr(_amountController.text)!.value
-        : _status == BillStatus.paid && !_walkIn
-            ? widget.grandTotal
-            : _status == BillStatus.paid && _walkIn
-                ? widget.grandTotal
-                : null;
+    final paymentAmount = switch (status) {
+      BillStatus.partial => parseNpr(_amountController.text)!.value,
+      BillStatus.paid => widget.grandTotal,
+      BillStatus.due => null,
+    };
 
     Navigator.pop(
       context,
       BillPaymentResult(
-        status: _status,
+        status: status,
         customerId: _walkIn ? null : _customerId,
         paymentAmount: paymentAmount,
         paymentMethod: _method,
@@ -180,7 +187,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               if (!_walkIn)
                 customersAsync.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (e, _) => Text(e.toString()),
+                  error: (e, _) => Text(l10n.loadingFailed),
                   data: (customers) => DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: l10n.selectCustomer),
                     initialValue: _customerId,

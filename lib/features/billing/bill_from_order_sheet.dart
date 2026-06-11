@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/quotes_repository.dart';
@@ -27,6 +29,8 @@ class BillFromOrderSheet extends ConsumerStatefulWidget {
 
 class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
   bool _loading = false;
+  bool _quoteLoading = true;
+  bool _noAcceptedQuote = false;
   int _itemsTotal = 0;
   int _discount = 0;
   List<BillLineInput> _lines = [];
@@ -41,7 +45,14 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
     final quote = await ref
         .read(quotesRepositoryProvider)
         .latestAccepted(widget.orderId);
-    if (quote == null || !mounted) return;
+    if (!mounted) return;
+    if (quote == null) {
+      setState(() {
+        _quoteLoading = false;
+        _noAcceptedQuote = true;
+      });
+      return;
+    }
     final lines = quote.items
         .map(
           (item) => BillLineInput(
@@ -56,8 +67,10 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
         .toList();
     setState(() {
       _lines = lines;
-      _itemsTotal = quote.total;
+      // Recompute from line items rather than trusting the stored quote total.
+      _itemsTotal = itemsTotalPaisa(lines.map((l) => l.lineTotal));
       _discount = 0;
+      _quoteLoading = false;
     });
   }
 
@@ -99,10 +112,10 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
         );
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(l10n.actionFailed)),
         );
       }
     } finally {
@@ -113,6 +126,19 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
+    if (_noAcceptedQuote) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: ErrorState(message: l10n.noAcceptedQuote),
+      );
+    }
+    if (_quoteLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Padding(
       padding: EdgeInsets.only(

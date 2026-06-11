@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
 import '../../domain/models/stock_valuation_row.dart';
@@ -37,8 +39,12 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
         ),
       ),
       body: rowsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        loading: () => const ListSkeleton(),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () =>
+              ref.invalidate(stockValuationProvider(widget.lowStockOnly)),
+        ),
         data: (rows) {
           _sorted = List<StockValuationRow>.from(rows);
           _applySort();

@@ -23,14 +23,20 @@ class MoneyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = style ?? Theme.of(context).textTheme.titleMedium;
+    final scheme = Theme.of(context).colorScheme;
     final color = !colorBySign
         ? null
         : amount.isNegative
-            ? BsColors.danger
-            : BsColors.success;
-    return Text(
-      formatNpr(amount, showPaisa: showPaisa),
-      style: base?.copyWith(color: color, fontWeight: FontWeight.w600),
+            ? scheme.dangerColor
+            : scheme.successColor;
+    final formatted = formatNpr(amount, showPaisa: showPaisa);
+    return Semantics(
+      label: formatted,
+      excludeSemantics: true,
+      child: Text(
+        formatted,
+        style: base?.copyWith(color: color, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

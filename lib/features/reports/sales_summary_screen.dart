@@ -55,7 +55,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
           const SizedBox(height: 16),
           salesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text(e.toString()),
+            error: (e, _) => Text(l10n.loadingFailed),
             data: (points) {
               final total =
                   points.fold<int>(0, (sum, p) => sum + p.totalSales);
@@ -83,7 +83,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
           Text(l10n.topProducts, style: Theme.of(context).textTheme.titleMedium),
           productsAsync.when(
             loading: () => const LinearProgressIndicator(),
-            error: (e, _) => Text(e.toString()),
+            error: (e, _) => Text(l10n.loadingFailed),
             data: (rows) => _RankedList(
               wide: isWideLayout(context),
               nameLabel: l10n.name,
@@ -97,7 +97,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
           Text(l10n.topCustomers, style: Theme.of(context).textTheme.titleMedium),
           customersAsync.when(
             loading: () => const LinearProgressIndicator(),
-            error: (e, _) => Text(e.toString()),
+            error: (e, _) => Text(l10n.loadingFailed),
             data: (rows) => _RankedList(
               wide: isWideLayout(context),
               nameLabel: l10n.name,

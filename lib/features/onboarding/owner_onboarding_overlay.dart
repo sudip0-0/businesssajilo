@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import 'demo_data_seeder.dart';
 import 'onboarding_prefs.dart';
 
-class OwnerOnboardingOverlay extends StatefulWidget {
+const _stepCount = 6;
+
+class OwnerOnboardingOverlay extends ConsumerStatefulWidget {
   const OwnerOnboardingOverlay({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<OwnerOnboardingOverlay> createState() => _OwnerOnboardingOverlayState();
+  ConsumerState<OwnerOnboardingOverlay> createState() =>
+      _OwnerOnboardingOverlayState();
 }
 
-class _OwnerOnboardingOverlayState extends State<OwnerOnboardingOverlay> {
+class _OwnerOnboardingOverlayState
+    extends ConsumerState<OwnerOnboardingOverlay> {
   bool _visible = false;
+  bool _seeding = false;
   int _step = 0;
 
   @override
@@ -32,27 +39,52 @@ class _OwnerOnboardingOverlayState extends State<OwnerOnboardingOverlay> {
     if (mounted) setState(() => _visible = false);
   }
 
+  Future<void> _seedAndFinish() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _seeding = true);
+    try {
+      final result = await DemoDataSeeder(ref).seed();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            result == DemoSeedResult.loaded
+                ? l10n.demoDataLoaded
+                : l10n.demoDataSkipped,
+          ),
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
+    } finally {
+      if (mounted) setState(() => _seeding = false);
+    }
+    await _finish();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         widget.child,
         if (_visible) ...[
-          ModalBarrier(
+          const ModalBarrier(
             dismissible: false,
             color: Colors.black54,
           ),
           Center(
             child: _OnboardingCard(
               step: _step,
+              seeding: _seeding,
               onNext: () {
-                if (_step >= 3) {
+                if (_step >= _stepCount - 1) {
                   _finish();
                 } else {
                   setState(() => _step++);
                 }
               },
-              onSkip: _finish,
+              onSkip: _seeding ? null : _finish,
+              onLoadSampleData: _seeding ? null : _seedAndFinish,
             ),
           ),
         ],
@@ -64,24 +96,32 @@ class _OwnerOnboardingOverlayState extends State<OwnerOnboardingOverlay> {
 class _OnboardingCard extends StatelessWidget {
   const _OnboardingCard({
     required this.step,
+    required this.seeding,
     required this.onNext,
     required this.onSkip,
+    required this.onLoadSampleData,
   });
 
   final int step;
+  final bool seeding;
   final VoidCallback onNext;
-  final VoidCallback onSkip;
+  final VoidCallback? onSkip;
+  final VoidCallback? onLoadSampleData;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final steps = [
       (Icons.dashboard, l10n.onboardingWelcome, l10n.onboardingKpis),
       (Icons.inventory_2, l10n.inventory, l10n.onboardingProducts),
       (Icons.storefront, l10n.customers, l10n.onboardingCustomers),
       (Icons.receipt_long, l10n.billing, l10n.onboardingBills),
+      (Icons.shopping_cart, l10n.orders, l10n.onboardingOrders),
+      (Icons.assessment, l10n.reports, l10n.onboardingReports),
     ];
     final (icon, title, body) = steps[step];
+    final isLast = step >= steps.length - 1;
 
     return Card(
       margin: const EdgeInsets.all(24),
@@ -97,16 +137,51 @@ class _OnboardingCard extends StatelessWidget {
               Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               Text(body, textAlign: TextAlign.center),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < steps.length; i++)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: i == step
+                            ? scheme.primary
+                            : scheme.outlineVariant,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (isLast) ...[
+                FilledButton.tonalIcon(
+                  onPressed: onLoadSampleData,
+                  icon: seeding
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.dataset_outlined),
+                  label: Text(l10n.loadDemoData),
+                ),
+                const SizedBox(height: 8),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(onPressed: onSkip, child: Text(l10n.onboardingSkip)),
+                  TextButton(
+                    onPressed: onSkip,
+                    child: Text(l10n.onboardingSkip),
+                  ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: onNext,
+                    onPressed: seeding ? null : onNext,
                     child: Text(
-                      step >= 3 ? l10n.onboardingDone : l10n.onboardingNext,
+                      isLast ? l10n.onboardingDone : l10n.onboardingNext,
                     ),
                   ),
                 ],

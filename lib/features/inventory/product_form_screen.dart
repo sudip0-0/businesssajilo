@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/categories_repository.dart';
 import '../../data/repositories/products_repository.dart';
@@ -81,6 +82,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     });
   }
 
+  /// Optional money field: empty is allowed, otherwise must parse to >= 0.
+  String? _validateMoney(String? v, AppLocalizations l10n) {
+    if (v == null || v.trim().isEmpty) return null;
+    final parsed = parseNpr(v);
+    if (parsed == null || parsed.value < 0) return l10n.invalidNumber;
+    return null;
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -145,10 +154,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       }
 
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: BsColors.danger),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).actionFailed),
+            backgroundColor: BsColors.danger,
+          ),
         );
       }
     } finally {
@@ -169,7 +181,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       ),
       body: categoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(message: l10n.loadingFailed),
         data: (categories) => SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
@@ -229,18 +241,26 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   controller: _costController,
                   decoration: InputDecoration(labelText: l10n.costPrice),
                   keyboardType: TextInputType.number,
+                  validator: (v) => _validateMoney(v, l10n),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _refController,
                   decoration: InputDecoration(labelText: l10n.referencePrice),
                   keyboardType: TextInputType.number,
+                  validator: (v) => _validateMoney(v, l10n),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _thresholdController,
                   decoration: InputDecoration(labelText: l10n.lowStockThreshold),
                   keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    final n = int.tryParse(v.trim());
+                    if (n == null || n < 0) return l10n.invalidNumber;
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
                 FilledButton(

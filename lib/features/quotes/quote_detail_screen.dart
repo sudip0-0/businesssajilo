@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/quotes_repository.dart';
+import '../../domain/enums.dart';
+import '../../domain/models/quote.dart';
+import '../orders/providers.dart';
+import 'providers.dart';
 
 class QuoteDetailScreen extends ConsumerStatefulWidget {
   const QuoteDetailScreen({super.key, required this.quoteId});
@@ -24,20 +29,45 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _accept() async {
+  Future<void> _accept(Quote quote) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.accept),
+        content: Text(
+          l10n.quoteAcceptConfirm(
+            formatNpr(Paisa(quote.total), showPaisa: false),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.accept),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() => _loading = true);
     try {
-      await ref.read(quotesRepositoryProvider).accept(
+      final updated = await ref.read(quotesRepositoryProvider).accept(
             widget.quoteId,
             comment: _commentController.text.trim().isEmpty
                 ? null
                 : _commentController.text.trim(),
           );
+      _invalidateOrder(updated.orderId);
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(AppLocalizations.of(context).actionFailed)),
         );
       }
     } finally {
@@ -55,20 +85,26 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
     }
     setState(() => _loading = true);
     try {
-      await ref.read(quotesRepositoryProvider).reject(
+      final updated = await ref.read(quotesRepositoryProvider).reject(
             widget.quoteId,
             comment: _commentController.text.trim(),
           );
+      _invalidateOrder(updated.orderId);
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(l10n.actionFailed)),
         );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _invalidateOrder(String orderId) {
+    ref.invalidate(orderDetailProvider(orderId));
+    ref.invalidate(orderQuotesProvider(orderId));
   }
 
   @override
@@ -84,7 +120,7 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text(snapshot.error.toString()));
+            return ErrorState(message: l10n.loadingFailed);
           }
           final quote = snapshot.data!;
 
@@ -112,7 +148,7 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
                 '${l10n.grandTotal}: ${formatNpr(Paisa(quote.total), showPaisa: false)}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              if (quote.status.name == 'sent') ...[
+              if (quote.status == QuoteStatus.sent) ...[
                 const SizedBox(height: 16),
                 TextField(
                   controller: _commentController,
@@ -131,7 +167,7 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: FilledButton(
-                        onPressed: _loading ? null : _accept,
+                        onPressed: _loading ? null : () => _accept(quote),
                         child: Text(l10n.accept),
                       ),
                     ),

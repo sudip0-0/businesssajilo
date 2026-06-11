@@ -12,6 +12,7 @@ import '../../core/ui/paginated_list_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
+import 'add_customer_sheet.dart';
 import 'customer_detail_screen.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
@@ -119,9 +120,15 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         icon: Icons.storefront_outlined,
         message: l10n.noCustomers,
         actionLabel: widget.canEdit ? l10n.addCustomer : null,
+        onAction: widget.canEdit ? () => _openAddCustomer(context) : null,
       );
     }
-    return ListView.separated(
+    return RefreshIndicator(
+      onRefresh: () async {
+        await pager.refresh();
+        ref.invalidate(totalDuesProvider);
+      },
+      child: ListView.separated(
       controller: _scrollController,
       itemCount: filtered.length + (pager.hasMore ? 1 : 0),
       separatorBuilder: (_, _) => const Divider(height: 1),
@@ -147,6 +154,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
           onEdit: widget.canEdit ? () => _openEdit(context, customer) : null,
         );
       },
+      ),
     );
   }
 
@@ -170,6 +178,19 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       ),
     );
     if (refreshed == true) {
+      ref.invalidate(customerListProvider);
+      ref.invalidate(totalDuesProvider);
+    }
+  }
+
+  Future<void> _openAddCustomer(BuildContext context) async {
+    final created = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const AddCustomerSheet(),
+    );
+    if (created == true) {
+      await _pager?.refresh();
       ref.invalidate(customerListProvider);
       ref.invalidate(totalDuesProvider);
     }
@@ -204,6 +225,7 @@ class _CustomerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context).textTheme;
     final due = customer.balanceDue;
 
@@ -229,16 +251,42 @@ class _CustomerTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            formatNpr(Paisa(due), showPaisa: false),
-            style: theme.titleSmall?.copyWith(
-              color: due > 0 ? BsColors.danger : BsColors.success,
-              fontWeight: FontWeight.w600,
+          if (due < 0)
+            Chip(
+              label: Text(
+                '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}',
+              ),
+              labelStyle: theme.labelSmall?.copyWith(
+                color: BsColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              visualDensity: VisualDensity.compact,
+              side: const BorderSide(color: BsColors.primary),
+            )
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon prefix so dues vs settled isn't color-only.
+                Icon(
+                  due > 0 ? Icons.arrow_upward : Icons.check,
+                  size: 14,
+                  color: due > 0 ? BsColors.danger : BsColors.success,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  formatNpr(Paisa(due), showPaisa: false),
+                  style: theme.titleSmall?.copyWith(
+                    color: due > 0 ? BsColors.danger : BsColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
           if (onEdit != null)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.editCustomer,
               onPressed: onEdit,
             ),
         ],

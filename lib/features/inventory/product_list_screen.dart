@@ -139,7 +139,12 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         onAction: widget.canEdit ? () => _openForm(context, null) : null,
       );
     }
-    return ListView.separated(
+    return RefreshIndicator(
+      onRefresh: () async {
+        await pager.refresh();
+        ref.invalidate(lowStockCountProvider);
+      },
+      child: ListView.separated(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: filtered.length + (pager.hasMore ? 1 : 0),
@@ -172,6 +177,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           onTap: () => _openDetail(context, product),
         );
       },
+      ),
     );
   }
 

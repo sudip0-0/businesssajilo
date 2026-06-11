@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/status_chip.dart';
+import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/enums.dart';
 import 'providers.dart';
@@ -18,20 +20,33 @@ class FulfillmentListScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(fulfillmentQueueProvider);
 
     return ordersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(e.toString())),
+      loading: () => const ListSkeleton(),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(fulfillmentQueueProvider),
+      ),
       data: (orders) {
         final active = orders
             .where((o) => o.status != OrderStatus.dispatched)
             .toList();
         if (active.isEmpty) {
-          return EmptyState(
-            icon: Icons.local_shipping_outlined,
-            message: l10n.fulfillmentQueue,
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(fulfillmentQueueProvider),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                EmptyState(
+                  icon: Icons.local_shipping_outlined,
+                  message: l10n.fulfillmentQueue,
+                ),
+              ],
+            ),
           );
         }
 
-        return ListView.separated(
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(fulfillmentQueueProvider),
+          child: ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: active.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -56,7 +71,10 @@ class FulfillmentListScreen extends ConsumerWidget {
                     ),
                     if (order.createdAt != null)
                       Text(
-                        DateFormat.MMMd().format(order.createdAt!.toLocal()),
+                        BsDate.both(
+                          order.createdAt!,
+                          locale: Localizations.localeOf(context),
+                        ),
                       ),
                     const SizedBox(height: 8),
                     if (order.status == OrderStatus.confirmed)
@@ -84,6 +102,7 @@ class FulfillmentListScreen extends ConsumerWidget {
               ),
             );
           },
+          ),
         );
       },
     );

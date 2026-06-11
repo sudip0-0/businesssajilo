@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/utils/money.dart';
 import '../customers/customer_ledger_screen.dart';
 import '../customers/providers.dart';
@@ -59,44 +60,37 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
       const CustomerLedgerScreen(showBillHistory: true),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          switch (_index) {
-            0 => l10n.dashboard,
-            1 => l10n.catalog,
-            2 => l10n.myOrders,
-            _ => l10n.myDues,
-          },
-        ),
-        actions: const [NotificationBellAction(), LogoutAction()],
-      ),
+    return AdaptiveScaffold(
+      selectedIndex: _index,
+      onDestinationSelected: (i) => setState(() => _index = i),
+      titles: [l10n.dashboard, l10n.catalog, l10n.myOrders, l10n.myDues],
+      actions: const [NotificationBellAction(), LogoutAction()],
       body: IndexedStack(
         index: _index,
         children: pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.dashboard_outlined),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.storefront_outlined),
-            label: l10n.catalog,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.shopping_bag_outlined),
-            label: l10n.myOrders,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            label: l10n.myDues,
-          ),
-        ],
-      ),
+      destinations: [
+        NavigationDestination(
+          icon: const Icon(Icons.dashboard_outlined),
+          selectedIcon: const Icon(Icons.dashboard),
+          label: l10n.dashboard,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.storefront_outlined),
+          selectedIcon: const Icon(Icons.storefront),
+          label: l10n.catalog,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.shopping_bag_outlined),
+          selectedIcon: const Icon(Icons.shopping_bag),
+          label: l10n.myOrders,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.account_balance_wallet_outlined),
+          selectedIcon: const Icon(Icons.account_balance_wallet),
+          label: l10n.myDues,
+        ),
+      ],
     );
   }
 }

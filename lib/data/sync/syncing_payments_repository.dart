@@ -43,34 +43,43 @@ class SyncingPaymentsRepository implements PaymentsRepository {
     required String receivedByMemberId,
   }) async {
     final id = _uuid.v4();
-    await _db.into(_db.localPayments).insert(
-      LocalPaymentsCompanion.insert(
-        id: id,
-        businessId: _businessId,
-        customerId: customerId,
-        billId: Value(billId),
-        amount: amount,
-        method: method.name,
-        refNote: Value(refNote),
-        receivedBy: receivedByMemberId,
-        syncStatus: const Value('pending'),
-      ),
-    );
+    await _db.transaction(() async {
+      await _db.into(_db.localPayments).insert(
+        LocalPaymentsCompanion.insert(
+          id: id,
+          businessId: _businessId,
+          customerId: customerId,
+          billId: Value(billId),
+          amount: amount,
+          method: method.name,
+          refNote: Value(refNote),
+          receivedBy: receivedByMemberId,
+          syncStatus: const Value('pending'),
+        ),
+      );
 
-    await _db.enqueue(
-      entityType: 'payment',
-      entityId: id,
-      dependsOnId: billId,
-      payload: {
-        'id': id,
-        'customer_id': customerId,
-        'bill_id': billId,
-        'amount': amount,
-        'method': method.name,
-        'ref_note': refNote,
-        'received_by': receivedByMemberId,
-      },
-    );
+      // Keep the cached balance consistent offline; the server-side balance
+      // view overwrites it on the next pull.
+      await _db.customStatement(
+        'UPDATE local_customers SET balance_due = balance_due - ? WHERE id = ?',
+        [amount, customerId],
+      );
+
+      await _db.enqueue(
+        entityType: 'payment',
+        entityId: id,
+        dependsOnId: billId,
+        payload: {
+          'id': id,
+          'customer_id': customerId,
+          'bill_id': billId,
+          'amount': amount,
+          'method': method.name,
+          'ref_note': refNote,
+          'received_by': receivedByMemberId,
+        },
+      );
+    });
 
     unawaited(_sync.syncNow());
     return mapLocalPayment(

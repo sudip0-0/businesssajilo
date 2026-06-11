@@ -31,13 +31,22 @@ class SupabaseProductsRepository implements ProductsRepository {
 
   @override
   Future<int> lowStockCount() async {
-    final products = await list();
-    return products
-        .where(
-          (p) =>
-              p.lowStockThreshold > 0 && p.stockCached <= p.lowStockThreshold,
-        )
-        .length;
+    // PostgREST cannot compare two columns in a filter, so fetch only the
+    // two columns needed instead of full product rows.
+    final client = _requireClient();
+    final rows = await client
+        .from('products')
+        .select('stock_cached, low_stock_threshold')
+        .eq('is_active', true)
+        .gt('low_stock_threshold', 0);
+    var count = 0;
+    for (final row in rows as List) {
+      final map = row as Map;
+      final stock = (map['stock_cached'] as num?)?.toInt() ?? 0;
+      final threshold = (map['low_stock_threshold'] as num?)?.toInt() ?? 0;
+      if (stock <= threshold) count++;
+    }
+    return count;
   }
 
   @override

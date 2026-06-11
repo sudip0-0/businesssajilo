@@ -43,11 +43,20 @@ Deno.serve(async (req) => {
 
     const { data: notification, error: notifError } = await supabaseAdmin
       .from("notifications")
-      .select("id, type, payload, recipient_member_id")
+      .select("id, type, payload, recipient_member_id, pushed_at")
       .eq("id", notificationId)
       .single();
     if (notifError || !notification) {
       return json({ error: "Notification not found" }, 404);
+    }
+
+    // Idempotency: webhook replays must not re-send pushes.
+    if (notification.pushed_at) {
+      return json({
+        pushed: false,
+        reason: "already_pushed",
+        notification_id: notificationId,
+      });
     }
 
     const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
@@ -79,15 +88,26 @@ Deno.serve(async (req) => {
     const title = TITLE_BY_TYPE[notification.type] ?? "BusinessSajilo";
     const bodyText = notification.type.replaceAll("_", " ");
 
+    // Only routing identifiers go to FCM — never names/amounts (PII).
+    const routingData: Record<string, unknown> = {
+      type: notification.type,
+      notification_id: notification.id,
+    };
+    for (const key of ["order_id", "bill_id", "customer_id", "product_id"]) {
+      const value = (notification.payload as Record<string, unknown>)?.[key];
+      if (value != null) routingData[key] = value;
+    }
+
     const results = await Promise.all(
       deviceTokens.map((token) =>
-        sendFcmMessage(accessToken, projectId, token, title, bodyText, {
-          type: notification.type,
-          notification_id: notification.id,
-          ...notification.payload,
-        })
+        sendFcmMessage(accessToken, projectId, token, title, bodyText, routingData)
       ),
     );
+
+    await supabaseAdmin
+      .from("notifications")
+      .update({ pushed_at: new Date().toISOString() })
+      .eq("id", notificationId);
 
     return json({
       pushed: true,
@@ -96,8 +116,8 @@ Deno.serve(async (req) => {
       failed: results.filter((r) => !r.ok).length,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return json({ error: message }, 500);
+    console.error("notify failed", err instanceof Error ? err.message : err);
+    return json({ error: "Push dispatch failed" }, 500);
   }
 });
 

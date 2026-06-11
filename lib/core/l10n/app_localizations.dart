@@ -1646,6 +1646,36 @@ abstract class AppLocalizations {
   /// **'Skip tour'**
   String get onboardingSkip;
 
+  /// No description provided for @accountDeactivated.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been deactivated. Contact your business owner.'**
+  String get accountDeactivated;
+
+  /// No description provided for @configError.
+  ///
+  /// In en, this message translates to:
+  /// **'App is not configured. Missing SUPABASE_URL / SUPABASE_ANON_KEY.'**
+  String get configError;
+
+  /// No description provided for @pageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get pageNotFound;
+
+  /// No description provided for @goHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go home'**
+  String get goHome;
+
+  /// No description provided for @failedSyncItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} failed'**
+  String failedSyncItems(int count);
+
   /// No description provided for @invalidCredentials.
   ///
   /// In en, this message translates to:
@@ -1687,6 +1717,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No categories yet'**
   String get noCategories;
+
+  /// No description provided for @selectCustomerForCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a customer for credit or partial bills'**
+  String get selectCustomerForCredit;
+
+  /// No description provided for @amountExceedsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount cannot exceed the grand total'**
+  String get amountExceedsTotal;
+
+  /// No description provided for @discountExceedsLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount cannot exceed the line amount'**
+  String get discountExceedsLine;
+
+  /// No description provided for @discountExceedsItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount cannot exceed the items total'**
+  String get discountExceedsItems;
+
+  /// No description provided for @noAcceptedQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'No accepted quote for this order yet'**
+  String get noAcceptedQuote;
+
+  /// No description provided for @invalidStatusChange.
+  ///
+  /// In en, this message translates to:
+  /// **'This status change is not allowed'**
+  String get invalidStatusChange;
+
+  /// No description provided for @closeOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Close order'**
+  String get closeOrder;
+
+  /// No description provided for @areYouSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get areYouSure;
+
+  /// No description provided for @messageSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Message could not be sent. Try again.'**
+  String get messageSendFailed;
+
+  /// No description provided for @openingBalanceLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance can only be set when the customer is created'**
+  String get openingBalanceLocked;
+
+  /// No description provided for @overpaymentWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This exceeds the due amount and will create a credit balance.'**
+  String get overpaymentWarning;
+
+  /// No description provided for @creditBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get creditBalance;
+
+  /// No description provided for @rateMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Price missing — set the rate'**
+  String get rateMissing;
+
+  /// No description provided for @placeOrderConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Place order with {count} items?'**
+  String placeOrderConfirm(int count);
+
+  /// No description provided for @removedUnavailableItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items were removed because they are no longer available'**
+  String get removedUnavailableItems;
+
+  /// No description provided for @orderPlaceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not place the order. Try again.'**
+  String get orderPlaceFailed;
+
+  /// No description provided for @quoteAcceptConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept this quote for {total}?'**
+  String quoteAcceptConfirm(String total);
+
+  /// No description provided for @actionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get actionFailed;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
+  /// No description provided for @replayTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay tour'**
+  String get replayTour;
+
+  /// No description provided for @replayTourDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour will show on the next dashboard visit'**
+  String get replayTourDone;
+
+  /// No description provided for @confirmDeleteCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this category? Products in it will keep working without a category.'**
+  String get confirmDeleteCategory;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get invalidEmail;
+
+  /// No description provided for @invalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get invalidNumber;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// No description provided for @increaseQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase quantity'**
+  String get increaseQuantity;
+
+  /// No description provided for @decreaseQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease quantity'**
+  String get decreaseQuantity;
+
+  /// No description provided for @onboardingOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Track customer orders and quotes from the Orders tab.'**
+  String get onboardingOrders;
+
+  /// No description provided for @onboardingReports.
+  ///
+  /// In en, this message translates to:
+  /// **'See sales, dues, and stock reports in Reports.'**
+  String get onboardingReports;
+
+  /// No description provided for @syncStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync status'**
+  String get syncStatus;
 }
 
 class _AppLocalizationsDelegate

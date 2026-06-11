@@ -16,6 +16,10 @@ class MessagesRepository {
 
   final SupabaseClient? _client;
   static const _bucket = 'order-chat-images';
+  static const _streamLimit = 200;
+
+  /// Signed URLs cached per storage path so rebuilds don't re-request them.
+  final Map<String, Future<String>> _signedUrlCache = {};
 
   Future<List<Message>> list(String orderId) async {
     final client = _requireClient();
@@ -29,12 +33,17 @@ class MessagesRepository {
 
   Stream<List<Message>> watch(String orderId) {
     final client = _requireClient();
+    // Capped at the most recent messages to avoid unbounded payloads.
     return client
         .from('messages')
         .stream(primaryKey: ['id'])
         .eq('order_id', orderId)
-        .order('created_at')
-        .map((rows) => rows.map(_mapRow).toList());
+        .order('created_at', ascending: false)
+        .limit(_streamLimit)
+        .map(
+          (rows) =>
+              rows.map(_mapRow).toList().reversed.toList(growable: false),
+        );
   }
 
   Future<Message> sendText({
@@ -69,25 +78,42 @@ class MessagesRepository {
     await client.storage.from(_bucket).uploadBinary(path, bytes);
 
     final id = const Uuid().v4();
-    final row = await client
-        .from('messages')
-        .insert({
-          'id': id,
-          'order_id': orderId,
-          'sender_member_id': senderMemberId,
-          'image_url': path,
-        })
-        .select('*, members(display_name)')
-        .single();
-    return _mapRow(row);
+    try {
+      final row = await client
+          .from('messages')
+          .insert({
+            'id': id,
+            'order_id': orderId,
+            'sender_member_id': senderMemberId,
+            'image_url': path,
+          })
+          .select('*, members(display_name)')
+          .single();
+      return _mapRow(row);
+    } catch (e) {
+      // Best-effort cleanup of the orphaned storage object.
+      try {
+        await client.storage.from(_bucket).remove([path]);
+      } catch (_) {}
+      rethrow;
+    }
   }
 
   Future<String?> signedImageUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
     final client = _requireClient();
-    return client.storage
+    final cached = _signedUrlCache[storagePath];
+    if (cached != null) return cached;
+    final future = client.storage
         .from(_bucket)
         .createSignedUrl(storagePath, 60 * 60 * 24);
+    _signedUrlCache[storagePath] = future;
+    // Don't cache failures.
+    future.catchError((Object _) {
+      _signedUrlCache.remove(storagePath);
+      return '';
+    });
+    return future;
   }
 
   Message _mapRow(dynamic row) {

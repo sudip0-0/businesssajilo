@@ -24,13 +24,17 @@ class SyncBadge extends StatelessWidget {
         ),
       SyncState.offline => (Colors.grey, Icons.cloud_off, l10n.offline),
     };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 12)),
-      ],
+    return Semantics(
+      label: '${l10n.syncStatus}: $label',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(color: color, fontSize: 12)),
+        ],
+      ),
     );
   }
 }

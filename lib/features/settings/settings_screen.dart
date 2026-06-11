@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../onboarding/demo_data_seeder.dart';
+import '../onboarding/onboarding_prefs.dart';
 import '../sync/pending_sync_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -33,6 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = ref.watch(localeProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return ListView(
       children: [
@@ -53,6 +55,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
           ),
         ),
+        ListTile(
+          title: Text(l10n.theme),
+          subtitle: Text(switch (themeMode) {
+            ThemeMode.system => l10n.themeSystem,
+            ThemeMode.light => l10n.themeLight,
+            ThemeMode.dark => l10n.themeDark,
+          }),
+          trailing: SegmentedButton<ThemeMode>(
+            segments: [
+              ButtonSegment(
+                value: ThemeMode.system,
+                label: Text(l10n.themeSystem),
+              ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                icon: const Icon(Icons.light_mode_outlined),
+                label: Text(l10n.themeLight),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                icon: const Icon(Icons.dark_mode_outlined),
+                label: Text(l10n.themeDark),
+              ),
+            ],
+            showSelectedIcon: false,
+            selected: {themeMode},
+            onSelectionChanged: (selected) {
+              ref.read(themeModeProvider.notifier).setMode(selected.first);
+            },
+          ),
+        ),
         const Divider(height: 1),
         ListTile(
           leading: const Icon(Icons.cloud_sync_outlined),
@@ -68,6 +101,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: Text(l10n.loadDemoData),
           subtitle: _seeding ? const LinearProgressIndicator() : null,
           onTap: _seeding ? null : () => _loadDemoData(context),
+        ),
+        ListTile(
+          leading: const Icon(Icons.replay_outlined),
+          title: Text(l10n.replayTour),
+          onTap: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final message = l10n.replayTourDone;
+            await resetOnboarding();
+            messenger.showSnackBar(SnackBar(content: Text(message)));
+          },
         ),
         const Divider(height: 1),
         ListTile(
@@ -96,7 +139,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.save),
+            child: Text(l10n.loadDemoData),
           ),
         ],
       ),

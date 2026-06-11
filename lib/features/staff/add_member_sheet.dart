@@ -67,8 +67,10 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
                 : null,
           );
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      setState(() => _error = e.toString());
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = AppLocalizations.of(context).actionFailed);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

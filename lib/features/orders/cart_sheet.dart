@@ -33,8 +33,50 @@ class _CartSheetState extends ConsumerState<CartSheet> {
   }
 
   Future<void> _placeOrder() async {
+    final l10n = AppLocalizations.of(context);
     final customer = await ref.read(ownCustomerProvider.future);
-    if (customer == null) return;
+    if (customer == null || !mounted) return;
+
+    // Drop cart lines whose product was deactivated since it was added.
+    final availableIds = widget.products.map((p) => p.id).toSet();
+    final staleIds =
+        _qty.keys.where((id) => !availableIds.contains(id)).toList();
+    if (staleIds.isNotEmpty) {
+      setState(() {
+        for (final id in staleIds) {
+          _qty.remove(id);
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.removedUnavailableItems)),
+      );
+      if (_qty.isEmpty) return;
+    }
+
+    final note = _noteController.text.trim();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.placeOrder),
+        content: Text(
+          [
+            l10n.placeOrderConfirm(_qty.length),
+            if (note.isNotEmpty) note,
+          ].join('\n\n'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.placeOrder),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
 
     setState(() => _loading = true);
     try {
@@ -45,15 +87,13 @@ class _CartSheetState extends ConsumerState<CartSheet> {
                   (e) => OrderLineInput(productId: e.key, qty: e.value),
                 )
                 .toList(),
-            note: _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
+            note: note.isEmpty ? null : note,
           );
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(l10n.orderPlaceFailed)),
         );
       }
     } finally {

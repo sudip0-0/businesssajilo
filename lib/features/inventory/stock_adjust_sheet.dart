@@ -48,10 +48,13 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
             createdByMemberId: memberId,
           );
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: BsColors.danger),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).actionFailed),
+            backgroundColor: BsColors.danger,
+          ),
         );
       }
     } finally {

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/ui/ledger_row.dart';
+import '../../core/ui/list_skeleton.dart';
 import '../../core/utils/money.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
@@ -32,7 +34,10 @@ class CustomerDetailScreen extends ConsumerWidget {
 
     final body = customerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(customerDetailProvider(customerId)),
+        ),
         data: (customer) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,8 +97,12 @@ class CustomerDetailScreen extends ConsumerWidget {
               const Divider(height: 1),
               Expanded(
                 child: ledgerAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text(e.toString())),
+                  loading: () => const ListSkeleton(),
+                  error: (e, _) => ErrorState(
+                    message: l10n.loadingFailed,
+                    onRetry: () =>
+                        ref.invalidate(customerLedgerProvider(customerId)),
+                  ),
                   data: (entries) {
                     if (entries.isEmpty) {
                       return EmptyState(
@@ -143,6 +152,7 @@ class CustomerDetailScreen extends ConsumerWidget {
           if (canEdit)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.editCustomer,
               onPressed: () async {
                 final saved = await Navigator.push<bool>(
                   context,

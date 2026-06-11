@@ -6,6 +6,7 @@ import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/auth_errors.dart';
+import 'login_screen.dart' show emailRegex;
 import 'providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _error;
 
   @override
@@ -125,17 +127,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _emailController,
                       decoration: InputDecoration(labelText: l10n.email),
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? l10n.fieldRequired
-                          : null,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return l10n.fieldRequired;
+                        }
+                        if (!emailRegex.hasMatch(v.trim())) {
+                          return l10n.invalidEmail;
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _passwordController,
-                      decoration: InputDecoration(labelText: l10n.password),
-                      obscureText: true,
-                      validator: (v) =>
-                          v == null || v.length < 6 ? l10n.fieldRequired : null,
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? l10n.showPassword
+                              : l10n.hidePassword,
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
+                      ),
+                      obscureText: _obscurePassword,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return l10n.fieldRequired;
+                        if (v.length < 6) return l10n.weakPassword;
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -150,7 +176,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
-                      Text(_error!, style: const TextStyle(color: BsColors.danger)),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(color: BsColors.danger),
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 24),
                     FilledButton(

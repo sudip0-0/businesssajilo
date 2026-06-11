@@ -1,31 +1,55 @@
 import '../../domain/enums.dart';
 
+/// Nepal Time fixed offset (UTC+05:45). No DST.
+const Duration nptOffset = Duration(hours: 5, minutes: 45);
+
+/// Start of the current Nepal-time day, expressed as a UTC instant.
+DateTime nptDayStartUtc({DateTime? now}) {
+  final npt = (now ?? DateTime.now()).toUtc().add(nptOffset);
+  return DateTime.utc(npt.year, npt.month, npt.day).subtract(nptOffset);
+}
+
+/// Formats the Nepal-time calendar date of [instant] as 'yyyy-MM-dd'.
+String nptDateString(DateTime instant) {
+  final npt = instant.toUtc().add(nptOffset);
+  return '${npt.year.toString().padLeft(4, '0')}'
+      '-${npt.month.toString().padLeft(2, '0')}'
+      '-${npt.day.toString().padLeft(2, '0')}';
+}
+
 class ReportDateRange {
   const ReportDateRange({required this.from, required this.to});
 
+  /// UTC instants delimiting [from, to).
   final DateTime from;
   final DateTime to;
 }
 
+/// Computes report windows on Nepal-time day boundaries, returned as UTC
+/// instants suitable for timestamptz queries.
 ReportDateRange dateRangeFor(ReportRange range, {DateTime? now}) {
-  final utc = (now ?? DateTime.now()).toUtc();
-  final todayStart = DateTime.utc(utc.year, utc.month, utc.day);
+  final npt = (now ?? DateTime.now()).toUtc().add(nptOffset);
+  DateTime toUtcInstant(DateTime nptWallClock) =>
+      nptWallClock.subtract(nptOffset);
+  final todayStartNpt = DateTime.utc(npt.year, npt.month, npt.day);
+  final todayStart = toUtcInstant(todayStartNpt);
+  final tomorrowStart = toUtcInstant(todayStartNpt.add(const Duration(days: 1)));
   return switch (range) {
     ReportRange.today => ReportDateRange(
         from: todayStart,
-        to: todayStart.add(const Duration(days: 1)),
+        to: tomorrowStart,
       ),
     ReportRange.week => ReportDateRange(
-        from: todayStart.subtract(const Duration(days: 6)),
-        to: todayStart.add(const Duration(days: 1)),
+        from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
+        to: tomorrowStart,
       ),
     ReportRange.month => ReportDateRange(
-        from: DateTime.utc(utc.year, utc.month, 1),
-        to: todayStart.add(const Duration(days: 1)),
+        from: toUtcInstant(DateTime.utc(npt.year, npt.month, 1)),
+        to: tomorrowStart,
       ),
     ReportRange.last7Days => ReportDateRange(
-        from: todayStart.subtract(const Duration(days: 6)),
-        to: todayStart.add(const Duration(days: 1)),
+        from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
+        to: tomorrowStart,
       ),
   };
 }

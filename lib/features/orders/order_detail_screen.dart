@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/order_status_timeline.dart';
 import '../../core/ui/status_chip.dart';
+import '../../core/utils/bs_date.dart';
+import '../../core/utils/money.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/enums.dart';
 import '../auth/providers/auth_provider.dart';
@@ -32,7 +35,10 @@ class OrderDetailScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.orderDetail)),
       body: orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
+        ),
         data: (order) {
           final latestSent = quotesAsync.value
               ?.where((q) => q.status == QuoteStatus.sent)
@@ -41,6 +47,8 @@ class OrderDetailScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              OrderStatusTimeline(status: order.status),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -54,9 +62,10 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
               if (order.createdAt != null)
                 Text(
-                  DateFormat.yMMMd()
-                      .add_jm()
-                      .format(order.createdAt!.toLocal()),
+                  BsDate.both(
+                    order.createdAt!,
+                    locale: Localizations.localeOf(context),
+                  ),
                 ),
               if (order.customerNote != null &&
                   order.customerNote!.isNotEmpty) ...[
@@ -79,6 +88,44 @@ class OrderDetailScreen extends ConsumerWidget {
                   trailing: Text('${item.qty} ${item.unit ?? ''}'),
                 ),
               ),
+              if ((quotesAsync.value ?? const []).isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(l10n.viewQuote,
+                    style: Theme.of(context).textTheme.titleMedium),
+                const Divider(),
+                ...quotesAsync.value!.map((quote) {
+                  final superseded = quote.status == QuoteStatus.superseded;
+                  final greyed = Theme.of(context).disabledColor;
+                  return ListTile(
+                    enabled: !superseded,
+                    title: Text(
+                      l10n.quoteVersion(quote.version),
+                      style: superseded ? TextStyle(color: greyed) : null,
+                    ),
+                    subtitle: Text(
+                      quote.status.name,
+                      style: superseded ? TextStyle(color: greyed) : null,
+                    ),
+                    trailing: Text(
+                      formatNpr(Paisa(quote.total), showPaisa: false),
+                      style: superseded ? TextStyle(color: greyed) : null,
+                    ),
+                    onTap: superseded
+                        ? null
+                        : () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    QuoteDetailScreen(quoteId: quote.id),
+                              ),
+                            );
+                            ref.invalidate(orderDetailProvider(orderId));
+                            ref.invalidate(orderQuotesProvider(orderId));
+                          },
+                  );
+                }),
+              ],
               const SizedBox(height: 16),
               _ActionButtons(
                 orderId: orderId,
@@ -166,18 +213,23 @@ class _ActionButtons extends ConsumerWidget {
           ),
         if (canQuote && status == OrderStatus.accepted)
           FilledButton(
-            onPressed: () async {
-              await ref
-                  .read(ordersRepositoryProvider)
-                  .updateStatus(orderId, OrderStatus.confirmed);
-              _invalidate(ref);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.confirmOrder)),
-                );
-              }
-            },
+            onPressed: () => _updateStatus(
+              context,
+              ref,
+              OrderStatus.confirmed,
+              l10n.confirmOrder,
+            ),
             child: Text(l10n.confirmOrder),
+          ),
+        if (canQuote && status == OrderStatus.billed)
+          OutlinedButton(
+            onPressed: () => _updateStatus(
+              context,
+              ref,
+              OrderStatus.closed,
+              l10n.closeOrder,
+            ),
+            child: Text(l10n.closeOrder),
           ),
         if (canQuote && status == OrderStatus.dispatched)
           FilledButton(
@@ -224,10 +276,44 @@ class _ActionButtons extends ConsumerWidget {
     OrderStatus next,
     String label,
   ) async {
-    await ref.read(ordersRepositoryProvider).updateStatus(orderId, next);
-    _invalidate(ref);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(label)));
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(label),
+        content: Text(l10n.areYouSure),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(label),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await ref.read(ordersRepositoryProvider).updateStatus(orderId, next);
+      _invalidate(ref);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(label)));
+      }
+    } on OrderStatusException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.invalidStatusChange)),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.actionFailed)),
+        );
+      }
     }
   }
 

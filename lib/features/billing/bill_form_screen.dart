@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../core/utils/bill_totals.dart';
@@ -28,6 +29,12 @@ class _DraftLine {
 
   int get lineTotal =>
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
+
+  bool get discountValid => isValidLineDiscount(
+        qty: qty,
+        ratePaisa: rate,
+        discountPaisa: discount,
+      );
 }
 
 class BillFormScreen extends ConsumerStatefulWidget {
@@ -71,6 +78,24 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     if (_lines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.noBillLines), backgroundColor: BsColors.danger),
+      );
+      return;
+    }
+    if (_lines.any((l) => !l.discountValid)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.discountExceedsLine),
+          backgroundColor: BsColors.danger,
+        ),
+      );
+      return;
+    }
+    if (_billDiscount < 0 || _billDiscount > _itemsTotal) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.discountExceedsItems),
+          backgroundColor: BsColors.danger,
+        ),
       );
       return;
     }
@@ -133,10 +158,13 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         );
         Navigator.pop(context, true);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: BsColors.danger),
+          SnackBar(
+            content: Text(l10n.actionFailed),
+            backgroundColor: BsColors.danger,
+          ),
         );
       }
     } finally {
@@ -153,7 +181,10 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       appBar: AppBar(title: Text(l10n.newBill)),
       body: productsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(productListProvider),
+        ),
         data: (products) {
           final filtered = products.where((p) {
             if (_query.isEmpty) return true;
@@ -276,6 +307,7 @@ class _LineEditor extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.close),
+                tooltip: AppLocalizations.of(context).remove,
                 onPressed: onRemove,
               ),
             ],
@@ -318,6 +350,9 @@ class _LineEditor extends StatelessWidget {
                 ? ''
                 : formatNpr(Paisa(line.discount), showSymbol: false, showPaisa: false),
             keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              errorText: line.discountValid ? null : l10n.discountExceedsLine,
+            ),
             onChanged: (v) {
               line.discount = parseNpr(v)?.value ?? 0;
               onChanged();
@@ -362,7 +397,17 @@ class _TotalsBar extends StatelessWidget {
             const SizedBox(height: 8),
             TextFormField(
               controller: billDiscountController,
-              decoration: InputDecoration(labelText: l10n.billDiscount),
+              decoration: InputDecoration(
+                labelText: l10n.billDiscount,
+                errorText: () {
+                  final discount =
+                      parseNpr(billDiscountController.text)?.value ?? 0;
+                  if (discount < 0 || discount > itemsTotal) {
+                    return l10n.discountExceedsItems;
+                  }
+                  return null;
+                }(),
+              ),
               keyboardType: TextInputType.number,
               onChanged: (_) => onDiscountChanged(),
             ),

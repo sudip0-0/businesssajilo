@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../domain/enums.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_theme.dart';
 
 class BillStatusChip extends StatelessWidget {
   const BillStatusChip(this.status, {super.key});
 
   final BillStatus status;
-
-  static const _colors = <BillStatus, Color>{
-    BillStatus.paid: Color(0xFF2E7D32),
-    BillStatus.partial: Color(0xFFF2A33C),
-    BillStatus.due: Color(0xFFC62828),
-  };
 
   String _label(AppLocalizations l10n) => switch (status) {
         BillStatus.paid => l10n.paid,
@@ -22,20 +17,51 @@ class BillStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _colors[status]!;
+    final scheme = Theme.of(context).colorScheme;
+    final dark = scheme.brightness == Brightness.dark;
+    // Icon per state so status is never color-only; partial uses a darker
+    // amber for text contrast on the tinted background.
+    final (tint, textColor, icon) = switch (status) {
+      BillStatus.paid => (
+          scheme.successColor,
+          scheme.successColor,
+          Icons.check_circle_outline,
+        ),
+      BillStatus.partial => (
+          BsColors.accent,
+          dark ? BsColors.accentDark : BsColors.amberTextOnTint,
+          Icons.timelapse,
+        ),
+      BillStatus.due => (
+          scheme.dangerColor,
+          scheme.dangerColor,
+          Icons.error_outline,
+        ),
+    };
     final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        _label(l10n),
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+    final label = _label(l10n);
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: tint.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: textColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

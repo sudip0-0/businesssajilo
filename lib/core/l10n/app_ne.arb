@@ -248,9 +248,6 @@
   "somethingWentWrong": "केही गडबड भयो",
   "tryAgain": "फेरि प्रयास गर्नुहोस्",
   "loadingFailed": "डाटा लोड गर्न सकिएन",
-  "language": "भाषा",
-  "english": "अंग्रेजी",
-  "nepali": "नेपाली",
   "aboutApp": "बारेमा",
   "appVersion": "संस्करण {version}",
   "name": "नाम",
@@ -275,11 +272,77 @@
   "onboardingNext": "अर्को",
   "onboardingDone": "सुरु गर्नुहोस्",
   "onboardingSkip": "टुर छोड्नुहोस्",
+  "accountDeactivated": "यो खाता निष्क्रिय गरिएको छ। आफ्नो व्यवसाय मालिकलाई सम्पर्क गर्नुहोस्।",
+  "configError": "एप कन्फिगर गरिएको छैन। SUPABASE_URL / SUPABASE_ANON_KEY छैन।",
+  "pageNotFound": "पृष्ठ फेला परेन",
+  "goHome": "गृहपृष्ठमा जानुहोस्",
+  "failedSyncItems": "{count} असफल",
+  "@failedSyncItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "invalidCredentials": "इमेल वा पासवर्ड गलत छ",
   "emailAlreadyRegistered": "यो इमेल पहिले नै दर्ता छ",
   "weakPassword": "पासवर्ड कमजोर छ",
   "networkError": "नेटवर्क समस्या — जडान जाँच गर्नुहोस्",
   "loadMore": "थप लोड गर्नुहोस्",
   "noStaff": "अहिलेसम्म कुनै कर्मचारी छैन",
-  "noCategories": "अहिलेसम्म कुनै श्रेणी छैन"
+  "noCategories": "अहिलेसम्म कुनै श्रेणी छैन",
+  "selectCustomerForCredit": "उधारो वा आंशिक बिलका लागि ग्राहक छान्नुहोस्",
+  "amountExceedsTotal": "रकम कुल जम्माभन्दा बढी हुन सक्दैन",
+  "discountExceedsLine": "छुट लाइन रकमभन्दा बढी हुन सक्दैन",
+  "discountExceedsItems": "छुट सामानको जम्माभन्दा बढी हुन सक्दैन",
+  "noAcceptedQuote": "यो अर्डरका लागि स्वीकृत कोटेसन छैन",
+  "invalidStatusChange": "यो स्थिति परिवर्तन अनुमति छैन",
+  "closeOrder": "अर्डर बन्द गर्नुहोस्",
+  "areYouSure": "के तपाईं निश्चित हुनुहुन्छ?",
+  "messageSendFailed": "सन्देश पठाउन सकिएन। फेरि प्रयास गर्नुहोस्।",
+  "openingBalanceLocked": "सुरुवाती बाँकी ग्राहक बनाउँदा मात्र सेट गर्न सकिन्छ",
+  "overpaymentWarning": "यो बाँकी रकमभन्दा बढी छ र क्रेडिट ब्यालेन्स बन्नेछ।",
+  "creditBalance": "क्रेडिट",
+  "rateMissing": "मूल्य छैन — दर सेट गर्नुहोस्",
+  "placeOrderConfirm": "{count} वस्तुसहित अर्डर गर्ने?",
+  "@placeOrderConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "removedUnavailableItems": "केही वस्तुहरू अब उपलब्ध नभएकाले हटाइए",
+  "orderPlaceFailed": "अर्डर गर्न सकिएन। फेरि प्रयास गर्नुहोस्।",
+  "quoteAcceptConfirm": "{total} को यो कोटेसन स्वीकार गर्ने?",
+  "@quoteAcceptConfirm": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "actionFailed": "केही गडबड भयो। फेरि प्रयास गर्नुहोस्।",
+  "theme": "थिम",
+  "themeSystem": "प्रणाली",
+  "themeLight": "उज्यालो",
+  "themeDark": "अँध्यारो",
+  "more": "थप",
+  "replayTour": "टुर फेरि हेर्नुहोस्",
+  "replayTourDone": "अर्को पटक ड्यासबोर्ड खोल्दा टुर देखिनेछ",
+  "confirmDeleteCategory": "यो श्रेणी मेट्ने? यसका सामानहरू श्रेणीबिना नै रहनेछन्।",
+  "delete": "मेटाउनुहोस्",
+  "edit": "सम्पादन गर्नुहोस्",
+  "remove": "हटाउनुहोस्",
+  "send": "पठाउनुहोस्",
+  "close": "बन्द गर्नुहोस्",
+  "invalidEmail": "मान्य इमेल लेख्नुहोस्",
+  "invalidNumber": "मान्य संख्या लेख्नुहोस्",
+  "showPassword": "पासवर्ड देखाउनुहोस्",
+  "hidePassword": "पासवर्ड लुकाउनुहोस्",
+  "increaseQuantity": "मात्रा बढाउनुहोस्",
+  "decreaseQuantity": "मात्रा घटाउनुहोस्",
+  "onboardingOrders": "अर्डर ट्याबबाट ग्राहकका अर्डर र कोटेशन हेर्नुहोस्।",
+  "onboardingReports": "रिपोर्टमा बिक्री, बाँकी र स्टक रिपोर्ट हेर्नुहोस्।",
+  "syncStatus": "सिंक स्थिति"
 }

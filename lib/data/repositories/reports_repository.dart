@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/utils/report_range.dart';
 import '../../domain/models/aging_customer_row.dart';
 import '../../domain/models/dues_aging_report.dart';
 import '../../domain/models/sales_period_point.dart';
@@ -38,35 +39,20 @@ class ReportsRepository {
     int limit = 10,
   }) async {
     final client = _requireClient();
-    final rows = await client
-        .from('report_top_products')
-        .select()
-        .gte('sale_date', _dateOnly(from))
-        .lt('sale_date', _dateOnly(to));
-    final aggregated = <String, TopProductRow>{};
-    for (final row in rows as List) {
+    final rows = await client.rpc('report_top_products_range', params: {
+      'p_from': _dateOnly(from),
+      'p_to': _dateOnly(to),
+      'p_limit': limit,
+    });
+    return (rows as List).map((row) {
       final map = Map<String, dynamic>.from(row as Map);
-      final id = map['product_id'] as String;
-      final existing = aggregated[id];
-      final qty = (map['qty_sold'] as num?)?.toInt() ?? 0;
-      final revenue = (map['revenue'] as num?)?.toInt() ?? 0;
-      if (existing == null) {
-        aggregated[id] = TopProductRow(
-          productId: id,
-          nameSnapshot: map['name_snapshot'] as String,
-          qtySold: qty,
-          revenue: revenue,
-        );
-      } else {
-        aggregated[id] = existing.copyWith(
-          qtySold: existing.qtySold + qty,
-          revenue: existing.revenue + revenue,
-        );
-      }
-    }
-    final list = aggregated.values.toList()
-      ..sort((a, b) => b.revenue.compareTo(a.revenue));
-    return list.take(limit).toList();
+      return TopProductRow(
+        productId: map['product_id'] as String,
+        nameSnapshot: map['name_snapshot'] as String,
+        qtySold: (map['qty_sold'] as num?)?.toInt() ?? 0,
+        revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+      );
+    }).toList();
   }
 
   Future<List<TopCustomerRow>> topCustomers({
@@ -75,35 +61,20 @@ class ReportsRepository {
     int limit = 10,
   }) async {
     final client = _requireClient();
-    final rows = await client
-        .from('report_top_customers')
-        .select()
-        .gte('sale_date', _dateOnly(from))
-        .lt('sale_date', _dateOnly(to));
-    final aggregated = <String, TopCustomerRow>{};
-    for (final row in rows as List) {
+    final rows = await client.rpc('report_top_customers_range', params: {
+      'p_from': _dateOnly(from),
+      'p_to': _dateOnly(to),
+      'p_limit': limit,
+    });
+    return (rows as List).map((row) {
       final map = Map<String, dynamic>.from(row as Map);
-      final id = map['customer_id'] as String;
-      final existing = aggregated[id];
-      final bills = (map['bill_count'] as num?)?.toInt() ?? 0;
-      final revenue = (map['revenue'] as num?)?.toInt() ?? 0;
-      if (existing == null) {
-        aggregated[id] = TopCustomerRow(
-          customerId: id,
-          shopName: map['shop_name'] as String,
-          billCount: bills,
-          revenue: revenue,
-        );
-      } else {
-        aggregated[id] = existing.copyWith(
-          billCount: existing.billCount + bills,
-          revenue: existing.revenue + revenue,
-        );
-      }
-    }
-    final list = aggregated.values.toList()
-      ..sort((a, b) => b.revenue.compareTo(a.revenue));
-    return list.take(limit).toList();
+      return TopCustomerRow(
+        customerId: map['customer_id'] as String,
+        shopName: map['shop_name'] as String,
+        billCount: (map['bill_count'] as num?)?.toInt() ?? 0,
+        revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+      );
+    }).toList();
   }
 
   Future<DuesAgingReport> duesAging() async {
@@ -179,10 +150,9 @@ class ReportsRepository {
     );
   }
 
-  String _dateOnly(DateTime dt) {
-    final u = dt.toUtc();
-    return '${u.year.toString().padLeft(4, '0')}-${u.month.toString().padLeft(2, '0')}-${u.day.toString().padLeft(2, '0')}';
-  }
+  // Report views use Asia/Kathmandu dates, so convert UTC instants to NPT
+  // calendar dates.
+  String _dateOnly(DateTime dt) => nptDateString(dt);
 
   SupabaseClient _requireClient() {
     final client = _client;

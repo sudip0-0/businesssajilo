@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// Large-touch-target quantity stepper for billing/order screens.
 class QtyStepper extends StatelessWidget {
   const QtyStepper({
@@ -18,12 +20,14 @@ class QtyStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton.filledTonal(
           onPressed: value > min ? () => onChanged(value - 1) : null,
           icon: const Icon(Icons.remove),
+          tooltip: l10n.decreaseQuantity,
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
         ),
         SizedBox(
@@ -42,6 +46,7 @@ class QtyStepper extends StatelessWidget {
               ? () => onChanged(value + 1)
               : null,
           icon: const Icon(Icons.add),
+          tooltip: l10n.increaseQuantity,
           style: IconButton.styleFrom(backgroundColor: scheme.primary),
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
         ),

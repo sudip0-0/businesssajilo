@@ -17,7 +17,7 @@ enum OrderStatus {
   cancelled,
 }
 
-enum QuoteStatus { sent, accepted, rejected }
+enum QuoteStatus { sent, accepted, rejected, superseded }
 
 enum BillStatus { paid, partial, due }
 

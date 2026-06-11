@@ -255,9 +255,6 @@
   "somethingWentWrong": "Something went wrong",
   "tryAgain": "Try again",
   "loadingFailed": "Could not load data",
-  "language": "Language",
-  "english": "English",
-  "nepali": "Nepali",
   "aboutApp": "About",
   "appVersion": "Version {version}",
   "@appVersion": {
@@ -287,11 +284,77 @@
   "onboardingNext": "Next",
   "onboardingDone": "Get started",
   "onboardingSkip": "Skip tour",
+  "accountDeactivated": "This account has been deactivated. Contact your business owner.",
+  "configError": "App is not configured. Missing SUPABASE_URL / SUPABASE_ANON_KEY.",
+  "pageNotFound": "Page not found",
+  "goHome": "Go home",
+  "failedSyncItems": "{count} failed",
+  "@failedSyncItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "invalidCredentials": "Invalid email or password",
   "emailAlreadyRegistered": "This email is already registered",
   "weakPassword": "Password is too weak",
   "networkError": "Network error — check your connection",
   "loadMore": "Load more",
   "noStaff": "No staff members yet",
-  "noCategories": "No categories yet"
+  "noCategories": "No categories yet",
+  "selectCustomerForCredit": "Select a customer for credit or partial bills",
+  "amountExceedsTotal": "Amount cannot exceed the grand total",
+  "discountExceedsLine": "Discount cannot exceed the line amount",
+  "discountExceedsItems": "Discount cannot exceed the items total",
+  "noAcceptedQuote": "No accepted quote for this order yet",
+  "invalidStatusChange": "This status change is not allowed",
+  "closeOrder": "Close order",
+  "areYouSure": "Are you sure?",
+  "messageSendFailed": "Message could not be sent. Try again.",
+  "openingBalanceLocked": "Opening balance can only be set when the customer is created",
+  "overpaymentWarning": "This exceeds the due amount and will create a credit balance.",
+  "creditBalance": "Credit",
+  "rateMissing": "Price missing — set the rate",
+  "placeOrderConfirm": "Place order with {count} items?",
+  "@placeOrderConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "removedUnavailableItems": "Some items were removed because they are no longer available",
+  "orderPlaceFailed": "Could not place the order. Try again.",
+  "quoteAcceptConfirm": "Accept this quote for {total}?",
+  "@quoteAcceptConfirm": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "actionFailed": "Something went wrong. Try again.",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "more": "More",
+  "replayTour": "Replay tour",
+  "replayTourDone": "Tour will show on the next dashboard visit",
+  "confirmDeleteCategory": "Delete this category? Products in it will keep working without a category.",
+  "delete": "Delete",
+  "edit": "Edit",
+  "remove": "Remove",
+  "send": "Send",
+  "close": "Close",
+  "invalidEmail": "Enter a valid email address",
+  "invalidNumber": "Enter a valid number",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "increaseQuantity": "Increase quantity",
+  "decreaseQuantity": "Decrease quantity",
+  "onboardingOrders": "Track customer orders and quotes from the Orders tab.",
+  "onboardingReports": "See sales, dues, and stock reports in Reports.",
+  "syncStatus": "Sync status"
 }

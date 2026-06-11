@@ -18,4 +18,44 @@ void main() {
       13000,
     );
   });
+
+  test('clampLineDiscountPaisa caps discount at line gross', () {
+    expect(
+      clampLineDiscountPaisa(qty: 2, ratePaisa: 5000, discountPaisa: 15000),
+      10000,
+    );
+    expect(
+      clampLineDiscountPaisa(qty: 2, ratePaisa: 5000, discountPaisa: -100),
+      0,
+    );
+    expect(
+      clampLineDiscountPaisa(qty: 2, ratePaisa: 5000, discountPaisa: 4000),
+      4000,
+    );
+  });
+
+  test('isValidLineDiscount bounds [0, qty*rate]', () {
+    expect(isValidLineDiscount(qty: 2, ratePaisa: 5000, discountPaisa: 0), true);
+    expect(
+      isValidLineDiscount(qty: 2, ratePaisa: 5000, discountPaisa: 10000),
+      true,
+    );
+    expect(
+      isValidLineDiscount(qty: 2, ratePaisa: 5000, discountPaisa: 10001),
+      false,
+    );
+    expect(
+      isValidLineDiscount(qty: 2, ratePaisa: 5000, discountPaisa: -1),
+      false,
+    );
+  });
+
+  test('clamped discount never yields negative line total', () {
+    final clamped =
+        clampLineDiscountPaisa(qty: 3, ratePaisa: 1000, discountPaisa: 99999);
+    expect(
+      lineTotalPaisa(qty: 3, ratePaisa: 1000, discountPaisa: clamped),
+      0,
+    );
+  });
 }

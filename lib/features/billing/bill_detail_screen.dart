@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
 import 'providers.dart';
@@ -24,10 +25,16 @@ class BillDetailScreen extends ConsumerWidget {
 
     final content = billAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(billDetailProvider(billId)),
+        ),
         data: (bill) {
           final dateStr = bill.createdAt != null
-              ? BsDate.both(bill.createdAt!)
+              ? BsDate.both(
+                  bill.createdAt!,
+                  locale: Localizations.localeOf(context),
+                )
               : '—';
 
           return ListView(

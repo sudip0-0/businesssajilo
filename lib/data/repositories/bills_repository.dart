@@ -26,6 +26,7 @@ final billsRepositoryProvider = Provider<BillsRepository>((ref) {
 
 abstract class BillsRepository {
   Future<List<Bill>> list({int offset = 0, int? limit});
+  Future<List<Bill>> search(String query, {int limit = 50});
   Future<Bill> get(String id);
   Future<int> todaysSales();
   Future<int> todaysBillCount();

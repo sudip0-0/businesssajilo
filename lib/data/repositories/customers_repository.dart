@@ -23,7 +23,14 @@ abstract class CustomersRepository {
   Future<List<Customer>> list({int offset = 0, int? limit});
   Future<Customer> get(String id);
   Future<Customer?> getOwnProfile();
-  Future<List<LedgerEntry>> ledger(String customerId);
+  /// Returns ledger entries sorted ascending by occurred_at. When [limit] is
+  /// given, returns a page starting at [offset]; entries are raw (no running
+  /// balance) so callers can accumulate pages and apply [withRunningBalance].
+  Future<List<LedgerEntry>> ledger(
+    String customerId, {
+    int offset = 0,
+    int? limit,
+  });
   Future<Customer> update({
     required String id,
     required String shopName,
@@ -97,16 +104,27 @@ class SupabaseCustomersRepository implements CustomersRepository {
   }
 
   @override
-  Future<List<LedgerEntry>> ledger(String customerId) async {
+  Future<List<LedgerEntry>> ledger(
+    String customerId, {
+    int offset = 0,
+    int? limit,
+  }) async {
     final client = _requireClient();
-    final rows = await client
+    var query = client
         .from('customer_ledger_entries')
         .select()
         .eq('customer_id', customerId)
-        .order('occurred_at', ascending: true);
+        .order('occurred_at', ascending: true)
+        .order('entry_type', ascending: true)
+        .order('ref_id', ascending: true);
+    if (limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+    final rows = await query;
     final entries = (rows as List)
         .map((row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)))
         .toList();
+    if (limit != null) return entries;
     return withRunningBalance(entries);
   }
 

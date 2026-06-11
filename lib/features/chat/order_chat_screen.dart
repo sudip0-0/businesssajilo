@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/utils/bs_date.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../auth/providers/auth_provider.dart';
 import 'providers.dart';
@@ -43,9 +45,19 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
             body: body,
           );
       _controller.clear();
+    } catch (_) {
+      _showSendFailed();
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  void _showSendFailed() {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.messageSendFailed)),
+    );
   }
 
   Future<void> _attachImage() async {
@@ -67,9 +79,27 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
             bytes: bytes,
             fileName: file.name,
           );
+    } catch (_) {
+      _showSendFailed();
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  /// Time-only for same-day messages; BS date + time otherwise.
+  String _timestamp(BuildContext context, DateTime createdAtUtc) {
+    final local = createdAtUtc.toLocal();
+    final now = DateTime.now();
+    final time = DateFormat.jm().format(local);
+    final sameDay = local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day;
+    if (sameDay) return time;
+    final date = BsDate.both(
+      createdAtUtc,
+      locale: Localizations.localeOf(context),
+    );
+    return '$date · $time';
   }
 
   @override
@@ -85,7 +115,11 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
           Expanded(
             child: messagesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(e.toString())),
+              error: (e, _) => ErrorState(
+                message: l10n.loadingFailed,
+                onRetry: () =>
+                    ref.invalidate(orderMessagesProvider(widget.orderId)),
+              ),
               data: (messages) {
                 if (messages.isEmpty) {
                   return EmptyState(
@@ -153,7 +187,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                             if (msg.body.isNotEmpty) Text(msg.body),
                             if (msg.createdAt != null)
                               Text(
-                                DateFormat.jm().format(msg.createdAt!.toLocal()),
+                                _timestamp(context, msg.createdAt!),
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
                           ],
@@ -187,6 +221,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                   IconButton(
                     onPressed: _sending ? null : _sendText,
                     icon: const Icon(Icons.send),
+                    tooltip: l10n.send,
                   ),
                 ],
               ),

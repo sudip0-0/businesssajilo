@@ -14,7 +14,17 @@ class SyncQueue extends Table {
   TextColumn get status => text().withDefault(const Constant('pending'))();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();
+  DateTimeColumn get nextAttemptAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Generic key-value store for sync metadata (e.g. active business id).
+class SyncMeta extends Table {
+  TextColumn get metaKey => text()();
+  TextColumn get metaValue => text()();
+
+  @override
+  Set<Column> get primaryKey => {metaKey};
 }
 
 class SyncWatermarks extends Table {
@@ -153,6 +163,7 @@ class LocalStockMovements extends Table {
 @DriftDatabase(
   tables: [
     SyncQueue,
+    SyncMeta,
     SyncWatermarks,
     DeviceMeta,
     LocalCategories,
@@ -173,7 +184,17 @@ class AppDatabase extends _$AppDatabase {
       AppDatabase(driftDatabase(name: 'businesssajilo_local'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(syncMeta);
+            await m.addColumn(syncQueue, syncQueue.nextAttemptAt);
+          }
+        },
+      );
 
   Future<void> enqueue({
     required String entityType,
@@ -193,9 +214,25 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<SyncQueueData>> pendingQueue() {
     return (select(syncQueue)
+          ..where((q) => q.status.equals('pending'))
+          ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+        .get();
+  }
+
+  /// All non-synced items (pending + terminally failed), oldest first.
+  Future<List<SyncQueueData>> unsyncedQueue() {
+    return (select(syncQueue)
           ..where((q) => q.status.equals('pending') | q.status.equals('failed'))
           ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
         .get();
+  }
+
+  /// Watches the non-synced queue for reactive UI.
+  Stream<List<SyncQueueData>> watchUnsyncedQueue() {
+    return (select(syncQueue)
+          ..where((q) => q.status.equals('pending') | q.status.equals('failed'))
+          ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+        .watch();
   }
 
   Future<int> pendingCount() async {
@@ -203,6 +240,25 @@ class AppDatabase extends _$AppDatabase {
           ..where((q) => q.status.equals('pending') | q.status.equals('failed')))
         .get();
     return rows.length;
+  }
+
+  Future<int> failedCount() async {
+    final rows = await (select(syncQueue)
+          ..where((q) => q.status.equals('failed')))
+        .get();
+    return rows.length;
+  }
+
+  /// Resets terminally failed items so they get retried from scratch.
+  Future<void> retryFailed() async {
+    await (update(syncQueue)..where((q) => q.status.equals('failed'))).write(
+      const SyncQueueCompanion(
+        status: Value('pending'),
+        attempts: Value(0),
+        nextAttemptAt: Value(null),
+        lastError: Value(null),
+      ),
+    );
   }
 
   Future<DateTime?> watermark(String remoteTable) async {
@@ -216,6 +272,48 @@ class AppDatabase extends _$AppDatabase {
     await into(syncWatermarks).insertOnConflictUpdate(
       SyncWatermarksCompanion.insert(remoteTable: remoteTable, lastSyncedAt: at),
     );
+  }
+
+  Future<String?> metaValue(String key) async {
+    final row = await (select(syncMeta)
+          ..where((m) => m.metaKey.equals(key)))
+        .getSingleOrNull();
+    return row?.metaValue;
+  }
+
+  Future<void> setMetaValue(String key, String value) async {
+    await into(syncMeta).insertOnConflictUpdate(
+      SyncMetaCompanion.insert(metaKey: key, metaValue: value),
+    );
+  }
+
+  /// Wipes every locally cached row, watermark, and queued mutation.
+  Future<void> wipeAllLocalData() async {
+    await transaction(() async {
+      await delete(syncQueue).go();
+      await delete(syncWatermarks).go();
+      await delete(localCategories).go();
+      await delete(localProducts).go();
+      await delete(localCustomers).go();
+      await delete(localBills).go();
+      await delete(localBillItems).go();
+      await delete(localPayments).go();
+      await delete(localStockMovements).go();
+      await delete(deviceMeta).go();
+    });
+  }
+
+  /// Ensures the local cache belongs to [businessId]; wipes stale tenant data.
+  /// Returns true if a wipe happened.
+  Future<bool> prepareForBusiness(String businessId) async {
+    const key = 'business_id';
+    final stored = await metaValue(key);
+    if (stored == businessId) return false;
+    if (stored != null) {
+      await wipeAllLocalData();
+    }
+    await setMetaValue(key, businessId);
+    return stored != null;
   }
 
   Future<DeviceMetaData> ensureDeviceMeta(String deviceId) async {

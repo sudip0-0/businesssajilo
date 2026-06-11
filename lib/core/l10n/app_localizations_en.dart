@@ -797,6 +797,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkip => 'Skip tour';
 
   @override
+  String get accountDeactivated =>
+      'This account has been deactivated. Contact your business owner.';
+
+  @override
+  String get configError =>
+      'App is not configured. Missing SUPABASE_URL / SUPABASE_ANON_KEY.';
+
+  @override
+  String get pageNotFound => 'Page not found';
+
+  @override
+  String get goHome => 'Go home';
+
+  @override
+  String failedSyncItems(int count) {
+    return '$count failed';
+  }
+
+  @override
   String get invalidCredentials => 'Invalid email or password';
 
   @override
@@ -816,4 +835,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCategories => 'No categories yet';
+
+  @override
+  String get selectCustomerForCredit =>
+      'Select a customer for credit or partial bills';
+
+  @override
+  String get amountExceedsTotal => 'Amount cannot exceed the grand total';
+
+  @override
+  String get discountExceedsLine => 'Discount cannot exceed the line amount';
+
+  @override
+  String get discountExceedsItems => 'Discount cannot exceed the items total';
+
+  @override
+  String get noAcceptedQuote => 'No accepted quote for this order yet';
+
+  @override
+  String get invalidStatusChange => 'This status change is not allowed';
+
+  @override
+  String get closeOrder => 'Close order';
+
+  @override
+  String get areYouSure => 'Are you sure?';
+
+  @override
+  String get messageSendFailed => 'Message could not be sent. Try again.';
+
+  @override
+  String get openingBalanceLocked =>
+      'Opening balance can only be set when the customer is created';
+
+  @override
+  String get overpaymentWarning =>
+      'This exceeds the due amount and will create a credit balance.';
+
+  @override
+  String get creditBalance => 'Credit';
+
+  @override
+  String get rateMissing => 'Price missing — set the rate';
+
+  @override
+  String placeOrderConfirm(int count) {
+    return 'Place order with $count items?';
+  }
+
+  @override
+  String get removedUnavailableItems =>
+      'Some items were removed because they are no longer available';
+
+  @override
+  String get orderPlaceFailed => 'Could not place the order. Try again.';
+
+  @override
+  String quoteAcceptConfirm(String total) {
+    return 'Accept this quote for $total?';
+  }
+
+  @override
+  String get actionFailed => 'Something went wrong. Try again.';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get replayTour => 'Replay tour';
+
+  @override
+  String get replayTourDone => 'Tour will show on the next dashboard visit';
+
+  @override
+  String get confirmDeleteCategory =>
+      'Delete this category? Products in it will keep working without a category.';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get invalidEmail => 'Enter a valid email address';
+
+  @override
+  String get invalidNumber => 'Enter a valid number';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get increaseQuantity => 'Increase quantity';
+
+  @override
+  String get decreaseQuantity => 'Decrease quantity';
+
+  @override
+  String get onboardingOrders =>
+      'Track customer orders and quotes from the Orders tab.';
+
+  @override
+  String get onboardingReports =>
+      'See sales, dues, and stock reports in Reports.';
+
+  @override
+  String get syncStatus => 'Sync status';
 }

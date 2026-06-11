@@ -40,4 +40,5 @@ const _$QuoteStatusEnumMap = {
   QuoteStatus.sent: 'sent',
   QuoteStatus.accepted: 'accepted',
   QuoteStatus.rejected: 'rejected',
+  QuoteStatus.superseded: 'superseded',
 };

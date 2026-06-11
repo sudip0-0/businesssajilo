@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
 import '../../domain/models/aging_customer_row.dart';
@@ -17,9 +19,9 @@ class DuesAgingScreen extends ConsumerStatefulWidget {
 }
 
 class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
+  // Sort field + direction live in state; build only derives a sorted copy.
   int? _sortColumnIndex;
   bool _sortAscending = true;
-  List<AgingCustomerRow> _sorted = [];
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +31,13 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.duesAging)),
       body: reportAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+        loading: () => const ListSkeleton(),
+        error: (e, _) => ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: () => ref.invalidate(duesAgingProvider),
+        ),
         data: (report) {
-          _sorted = List<AgingCustomerRow>.from(report.customers);
-          _applySort();
+          final sorted = _sortedCustomers(report.customers);
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -86,7 +90,7 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
                         onSort: (_, asc) => _onSort(2, asc),
                       ),
                     ],
-                    rows: _sorted
+                    rows: sorted
                         .map(
                           (c) => DataRow(cells: [
                             DataCell(Text(c.shopName)),
@@ -100,7 +104,7 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
                   ),
                 )
               else
-                ..._sorted.map(
+                ...sorted.map(
                   (c) => ListTile(
                     title: Text(c.shopName),
                     subtitle: Text('${c.ageDays} ${l10n.ageDays}'),
@@ -118,13 +122,13 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
-      _applySort();
     });
   }
 
-  void _applySort() {
-    if (_sortColumnIndex == null) return;
-    _sorted.sort((a, b) {
+  List<AgingCustomerRow> _sortedCustomers(List<AgingCustomerRow> customers) {
+    final sorted = List<AgingCustomerRow>.from(customers);
+    if (_sortColumnIndex == null) return sorted;
+    sorted.sort((a, b) {
       final cmp = switch (_sortColumnIndex) {
         0 => a.shopName.compareTo(b.shopName),
         1 => a.balanceDue.compareTo(b.balanceDue),
@@ -133,6 +137,7 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
       };
       return _sortAscending ? cmp : -cmp;
     });
+    return sorted;
   }
 }
 

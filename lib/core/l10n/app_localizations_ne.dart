@@ -200,7 +200,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get language => 'भाषा';
 
   @override
-  String get english => 'अंग्रेजी';
+  String get english => 'English';
 
   @override
   String get nepali => 'नेपाली';
@@ -795,6 +795,25 @@ class AppLocalizationsNe extends AppLocalizations {
   String get onboardingSkip => 'टुर छोड्नुहोस्';
 
   @override
+  String get accountDeactivated =>
+      'यो खाता निष्क्रिय गरिएको छ। आफ्नो व्यवसाय मालिकलाई सम्पर्क गर्नुहोस्।';
+
+  @override
+  String get configError =>
+      'एप कन्फिगर गरिएको छैन। SUPABASE_URL / SUPABASE_ANON_KEY छैन।';
+
+  @override
+  String get pageNotFound => 'पृष्ठ फेला परेन';
+
+  @override
+  String get goHome => 'गृहपृष्ठमा जानुहोस्';
+
+  @override
+  String failedSyncItems(int count) {
+    return '$count असफल';
+  }
+
+  @override
   String get invalidCredentials => 'इमेल वा पासवर्ड गलत छ';
 
   @override
@@ -814,4 +833,134 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get noCategories => 'अहिलेसम्म कुनै श्रेणी छैन';
+
+  @override
+  String get selectCustomerForCredit =>
+      'उधारो वा आंशिक बिलका लागि ग्राहक छान्नुहोस्';
+
+  @override
+  String get amountExceedsTotal => 'रकम कुल जम्माभन्दा बढी हुन सक्दैन';
+
+  @override
+  String get discountExceedsLine => 'छुट लाइन रकमभन्दा बढी हुन सक्दैन';
+
+  @override
+  String get discountExceedsItems => 'छुट सामानको जम्माभन्दा बढी हुन सक्दैन';
+
+  @override
+  String get noAcceptedQuote => 'यो अर्डरका लागि स्वीकृत कोटेसन छैन';
+
+  @override
+  String get invalidStatusChange => 'यो स्थिति परिवर्तन अनुमति छैन';
+
+  @override
+  String get closeOrder => 'अर्डर बन्द गर्नुहोस्';
+
+  @override
+  String get areYouSure => 'के तपाईं निश्चित हुनुहुन्छ?';
+
+  @override
+  String get messageSendFailed => 'सन्देश पठाउन सकिएन। फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get openingBalanceLocked =>
+      'सुरुवाती बाँकी ग्राहक बनाउँदा मात्र सेट गर्न सकिन्छ';
+
+  @override
+  String get overpaymentWarning =>
+      'यो बाँकी रकमभन्दा बढी छ र क्रेडिट ब्यालेन्स बन्नेछ।';
+
+  @override
+  String get creditBalance => 'क्रेडिट';
+
+  @override
+  String get rateMissing => 'मूल्य छैन — दर सेट गर्नुहोस्';
+
+  @override
+  String placeOrderConfirm(int count) {
+    return '$count वस्तुसहित अर्डर गर्ने?';
+  }
+
+  @override
+  String get removedUnavailableItems => 'केही वस्तुहरू अब उपलब्ध नभएकाले हटाइए';
+
+  @override
+  String get orderPlaceFailed => 'अर्डर गर्न सकिएन। फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String quoteAcceptConfirm(String total) {
+    return '$total को यो कोटेसन स्वीकार गर्ने?';
+  }
+
+  @override
+  String get actionFailed => 'केही गडबड भयो। फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get theme => 'थिम';
+
+  @override
+  String get themeSystem => 'प्रणाली';
+
+  @override
+  String get themeLight => 'उज्यालो';
+
+  @override
+  String get themeDark => 'अँध्यारो';
+
+  @override
+  String get more => 'थप';
+
+  @override
+  String get replayTour => 'टुर फेरि हेर्नुहोस्';
+
+  @override
+  String get replayTourDone => 'अर्को पटक ड्यासबोर्ड खोल्दा टुर देखिनेछ';
+
+  @override
+  String get confirmDeleteCategory =>
+      'यो श्रेणी मेट्ने? यसका सामानहरू श्रेणीबिना नै रहनेछन्।';
+
+  @override
+  String get delete => 'मेटाउनुहोस्';
+
+  @override
+  String get edit => 'सम्पादन गर्नुहोस्';
+
+  @override
+  String get remove => 'हटाउनुहोस्';
+
+  @override
+  String get send => 'पठाउनुहोस्';
+
+  @override
+  String get close => 'बन्द गर्नुहोस्';
+
+  @override
+  String get invalidEmail => 'मान्य इमेल लेख्नुहोस्';
+
+  @override
+  String get invalidNumber => 'मान्य संख्या लेख्नुहोस्';
+
+  @override
+  String get showPassword => 'पासवर्ड देखाउनुहोस्';
+
+  @override
+  String get hidePassword => 'पासवर्ड लुकाउनुहोस्';
+
+  @override
+  String get increaseQuantity => 'मात्रा बढाउनुहोस्';
+
+  @override
+  String get decreaseQuantity => 'मात्रा घटाउनुहोस्';
+
+  @override
+  String get onboardingOrders =>
+      'अर्डर ट्याबबाट ग्राहकका अर्डर र कोटेशन हेर्नुहोस्।';
+
+  @override
+  String get onboardingReports =>
+      'रिपोर्टमा बिक्री, बाँकी र स्टक रिपोर्ट हेर्नुहोस्।';
+
+  @override
+  String get syncStatus => 'सिंक स्थिति';
 }
