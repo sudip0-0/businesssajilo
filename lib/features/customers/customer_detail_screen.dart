@@ -156,11 +156,14 @@ class CustomerDetailScreen extends ConsumerWidget {
                       itemCount: entries.length,
                       itemBuilder: (context, index) {
                         final entry = entries[index];
-                        final description = entry.entryType == 'opening_balance'
-                            ? l10n.entryOpeningBalance
-                            : entry.entryType == 'payment'
-                                ? '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}'
-                                : entry.description;
+                        final description = switch (entry.entryType) {
+                          'opening_balance' => l10n.entryOpeningBalance,
+                          'bill' =>
+                            '${l10n.entryBill} · ${entry.description}',
+                          'payment' =>
+                            '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}',
+                          _ => entry.description,
+                        };
                         return LedgerRow(
                           date: entry.occurredAt,
                           description: description,

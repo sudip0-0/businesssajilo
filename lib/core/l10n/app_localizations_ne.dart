@@ -457,4 +457,61 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get entryPayment => 'भुक्तानी';
+
+  @override
+  String get billNo => 'बिल नं.';
+
+  @override
+  String get walkIn => 'वाक-इन';
+
+  @override
+  String get lineTotal => 'लाइन जम्मा';
+
+  @override
+  String get billDiscount => 'बिल छुट';
+
+  @override
+  String get saveBill => 'बिल सेभ';
+
+  @override
+  String get billSaved => 'बिल सेभ भयो';
+
+  @override
+  String get noBills => 'अहिलेसम्म कुनै बिल छैन';
+
+  @override
+  String get filterBills => 'बिल खोज्नुहोस्';
+
+  @override
+  String get entryBill => 'बिल';
+
+  @override
+  String get billDetail => 'बिल विवरण';
+
+  @override
+  String get selectPaymentStatus => 'भुक्तानी स्थिति';
+
+  @override
+  String get amountPaid => 'भुक्तानी रकम';
+
+  @override
+  String get customerOptional => 'ग्राहक (वैकल्पिक)';
+
+  @override
+  String get addToBill => 'बिलमा थप्नुहोस्';
+
+  @override
+  String get billLines => 'बिल लाइनहरू';
+
+  @override
+  String get noBillLines => 'बिलमा उत्पादन थप्नुहोस्';
+
+  @override
+  String get lineDiscount => 'लाइन छुट';
+
+  @override
+  String get reviewAndSave => 'समीक्षा र सेभ';
+
+  @override
+  String get todaysBills => 'आजका बिल';
 }

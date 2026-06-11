@@ -1,0 +1,240 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/l10n/app_localizations.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/money.dart';
+import '../../core/utils/payment_method_label.dart';
+import '../../domain/enums.dart';
+import '../customers/providers.dart';
+
+class BillPaymentResult {
+  const BillPaymentResult({
+    required this.status,
+    this.customerId,
+    this.paymentAmount,
+    this.paymentMethod = PaymentMethod.cash,
+    this.paymentRefNote,
+  });
+
+  final BillStatus status;
+  final String? customerId;
+  final int? paymentAmount;
+  final PaymentMethod paymentMethod;
+  final String? paymentRefNote;
+}
+
+class BillPaymentSheet extends ConsumerStatefulWidget {
+  const BillPaymentSheet({
+    super.key,
+    required this.grandTotal,
+    this.initialCustomerId,
+  });
+
+  final int grandTotal;
+  final String? initialCustomerId;
+
+  @override
+  ConsumerState<BillPaymentSheet> createState() => _BillPaymentSheetState();
+}
+
+class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
+  BillStatus _status = BillStatus.paid;
+  bool _walkIn = false;
+  String? _customerId;
+  final _amountController = TextEditingController();
+  final _refController = TextEditingController();
+  PaymentMethod _method = PaymentMethod.cash;
+
+  @override
+  void initState() {
+    super.initState();
+    _customerId = widget.initialCustomerId;
+    _walkIn = widget.initialCustomerId == null;
+    _amountController.text = formatNpr(
+      Paisa(widget.grandTotal),
+      showSymbol: false,
+      showPaisa: false,
+    );
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _refController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final l10n = AppLocalizations.of(context);
+
+    if (_status == BillStatus.partial) {
+      final amount = parseNpr(_amountController.text);
+      if (amount == null) {
+        _showError(l10n.amountRequired);
+        return;
+      }
+      if (amount.value <= 0 || amount.value > widget.grandTotal) {
+        _showError(l10n.amountMustBePositive);
+        return;
+      }
+    }
+
+    if (!_walkIn && _customerId == null && _status != BillStatus.due) {
+      _showError(l10n.selectCustomer);
+      return;
+    }
+
+    if (_walkIn && _status != BillStatus.paid) {
+      _showError(l10n.customerOptional);
+      return;
+    }
+
+    final paymentAmount = _status == BillStatus.partial
+        ? parseNpr(_amountController.text)!.value
+        : _status == BillStatus.paid && !_walkIn
+            ? widget.grandTotal
+            : _status == BillStatus.paid && _walkIn
+                ? widget.grandTotal
+                : null;
+
+    Navigator.pop(
+      context,
+      BillPaymentResult(
+        status: _status,
+        customerId: _walkIn ? null : _customerId,
+        paymentAmount: paymentAmount,
+        paymentMethod: _method,
+        paymentRefNote: _refController.text.trim().isEmpty
+            ? null
+            : _refController.text.trim(),
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: BsColors.danger),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final customersAsync = ref.watch(customerListProvider);
+
+    return Material(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.reviewAndSave,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${l10n.grandTotal}: ${formatNpr(Paisa(widget.grandTotal), showPaisa: false)}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              Text(l10n.selectPaymentStatus),
+              const SizedBox(height: 8),
+              SegmentedButton<BillStatus>(
+                segments: [
+                  ButtonSegment(value: BillStatus.paid, label: Text(l10n.paid)),
+                  ButtonSegment(
+                    value: BillStatus.partial,
+                    label: Text(l10n.partial),
+                  ),
+                  ButtonSegment(value: BillStatus.due, label: Text(l10n.due)),
+                ],
+                selected: {_status},
+                onSelectionChanged: (s) {
+                  setState(() {
+                    _status = s.first;
+                    if (_status == BillStatus.paid) {
+                      _amountController.text = formatNpr(
+                        Paisa(widget.grandTotal),
+                        showSymbol: false,
+                        showPaisa: false,
+                      );
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.walkIn),
+                value: _walkIn,
+                onChanged: (v) => setState(() {
+                  _walkIn = v;
+                  if (v) _customerId = null;
+                }),
+              ),
+              if (!_walkIn)
+                customersAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, _) => Text(e.toString()),
+                  data: (customers) => DropdownButtonFormField<String>(
+                    decoration: InputDecoration(labelText: l10n.selectCustomer),
+                    initialValue: _customerId,
+                    items: customers
+                        .map(
+                          (c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.shopName),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _customerId = v),
+                  ),
+                ),
+              if (_status == BillStatus.partial) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _amountController,
+                  decoration: InputDecoration(labelText: l10n.amountPaid),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+              if (_status != BillStatus.due && !_walkIn || _status == BillStatus.partial) ...[
+                const SizedBox(height: 12),
+                DropdownButtonFormField<PaymentMethod>(
+                  decoration: InputDecoration(labelText: l10n.paymentMethod),
+                  initialValue: _method,
+                  items: PaymentMethod.values
+                      .map(
+                        (m) => DropdownMenuItem(
+                          value: m,
+                          child: Text(paymentMethodLabel(l10n, m)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _method = v);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _refController,
+                  decoration: InputDecoration(labelText: l10n.paymentRef),
+                ),
+              ],
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _submit,
+                child: Text(l10n.saveBill),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

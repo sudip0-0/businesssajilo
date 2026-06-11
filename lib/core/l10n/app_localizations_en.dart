@@ -457,4 +457,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entryPayment => 'Payment';
+
+  @override
+  String get billNo => 'Bill no.';
+
+  @override
+  String get walkIn => 'Walk-in';
+
+  @override
+  String get lineTotal => 'Line total';
+
+  @override
+  String get billDiscount => 'Bill discount';
+
+  @override
+  String get saveBill => 'Save bill';
+
+  @override
+  String get billSaved => 'Bill saved';
+
+  @override
+  String get noBills => 'No bills yet';
+
+  @override
+  String get filterBills => 'Search bills';
+
+  @override
+  String get entryBill => 'Bill';
+
+  @override
+  String get billDetail => 'Bill detail';
+
+  @override
+  String get selectPaymentStatus => 'Payment status';
+
+  @override
+  String get amountPaid => 'Amount paid';
+
+  @override
+  String get customerOptional => 'Customer (optional)';
+
+  @override
+  String get addToBill => 'Add to bill';
+
+  @override
+  String get billLines => 'Bill lines';
+
+  @override
+  String get noBillLines => 'Add products to the bill';
+
+  @override
+  String get lineDiscount => 'Line discount';
+
+  @override
+  String get reviewAndSave => 'Review & save';
+
+  @override
+  String get todaysBills => 'Today\'s bills';
 }

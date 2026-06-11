@@ -34,11 +34,11 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Record payment flow (cash/cheque/wallet/bank ref), account-level allocation
 
 ## Phase 4 — Billing (online first)
-- ⬜ DB: `bills`, `bill_items` + per-business bill numbering + RLS (warehouse blocked)
-- ⬜ Billing screen: product search, qty steppers, discounts, running total
-- ⬜ Payment sheet on save: Paid / Partial / Due → ledger entries
-- ⬜ Walk-in (no-customer) bills
-- ⬜ Bill list + bill detail (immutable snapshot view)
+- ✅ DB: `bills`, `bill_items`, `bill_sequences` + per-business BS-0001 numbering + RLS (warehouse blocked)
+- ✅ Billing screen: product search, qty steppers, discounts, running total
+- ✅ Payment sheet on save: Paid / Partial / Due → ledger entries
+- ✅ Walk-in (no-customer) bills
+- ✅ Bill list + bill detail (immutable snapshot view)
 
 ## Phase 5 — Orders, Quotes & Chat (customer app)
 - ⬜ DB: `orders`, `order_items`, `quotes`, `quote_items`, `messages` + RLS

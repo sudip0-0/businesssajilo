@@ -985,6 +985,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment'**
   String get entryPayment;
+
+  /// No description provided for @billNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill no.'**
+  String get billNo;
+
+  /// No description provided for @walkIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in'**
+  String get walkIn;
+
+  /// No description provided for @lineTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Line total'**
+  String get lineTotal;
+
+  /// No description provided for @billDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill discount'**
+  String get billDiscount;
+
+  /// No description provided for @saveBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Save bill'**
+  String get saveBill;
+
+  /// No description provided for @billSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill saved'**
+  String get billSaved;
+
+  /// No description provided for @noBills.
+  ///
+  /// In en, this message translates to:
+  /// **'No bills yet'**
+  String get noBills;
+
+  /// No description provided for @filterBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Search bills'**
+  String get filterBills;
+
+  /// No description provided for @entryBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get entryBill;
+
+  /// No description provided for @billDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill detail'**
+  String get billDetail;
+
+  /// No description provided for @selectPaymentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment status'**
+  String get selectPaymentStatus;
+
+  /// No description provided for @amountPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount paid'**
+  String get amountPaid;
+
+  /// No description provided for @customerOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer (optional)'**
+  String get customerOptional;
+
+  /// No description provided for @addToBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to bill'**
+  String get addToBill;
+
+  /// No description provided for @billLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill lines'**
+  String get billLines;
+
+  /// No description provided for @noBillLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Add products to the bill'**
+  String get noBillLines;
+
+  /// No description provided for @lineDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Line discount'**
+  String get lineDiscount;
+
+  /// No description provided for @reviewAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Review & save'**
+  String get reviewAndSave;
+
+  /// No description provided for @todaysBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s bills'**
+  String get todaysBills;
 }
 
 class _AppLocalizationsDelegate
