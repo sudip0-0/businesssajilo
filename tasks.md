@@ -11,13 +11,13 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Design-system widgets (`core/ui/`): MoneyText, StatusChip, QtyStepper, SyncBadge, EmptyState
 
 ## Phase 1 — Tenancy, Auth & Roles
-- ⬜ DB: `businesses`, `members`, `device_tokens` tables + RLS policies
-- ⬜ Business registration flow (owner signup, business profile)
-- ⬜ Edge Function `create-member` (owner creates sales/warehouse/customer logins)
-- ⬜ Login (phone/email + password), session persistence, role claim in JWT
-- ⬜ Role-aware routing: 4 role home shells with bottom nav
-- ⬜ Staff management screen (owner: list, add, deactivate members)
-- ⬜ RLS test suite per role (pgTAP or integration tests)
+- ✅ DB: `businesses`, `members`, `customers`, `device_tokens` + FORCE RLS + auth claims trigger
+- ✅ Business registration flow (`register-business` Edge Function + register screen)
+- ✅ Edge Function `create-member` (owner creates sales/warehouse/customer logins)
+- ✅ Login (email + password), session persistence, role in JWT app_metadata via trigger
+- ✅ Role-aware routing: 4 role home shells with bottom nav (warehouse has no billing)
+- ✅ Staff management screen (owner: list, add, deactivate members)
+- ✅ RLS test suite (`supabase test db` — 8 tests in `supabase/tests/rls_phase1_test.sql`)
 
 ## Phase 2 — Products & Inventory
 - ⬜ DB: `categories`, `products`, `stock_movements` + stock_cached trigger + RLS

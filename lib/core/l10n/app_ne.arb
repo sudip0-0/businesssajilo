@@ -66,5 +66,41 @@
   "emptyAddFirstProduct": "पहिलो उत्पादन थप्नुहोस्",
   "language": "भाषा",
   "english": "English",
-  "nepali": "नेपाली"
+  "nepali": "नेपाली",
+  "email": "इमेल",
+  "createAccount": "खाता बनाउनुहोस्",
+  "registerBusiness": "आफ्नो व्यवसाय दर्ता गर्नुहोस्",
+  "businessName": "व्यवसायको नाम",
+  "businessNameNp": "व्यवसायको नाम (नेपाली)",
+  "displayName": "तपाईंको नाम",
+  "address": "ठेगाना",
+  "noAccount": "खाता छैन?",
+  "hasAccount": "पहिले नै खाता छ?",
+  "signUp": "साइन अप",
+  "signIn": "साइन इन",
+  "staff": "कर्मचारी",
+  "staffManagement": "कर्मचारी व्यवस्थापन",
+  "addMember": "सदस्य थप्नुहोस्",
+  "deactivate": "निष्क्रिय गर्नुहोस्",
+  "deactivateConfirm": "यो सदस्यलाई निष्क्रिय गर्ने? उनीहरू अब लगइन गर्न सक्ने छैनन्।",
+  "active": "सक्रिय",
+  "inactive": "निष्क्रिय",
+  "roleOwner": "मालिक",
+  "roleSales": "बिक्री",
+  "roleWarehouse": "गोदाम",
+  "roleCustomer": "ग्राहक",
+  "shopName": "पसलको नाम",
+  "contactName": "सम्पर्क नाम",
+  "fieldRequired": "यो फिल्ड आवश्यक छ",
+  "logoutConfirm": "BusinessSajilo बाट लगआउट गर्ने?",
+  "welcomeUser": "स्वागत छ, {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fulfillment": "पूर्ति",
+  "stock": "स्टक"
 }

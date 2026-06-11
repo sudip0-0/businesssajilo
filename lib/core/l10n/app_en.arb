@@ -66,5 +66,41 @@
   "emptyAddFirstProduct": "Add your first product",
   "language": "Language",
   "english": "English",
-  "nepali": "Nepali"
+  "nepali": "Nepali",
+  "email": "Email",
+  "createAccount": "Create account",
+  "registerBusiness": "Register your business",
+  "businessName": "Business name",
+  "businessNameNp": "Business name (Nepali)",
+  "displayName": "Your name",
+  "address": "Address",
+  "noAccount": "Don't have an account?",
+  "hasAccount": "Already have an account?",
+  "signUp": "Sign up",
+  "signIn": "Sign in",
+  "staff": "Staff",
+  "staffManagement": "Staff management",
+  "addMember": "Add member",
+  "deactivate": "Deactivate",
+  "deactivateConfirm": "Deactivate this member? They will no longer be able to log in.",
+  "active": "Active",
+  "inactive": "Inactive",
+  "roleOwner": "Owner",
+  "roleSales": "Sales",
+  "roleWarehouse": "Warehouse",
+  "roleCustomer": "Customer",
+  "shopName": "Shop name",
+  "contactName": "Contact name",
+  "fieldRequired": "This field is required",
+  "logoutConfirm": "Log out of BusinessSajilo?",
+  "welcomeUser": "Welcome, {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fulfillment": "Fulfillment",
+  "stock": "Stock"
 }

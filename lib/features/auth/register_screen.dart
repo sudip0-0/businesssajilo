@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/l10n/app_localizations.dart';
+import '../../core/theme/app_theme.dart';
+import 'providers/auth_provider.dart';
+
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _displayNameController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _businessNameNpController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _displayNameController.dispose();
+    _businessNameController.dispose();
+    _businessNameNpController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authProvider.notifier).registerBusiness(
+            email: _emailController.text,
+            password: _passwordController.text,
+            displayName: _displayNameController.text,
+            businessName: _businessNameController.text,
+            businessNameNp: _businessNameNpController.text.isEmpty
+                ? null
+                : _businessNameNpController.text,
+            phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+            address:
+                _addressController.text.isEmpty ? null : _addressController.text,
+          );
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.registerBusiness)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _businessNameController,
+                      decoration: InputDecoration(labelText: l10n.businessName),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? l10n.fieldRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _businessNameNpController,
+                      decoration:
+                          InputDecoration(labelText: l10n.businessNameNp),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _displayNameController,
+                      decoration: InputDecoration(labelText: l10n.displayName),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? l10n.fieldRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(labelText: l10n.email),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? l10n.fieldRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: InputDecoration(labelText: l10n.password),
+                      obscureText: true,
+                      validator: (v) =>
+                          v == null || v.length < 6 ? l10n.fieldRequired : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(labelText: l10n.phoneNumber),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: InputDecoration(labelText: l10n.address),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(_error!, style: const TextStyle(color: BsColors.danger)),
+                    ],
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _loading ? null : _submit,
+                      child: _loading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.createAccount),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => context.go('/login'),
+                      child: Text(l10n.hasAccount),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

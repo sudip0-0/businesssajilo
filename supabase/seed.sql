@@ -1,0 +1,1 @@
+-- Seed data for local dev (optional). Phase 1 uses register-business Edge Function instead.

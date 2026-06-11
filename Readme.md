@@ -35,26 +35,26 @@ A multi-platform (Android · iOS · Web) business app for small and medium deale
 | [tasks.md](tasks.md) | Phased implementation task breakdown |
 | [Agent.md](Agent.md) | Rules & conventions for AI coding agents working on this repo |
 
-## Getting Started (once scaffolded)
+## Getting Started
 
 ```bash
-# Prereqs: Flutter SDK (stable), Supabase CLI, Firebase project
+# Prereqs: Flutter SDK, Docker Desktop, Supabase CLI (npm i -g supabase)
 
 flutter pub get
+supabase start
+supabase db reset
 
-# Run against the dev environment
-flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+# Copy keys from `supabase status` into .env.local (see .env.example)
+.\scripts\run_dev.ps1          # Windows
+# flutter run --dart-define=SUPABASE_URL=http://127.0.0.1:54321 --dart-define=SUPABASE_ANON_KEY=<publishable-key>
 
-# Apply database migrations
-supabase db push
-
-# Quality gates
 flutter analyze && flutter test
+supabase test db               # RLS policy tests
 ```
 
 ## Status
 
-📋 Planning complete — implementation starts at Phase 0 in [tasks.md](tasks.md).
+Phase 0 complete. Phase 1 (auth, roles, staff management) implemented against local Supabase — see [tasks.md](tasks.md).
 
 ## License
 

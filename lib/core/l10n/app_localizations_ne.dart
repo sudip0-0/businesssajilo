@@ -189,4 +189,94 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get nepali => 'नेपाली';
+
+  @override
+  String get email => 'इमेल';
+
+  @override
+  String get createAccount => 'खाता बनाउनुहोस्';
+
+  @override
+  String get registerBusiness => 'आफ्नो व्यवसाय दर्ता गर्नुहोस्';
+
+  @override
+  String get businessName => 'व्यवसायको नाम';
+
+  @override
+  String get businessNameNp => 'व्यवसायको नाम (नेपाली)';
+
+  @override
+  String get displayName => 'तपाईंको नाम';
+
+  @override
+  String get address => 'ठेगाना';
+
+  @override
+  String get noAccount => 'खाता छैन?';
+
+  @override
+  String get hasAccount => 'पहिले नै खाता छ?';
+
+  @override
+  String get signUp => 'साइन अप';
+
+  @override
+  String get signIn => 'साइन इन';
+
+  @override
+  String get staff => 'कर्मचारी';
+
+  @override
+  String get staffManagement => 'कर्मचारी व्यवस्थापन';
+
+  @override
+  String get addMember => 'सदस्य थप्नुहोस्';
+
+  @override
+  String get deactivate => 'निष्क्रिय गर्नुहोस्';
+
+  @override
+  String get deactivateConfirm =>
+      'यो सदस्यलाई निष्क्रिय गर्ने? उनीहरू अब लगइन गर्न सक्ने छैनन्।';
+
+  @override
+  String get active => 'सक्रिय';
+
+  @override
+  String get inactive => 'निष्क्रिय';
+
+  @override
+  String get roleOwner => 'मालिक';
+
+  @override
+  String get roleSales => 'बिक्री';
+
+  @override
+  String get roleWarehouse => 'गोदाम';
+
+  @override
+  String get roleCustomer => 'ग्राहक';
+
+  @override
+  String get shopName => 'पसलको नाम';
+
+  @override
+  String get contactName => 'सम्पर्क नाम';
+
+  @override
+  String get fieldRequired => 'यो फिल्ड आवश्यक छ';
+
+  @override
+  String get logoutConfirm => 'BusinessSajilo बाट लगआउट गर्ने?';
+
+  @override
+  String welcomeUser(String name) {
+    return 'स्वागत छ, $name';
+  }
+
+  @override
+  String get fulfillment => 'पूर्ति';
+
+  @override
+  String get stock => 'स्टक';
 }

@@ -189,4 +189,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nepali => 'Nepali';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get registerBusiness => 'Register your business';
+
+  @override
+  String get businessName => 'Business name';
+
+  @override
+  String get businessNameNp => 'Business name (Nepali)';
+
+  @override
+  String get displayName => 'Your name';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get noAccount => 'Don\'t have an account?';
+
+  @override
+  String get hasAccount => 'Already have an account?';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get staff => 'Staff';
+
+  @override
+  String get staffManagement => 'Staff management';
+
+  @override
+  String get addMember => 'Add member';
+
+  @override
+  String get deactivate => 'Deactivate';
+
+  @override
+  String get deactivateConfirm =>
+      'Deactivate this member? They will no longer be able to log in.';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get inactive => 'Inactive';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleSales => 'Sales';
+
+  @override
+  String get roleWarehouse => 'Warehouse';
+
+  @override
+  String get roleCustomer => 'Customer';
+
+  @override
+  String get shopName => 'Shop name';
+
+  @override
+  String get contactName => 'Contact name';
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String get logoutConfirm => 'Log out of BusinessSajilo?';
+
+  @override
+  String welcomeUser(String name) {
+    return 'Welcome, $name';
+  }
+
+  @override
+  String get fulfillment => 'Fulfillment';
+
+  @override
+  String get stock => 'Stock';
 }
