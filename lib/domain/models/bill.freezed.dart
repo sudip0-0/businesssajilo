@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Bill {
 
- String get id; String get businessId; String? get customerId; String? get orderId; String get billNo; String? get devicePrefix; int get itemsTotal; int get discount; int get grandTotal; BillStatus get status; String get createdBy; DateTime? get createdAt; String? get customerShopName; List<BillItem> get items;
+ String get id; String get businessId; String? get customerId; String? get orderId; String get billNo; String? get devicePrefix; int get itemsTotal; int get discount; int get grandTotal; BillStatus get status; String get createdBy; DateTime? get createdAt; String? get customerShopName; List<BillItem> get items; bool get pendingSync;
 /// Create a copy of Bill
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $BillCopyWith<Bill> get copyWith => _$BillCopyWithImpl<Bill>(this as Bill, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bill&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.billNo, billNo) || other.billNo == billNo)&&(identical(other.devicePrefix, devicePrefix) || other.devicePrefix == devicePrefix)&&(identical(other.itemsTotal, itemsTotal) || other.itemsTotal == itemsTotal)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.grandTotal, grandTotal) || other.grandTotal == grandTotal)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.customerShopName, customerShopName) || other.customerShopName == customerShopName)&&const DeepCollectionEquality().equals(other.items, items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bill&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.billNo, billNo) || other.billNo == billNo)&&(identical(other.devicePrefix, devicePrefix) || other.devicePrefix == devicePrefix)&&(identical(other.itemsTotal, itemsTotal) || other.itemsTotal == itemsTotal)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.grandTotal, grandTotal) || other.grandTotal == grandTotal)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.customerShopName, customerShopName) || other.customerShopName == customerShopName)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.pendingSync, pendingSync) || other.pendingSync == pendingSync));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,customerId,orderId,billNo,devicePrefix,itemsTotal,discount,grandTotal,status,createdBy,createdAt,customerShopName,const DeepCollectionEquality().hash(items));
+int get hashCode => Object.hash(runtimeType,id,businessId,customerId,orderId,billNo,devicePrefix,itemsTotal,discount,grandTotal,status,createdBy,createdAt,customerShopName,const DeepCollectionEquality().hash(items),pendingSync);
 
 @override
 String toString() {
-  return 'Bill(id: $id, businessId: $businessId, customerId: $customerId, orderId: $orderId, billNo: $billNo, devicePrefix: $devicePrefix, itemsTotal: $itemsTotal, discount: $discount, grandTotal: $grandTotal, status: $status, createdBy: $createdBy, createdAt: $createdAt, customerShopName: $customerShopName, items: $items)';
+  return 'Bill(id: $id, businessId: $businessId, customerId: $customerId, orderId: $orderId, billNo: $billNo, devicePrefix: $devicePrefix, itemsTotal: $itemsTotal, discount: $discount, grandTotal: $grandTotal, status: $status, createdBy: $createdBy, createdAt: $createdAt, customerShopName: $customerShopName, items: $items, pendingSync: $pendingSync)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $BillCopyWith<$Res>  {
   factory $BillCopyWith(Bill value, $Res Function(Bill) _then) = _$BillCopyWithImpl;
 @useResult
 $Res call({
- String id, String businessId, String? customerId, String? orderId, String billNo, String? devicePrefix, int itemsTotal, int discount, int grandTotal, BillStatus status, String createdBy, DateTime? createdAt, String? customerShopName, List<BillItem> items
+ String id, String businessId, String? customerId, String? orderId, String billNo, String? devicePrefix, int itemsTotal, int discount, int grandTotal, BillStatus status, String createdBy, DateTime? createdAt, String? customerShopName, List<BillItem> items, bool pendingSync
 });
 
 
@@ -65,7 +65,7 @@ class _$BillCopyWithImpl<$Res>
 
 /// Create a copy of Bill
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? customerId = freezed,Object? orderId = freezed,Object? billNo = null,Object? devicePrefix = freezed,Object? itemsTotal = null,Object? discount = null,Object? grandTotal = null,Object? status = null,Object? createdBy = null,Object? createdAt = freezed,Object? customerShopName = freezed,Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? customerId = freezed,Object? orderId = freezed,Object? billNo = null,Object? devicePrefix = freezed,Object? itemsTotal = null,Object? discount = null,Object? grandTotal = null,Object? status = null,Object? createdBy = null,Object? createdAt = freezed,Object? customerShopName = freezed,Object? items = null,Object? pendingSync = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
@@ -81,7 +81,8 @@ as BillStatus,createdBy: null == createdBy ? _self.createdBy : createdBy // igno
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,customerShopName: freezed == customerShopName ? _self.customerShopName : customerShopName // ignore: cast_nullable_to_non_nullable
 as String?,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<BillItem>,
+as List<BillItem>,pendingSync: null == pendingSync ? _self.pendingSync : pendingSync // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -166,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String? customerId,  String? orderId,  String billNo,  String? devicePrefix,  int itemsTotal,  int discount,  int grandTotal,  BillStatus status,  String createdBy,  DateTime? createdAt,  String? customerShopName,  List<BillItem> items)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String? customerId,  String? orderId,  String billNo,  String? devicePrefix,  int itemsTotal,  int discount,  int grandTotal,  BillStatus status,  String createdBy,  DateTime? createdAt,  String? customerShopName,  List<BillItem> items,  bool pendingSync)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Bill() when $default != null:
-return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.billNo,_that.devicePrefix,_that.itemsTotal,_that.discount,_that.grandTotal,_that.status,_that.createdBy,_that.createdAt,_that.customerShopName,_that.items);case _:
+return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.billNo,_that.devicePrefix,_that.itemsTotal,_that.discount,_that.grandTotal,_that.status,_that.createdBy,_that.createdAt,_that.customerShopName,_that.items,_that.pendingSync);case _:
   return orElse();
 
 }
@@ -187,10 +188,10 @@ return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String? customerId,  String? orderId,  String billNo,  String? devicePrefix,  int itemsTotal,  int discount,  int grandTotal,  BillStatus status,  String createdBy,  DateTime? createdAt,  String? customerShopName,  List<BillItem> items)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String? customerId,  String? orderId,  String billNo,  String? devicePrefix,  int itemsTotal,  int discount,  int grandTotal,  BillStatus status,  String createdBy,  DateTime? createdAt,  String? customerShopName,  List<BillItem> items,  bool pendingSync)  $default,) {final _that = this;
 switch (_that) {
 case _Bill():
-return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.billNo,_that.devicePrefix,_that.itemsTotal,_that.discount,_that.grandTotal,_that.status,_that.createdBy,_that.createdAt,_that.customerShopName,_that.items);case _:
+return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.billNo,_that.devicePrefix,_that.itemsTotal,_that.discount,_that.grandTotal,_that.status,_that.createdBy,_that.createdAt,_that.customerShopName,_that.items,_that.pendingSync);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +208,10 @@ return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String? customerId,  String? orderId,  String billNo,  String? devicePrefix,  int itemsTotal,  int discount,  int grandTotal,  BillStatus status,  String createdBy,  DateTime? createdAt,  String? customerShopName,  List<BillItem> items)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String? customerId,  String? orderId,  String billNo,  String? devicePrefix,  int itemsTotal,  int discount,  int grandTotal,  BillStatus status,  String createdBy,  DateTime? createdAt,  String? customerShopName,  List<BillItem> items,  bool pendingSync)?  $default,) {final _that = this;
 switch (_that) {
 case _Bill() when $default != null:
-return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.billNo,_that.devicePrefix,_that.itemsTotal,_that.discount,_that.grandTotal,_that.status,_that.createdBy,_that.createdAt,_that.customerShopName,_that.items);case _:
+return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.billNo,_that.devicePrefix,_that.itemsTotal,_that.discount,_that.grandTotal,_that.status,_that.createdBy,_that.createdAt,_that.customerShopName,_that.items,_that.pendingSync);case _:
   return null;
 
 }
@@ -222,7 +223,7 @@ return $default(_that.id,_that.businessId,_that.customerId,_that.orderId,_that.b
 @JsonSerializable()
 
 class _Bill implements Bill {
-  const _Bill({required this.id, required this.businessId, this.customerId, this.orderId, required this.billNo, this.devicePrefix, this.itemsTotal = 0, this.discount = 0, this.grandTotal = 0, required this.status, required this.createdBy, this.createdAt, this.customerShopName, final  List<BillItem> items = const []}): _items = items;
+  const _Bill({required this.id, required this.businessId, this.customerId, this.orderId, required this.billNo, this.devicePrefix, this.itemsTotal = 0, this.discount = 0, this.grandTotal = 0, required this.status, required this.createdBy, this.createdAt, this.customerShopName, final  List<BillItem> items = const [], this.pendingSync = false}): _items = items;
   factory _Bill.fromJson(Map<String, dynamic> json) => _$BillFromJson(json);
 
 @override final  String id;
@@ -245,6 +246,7 @@ class _Bill implements Bill {
   return EqualUnmodifiableListView(_items);
 }
 
+@override@JsonKey() final  bool pendingSync;
 
 /// Create a copy of Bill
 /// with the given fields replaced by the non-null parameter values.
@@ -259,16 +261,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Bill&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.billNo, billNo) || other.billNo == billNo)&&(identical(other.devicePrefix, devicePrefix) || other.devicePrefix == devicePrefix)&&(identical(other.itemsTotal, itemsTotal) || other.itemsTotal == itemsTotal)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.grandTotal, grandTotal) || other.grandTotal == grandTotal)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.customerShopName, customerShopName) || other.customerShopName == customerShopName)&&const DeepCollectionEquality().equals(other._items, _items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Bill&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.orderId, orderId) || other.orderId == orderId)&&(identical(other.billNo, billNo) || other.billNo == billNo)&&(identical(other.devicePrefix, devicePrefix) || other.devicePrefix == devicePrefix)&&(identical(other.itemsTotal, itemsTotal) || other.itemsTotal == itemsTotal)&&(identical(other.discount, discount) || other.discount == discount)&&(identical(other.grandTotal, grandTotal) || other.grandTotal == grandTotal)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.customerShopName, customerShopName) || other.customerShopName == customerShopName)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.pendingSync, pendingSync) || other.pendingSync == pendingSync));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,customerId,orderId,billNo,devicePrefix,itemsTotal,discount,grandTotal,status,createdBy,createdAt,customerShopName,const DeepCollectionEquality().hash(_items));
+int get hashCode => Object.hash(runtimeType,id,businessId,customerId,orderId,billNo,devicePrefix,itemsTotal,discount,grandTotal,status,createdBy,createdAt,customerShopName,const DeepCollectionEquality().hash(_items),pendingSync);
 
 @override
 String toString() {
-  return 'Bill(id: $id, businessId: $businessId, customerId: $customerId, orderId: $orderId, billNo: $billNo, devicePrefix: $devicePrefix, itemsTotal: $itemsTotal, discount: $discount, grandTotal: $grandTotal, status: $status, createdBy: $createdBy, createdAt: $createdAt, customerShopName: $customerShopName, items: $items)';
+  return 'Bill(id: $id, businessId: $businessId, customerId: $customerId, orderId: $orderId, billNo: $billNo, devicePrefix: $devicePrefix, itemsTotal: $itemsTotal, discount: $discount, grandTotal: $grandTotal, status: $status, createdBy: $createdBy, createdAt: $createdAt, customerShopName: $customerShopName, items: $items, pendingSync: $pendingSync)';
 }
 
 
@@ -279,7 +281,7 @@ abstract mixin class _$BillCopyWith<$Res> implements $BillCopyWith<$Res> {
   factory _$BillCopyWith(_Bill value, $Res Function(_Bill) _then) = __$BillCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String businessId, String? customerId, String? orderId, String billNo, String? devicePrefix, int itemsTotal, int discount, int grandTotal, BillStatus status, String createdBy, DateTime? createdAt, String? customerShopName, List<BillItem> items
+ String id, String businessId, String? customerId, String? orderId, String billNo, String? devicePrefix, int itemsTotal, int discount, int grandTotal, BillStatus status, String createdBy, DateTime? createdAt, String? customerShopName, List<BillItem> items, bool pendingSync
 });
 
 
@@ -296,7 +298,7 @@ class __$BillCopyWithImpl<$Res>
 
 /// Create a copy of Bill
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? customerId = freezed,Object? orderId = freezed,Object? billNo = null,Object? devicePrefix = freezed,Object? itemsTotal = null,Object? discount = null,Object? grandTotal = null,Object? status = null,Object? createdBy = null,Object? createdAt = freezed,Object? customerShopName = freezed,Object? items = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? customerId = freezed,Object? orderId = freezed,Object? billNo = null,Object? devicePrefix = freezed,Object? itemsTotal = null,Object? discount = null,Object? grandTotal = null,Object? status = null,Object? createdBy = null,Object? createdAt = freezed,Object? customerShopName = freezed,Object? items = null,Object? pendingSync = null,}) {
   return _then(_Bill(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
@@ -312,7 +314,8 @@ as BillStatus,createdBy: null == createdBy ? _self.createdBy : createdBy // igno
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,customerShopName: freezed == customerShopName ? _self.customerShopName : customerShopName // ignore: cast_nullable_to_non_nullable
 as String?,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
-as List<BillItem>,
+as List<BillItem>,pendingSync: null == pendingSync ? _self.pendingSync : pendingSync // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

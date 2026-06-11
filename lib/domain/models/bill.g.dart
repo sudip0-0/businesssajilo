@@ -27,6 +27,7 @@ _Bill _$BillFromJson(Map<String, dynamic> json) => _Bill(
           ?.map((e) => BillItem.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  pendingSync: json['pending_sync'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$BillToJson(_Bill instance) => <String, dynamic>{
@@ -44,6 +45,7 @@ Map<String, dynamic> _$BillToJson(_Bill instance) => <String, dynamic>{
   'created_at': instance.createdAt?.toIso8601String(),
   'customer_shop_name': instance.customerShopName,
   'items': instance.items.map((e) => e.toJson()).toList(),
+  'pending_sync': instance.pendingSync,
 };
 
 const _$BillStatusEnumMap = {

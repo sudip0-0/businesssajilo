@@ -146,6 +146,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get syncNow => 'Sync now';
+
+  @override
+  String get retrySync => 'Retry';
+
+  @override
+  String get pendingSyncItems => 'Pending sync';
+
+  @override
+  String get syncFailed => 'Sync failed';
+
+  @override
+  String get provisionalBillNo => 'Provisional bill number';
+
+  @override
   String get statusPlaced => 'Placed';
 
   @override

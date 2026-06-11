@@ -1,22 +1,55 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/utils/ledger_balance.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../remote/supabase_provider.dart';
-import 'members_repository.dart';
+import '../repositories/members_repository.dart';
+import '../sync/cached_customers_repository.dart';
+import '../sync/sync_providers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
-  return CustomersRepository(ref.watch(supabaseClientProvider));
+  final client = ref.watch(supabaseClientProvider);
+  final bundle = ref.watch(syncBundleProvider);
+  if (bundle != null) {
+    return CachedCustomersRepository(db: bundle.db, client: client);
+  }
+  return SupabaseCustomersRepository(client);
 });
 
-class CustomersRepository {
-  CustomersRepository(this._client);
+abstract class CustomersRepository {
+  Future<List<Customer>> list();
+  Future<Customer> get(String id);
+  Future<Customer?> getOwnProfile();
+  Future<List<LedgerEntry>> ledger(String customerId);
+  Future<Customer> update({
+    required String id,
+    required String shopName,
+    String? contactName,
+    String? phone,
+    String? address,
+    required int openingBalance,
+  });
+  Future<Customer> createWithCredentials({
+    required String email,
+    required String password,
+    required String displayName,
+    required String shopName,
+    String? contactName,
+    String? phone,
+    String? address,
+    int openingBalance,
+  });
+}
+
+class SupabaseCustomersRepository implements CustomersRepository {
+  SupabaseCustomersRepository(this._client);
 
   final SupabaseClient? _client;
 
+  @override
   Future<List<Customer>> list() async {
     final client = _requireClient();
     final rows = await client
@@ -26,6 +59,7 @@ class CustomersRepository {
     return (rows as List).map(_mapBalanceRow).toList();
   }
 
+  @override
   Future<Customer> get(String id) async {
     final client = _requireClient();
     final row = await client.from('customers').select().eq('id', id).single();
@@ -43,6 +77,7 @@ class CustomersRepository {
     return customer;
   }
 
+  @override
   Future<Customer?> getOwnProfile() async {
     final client = _requireClient();
     final row = await client.from('customers').select().maybeSingle();
@@ -57,6 +92,7 @@ class CustomersRepository {
     return customer;
   }
 
+  @override
   Future<List<LedgerEntry>> ledger(String customerId) async {
     final client = _requireClient();
     final rows = await client
@@ -70,6 +106,7 @@ class CustomersRepository {
     return withRunningBalance(entries);
   }
 
+  @override
   Future<Customer> update({
     required String id,
     required String shopName,
@@ -89,6 +126,7 @@ class CustomersRepository {
     return get(id);
   }
 
+  @override
   Future<Customer> createWithCredentials({
     required String email,
     required String password,

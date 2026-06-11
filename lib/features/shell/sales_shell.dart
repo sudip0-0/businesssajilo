@@ -11,6 +11,7 @@ import '../customers/providers.dart';
 import '../customers/record_payment_sheet.dart';
 import '../inventory/product_list_screen.dart';
 import '../notifications/notification_bell_action.dart';
+import '../sync/sync_badge_action.dart';
 import '../orders/order_queue_screen.dart';
 import '../orders/providers.dart';
 import 'logout_action.dart';
@@ -92,7 +93,11 @@ class _SalesShellState extends ConsumerState<SalesShell> {
             _ => l10n.billing,
           },
         ),
-        actions: const [NotificationBellAction(), LogoutAction()],
+        actions: const [
+          SyncBadgeAction(),
+          NotificationBellAction(),
+          LogoutAction(),
+        ],
       ),
       body: pages[_index],
       floatingActionButton: switch (_index) {

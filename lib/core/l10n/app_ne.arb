@@ -52,6 +52,11 @@
       }
     }
   },
+  "syncNow": "अहिले सिंक गर्नुहोस्",
+  "retrySync": "पुनः प्रयास",
+  "pendingSyncItems": "बाँकी सिंक",
+  "syncFailed": "सिंक असफल",
+  "provisionalBillNo": "अस्थायी बिल नम्बर",
   "statusPlaced": "अर्डर गरियो",
   "statusQuoted": "कोटेशन पठाइयो",
   "statusAccepted": "स्वीकृत",

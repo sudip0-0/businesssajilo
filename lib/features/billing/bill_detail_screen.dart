@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/utils/money.dart';
 import 'providers.dart';
@@ -30,11 +31,26 @@ class BillDetailScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(
-                bill.billNo,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      bill.billNo,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                     ),
+                  ),
+                  if (bill.pendingSync)
+                    Tooltip(
+                      message: l10n.provisionalBillNo,
+                      child: const Icon(
+                        Icons.schedule,
+                        color: BsColors.accent,
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 8),
               Text(bill.customerShopName ?? l10n.walkIn),

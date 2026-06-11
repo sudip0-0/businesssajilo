@@ -146,6 +146,21 @@ class AppLocalizationsNe extends AppLocalizations {
   }
 
   @override
+  String get syncNow => 'अहिले सिंक गर्नुहोस्';
+
+  @override
+  String get retrySync => 'पुनः प्रयास';
+
+  @override
+  String get pendingSyncItems => 'बाँकी सिंक';
+
+  @override
+  String get syncFailed => 'सिंक असफल';
+
+  @override
+  String get provisionalBillNo => 'अस्थायी बिल नम्बर';
+
+  @override
   String get statusPlaced => 'अर्डर गरियो';
 
   @override

@@ -1,0 +1,90 @@
+import 'dart:async';
+
+import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../domain/enums.dart';
+import '../../domain/models/payment.dart';
+import '../local/app_database.dart';
+import '../local/local_mappers.dart';
+import '../repositories/payments_repository.dart';
+import 'sync_service.dart';
+
+class SyncingPaymentsRepository implements PaymentsRepository {
+  SyncingPaymentsRepository({
+    required AppDatabase db,
+    required SyncService sync,
+    required String businessId,
+  })  : _db = db,
+        _sync = sync,
+        _businessId = businessId;
+
+  final AppDatabase _db;
+  final SyncService _sync;
+  final String _businessId;
+  static const _uuid = Uuid();
+
+  @override
+  Future<List<Payment>> listByCustomer(String customerId) async {
+    final rows = await (_db.select(_db.localPayments)
+          ..where((p) => p.customerId.equals(customerId))
+          ..orderBy([(p) => OrderingTerm.desc(p.createdAt)]))
+        .get();
+    return rows.map(mapLocalPayment).toList();
+  }
+
+  @override
+  Future<Payment> record({
+    required String customerId,
+    required int amount,
+    required PaymentMethod method,
+    String? refNote,
+    String? billId,
+    required String receivedByMemberId,
+  }) async {
+    final id = _uuid.v4();
+    await _db.into(_db.localPayments).insert(
+      LocalPaymentsCompanion.insert(
+        id: id,
+        businessId: _businessId,
+        customerId: customerId,
+        billId: Value(billId),
+        amount: amount,
+        method: method.name,
+        refNote: Value(refNote),
+        receivedBy: receivedByMemberId,
+        syncStatus: const Value('pending'),
+      ),
+    );
+
+    await _db.enqueue(
+      entityType: 'payment',
+      entityId: id,
+      dependsOnId: billId,
+      payload: {
+        'id': id,
+        'customer_id': customerId,
+        'bill_id': billId,
+        'amount': amount,
+        'method': method.name,
+        'ref_note': refNote,
+        'received_by': receivedByMemberId,
+      },
+    );
+
+    unawaited(_sync.syncNow());
+    return mapLocalPayment(
+      await (_db.select(_db.localPayments)..where((p) => p.id.equals(id)))
+          .getSingle(),
+    );
+  }
+
+  @override
+  Future<int> totalDues() async {
+    final rows = await _db.select(_db.localCustomers).get();
+    return rows.fold<int>(
+      0,
+      (sum, c) => sum + (c.balanceDue > 0 ? c.balanceDue : 0),
+    );
+  }
+}

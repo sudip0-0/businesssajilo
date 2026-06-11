@@ -52,6 +52,11 @@
       }
     }
   },
+  "syncNow": "Sync now",
+  "retrySync": "Retry",
+  "pendingSyncItems": "Pending sync",
+  "syncFailed": "Sync failed",
+  "provisionalBillNo": "Provisional bill number",
   "statusPlaced": "Placed",
   "statusQuoted": "Quoted",
   "statusAccepted": "Accepted",

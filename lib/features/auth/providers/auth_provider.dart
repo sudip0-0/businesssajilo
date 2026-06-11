@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/notifications/push_service_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/sync/sync_providers.dart';
 import '../../../domain/models/session_state.dart';
 
 final authProvider =
@@ -24,9 +25,12 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
 
   Future<void> _reload() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).loadSession(),
-    );
+    state = await AsyncValue.guard(() async {
+      final session = await ref.read(authRepositoryProvider).loadSession();
+      await syncBootstrapForSession(session);
+      ref.invalidate(syncBundleProvider);
+      return session;
+    });
     final member = state.value?.member;
     if (member != null) {
       await ref.read(pushServiceProvider).registerForMember(member.id);
@@ -40,13 +44,18 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
             email: email.trim(),
             password: password,
           );
-      return ref.read(authRepositoryProvider).loadSession();
+      final session = await ref.read(authRepositoryProvider).loadSession();
+      await syncBootstrapForSession(session);
+      ref.invalidate(syncBundleProvider);
+      return session;
     });
     if (state.hasError) throw state.error!;
   }
 
   Future<void> signOut() async {
     await ref.read(pushServiceProvider).unregister();
+    await disposeSyncBundle();
+    ref.invalidate(syncBundleProvider);
     await ref.read(authRepositoryProvider).signOut();
     state = const AsyncValue.data(SessionState.empty);
   }
@@ -73,7 +82,10 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
         address: address?.trim(),
       );
       await repo.signIn(email: email.trim(), password: password);
-      return repo.loadSession();
+      final session = await repo.loadSession();
+      await syncBootstrapForSession(session);
+      ref.invalidate(syncBundleProvider);
+      return session;
     });
     if (state.hasError) throw state.error!;
   }

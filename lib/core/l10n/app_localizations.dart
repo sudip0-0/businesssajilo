@@ -368,6 +368,36 @@ abstract class AppLocalizations {
   /// **'{count} pending'**
   String pendingSync(int count);
 
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @retrySync.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retrySync;
+
+  /// No description provided for @pendingSyncItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get pendingSyncItems;
+
+  /// No description provided for @syncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed'**
+  String get syncFailed;
+
+  /// No description provided for @provisionalBillNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Provisional bill number'**
+  String get provisionalBillNo;
+
   /// No description provided for @statusPlaced.
   ///
   /// In en, this message translates to:

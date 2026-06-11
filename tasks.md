@@ -56,12 +56,12 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ In-app notification center with read states
 
 ## Phase 7 — Offline Sync (staff mobile)
-- ⬜ Drift schema mirroring core tables; repository swap (local-first on mobile staff)
-- ⬜ Sync queue: ordered push of bills/payments/stock movements with idempotent UUID upserts
-- ⬜ Delta pull sync (`updated_at` watermark) + initial bootstrap
-- ⬜ Provisional bill numbering (device prefix) + server-side final assignment
-- ⬜ Sync status UI (badge, pending-items screen, retry)
-- ⬜ Conflict handling: LWW for mutable rows + audit_log; offline e2e tests
+- ✅ Drift schema mirroring core tables; repository swap (local-first on mobile staff)
+- ✅ Sync queue: ordered push of bills/payments/stock movements with idempotent UUID upserts
+- ✅ Delta pull sync (`updated_at` watermark) + initial bootstrap
+- ✅ Provisional bill numbering (device prefix) + server-side final assignment
+- ✅ Sync status UI (badge, pending-items screen, retry)
+- ✅ Conflict handling: LWW for mutable rows + audit_log; offline e2e tests
 
 ## Phase 8 — Reports & Dashboard
 - ⬜ Owner dashboard: today's sales, dues total, low stock, pending orders

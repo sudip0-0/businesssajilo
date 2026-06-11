@@ -113,8 +113,21 @@ class _BillTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      leading: const Icon(Icons.receipt_long_outlined, color: BsColors.primary),
-      title: Text(bill.billNo),
+      leading: bill.pendingSync
+          ? const Icon(Icons.schedule, color: BsColors.accent)
+          : const Icon(Icons.receipt_long_outlined, color: BsColors.primary),
+      title: Row(
+        children: [
+          Expanded(child: Text(bill.billNo)),
+          if (bill.pendingSync) ...[
+            const SizedBox(width: 4),
+            Tooltip(
+              message: l10n.provisionalBillNo,
+              child: const Icon(Icons.schedule, size: 14, color: BsColors.accent),
+            ),
+          ],
+        ],
+      ),
       subtitle: Text(customerLabel),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,

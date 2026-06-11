@@ -23,6 +23,7 @@ abstract class Bill with _$Bill {
     DateTime? createdAt,
     String? customerShopName,
     @Default([]) List<BillItem> items,
+    @Default(false) bool pendingSync,
   }) = _Bill;
 
   factory Bill.fromJson(Map<String, dynamic> json) => _$BillFromJson(json);
