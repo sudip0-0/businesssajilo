@@ -1,3 +1,5 @@
+import 'package:json_annotation/json_annotation.dart';
+
 /// Core enums — names must match Postgres enums exactly (see Agent.md).
 enum Role { owner, sales, warehouse, customer }
 
@@ -21,7 +23,14 @@ enum BillStatus { paid, partial, due }
 
 enum PaymentMethod { cash, cheque, wallet, bank }
 
-enum StockMovementType { stockIn, adjust, dispatch }
+enum StockMovementType {
+  @JsonValue('stock_in')
+  stockIn,
+  @JsonValue('adjust')
+  adjust,
+  @JsonValue('dispatch')
+  dispatch,
+}
 
 /// Allowed order state transitions (validated server-side too).
 const Map<OrderStatus, Set<OrderStatus>> orderTransitions = {

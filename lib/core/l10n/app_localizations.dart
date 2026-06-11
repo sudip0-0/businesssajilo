@@ -631,6 +631,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stock'**
   String get stock;
+
+  /// No description provided for @addProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Add product'**
+  String get addProduct;
+
+  /// No description provided for @editProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit product'**
+  String get editProduct;
+
+  /// No description provided for @productName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name'**
+  String get productName;
+
+  /// No description provided for @productNameNp.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name (Nepali)'**
+  String get productNameNp;
+
+  /// No description provided for @sku.
+  ///
+  /// In en, this message translates to:
+  /// **'SKU'**
+  String get sku;
+
+  /// No description provided for @unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unit;
+
+  /// No description provided for @costPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost price'**
+  String get costPrice;
+
+  /// No description provided for @referencePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference price'**
+  String get referencePrice;
+
+  /// No description provided for @lowStockThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock alert at'**
+  String get lowStockThreshold;
+
+  /// No description provided for @inStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get inStock;
+
+  /// No description provided for @outOfStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get outOfStock;
+
+  /// No description provided for @stockLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock level'**
+  String get stockLevel;
+
+  /// No description provided for @movementHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement history'**
+  String get movementHistory;
+
+  /// No description provided for @adjustmentReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment reason'**
+  String get adjustmentReason;
+
+  /// No description provided for @reasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason is required for adjustments'**
+  String get reasonRequired;
+
+  /// No description provided for @addCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category'**
+  String get addCategory;
+
+  /// No description provided for @editCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get editCategory;
+
+  /// No description provided for @categories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categories;
+
+  /// No description provided for @deleteProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete product'**
+  String get deleteProduct;
+
+  /// No description provided for @deactivateProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate product'**
+  String get deactivateProduct;
+
+  /// No description provided for @deactivateProductConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate this product? It will be hidden from sales.'**
+  String get deactivateProductConfirm;
+
+  /// No description provided for @imageOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Product image (optional)'**
+  String get imageOptional;
+
+  /// No description provided for @pickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick image'**
+  String get pickImage;
+
+  /// No description provided for @piece.
+  ///
+  /// In en, this message translates to:
+  /// **'Piece'**
+  String get piece;
+
+  /// No description provided for @stockAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust stock'**
+  String get stockAdjust;
+
+  /// No description provided for @qtyChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity change'**
+  String get qtyChange;
+
+  /// No description provided for @allCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get allCategories;
+
+  /// No description provided for @noMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock movements yet'**
+  String get noMovements;
+
+  /// No description provided for @stockInQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity to add'**
+  String get stockInQty;
+
+  /// No description provided for @movementTypeStockIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock in'**
+  String get movementTypeStockIn;
+
+  /// No description provided for @movementTypeAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment'**
+  String get movementTypeAdjust;
+
+  /// No description provided for @movementTypeDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch'**
+  String get movementTypeDispatch;
+
+  /// No description provided for @filterProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products'**
+  String get filterProducts;
 }
 
 class _AppLocalizationsDelegate

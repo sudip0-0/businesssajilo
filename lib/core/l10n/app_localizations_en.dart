@@ -279,4 +279,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stock => 'Stock';
+
+  @override
+  String get addProduct => 'Add product';
+
+  @override
+  String get editProduct => 'Edit product';
+
+  @override
+  String get productName => 'Product name';
+
+  @override
+  String get productNameNp => 'Product name (Nepali)';
+
+  @override
+  String get sku => 'SKU';
+
+  @override
+  String get unit => 'Unit';
+
+  @override
+  String get costPrice => 'Cost price';
+
+  @override
+  String get referencePrice => 'Reference price';
+
+  @override
+  String get lowStockThreshold => 'Low stock alert at';
+
+  @override
+  String get inStock => 'In stock';
+
+  @override
+  String get outOfStock => 'Out of stock';
+
+  @override
+  String get stockLevel => 'Stock level';
+
+  @override
+  String get movementHistory => 'Movement history';
+
+  @override
+  String get adjustmentReason => 'Adjustment reason';
+
+  @override
+  String get reasonRequired => 'Reason is required for adjustments';
+
+  @override
+  String get addCategory => 'Add category';
+
+  @override
+  String get editCategory => 'Edit category';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get deleteProduct => 'Delete product';
+
+  @override
+  String get deactivateProduct => 'Deactivate product';
+
+  @override
+  String get deactivateProductConfirm =>
+      'Deactivate this product? It will be hidden from sales.';
+
+  @override
+  String get imageOptional => 'Product image (optional)';
+
+  @override
+  String get pickImage => 'Pick image';
+
+  @override
+  String get piece => 'Piece';
+
+  @override
+  String get stockAdjust => 'Adjust stock';
+
+  @override
+  String get qtyChange => 'Quantity change';
+
+  @override
+  String get allCategories => 'All categories';
+
+  @override
+  String get noMovements => 'No stock movements yet';
+
+  @override
+  String get stockInQty => 'Quantity to add';
+
+  @override
+  String get movementTypeStockIn => 'Stock in';
+
+  @override
+  String get movementTypeAdjust => 'Adjustment';
+
+  @override
+  String get movementTypeDispatch => 'Dispatch';
+
+  @override
+  String get filterProducts => 'Search products';
 }

@@ -20,12 +20,12 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ RLS test suite (`supabase test db` — 8 tests in `supabase/tests/rls_phase1_test.sql`)
 
 ## Phase 2 — Products & Inventory
-- ⬜ DB: `categories`, `products`, `stock_movements` + stock_cached trigger + RLS
-- ⬜ Product CRUD (owner) with image upload (Supabase Storage), EN/NP names
-- ⬜ Category management
-- ⬜ Stock-in entry, manual adjustment (reason required) — owner/warehouse
-- ⬜ Stock list with levels + low-stock badges; movement history per product
-- ⬜ Low-stock threshold alerts (DB trigger → notification record)
+- ✅ DB: `categories`, `products`, `stock_movements`, `notifications` + stock_cached trigger + RLS + storage bucket
+- ✅ Product CRUD (owner) with image upload (Supabase Storage), EN/NP names
+- ✅ Category management
+- ✅ Stock-in entry, manual adjustment (reason required) — owner/warehouse
+- ✅ Stock list with levels + low-stock badges; movement history per product
+- ✅ Low-stock threshold alerts (DB trigger → notification records)
 
 ## Phase 3 — Customers & Ledger
 - ⬜ DB: `customers`, `payments` + ledger view + RLS

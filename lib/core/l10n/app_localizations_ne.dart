@@ -279,4 +279,104 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get stock => 'स्टक';
+
+  @override
+  String get addProduct => 'उत्पादन थप्नुहोस्';
+
+  @override
+  String get editProduct => 'उत्पादन सम्पादन';
+
+  @override
+  String get productName => 'उत्पादनको नाम';
+
+  @override
+  String get productNameNp => 'उत्पादनको नाम (नेपाली)';
+
+  @override
+  String get sku => 'SKU';
+
+  @override
+  String get unit => 'इकाई';
+
+  @override
+  String get costPrice => 'लागत मूल्य';
+
+  @override
+  String get referencePrice => 'सन्दर्भ मूल्य';
+
+  @override
+  String get lowStockThreshold => 'कम स्टक चेतावनी';
+
+  @override
+  String get inStock => 'स्टकमा छ';
+
+  @override
+  String get outOfStock => 'स्टक सकियो';
+
+  @override
+  String get stockLevel => 'स्टक स्तर';
+
+  @override
+  String get movementHistory => 'स्टक इतिहास';
+
+  @override
+  String get adjustmentReason => 'समायोजनको कारण';
+
+  @override
+  String get reasonRequired => 'समायोजनको लागि कारण आवश्यक छ';
+
+  @override
+  String get addCategory => 'श्रेणी थप्नुहोस्';
+
+  @override
+  String get editCategory => 'श्रेणी सम्पादन';
+
+  @override
+  String get categories => 'श्रेणीहरू';
+
+  @override
+  String get deleteProduct => 'उत्पादन मेटाउनुहोस्';
+
+  @override
+  String get deactivateProduct => 'उत्पादन निष्क्रिय';
+
+  @override
+  String get deactivateProductConfirm =>
+      'यो उत्पादन निष्क्रिय गर्ने? बिक्रीबाट लुकाइनेछ।';
+
+  @override
+  String get imageOptional => 'उत्पादन तस्बिर (वैकल्पिक)';
+
+  @override
+  String get pickImage => 'तस्बिर छान्नुहोस्';
+
+  @override
+  String get piece => 'पिस';
+
+  @override
+  String get stockAdjust => 'स्टक समायोजन';
+
+  @override
+  String get qtyChange => 'परिमाण परिवर्तन';
+
+  @override
+  String get allCategories => 'सबै श्रेणी';
+
+  @override
+  String get noMovements => 'अहिलेसम्म कुनै स्टक चाल छैन';
+
+  @override
+  String get stockInQty => 'थप्ने परिमाण';
+
+  @override
+  String get movementTypeStockIn => 'स्टक भित्र';
+
+  @override
+  String get movementTypeAdjust => 'समायोजन';
+
+  @override
+  String get movementTypeDispatch => 'पठाइयो';
+
+  @override
+  String get filterProducts => 'उत्पादन खोज्नुहोस्';
 }
