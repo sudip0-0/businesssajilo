@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/money.dart';
+import '../customers/add_customer_sheet.dart';
+import '../customers/customer_list_screen.dart';
+import '../customers/providers.dart';
 import '../inventory/product_form_screen.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/providers.dart';
@@ -24,12 +28,21 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final lowStockAsync = ref.watch(lowStockCountProvider);
+    final totalDuesAsync = ref.watch(totalDuesProvider);
 
     final pages = [
       RoleDashboard(
         stats: [
           (icon: Icons.payments, label: l10n.todaysSales, value: 'रू 0'),
-          (icon: Icons.account_balance_wallet, label: l10n.totalDues, value: 'रू 0'),
+          (
+            icon: Icons.account_balance_wallet,
+            label: l10n.totalDues,
+            value: totalDuesAsync.when(
+              data: (d) => formatNpr(Paisa(d), showPaisa: false),
+              loading: () => '…',
+              error: (_, _) => '—',
+            ),
+          ),
           (
             icon: Icons.inventory_2,
             label: l10n.lowStock,
@@ -43,6 +56,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         ],
       ),
       const ProductListScreen(canEdit: true, canManageStock: true),
+      const CustomerListScreen(canEdit: true, canRecordPayments: true),
       const StaffListScreen(),
       Center(child: Text(l10n.settings)),
     ];
@@ -50,6 +64,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
     final titles = [
       l10n.dashboard,
       l10n.inventory,
+      l10n.customers,
       l10n.staffManagement,
       l10n.settings,
     ];
@@ -80,6 +95,21 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               final created = await showModalBottomSheet<bool>(
                 context: context,
                 isScrollControlled: true,
+                builder: (_) => const AddCustomerSheet(),
+              );
+              if (created == true) {
+                ref.invalidate(customerListProvider);
+                ref.invalidate(totalDuesProvider);
+              }
+            },
+            icon: const Icon(Icons.person_add),
+            label: Text(l10n.addCustomer),
+          ),
+        3 => FloatingActionButton.extended(
+            onPressed: () async {
+              final created = await showModalBottomSheet<bool>(
+                context: context,
+                isScrollControlled: true,
                 builder: (_) => const AddMemberSheet(),
               );
               if (created == true) ref.invalidate(staffListProvider);
@@ -102,6 +132,11 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.inventory_2_outlined),
             selectedIcon: const Icon(Icons.inventory_2),
             label: l10n.inventory,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.storefront_outlined),
+            selectedIcon: const Icon(Icons.storefront),
+            label: l10n.customers,
           ),
           NavigationDestination(
             icon: const Icon(Icons.people_outline),

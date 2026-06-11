@@ -28,10 +28,10 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Low-stock threshold alerts (DB trigger → notification records)
 
 ## Phase 3 — Customers & Ledger
-- ⬜ DB: `customers`, `payments` + ledger view + RLS
-- ⬜ Customer CRUD (owner) incl. credential creation, opening balance
-- ⬜ Customer list with dues summary; customer detail with ledger statement
-- ⬜ Record payment flow (cash/cheque/wallet/bank ref), allocate to bill or account
+- ✅ DB: `payments` + `customer_balances` / `customer_ledger_entries` views + extended RLS
+- ✅ Customer CRUD (owner) incl. credential creation, opening balance
+- ✅ Customer list with dues summary; customer detail with ledger statement
+- ✅ Record payment flow (cash/cheque/wallet/bank ref), account-level allocation
 
 ## Phase 4 — Billing (online first)
 - ⬜ DB: `bills`, `bill_items` + per-business bill numbering + RLS (warehouse blocked)

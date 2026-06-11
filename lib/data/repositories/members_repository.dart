@@ -34,6 +34,7 @@ class MembersRepository {
     String? shopName,
     String? contactName,
     String? address,
+    int openingBalance = 0,
   }) async {
     final client = _requireClient();
     final response = await client.functions.invoke(
@@ -47,6 +48,7 @@ class MembersRepository {
         'shopName': ?shopName,
         'contactName': ?contactName,
         'address': ?address,
+        'openingBalance': openingBalance,
       },
     );
 

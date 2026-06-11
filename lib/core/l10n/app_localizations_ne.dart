@@ -379,4 +379,82 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get filterProducts => 'उत्पादन खोज्नुहोस्';
+
+  @override
+  String get addCustomer => 'ग्राहक थप्नुहोस्';
+
+  @override
+  String get editCustomer => 'ग्राहक सम्पादन';
+
+  @override
+  String get openingBalance => 'सुरुवाती बाँकी';
+
+  @override
+  String get currentBalance => 'हालको बाँकी';
+
+  @override
+  String get recordPayment => 'भुक्तानी रेकर्ड';
+
+  @override
+  String get paymentMethod => 'भुक्तानी विधि';
+
+  @override
+  String get paymentRef => 'सन्दर्भ नोट';
+
+  @override
+  String get paymentAmount => 'भुक्तानी रकम';
+
+  @override
+  String get allocateToAccount => 'खाता भुक्तानी';
+
+  @override
+  String get allocateToBill => 'बिलमा जोड्नुहोस्';
+
+  @override
+  String get ledgerDebit => 'डेबिट';
+
+  @override
+  String get ledgerCredit => 'क्रेडिट';
+
+  @override
+  String get runningBalance => 'बाँकी';
+
+  @override
+  String get noCustomers => 'अहिलेसम्म कुनै ग्राहक छैन';
+
+  @override
+  String get noPayments => 'अहिलेसम्म कुनै भुक्तानी छैन';
+
+  @override
+  String get noLedgerEntries => 'अहिलेसम्म कुनै खाता प्रविष्टि छैन';
+
+  @override
+  String get filterCustomers => 'ग्राहक खोज्नुहोस्';
+
+  @override
+  String get paymentMethodCash => 'नगद';
+
+  @override
+  String get paymentMethodCheque => 'चेक';
+
+  @override
+  String get paymentMethodWallet => 'वालेट';
+
+  @override
+  String get paymentMethodBank => 'बैंक ट्रान्सफर';
+
+  @override
+  String get amountRequired => 'रकम आवश्यक छ';
+
+  @override
+  String get amountMustBePositive => 'रकम शून्य भन्दा ठूलो हुनुपर्छ';
+
+  @override
+  String get selectCustomer => 'ग्राहक छान्नुहोस्';
+
+  @override
+  String get entryOpeningBalance => 'सुरुवाती बाँकी';
+
+  @override
+  String get entryPayment => 'भुक्तानी';
 }

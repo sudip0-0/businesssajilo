@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
       shopName,
       contactName,
       address,
+      openingBalance,
     } = body;
 
     if (!email || !password || !role || !displayName) {
@@ -104,6 +105,8 @@ Deno.serve(async (req) => {
           contact_name: contactName ?? displayName,
           phone: phone ?? null,
           address: address ?? null,
+          opening_balance:
+            typeof openingBalance === "number" ? openingBalance : 0,
         })
         .select("id")
         .single();

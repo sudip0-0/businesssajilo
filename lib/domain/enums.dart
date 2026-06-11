@@ -58,6 +58,7 @@ extension RolePermissions on Role {
   bool get canQuote => this == Role.owner || this == Role.sales;
   bool get canRecordPayments => this == Role.owner || this == Role.sales;
   bool get canManageMembers => this == Role.owner;
+  bool get canManageCustomers => this == Role.owner;
   bool get canManageProducts => this == Role.owner;
   bool get isStaff => this != Role.customer;
 }

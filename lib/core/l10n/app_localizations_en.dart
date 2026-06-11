@@ -379,4 +379,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterProducts => 'Search products';
+
+  @override
+  String get addCustomer => 'Add customer';
+
+  @override
+  String get editCustomer => 'Edit customer';
+
+  @override
+  String get openingBalance => 'Opening balance';
+
+  @override
+  String get currentBalance => 'Current balance';
+
+  @override
+  String get recordPayment => 'Record payment';
+
+  @override
+  String get paymentMethod => 'Payment method';
+
+  @override
+  String get paymentRef => 'Reference note';
+
+  @override
+  String get paymentAmount => 'Payment amount';
+
+  @override
+  String get allocateToAccount => 'Account payment';
+
+  @override
+  String get allocateToBill => 'Allocate to bill';
+
+  @override
+  String get ledgerDebit => 'Debit';
+
+  @override
+  String get ledgerCredit => 'Credit';
+
+  @override
+  String get runningBalance => 'Balance';
+
+  @override
+  String get noCustomers => 'No customers yet';
+
+  @override
+  String get noPayments => 'No payments yet';
+
+  @override
+  String get noLedgerEntries => 'No ledger entries yet';
+
+  @override
+  String get filterCustomers => 'Search customers';
+
+  @override
+  String get paymentMethodCash => 'Cash';
+
+  @override
+  String get paymentMethodCheque => 'Cheque';
+
+  @override
+  String get paymentMethodWallet => 'Wallet';
+
+  @override
+  String get paymentMethodBank => 'Bank transfer';
+
+  @override
+  String get amountRequired => 'Amount is required';
+
+  @override
+  String get amountMustBePositive => 'Amount must be greater than zero';
+
+  @override
+  String get selectCustomer => 'Select customer';
+
+  @override
+  String get entryOpeningBalance => 'Opening balance';
+
+  @override
+  String get entryPayment => 'Payment';
 }

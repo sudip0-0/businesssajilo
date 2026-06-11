@@ -829,6 +829,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search products'**
   String get filterProducts;
+
+  /// No description provided for @addCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add customer'**
+  String get addCustomer;
+
+  /// No description provided for @editCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit customer'**
+  String get editCustomer;
+
+  /// No description provided for @openingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance'**
+  String get openingBalance;
+
+  /// No description provided for @currentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance'**
+  String get currentBalance;
+
+  /// No description provided for @recordPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Record payment'**
+  String get recordPayment;
+
+  /// No description provided for @paymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get paymentMethod;
+
+  /// No description provided for @paymentRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference note'**
+  String get paymentRef;
+
+  /// No description provided for @paymentAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment amount'**
+  String get paymentAmount;
+
+  /// No description provided for @allocateToAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account payment'**
+  String get allocateToAccount;
+
+  /// No description provided for @allocateToBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocate to bill'**
+  String get allocateToBill;
+
+  /// No description provided for @ledgerDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get ledgerDebit;
+
+  /// No description provided for @ledgerCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get ledgerCredit;
+
+  /// No description provided for @runningBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get runningBalance;
+
+  /// No description provided for @noCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'No customers yet'**
+  String get noCustomers;
+
+  /// No description provided for @noPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments yet'**
+  String get noPayments;
+
+  /// No description provided for @noLedgerEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No ledger entries yet'**
+  String get noLedgerEntries;
+
+  /// No description provided for @filterCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Search customers'**
+  String get filterCustomers;
+
+  /// No description provided for @paymentMethodCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get paymentMethodCash;
+
+  /// No description provided for @paymentMethodCheque.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheque'**
+  String get paymentMethodCheque;
+
+  /// No description provided for @paymentMethodWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get paymentMethodWallet;
+
+  /// No description provided for @paymentMethodBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank transfer'**
+  String get paymentMethodBank;
+
+  /// No description provided for @amountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount is required'**
+  String get amountRequired;
+
+  /// No description provided for @amountMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be greater than zero'**
+  String get amountMustBePositive;
+
+  /// No description provided for @selectCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Select customer'**
+  String get selectCustomer;
+
+  /// No description provided for @entryOpeningBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance'**
+  String get entryOpeningBalance;
+
+  /// No description provided for @entryPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get entryPayment;
 }
 
 class _AppLocalizationsDelegate
