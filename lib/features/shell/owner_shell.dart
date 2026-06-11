@@ -12,6 +12,8 @@ import '../customers/providers.dart';
 import '../inventory/product_form_screen.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/providers.dart';
+import '../orders/order_queue_screen.dart';
+import '../orders/providers.dart';
 import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
 import 'logout_action.dart';
@@ -33,6 +35,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
     final lowStockAsync = ref.watch(lowStockCountProvider);
     final totalDuesAsync = ref.watch(totalDuesProvider);
     final todaysSalesAsync = ref.watch(todaysSalesProvider);
+    final pendingOrdersAsync = ref.watch(pendingOrdersCountProvider);
 
     final pages = [
       RoleDashboard(
@@ -64,12 +67,21 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               error: (_, _) => '—',
             ),
           ),
-          (icon: Icons.shopping_cart, label: l10n.pendingOrders, value: '0'),
+          (
+            icon: Icons.shopping_cart,
+            label: l10n.pendingOrders,
+            value: pendingOrdersAsync.when(
+              data: (c) => '$c',
+              loading: () => '…',
+              error: (_, _) => '—',
+            ),
+          ),
         ],
       ),
       const ProductListScreen(canEdit: true, canManageStock: true),
       const CustomerListScreen(canEdit: true, canRecordPayments: true),
       const BillListScreen(),
+      const OrderQueueScreen(),
       const StaffListScreen(),
       Center(child: Text(l10n.settings)),
     ];
@@ -79,6 +91,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       l10n.inventory,
       l10n.customers,
       l10n.billing,
+      l10n.orders,
       l10n.staffManagement,
       l10n.settings,
     ];
@@ -135,7 +148,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.add),
             label: Text(l10n.newBill),
           ),
-        4 => FloatingActionButton.extended(
+        5 => FloatingActionButton.extended(
             onPressed: () async {
               final created = await showModalBottomSheet<bool>(
                 context: context,
@@ -172,6 +185,11 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.receipt_long_outlined),
             selectedIcon: const Icon(Icons.receipt_long),
             label: l10n.billing,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            selectedIcon: const Icon(Icons.shopping_cart),
+            label: l10n.orders,
           ),
           NavigationDestination(
             icon: const Icon(Icons.people_outline),

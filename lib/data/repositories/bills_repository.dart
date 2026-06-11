@@ -150,6 +150,75 @@ class BillsRepository {
     return get(billId);
   }
 
+  Future<Bill> createFromOrder({
+    required String orderId,
+    required String customerId,
+    required String createdByMemberId,
+    required BillStatus status,
+    required int itemsTotal,
+    required int discount,
+    required int grandTotal,
+    required List<BillLineInput> lines,
+    PaymentMethod paymentMethod = PaymentMethod.cash,
+    String? paymentRefNote,
+    int? paymentAmount,
+  }) async {
+    final client = _requireClient();
+    final billId = const Uuid().v4();
+
+    await client.from('bills').insert({
+      'id': billId,
+      'customer_id': customerId,
+      'order_id': orderId,
+      'items_total': itemsTotal,
+      'discount': discount,
+      'grand_total': grandTotal,
+      'status': status.name,
+      'created_by': createdByMemberId,
+    });
+
+    if (lines.isNotEmpty) {
+      await client.from('bill_items').insert(
+            lines
+                .map(
+                  (line) => {
+                    'id': const Uuid().v4(),
+                    'bill_id': billId,
+                    'product_id': line.productId,
+                    'name_snapshot': line.nameSnapshot,
+                    'qty': line.qty,
+                    'rate': line.rate,
+                    'discount': line.discount,
+                    'line_total': line.lineTotal,
+                  },
+                )
+                .toList(),
+          );
+    }
+
+    if (status == BillStatus.paid || status == BillStatus.partial) {
+      final amount =
+          status == BillStatus.paid ? grandTotal : (paymentAmount ?? 0);
+      if (amount > 0) {
+        await _payments.record(
+          customerId: customerId,
+          amount: amount,
+          method: paymentMethod,
+          refNote: paymentRefNote,
+          billId: billId,
+          receivedByMemberId: createdByMemberId,
+        );
+      }
+    }
+
+    await client
+        .from('orders')
+        .update({'status': OrderStatus.billed.name})
+        .eq('id', orderId);
+
+    return get(billId);
+  }
+
   Bill _mapBillRow(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
     final customer = map.remove('customers');

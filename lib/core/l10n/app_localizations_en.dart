@@ -514,4 +514,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get todaysBills => 'Today\'s bills';
+
+  @override
+  String get cart => 'Cart';
+
+  @override
+  String get addToCart => 'Add to cart';
+
+  @override
+  String get orderNote => 'Order note';
+
+  @override
+  String get sendQuote => 'Send quote';
+
+  @override
+  String quoteVersion(int version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get rejectComment => 'Reason for rejection';
+
+  @override
+  String get confirmOrder => 'Confirm order';
+
+  @override
+  String get markPacked => 'Mark packed';
+
+  @override
+  String get markDispatched => 'Mark dispatched';
+
+  @override
+  String get generateBill => 'Generate bill';
+
+  @override
+  String get orderChat => 'Order chat';
+
+  @override
+  String get typeMessage => 'Type a message';
+
+  @override
+  String get billHistory => 'Bill history';
+
+  @override
+  String get orderDetail => 'Order detail';
+
+  @override
+  String get noOrders => 'No orders yet';
+
+  @override
+  String get viewQuote => 'View quote';
+
+  @override
+  String get requote => 'Send new quote';
+
+  @override
+  String get openChat => 'Chat';
+
+  @override
+  String get emptyCatalog => 'No products in catalog';
+
+  @override
+  String get orderItems => 'Order items';
+
+  @override
+  String get quoteDetail => 'Quote detail';
+
+  @override
+  String get quoteSent => 'Quote sent';
+
+  @override
+  String get quoteAccepted => 'Quote accepted';
+
+  @override
+  String get quoteRejected => 'Quote rejected';
+
+  @override
+  String get orderQueue => 'Order queue';
+
+  @override
+  String get fulfillmentQueue => 'Orders to fulfill';
+
+  @override
+  String get noMessages => 'No messages yet';
+
+  @override
+  String get attachImage => 'Attach image';
+
+  @override
+  String get customerNote => 'Customer note';
 }

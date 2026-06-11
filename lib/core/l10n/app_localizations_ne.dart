@@ -514,4 +514,93 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get todaysBills => 'आजका बिल';
+
+  @override
+  String get cart => 'कार्ट';
+
+  @override
+  String get addToCart => 'कार्टमा थप्नुहोस्';
+
+  @override
+  String get orderNote => 'अर्डर नोट';
+
+  @override
+  String get sendQuote => 'कोटेशन पठाउनुहोस्';
+
+  @override
+  String quoteVersion(int version) {
+    return 'संस्करण $version';
+  }
+
+  @override
+  String get rejectComment => 'अस्वीकारको कारण';
+
+  @override
+  String get confirmOrder => 'अर्डर पुष्टि गर्नुहोस्';
+
+  @override
+  String get markPacked => 'प्याक गरियो';
+
+  @override
+  String get markDispatched => 'पठाइयो';
+
+  @override
+  String get generateBill => 'बिल बनाउनुहोस्';
+
+  @override
+  String get orderChat => 'अर्डर च्याट';
+
+  @override
+  String get typeMessage => 'सन्देश टाइप गर्नुहोस्';
+
+  @override
+  String get billHistory => 'बिल इतिहास';
+
+  @override
+  String get orderDetail => 'अर्डर विवरण';
+
+  @override
+  String get noOrders => 'अहिलेसम्म कुनै अर्डर छैन';
+
+  @override
+  String get viewQuote => 'कोटेशन हेर्नुहोस्';
+
+  @override
+  String get requote => 'नयाँ कोटेशन पठाउनुहोस्';
+
+  @override
+  String get openChat => 'च्याट';
+
+  @override
+  String get emptyCatalog => 'सूचीमा उत्पादन छैन';
+
+  @override
+  String get orderItems => 'अर्डर वस्तुहरू';
+
+  @override
+  String get quoteDetail => 'कोटेशन विवरण';
+
+  @override
+  String get quoteSent => 'कोटेशन पठाइयो';
+
+  @override
+  String get quoteAccepted => 'कोटेशन स्वीकार';
+
+  @override
+  String get quoteRejected => 'कोटेशन अस्वीकार';
+
+  @override
+  String get orderQueue => 'अर्डर क्यू';
+
+  @override
+  String get fulfillmentQueue => 'पूर्ति गर्न बाँकी अर्डर';
+
+  @override
+  String get noMessages => 'अहिलेसम्म कुनै सन्देश छैन';
+
+  @override
+  String get attachImage => 'फोटो संलग्न';
+
+  @override
+  String get customerNote => 'ग्राहक नोट';
 }

@@ -1,0 +1,164 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../domain/enums.dart';
+import '../../domain/models/order.dart';
+import '../../domain/models/order_item.dart';
+import '../remote/supabase_provider.dart';
+
+final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
+  return OrdersRepository(ref.watch(supabaseClientProvider));
+});
+
+class OrderLineInput {
+  const OrderLineInput({required this.productId, required this.qty});
+
+  final String productId;
+  final int qty;
+}
+
+class OrdersRepository {
+  OrdersRepository(this._client);
+
+  final SupabaseClient? _client;
+
+  Future<List<Order>> listForStaff({List<OrderStatus>? statuses}) async {
+    final client = _requireClient();
+    var query = client
+        .from('orders')
+        .select('*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))');
+    if (statuses != null && statuses.isNotEmpty) {
+      query = query.inFilter(
+        'status',
+        statuses.map((s) => s.name).toList(),
+      );
+    }
+    final rows = await query.order('created_at', ascending: false);
+    return (rows as List).map(_mapOrderRow).toList();
+  }
+
+  Future<List<Order>> listOwn() async {
+    final client = _requireClient();
+    final rows = await client
+        .from('orders')
+        .select('*, order_items(*, products(name, name_np, unit, image_url))')
+        .order('created_at', ascending: false);
+    return (rows as List).map(_mapOrderRow).toList();
+  }
+
+  Future<List<Order>> fulfillmentQueue() async {
+    return listForStaff(
+      statuses: [
+        OrderStatus.confirmed,
+        OrderStatus.packed,
+        OrderStatus.dispatched,
+      ],
+    );
+  }
+
+  Future<int> pendingCount() async {
+    final orders = await listForStaff(
+      statuses: [
+        OrderStatus.placed,
+        OrderStatus.quoted,
+        OrderStatus.accepted,
+      ],
+    );
+    return orders.length;
+  }
+
+  Future<int> openQuotesCount() async {
+    final client = _requireClient();
+    final rows = await client
+        .from('orders')
+        .select('id')
+        .eq('status', OrderStatus.quoted.name);
+    return (rows as List).length;
+  }
+
+  Future<Order> get(String id) async {
+    final client = _requireClient();
+    final row = await client
+        .from('orders')
+        .select(
+          '*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))',
+        )
+        .eq('id', id)
+        .single();
+    return _mapOrderRow(row);
+  }
+
+  Future<Order> placeOrder({
+    required String customerId,
+    required List<OrderLineInput> lines,
+    String? note,
+  }) async {
+    final client = _requireClient();
+    final orderId = const Uuid().v4();
+
+    await client.from('orders').insert({
+      'id': orderId,
+      'customer_id': customerId,
+      'status': OrderStatus.placed.name,
+      'customer_note': ?note,
+    });
+
+    if (lines.isNotEmpty) {
+      await client.from('order_items').insert(
+            lines
+                .map(
+                  (line) => {
+                    'id': const Uuid().v4(),
+                    'order_id': orderId,
+                    'product_id': line.productId,
+                    'qty': line.qty,
+                  },
+                )
+                .toList(),
+          );
+    }
+
+    return get(orderId);
+  }
+
+  Future<Order> updateStatus(String id, OrderStatus status) async {
+    final client = _requireClient();
+    await client
+        .from('orders')
+        .update({'status': status.name})
+        .eq('id', id);
+    return get(id);
+  }
+
+  Order _mapOrderRow(dynamic row) {
+    final map = Map<String, dynamic>.from(row as Map);
+    final customer = map.remove('customers');
+    if (customer is Map) {
+      map['customer_shop_name'] = customer['shop_name'];
+    }
+    final itemsRaw = map.remove('order_items');
+    final order = Order.fromJson(map);
+    if (itemsRaw is List) {
+      final items = itemsRaw.map((raw) {
+        final itemMap = Map<String, dynamic>.from(raw as Map);
+        final product = itemMap.remove('products');
+        if (product is Map) {
+          itemMap['product_name'] = product['name'];
+          itemMap['product_name_np'] = product['name_np'];
+          itemMap['unit'] = product['unit'];
+          itemMap['image_url'] = product['image_url'];
+        }
+        return OrderItem.fromJson(itemMap);
+      }).toList();
+      return order.copyWith(items: items);
+    }
+    return order;
+  }
+
+  SupabaseClient _requireClient() {
+    final client = _client;
+    if (client == null) throw Exception('Supabase not configured');
+    return client;
+  }
+}

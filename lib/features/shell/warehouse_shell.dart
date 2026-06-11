@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/stock_in_picker_sheet.dart';
+import '../orders/fulfillment_list_screen.dart';
+import '../orders/providers.dart';
 import 'logout_action.dart';
-import 'role_dashboard.dart';
 
 /// Warehouse shell — no billing nav (hard product rule).
 class WarehouseShell extends ConsumerStatefulWidget {
@@ -21,6 +22,15 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final fulfillmentAsync = ref.watch(fulfillmentQueueProvider);
+    final pendingCount = fulfillmentAsync.when(
+      data: (orders) => orders
+          .where((o) => o.status.name != 'dispatched')
+          .length
+          .toString(),
+      loading: () => '…',
+      error: (_, _) => '—',
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -29,9 +39,17 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
       ),
       body: _index == 0
           ? const ProductListScreen(canEdit: false, canManageStock: true)
-          : RoleDashboard(
-              stats: [
-                (icon: Icons.local_shipping, label: l10n.fulfillment, value: '0'),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    '$pendingCount ${l10n.fulfillmentQueue.toLowerCase()}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                const Expanded(child: FulfillmentListScreen()),
               ],
             ),
       floatingActionButton: _index == 0

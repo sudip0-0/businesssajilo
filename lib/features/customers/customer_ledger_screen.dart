@@ -6,13 +6,24 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/ledger_row.dart';
 import '../../core/utils/money.dart';
+import '../billing/customer_bill_list_screen.dart';
 import 'providers.dart';
 
-class CustomerLedgerScreen extends ConsumerWidget {
-  const CustomerLedgerScreen({super.key});
+class CustomerLedgerScreen extends ConsumerStatefulWidget {
+  const CustomerLedgerScreen({super.key, this.showBillHistory = false});
+
+  final bool showBillHistory;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomerLedgerScreen> createState() =>
+      _CustomerLedgerScreenState();
+}
+
+class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
+  int _tab = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final customerAsync = ref.watch(ownCustomerProvider);
     final ledgerAsync = ref.watch(ownLedgerProvider);
@@ -38,7 +49,8 @@ class CustomerLedgerScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.myDues, style: Theme.of(context).textTheme.titleMedium),
+                    Text(l10n.myDues,
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 8),
                     Text(
                       formatNpr(Paisa(customer.balanceDue), showPaisa: false),
@@ -53,45 +65,63 @@ class CustomerLedgerScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(l10n.ledger, style: Theme.of(context).textTheme.titleMedium),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: ledgerAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text(e.toString())),
-                data: (entries) {
-                  if (entries.isEmpty) {
-                    return EmptyState(
-                      icon: Icons.receipt_long_outlined,
-                      message: l10n.noLedgerEntries,
-                    );
-                  }
-                  return ListView.builder(
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) {
-                      final entry = entries[index];
-                      final description = switch (entry.entryType) {
-                        'opening_balance' => l10n.entryOpeningBalance,
-                        'bill' => '${l10n.entryBill} · ${entry.description}',
-                        'payment' =>
-                          '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}',
-                        _ => entry.description,
-                      };
-                      return LedgerRow(
-                        date: entry.occurredAt,
-                        description: description,
-                        debit: Paisa(entry.debitPaisa),
-                        credit: Paisa(entry.creditPaisa),
-                        runningBalance: Paisa(entry.runningBalance),
-                      );
-                    },
-                  );
-                },
+            if (widget.showBillHistory)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SegmentedButton<int>(
+                  segments: [
+                    ButtonSegment(value: 0, label: Text(l10n.ledger)),
+                    ButtonSegment(value: 1, label: Text(l10n.billHistory)),
+                  ],
+                  selected: {_tab},
+                  onSelectionChanged: (s) => setState(() => _tab = s.first),
+                ),
               ),
-            ),
+            if (widget.showBillHistory && _tab == 1)
+              const Expanded(child: CustomerBillListScreen())
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(l10n.ledger,
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ledgerAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text(e.toString())),
+                  data: (entries) {
+                    if (entries.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.receipt_long_outlined,
+                        message: l10n.noLedgerEntries,
+                      );
+                    }
+                    return ListView.builder(
+                      itemCount: entries.length,
+                      itemBuilder: (context, index) {
+                        final entry = entries[index];
+                        final description = switch (entry.entryType) {
+                          'opening_balance' => l10n.entryOpeningBalance,
+                          'bill' => '${l10n.entryBill} · ${entry.description}',
+                          'payment' =>
+                            '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}',
+                          _ => entry.description,
+                        };
+                        return LedgerRow(
+                          date: entry.occurredAt,
+                          description: description,
+                          debit: Paisa(entry.debitPaisa),
+                          credit: Paisa(entry.creditPaisa),
+                          runningBalance: Paisa(entry.runningBalance),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
         );
       },

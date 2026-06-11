@@ -1099,6 +1099,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today\'s bills'**
   String get todaysBills;
+
+  /// No description provided for @cart.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cart;
+
+  /// No description provided for @addToCart.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get addToCart;
+
+  /// No description provided for @orderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Order note'**
+  String get orderNote;
+
+  /// No description provided for @sendQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Send quote'**
+  String get sendQuote;
+
+  /// No description provided for @quoteVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String quoteVersion(int version);
+
+  /// No description provided for @rejectComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for rejection'**
+  String get rejectComment;
+
+  /// No description provided for @confirmOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm order'**
+  String get confirmOrder;
+
+  /// No description provided for @markPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark packed'**
+  String get markPacked;
+
+  /// No description provided for @markDispatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark dispatched'**
+  String get markDispatched;
+
+  /// No description provided for @generateBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate bill'**
+  String get generateBill;
+
+  /// No description provided for @orderChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Order chat'**
+  String get orderChat;
+
+  /// No description provided for @typeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message'**
+  String get typeMessage;
+
+  /// No description provided for @billHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill history'**
+  String get billHistory;
+
+  /// No description provided for @orderDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Order detail'**
+  String get orderDetail;
+
+  /// No description provided for @noOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders yet'**
+  String get noOrders;
+
+  /// No description provided for @viewQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'View quote'**
+  String get viewQuote;
+
+  /// No description provided for @requote.
+  ///
+  /// In en, this message translates to:
+  /// **'Send new quote'**
+  String get requote;
+
+  /// No description provided for @openChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get openChat;
+
+  /// No description provided for @emptyCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'No products in catalog'**
+  String get emptyCatalog;
+
+  /// No description provided for @orderItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Order items'**
+  String get orderItems;
+
+  /// No description provided for @quoteDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote detail'**
+  String get quoteDetail;
+
+  /// No description provided for @quoteSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote sent'**
+  String get quoteSent;
+
+  /// No description provided for @quoteAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote accepted'**
+  String get quoteAccepted;
+
+  /// No description provided for @quoteRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote rejected'**
+  String get quoteRejected;
+
+  /// No description provided for @orderQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Order queue'**
+  String get orderQueue;
+
+  /// No description provided for @fulfillmentQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders to fulfill'**
+  String get fulfillmentQueue;
+
+  /// No description provided for @noMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get noMessages;
+
+  /// No description provided for @attachImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach image'**
+  String get attachImage;
+
+  /// No description provided for @customerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer note'**
+  String get customerNote;
 }
 
 class _AppLocalizationsDelegate

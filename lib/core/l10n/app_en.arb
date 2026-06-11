@@ -180,5 +180,41 @@
   "noBillLines": "Add products to the bill",
   "lineDiscount": "Line discount",
   "reviewAndSave": "Review & save",
-  "todaysBills": "Today's bills"
+  "todaysBills": "Today's bills",
+  "cart": "Cart",
+  "addToCart": "Add to cart",
+  "orderNote": "Order note",
+  "sendQuote": "Send quote",
+  "quoteVersion": "Version {version}",
+  "@quoteVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "rejectComment": "Reason for rejection",
+  "confirmOrder": "Confirm order",
+  "markPacked": "Mark packed",
+  "markDispatched": "Mark dispatched",
+  "generateBill": "Generate bill",
+  "orderChat": "Order chat",
+  "typeMessage": "Type a message",
+  "billHistory": "Bill history",
+  "orderDetail": "Order detail",
+  "noOrders": "No orders yet",
+  "viewQuote": "View quote",
+  "requote": "Send new quote",
+  "openChat": "Chat",
+  "emptyCatalog": "No products in catalog",
+  "orderItems": "Order items",
+  "quoteDetail": "Quote detail",
+  "quoteSent": "Quote sent",
+  "quoteAccepted": "Quote accepted",
+  "quoteRejected": "Quote rejected",
+  "orderQueue": "Order queue",
+  "fulfillmentQueue": "Orders to fulfill",
+  "noMessages": "No messages yet",
+  "attachImage": "Attach image",
+  "customerNote": "Customer note"
 }
