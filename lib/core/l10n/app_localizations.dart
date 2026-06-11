@@ -1369,6 +1369,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Low stock alert'**
   String get notifLowStock;
+
+  /// No description provided for @salesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales summary'**
+  String get salesSummary;
+
+  /// No description provided for @duesAging.
+  ///
+  /// In en, this message translates to:
+  /// **'Dues aging'**
+  String get duesAging;
+
+  /// No description provided for @stockValuation.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock valuation'**
+  String get stockValuation;
+
+  /// No description provided for @topProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Top products'**
+  String get topProducts;
+
+  /// No description provided for @topCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Top customers'**
+  String get topCustomers;
+
+  /// No description provided for @aging0to30.
+  ///
+  /// In en, this message translates to:
+  /// **'0–30 days'**
+  String get aging0to30;
+
+  /// No description provided for @aging31to60.
+  ///
+  /// In en, this message translates to:
+  /// **'31–60 days'**
+  String get aging31to60;
+
+  /// No description provided for @aging60plus.
+  ///
+  /// In en, this message translates to:
+  /// **'60+ days'**
+  String get aging60plus;
+
+  /// No description provided for @totalValuation.
+  ///
+  /// In en, this message translates to:
+  /// **'Total valuation'**
+  String get totalValuation;
+
+  /// No description provided for @periodToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get periodToday;
+
+  /// No description provided for @periodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get periodWeek;
+
+  /// No description provided for @periodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get periodMonth;
+
+  /// No description provided for @viewReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get viewReport;
+
+  /// No description provided for @totalSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Total sales'**
+  String get totalSales;
+
+  /// No description provided for @noSalesInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales in this period'**
+  String get noSalesInPeriod;
+
+  /// No description provided for @last7DaysSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days sales'**
+  String get last7DaysSales;
+
+  /// No description provided for @ageDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get ageDays;
+
+  /// No description provided for @noDues.
+  ///
+  /// In en, this message translates to:
+  /// **'No outstanding dues'**
+  String get noDues;
+
+  /// No description provided for @selectItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item'**
+  String get selectItem;
 }
 
 class _AppLocalizationsDelegate

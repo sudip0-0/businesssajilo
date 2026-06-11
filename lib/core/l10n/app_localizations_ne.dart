@@ -651,4 +651,61 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get notifLowStock => 'कम स्टक चेतावनी';
+
+  @override
+  String get salesSummary => 'बिक्री सारांश';
+
+  @override
+  String get duesAging => 'बाँकी उमेर';
+
+  @override
+  String get stockValuation => 'स्टक मूल्यांकन';
+
+  @override
+  String get topProducts => 'शीर्ष सामान';
+
+  @override
+  String get topCustomers => 'शीर्ष ग्राहक';
+
+  @override
+  String get aging0to30 => '०–३० दिन';
+
+  @override
+  String get aging31to60 => '३१–६० दिन';
+
+  @override
+  String get aging60plus => '६०+ दिन';
+
+  @override
+  String get totalValuation => 'कुल मूल्यांकन';
+
+  @override
+  String get periodToday => 'आज';
+
+  @override
+  String get periodWeek => 'हप्ता';
+
+  @override
+  String get periodMonth => 'महिना';
+
+  @override
+  String get viewReport => 'रिपोर्टहरू';
+
+  @override
+  String get totalSales => 'कुल बिक्री';
+
+  @override
+  String get noSalesInPeriod => 'यो अवधिमा बिक्री छैन';
+
+  @override
+  String get last7DaysSales => 'पछिल्लो ७ दिनको बिक्री';
+
+  @override
+  String get ageDays => 'दिन';
+
+  @override
+  String get noDues => 'कुनै बाँकी छैन';
+
+  @override
+  String get selectItem => 'एउटा वस्तु छान्नुहोस्';
 }

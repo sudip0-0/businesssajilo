@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/utils/money.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
@@ -15,11 +16,15 @@ import '../inventory/providers.dart';
 import '../orders/order_queue_screen.dart';
 import '../orders/providers.dart';
 import '../notifications/notification_bell_action.dart';
+import '../reports/dues_aging_screen.dart';
+import '../reports/owner_dashboard.dart';
+import '../reports/sales_summary_screen.dart';
+import '../reports/stock_valuation_screen.dart';
+import '../reports/reports_hub_screen.dart';
 import '../sync/sync_badge_action.dart';
 import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
 import 'logout_action.dart';
-import 'role_dashboard.dart';
 
 class OwnerShell extends ConsumerStatefulWidget {
   const OwnerShell({super.key});
@@ -40,7 +45,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
     final pendingOrdersAsync = ref.watch(pendingOrdersCountProvider);
 
     final pages = [
-      RoleDashboard(
+      OwnerDashboard(
+        onOrdersTap: () => setState(() => _index = 4),
         stats: [
           (
             icon: Icons.payments,
@@ -49,6 +55,10 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               data: (d) => formatNpr(Paisa(d), showPaisa: false),
               loading: () => '…',
               error: (_, _) => '—',
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
             ),
           ),
           (
@@ -59,6 +69,10 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               loading: () => '…',
               error: (_, _) => '—',
             ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
+            ),
           ),
           (
             icon: Icons.inventory_2,
@@ -67,6 +81,12 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               data: (c) => '$c',
               loading: () => '…',
               error: (_, _) => '—',
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const StockValuationScreen(lowStockOnly: true),
+              ),
             ),
           ),
           (
@@ -77,6 +97,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               loading: () => '…',
               error: (_, _) => '—',
             ),
+            onTap: () => setState(() => _index = 4),
           ),
         ],
       ),
@@ -85,6 +106,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       const BillListScreen(),
       const OrderQueueScreen(),
       const StaffListScreen(),
+      const ReportsHubScreen(),
       Center(child: Text(l10n.settings)),
     ];
 
@@ -95,18 +117,63 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       l10n.billing,
       l10n.orders,
       l10n.staffManagement,
+      l10n.reports,
       l10n.settings,
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titles[_index]),
-        actions: const [
-          SyncBadgeAction(),
-          NotificationBellAction(),
-          LogoutAction(),
-        ],
+    final destinations = [
+      NavigationDestination(
+        icon: const Icon(Icons.dashboard_outlined),
+        selectedIcon: const Icon(Icons.dashboard),
+        label: l10n.dashboard,
       ),
+      NavigationDestination(
+        icon: const Icon(Icons.inventory_2_outlined),
+        selectedIcon: const Icon(Icons.inventory_2),
+        label: l10n.inventory,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.storefront_outlined),
+        selectedIcon: const Icon(Icons.storefront),
+        label: l10n.customers,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.receipt_long_outlined),
+        selectedIcon: const Icon(Icons.receipt_long),
+        label: l10n.billing,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.shopping_cart_outlined),
+        selectedIcon: const Icon(Icons.shopping_cart),
+        label: l10n.orders,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.people_outline),
+        selectedIcon: const Icon(Icons.people),
+        label: l10n.staff,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.assessment_outlined),
+        selectedIcon: const Icon(Icons.assessment),
+        label: l10n.reports,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.settings_outlined),
+        selectedIcon: const Icon(Icons.settings),
+        label: l10n.settings,
+      ),
+    ];
+
+    return AdaptiveScaffold(
+      selectedIndex: _index,
+      onDestinationSelected: (i) => setState(() => _index = i),
+      destinations: destinations,
+      titles: titles,
+      actions: const [
+        SyncBadgeAction(),
+        NotificationBellAction(),
+        LogoutAction(),
+      ],
       body: pages[_index],
       floatingActionButton: switch (_index) {
         1 => FloatingActionButton.extended(
@@ -168,47 +235,6 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
           ),
         _ => null,
       },
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.dashboard_outlined),
-            selectedIcon: const Icon(Icons.dashboard),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.inventory_2_outlined),
-            selectedIcon: const Icon(Icons.inventory_2),
-            label: l10n.inventory,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.storefront_outlined),
-            selectedIcon: const Icon(Icons.storefront),
-            label: l10n.customers,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.receipt_long_outlined),
-            selectedIcon: const Icon(Icons.receipt_long),
-            label: l10n.billing,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            selectedIcon: const Icon(Icons.shopping_cart),
-            label: l10n.orders,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.people_outline),
-            selectedIcon: const Icon(Icons.people),
-            label: l10n.staff,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: l10n.settings,
-          ),
-        ],
-      ),
     );
   }
 }

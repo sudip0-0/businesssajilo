@@ -651,4 +651,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifLowStock => 'Low stock alert';
+
+  @override
+  String get salesSummary => 'Sales summary';
+
+  @override
+  String get duesAging => 'Dues aging';
+
+  @override
+  String get stockValuation => 'Stock valuation';
+
+  @override
+  String get topProducts => 'Top products';
+
+  @override
+  String get topCustomers => 'Top customers';
+
+  @override
+  String get aging0to30 => '0–30 days';
+
+  @override
+  String get aging31to60 => '31–60 days';
+
+  @override
+  String get aging60plus => '60+ days';
+
+  @override
+  String get totalValuation => 'Total valuation';
+
+  @override
+  String get periodToday => 'Today';
+
+  @override
+  String get periodWeek => 'Week';
+
+  @override
+  String get periodMonth => 'Month';
+
+  @override
+  String get viewReport => 'Reports';
+
+  @override
+  String get totalSales => 'Total sales';
+
+  @override
+  String get noSalesInPeriod => 'No sales in this period';
+
+  @override
+  String get last7DaysSales => 'Last 7 days sales';
+
+  @override
+  String get ageDays => 'days';
+
+  @override
+  String get noDues => 'No outstanding dues';
+
+  @override
+  String get selectItem => 'Select an item';
 }

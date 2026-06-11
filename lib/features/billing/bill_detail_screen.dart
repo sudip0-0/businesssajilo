@@ -9,18 +9,21 @@ import '../../core/utils/money.dart';
 import 'providers.dart';
 
 class BillDetailScreen extends ConsumerWidget {
-  const BillDetailScreen({super.key, required this.billId});
+  const BillDetailScreen({
+    super.key,
+    required this.billId,
+    this.embedded = false,
+  });
 
   final String billId;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final billAsync = ref.watch(billDetailProvider(billId));
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.billDetail)),
-      body: billAsync.when(
+    final content = billAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
         data: (bill) {
@@ -89,7 +92,12 @@ class BillDetailScreen extends ConsumerWidget {
             ],
           );
         },
-      ),
+    );
+
+    if (embedded) return content;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.billDetail)),
+      body: content,
     );
   }
 }

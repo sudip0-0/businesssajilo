@@ -1,0 +1,192 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../domain/models/aging_customer_row.dart';
+import '../../domain/models/dues_aging_report.dart';
+import '../../domain/models/sales_period_point.dart';
+import '../../domain/models/stock_valuation_row.dart';
+import '../../domain/models/top_customer_row.dart';
+import '../../domain/models/top_product_row.dart';
+import '../remote/supabase_provider.dart';
+
+final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
+  return ReportsRepository(ref.watch(supabaseClientProvider));
+});
+
+class ReportsRepository {
+  ReportsRepository(this._client);
+
+  final SupabaseClient? _client;
+
+  Future<List<SalesPeriodPoint>> salesDaily({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('report_sales_daily')
+        .select()
+        .gte('sale_date', _dateOnly(from))
+        .lt('sale_date', _dateOnly(to))
+        .order('sale_date', ascending: true);
+    return (rows as List).map(_mapSalesDaily).toList();
+  }
+
+  Future<List<TopProductRow>> topProducts({
+    required DateTime from,
+    required DateTime to,
+    int limit = 10,
+  }) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('report_top_products')
+        .select()
+        .gte('sale_date', _dateOnly(from))
+        .lt('sale_date', _dateOnly(to));
+    final aggregated = <String, TopProductRow>{};
+    for (final row in rows as List) {
+      final map = Map<String, dynamic>.from(row as Map);
+      final id = map['product_id'] as String;
+      final existing = aggregated[id];
+      final qty = (map['qty_sold'] as num?)?.toInt() ?? 0;
+      final revenue = (map['revenue'] as num?)?.toInt() ?? 0;
+      if (existing == null) {
+        aggregated[id] = TopProductRow(
+          productId: id,
+          nameSnapshot: map['name_snapshot'] as String,
+          qtySold: qty,
+          revenue: revenue,
+        );
+      } else {
+        aggregated[id] = existing.copyWith(
+          qtySold: existing.qtySold + qty,
+          revenue: existing.revenue + revenue,
+        );
+      }
+    }
+    final list = aggregated.values.toList()
+      ..sort((a, b) => b.revenue.compareTo(a.revenue));
+    return list.take(limit).toList();
+  }
+
+  Future<List<TopCustomerRow>> topCustomers({
+    required DateTime from,
+    required DateTime to,
+    int limit = 10,
+  }) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('report_top_customers')
+        .select()
+        .gte('sale_date', _dateOnly(from))
+        .lt('sale_date', _dateOnly(to));
+    final aggregated = <String, TopCustomerRow>{};
+    for (final row in rows as List) {
+      final map = Map<String, dynamic>.from(row as Map);
+      final id = map['customer_id'] as String;
+      final existing = aggregated[id];
+      final bills = (map['bill_count'] as num?)?.toInt() ?? 0;
+      final revenue = (map['revenue'] as num?)?.toInt() ?? 0;
+      if (existing == null) {
+        aggregated[id] = TopCustomerRow(
+          customerId: id,
+          shopName: map['shop_name'] as String,
+          billCount: bills,
+          revenue: revenue,
+        );
+      } else {
+        aggregated[id] = existing.copyWith(
+          billCount: existing.billCount + bills,
+          revenue: existing.revenue + revenue,
+        );
+      }
+    }
+    final list = aggregated.values.toList()
+      ..sort((a, b) => b.revenue.compareTo(a.revenue));
+    return list.take(limit).toList();
+  }
+
+  Future<DuesAgingReport> duesAging() async {
+    final client = _requireClient();
+    final rows = await client
+        .from('customer_dues_aging')
+        .select()
+        .order('balance_due', ascending: false);
+    var b0 = 0;
+    var b31 = 0;
+    var b60 = 0;
+    final customers = <AgingCustomerRow>[];
+    for (final row in rows as List) {
+      final customer = _mapAgingCustomer(row);
+      customers.add(customer);
+      switch (customer.bucket) {
+        case '0_30':
+          b0 += customer.balanceDue;
+        case '31_60':
+          b31 += customer.balanceDue;
+        case '60_plus':
+          b60 += customer.balanceDue;
+      }
+    }
+    return DuesAgingReport(
+      bucket0to30: b0,
+      bucket31to60: b31,
+      bucket60plus: b60,
+      customers: customers,
+    );
+  }
+
+  Future<List<StockValuationRow>> stockValuation({bool lowStockOnly = false}) async {
+    final client = _requireClient();
+    var query = client.from('report_stock_valuation').select();
+    if (lowStockOnly) {
+      query = query.eq('is_low_stock', true);
+    }
+    final rows = await query.order('valuation', ascending: false);
+    return (rows as List).map(_mapStockValuation).toList();
+  }
+
+  SalesPeriodPoint _mapSalesDaily(dynamic row) {
+    final map = Map<String, dynamic>.from(row as Map);
+    return SalesPeriodPoint(
+      saleDate: DateTime.parse('${map['sale_date']}T00:00:00Z'),
+      billCount: (map['bill_count'] as num?)?.toInt() ?? 0,
+      totalSales: (map['total_sales'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  AgingCustomerRow _mapAgingCustomer(dynamic row) {
+    final map = Map<String, dynamic>.from(row as Map);
+    return AgingCustomerRow(
+      customerId: map['customer_id'] as String,
+      shopName: map['shop_name'] as String,
+      balanceDue: (map['balance_due'] as num?)?.toInt() ?? 0,
+      oldestDueAt: DateTime.parse(map['oldest_due_at'] as String),
+      ageDays: (map['age_days'] as num?)?.toInt() ?? 0,
+      bucket: map['bucket'] as String,
+    );
+  }
+
+  StockValuationRow _mapStockValuation(dynamic row) {
+    final map = Map<String, dynamic>.from(row as Map);
+    return StockValuationRow(
+      productId: map['product_id'] as String,
+      name: map['name'] as String,
+      stockCached: (map['stock_cached'] as num?)?.toInt() ?? 0,
+      costPrice: (map['cost_price'] as num?)?.toInt() ?? 0,
+      valuation: (map['valuation'] as num?)?.toInt() ?? 0,
+      isLowStock: map['is_low_stock'] as bool? ?? false,
+    );
+  }
+
+  String _dateOnly(DateTime dt) {
+    final u = dt.toUtc();
+    return '${u.year.toString().padLeft(4, '0')}-${u.month.toString().padLeft(2, '0')}-${u.day.toString().padLeft(2, '0')}';
+  }
+
+  SupabaseClient _requireClient() {
+    final client = _client;
+    if (client == null) throw Exception('Supabase not configured');
+    return client;
+  }
+}

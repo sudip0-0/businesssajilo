@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
+import '../../core/layout/two_pane_layout.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/utils/money.dart';
@@ -26,13 +28,14 @@ class CustomerListScreen extends ConsumerStatefulWidget {
 
 class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   String _query = '';
+  String? _selectedCustomerId;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final customersAsync = ref.watch(customerListProvider);
 
-    return Column(
+    final listPane = Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -71,7 +74,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   final customer = filtered[index];
                   return _CustomerTile(
                     customer: customer,
-                    onTap: () => _openDetail(context, customer),
+                    selected: _selectedCustomerId == customer.id,
+                    onTap: () => _selectCustomer(context, customer),
                     onEdit: widget.canEdit
                         ? () => _openEdit(context, customer)
                         : null,
@@ -83,6 +87,26 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         ),
       ],
     );
+
+    return TwoPaneLayout(
+      listPane: listPane,
+      detailPane: _selectedCustomerId == null
+          ? null
+          : CustomerDetailScreen(
+              customerId: _selectedCustomerId!,
+              canEdit: widget.canEdit,
+              canRecordPayments: widget.canRecordPayments,
+              embedded: true,
+            ),
+    );
+  }
+
+  void _selectCustomer(BuildContext context, Customer customer) {
+    if (isWideLayout(context)) {
+      setState(() => _selectedCustomerId = customer.id);
+      return;
+    }
+    _openDetail(context, customer);
   }
 
   Future<void> _openDetail(BuildContext context, Customer customer) async {
@@ -121,11 +145,13 @@ class _CustomerTile extends StatelessWidget {
     required this.customer,
     required this.onTap,
     this.onEdit,
+    this.selected = false,
   });
 
   final Customer customer;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +160,7 @@ class _CustomerTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
+      selected: selected,
       leading: CircleAvatar(
         backgroundColor: BsColors.primary.withValues(alpha: 0.12),
         child: Text(

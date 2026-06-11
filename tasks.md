@@ -64,11 +64,11 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Conflict handling: LWW for mutable rows + audit_log; offline e2e tests
 
 ## Phase 8 — Reports & Dashboard
-- ⬜ Owner dashboard: today's sales, dues total, low stock, pending orders
-- ⬜ Sales summary report (daily/weekly/monthly, top products/customers)
-- ⬜ Dues aging report (0–30/31–60/60+)
-- ⬜ Stock valuation report
-- ⬜ Web responsive layouts (nav rail, two-pane, data tables)
+- ✅ Owner dashboard: today's sales, dues total, low stock, pending orders
+- ✅ Sales summary report (daily/weekly/monthly, top products/customers)
+- ✅ Dues aging report (0–30/31–60/60+)
+- ✅ Stock valuation report
+- ✅ Web responsive layouts (nav rail, two-pane, data tables)
 
 ## Phase 9 — Polish & Release
 - ⬜ Nepali translation pass on all strings; BS date verification

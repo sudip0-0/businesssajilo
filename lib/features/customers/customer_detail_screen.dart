@@ -16,11 +16,13 @@ class CustomerDetailScreen extends ConsumerWidget {
     required this.customerId,
     this.canEdit = false,
     this.canRecordPayments = false,
+    this.embedded = false,
   });
 
   final String customerId;
   final bool canEdit;
   final bool canRecordPayments;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,60 +30,7 @@ class CustomerDetailScreen extends ConsumerWidget {
     final customerAsync = ref.watch(customerDetailProvider(customerId));
     final ledgerAsync = ref.watch(customerLedgerProvider(customerId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: customerAsync.when(
-          data: (c) => Text(c.shopName),
-          loading: () => Text(l10n.customers),
-          error: (_, _) => Text(l10n.customers),
-        ),
-        actions: [
-          if (canEdit)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () async {
-                final saved = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CustomerFormScreen(customerId: customerId),
-                  ),
-                );
-                if (saved == true) {
-                  ref.invalidate(customerDetailProvider(customerId));
-                  ref.invalidate(customerLedgerProvider(customerId));
-                  ref.invalidate(customerListProvider);
-                  ref.invalidate(totalDuesProvider);
-                }
-              },
-            ),
-        ],
-      ),
-      floatingActionButton: canRecordPayments
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final customer = customerAsync.value;
-                if (customer == null) return;
-                final saved = await showModalBottomSheet<bool>(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (_) => RecordPaymentSheet(
-                    customerId: customerId,
-                    customerName: customer.shopName,
-                  ),
-                );
-                if (saved == true) {
-                  ref.invalidate(customerDetailProvider(customerId));
-                  ref.invalidate(customerLedgerProvider(customerId));
-                  ref.invalidate(customerListProvider);
-                  ref.invalidate(totalDuesProvider);
-                  if (context.mounted) Navigator.pop(context, true);
-                }
-              },
-              icon: const Icon(Icons.payments_outlined),
-              label: Text(l10n.recordPayment),
-            )
-          : null,
-      body: customerAsync.when(
+    final body = customerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
         data: (customer) {
@@ -179,7 +128,64 @@ class CustomerDetailScreen extends ConsumerWidget {
             ],
           );
         },
+    );
+
+    if (embedded) return body;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: customerAsync.when(
+          data: (c) => Text(c.shopName),
+          loading: () => Text(l10n.customers),
+          error: (_, _) => Text(l10n.customers),
+        ),
+        actions: [
+          if (canEdit)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () async {
+                final saved = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CustomerFormScreen(customerId: customerId),
+                  ),
+                );
+                if (saved == true) {
+                  ref.invalidate(customerDetailProvider(customerId));
+                  ref.invalidate(customerLedgerProvider(customerId));
+                  ref.invalidate(customerListProvider);
+                  ref.invalidate(totalDuesProvider);
+                }
+              },
+            ),
+        ],
       ),
+      floatingActionButton: canRecordPayments
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final customer = customerAsync.value;
+                if (customer == null) return;
+                final saved = await showModalBottomSheet<bool>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => RecordPaymentSheet(
+                    customerId: customerId,
+                    customerName: customer.shopName,
+                  ),
+                );
+                if (saved == true) {
+                  ref.invalidate(customerDetailProvider(customerId));
+                  ref.invalidate(customerLedgerProvider(customerId));
+                  ref.invalidate(customerListProvider);
+                  ref.invalidate(totalDuesProvider);
+                  if (context.mounted) Navigator.pop(context, true);
+                }
+              },
+              icon: const Icon(Icons.payments_outlined),
+              label: Text(l10n.recordPayment),
+            )
+          : null,
+      body: body,
     );
   }
 }

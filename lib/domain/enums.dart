@@ -23,6 +23,18 @@ enum BillStatus { paid, partial, due }
 
 enum PaymentMethod { cash, cheque, wallet, bank }
 
+enum ReportRange { today, week, month, last7Days }
+
+enum AgingBucket { bucket0to30, bucket31to60, bucket60plus }
+
+extension AgingBucketX on AgingBucket {
+  String get dbValue => switch (this) {
+        AgingBucket.bucket0to30 => '0_30',
+        AgingBucket.bucket31to60 => '31_60',
+        AgingBucket.bucket60plus => '60_plus',
+      };
+}
+
 enum StockMovementType {
   @JsonValue('stock_in')
   stockIn,

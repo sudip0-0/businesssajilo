@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
+import '../../core/layout/two_pane_layout.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/empty_state.dart';
@@ -20,13 +22,14 @@ class BillListScreen extends ConsumerStatefulWidget {
 
 class _BillListScreenState extends ConsumerState<BillListScreen> {
   String _query = '';
+  String? _selectedBillId;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final billsAsync = ref.watch(billListProvider);
 
-    return Column(
+    final listPane = Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -66,7 +69,8 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
                   final bill = filtered[index];
                   return _BillTile(
                     bill: bill,
-                    onTap: () => _openDetail(context, bill),
+                    selected: _selectedBillId == bill.id,
+                    onTap: () => _selectBill(context, bill),
                   );
                 },
               );
@@ -75,6 +79,21 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         ),
       ],
     );
+
+    return TwoPaneLayout(
+      listPane: listPane,
+      detailPane: _selectedBillId == null
+          ? null
+          : BillDetailScreen(billId: _selectedBillId!, embedded: true),
+    );
+  }
+
+  void _selectBill(BuildContext context, Bill bill) {
+    if (isWideLayout(context)) {
+      setState(() => _selectedBillId = bill.id);
+      return;
+    }
+    _openDetail(context, bill);
   }
 
   Future<void> _openForm(BuildContext context) async {
@@ -100,10 +119,15 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
 }
 
 class _BillTile extends StatelessWidget {
-  const _BillTile({required this.bill, required this.onTap});
+  const _BillTile({
+    required this.bill,
+    required this.onTap,
+    this.selected = false,
+  });
 
   final Bill bill;
   final VoidCallback onTap;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +137,7 @@ class _BillTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
+      selected: selected,
       leading: bill.pendingSync
           ? const Icon(Icons.schedule, color: BsColors.accent)
           : const Icon(Icons.receipt_long_outlined, color: BsColors.primary),
