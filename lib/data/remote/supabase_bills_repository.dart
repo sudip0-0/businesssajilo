@@ -14,12 +14,16 @@ class SupabaseBillsRepository implements BillsRepository {
   final PaymentsRepository _payments;
 
   @override
-  Future<List<Bill>> list() async {
+  Future<List<Bill>> list({int offset = 0, int? limit}) async {
     final client = _requireClient();
-    final rows = await client
+    var query = client
         .from('bills')
         .select('*, customers(shop_name)')
         .order('created_at', ascending: false);
+    if (limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+    final rows = await query;
     return (rows as List).map(_mapBillRow).toList();
   }
 

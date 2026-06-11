@@ -200,7 +200,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get language => 'भाषा';
 
   @override
-  String get english => 'English';
+  String get english => 'अंग्रेजी';
 
   @override
   String get nepali => 'नेपाली';
@@ -708,4 +708,110 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get selectItem => 'एउटा वस्तु छान्नुहोस्';
+
+  @override
+  String get somethingWentWrong => 'केही गडबड भयो';
+
+  @override
+  String get tryAgain => 'फेरि प्रयास गर्नुहोस्';
+
+  @override
+  String get loadingFailed => 'डाटा लोड गर्न सकिएन';
+
+  @override
+  String get aboutApp => 'बारेमा';
+
+  @override
+  String appVersion(String version) {
+    return 'संस्करण $version';
+  }
+
+  @override
+  String get name => 'नाम';
+
+  @override
+  String get revenue => 'आम्दानी';
+
+  @override
+  String get syncEntityBill => 'बिल';
+
+  @override
+  String get syncEntityPayment => 'भुक्तानी';
+
+  @override
+  String get syncEntityStockMovement => 'स्टक सार्ने';
+
+  @override
+  String get syncEntityCustomer => 'ग्राहक';
+
+  @override
+  String get syncEntityProduct => 'सामान';
+
+  @override
+  String get syncStatusPending => 'पर्खाइमा';
+
+  @override
+  String get syncStatusFailed => 'असफल';
+
+  @override
+  String get syncStatusSynced => 'सिंक भयो';
+
+  @override
+  String get loadDemoData => 'नमूना डाटा लोड गर्नुहोस्';
+
+  @override
+  String get loadDemoDataConfirm => 'सुरु गर्न नमूना सामान र ग्राहक थप्ने?';
+
+  @override
+  String get demoDataLoaded => 'नमूना डाटा थपियो';
+
+  @override
+  String get demoDataSkipped => 'नमूना डाटा पहिले नै छ';
+
+  @override
+  String get onboardingWelcome => 'BusinessSajilo मा स्वागत छ';
+
+  @override
+  String get onboardingKpis =>
+      'ड्यासबोर्डमा आजको बिक्री, बाँकी, स्टक र अर्डर देखिन्छ।';
+
+  @override
+  String get onboardingProducts =>
+      'बिलिङ सुरु गर्न इन्भेन्टरीमा सामान थप्नुहोस्।';
+
+  @override
+  String get onboardingCustomers => 'उधारो ट्र्याक गर्न ग्राहक थप्नुहोस्।';
+
+  @override
+  String get onboardingBills => 'बिलिङ ट्याबबाट बिल बनाउनुहोस्।';
+
+  @override
+  String get onboardingNext => 'अर्को';
+
+  @override
+  String get onboardingDone => 'सुरु गर्नुहोस्';
+
+  @override
+  String get onboardingSkip => 'टुर छोड्नुहोस्';
+
+  @override
+  String get invalidCredentials => 'इमेल वा पासवर्ड गलत छ';
+
+  @override
+  String get emailAlreadyRegistered => 'यो इमेल पहिले नै दर्ता छ';
+
+  @override
+  String get weakPassword => 'पासवर्ड कमजोर छ';
+
+  @override
+  String get networkError => 'नेटवर्क समस्या — जडान जाँच गर्नुहोस्';
+
+  @override
+  String get loadMore => 'थप लोड गर्नुहोस्';
+
+  @override
+  String get noStaff => 'अहिलेसम्म कुनै कर्मचारी छैन';
+
+  @override
+  String get noCategories => 'अहिलेसम्म कुनै श्रेणी छैन';
 }

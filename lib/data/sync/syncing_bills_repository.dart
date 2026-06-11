@@ -29,11 +29,12 @@ class SyncingBillsRepository implements BillsRepository {
   static const _uuid = Uuid();
 
   @override
-  Future<List<Bill>> list() async {
+  Future<List<Bill>> list({int offset = 0, int? limit}) async {
     final bills = await _db.select(_db.localBills).get();
     bills.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sliced = limit == null ? bills : bills.skip(offset).take(limit).toList();
     final result = <Bill>[];
-    for (final bill in bills) {
+    for (final bill in sliced) {
       final items = await (_db.select(_db.localBillItems)
             ..where((i) => i.billId.equals(bill.id)))
           .get();

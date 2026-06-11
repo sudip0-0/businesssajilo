@@ -708,4 +708,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectItem => 'Select an item';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String get loadingFailed => 'Could not load data';
+
+  @override
+  String get aboutApp => 'About';
+
+  @override
+  String appVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get revenue => 'Revenue';
+
+  @override
+  String get syncEntityBill => 'Bill';
+
+  @override
+  String get syncEntityPayment => 'Payment';
+
+  @override
+  String get syncEntityStockMovement => 'Stock movement';
+
+  @override
+  String get syncEntityCustomer => 'Customer';
+
+  @override
+  String get syncEntityProduct => 'Product';
+
+  @override
+  String get syncStatusPending => 'Pending';
+
+  @override
+  String get syncStatusFailed => 'Failed';
+
+  @override
+  String get syncStatusSynced => 'Synced';
+
+  @override
+  String get loadDemoData => 'Load sample data';
+
+  @override
+  String get loadDemoDataConfirm =>
+      'Add sample products and a customer to get started?';
+
+  @override
+  String get demoDataLoaded => 'Sample data added';
+
+  @override
+  String get demoDataSkipped => 'Sample data already exists';
+
+  @override
+  String get onboardingWelcome => 'Welcome to BusinessSajilo';
+
+  @override
+  String get onboardingKpis =>
+      'Your dashboard shows today\'s sales, dues, stock alerts, and orders.';
+
+  @override
+  String get onboardingProducts =>
+      'Add products in Inventory to start billing.';
+
+  @override
+  String get onboardingCustomers =>
+      'Add customers to track udharo and payments.';
+
+  @override
+  String get onboardingBills => 'Create bills from the Billing tab.';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingDone => 'Get started';
+
+  @override
+  String get onboardingSkip => 'Skip tour';
+
+  @override
+  String get invalidCredentials => 'Invalid email or password';
+
+  @override
+  String get emailAlreadyRegistered => 'This email is already registered';
+
+  @override
+  String get weakPassword => 'Password is too weak';
+
+  @override
+  String get networkError => 'Network error — check your connection';
+
+  @override
+  String get loadMore => 'Load more';
+
+  @override
+  String get noStaff => 'No staff members yet';
+
+  @override
+  String get noCategories => 'No categories yet';
 }

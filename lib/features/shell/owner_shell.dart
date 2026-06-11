@@ -21,6 +21,8 @@ import '../reports/owner_dashboard.dart';
 import '../reports/sales_summary_screen.dart';
 import '../reports/stock_valuation_screen.dart';
 import '../reports/reports_hub_screen.dart';
+import '../settings/settings_screen.dart';
+import '../onboarding/owner_onboarding_overlay.dart';
 import '../sync/sync_badge_action.dart';
 import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
@@ -107,7 +109,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       const OrderQueueScreen(),
       const StaffListScreen(),
       const ReportsHubScreen(),
-      Center(child: Text(l10n.settings)),
+      const SettingsScreen(),
     ];
 
     final titles = [
@@ -164,17 +166,18 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       ),
     ];
 
-    return AdaptiveScaffold(
-      selectedIndex: _index,
-      onDestinationSelected: (i) => setState(() => _index = i),
-      destinations: destinations,
-      titles: titles,
-      actions: const [
-        SyncBadgeAction(),
-        NotificationBellAction(),
-        LogoutAction(),
-      ],
-      body: pages[_index],
+    return OwnerOnboardingOverlay(
+      child: AdaptiveScaffold(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: destinations,
+        titles: titles,
+        actions: const [
+          SyncBadgeAction(),
+          NotificationBellAction(),
+          LogoutAction(),
+        ],
+        body: pages[_index],
       floatingActionButton: switch (_index) {
         1 => FloatingActionButton.extended(
             onPressed: () async {
@@ -235,6 +238,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
           ),
         _ => null,
       },
+      ),
     );
   }
 }

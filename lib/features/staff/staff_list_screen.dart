@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/async_body.dart';
+import '../../core/ui/empty_state.dart';
 import '../../core/utils/role_label.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../domain/enums.dart';
@@ -20,11 +22,17 @@ class StaffListScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final staffAsync = ref.watch(staffListProvider);
 
-    return staffAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(e.toString())),
+    return AsyncBody(
+      value: staffAsync,
+      onRetry: () => ref.invalidate(staffListProvider),
       data: (members) {
         final active = members.where((m) => m.isActive).toList();
+        if (active.isEmpty) {
+          return EmptyState(
+            icon: Icons.people_outline,
+            message: l10n.noStaff,
+          );
+        }
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: active.length,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/auth_errors.dart';
 import 'providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -39,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _passwordController.text,
           );
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = localizeAuthError(e, AppLocalizations.of(context)));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

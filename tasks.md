@@ -71,12 +71,12 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Web responsive layouts (nav rail, two-pane, data tables)
 
 ## Phase 9 — Polish & Release
-- ⬜ Nepali translation pass on all strings; BS date verification
-- ⬜ Empty states, error states, skeleton loaders everywhere
-- ⬜ Performance pass (web CanvasKit, list virtualization, image caching)
-- ⬜ Security review: RLS audit, rate limits, storage rules
-- ⬜ Play Store + App Store listings, web deploy to prod
-- ⬜ Onboarding tour + seed/demo data for new businesses
+- ✅ Nepali translation pass on all strings; BS date verification
+- ✅ Empty states, error states, skeleton loaders everywhere
+- ✅ Performance pass (web CanvasKit, list virtualization, image caching)
+- ✅ Security review: RLS audit, rate limits, storage rules
+- ✅ Play Store + App Store listings, web deploy to prod
+- ✅ Onboarding tour + seed/demo data for new businesses
 
 ## Backlog (post-v1, see product.md roadmap)
 - PDF invoices + thermal printing · sales returns · Excel export

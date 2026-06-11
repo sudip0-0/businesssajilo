@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
+import '../../core/ui/list_skeleton.dart';
+import '../../core/ui/paginated_list_state.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../data/repositories/categories_repository.dart';
+import '../../data/repositories/products_repository.dart';
 import '../../domain/models/category.dart';
 import '../../domain/models/product.dart';
 import 'category_list_screen.dart';
@@ -30,96 +34,142 @@ class ProductListScreen extends ConsumerStatefulWidget {
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   String _query = '';
   String? _categoryId;
+  PaginatedListState<Product>? _pager;
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+  }
+
+  void _initPager() {
+    _pager = PaginatedListState<Product>(
+      loadPage: (offset, limit) => ref
+          .read(productsRepositoryProvider)
+          .list(offset: offset, limit: limit),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    )..attachScrollController(_scrollController);
+    _pager!.refresh().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  List<Product> get _filtered {
+    final items = _pager?.items ?? [];
+    return items.where((p) {
+      final matchesQuery = _query.isEmpty ||
+          p.name.toLowerCase().contains(_query.toLowerCase()) ||
+          (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
+      final matchesCategory = _categoryId == null || p.categoryId == _categoryId;
+      return matchesQuery && matchesCategory;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final productsAsync = ref.watch(productListProvider);
     final categoriesAsync = ref.watch(
       FutureProvider.autoDispose((ref) => ref.watch(categoriesRepositoryProvider).list()),
     );
+    final pager = _pager;
 
-    return productsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(e.toString())),
-      data: (products) {
-        final filtered = products.where((p) {
-          final matchesQuery = _query.isEmpty ||
-              p.name.toLowerCase().contains(_query.toLowerCase()) ||
-              (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-          final matchesCategory =
-              _categoryId == null || p.categoryId == _categoryId;
-          return matchesQuery && matchesCategory;
-        }).toList();
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: l10n.filterProducts,
+              prefixIcon: const Icon(Icons.search),
+            ),
+            onChanged: (v) => setState(() => _query = v),
+          ),
+        ),
+        categoriesAsync.when(
+          loading: () => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
+          data: (categories) => _CategoryChips(
+            categories: categories,
+            selectedId: _categoryId,
+            onSelected: (id) => setState(() => _categoryId = id),
+          ),
+        ),
+        if (widget.canEdit)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CategoryListScreen()),
+                );
+                await _pager?.refresh();
+              },
+              icon: const Icon(Icons.category_outlined),
+              label: Text(l10n.categories),
+            ),
+          ),
+        Expanded(child: _buildListBody(l10n, pager)),
+      ],
+    );
+  }
 
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: l10n.filterProducts,
-                  prefixIcon: const Icon(Icons.search),
-                ),
-                onChanged: (v) => setState(() => _query = v),
-              ),
-            ),
-            categoriesAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
-              data: (categories) => _CategoryChips(
-                categories: categories,
-                selectedId: _categoryId,
-                onSelected: (id) => setState(() => _categoryId = id),
-              ),
-            ),
-            if (widget.canEdit)
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CategoryListScreen()),
-                    );
-                    ref.invalidate(productListProvider);
-                  },
-                  icon: const Icon(Icons.category_outlined),
-                  label: Text(l10n.categories),
-                ),
-              ),
-            Expanded(
-              child: filtered.isEmpty
-                  ? EmptyState(
-                      icon: Icons.inventory_2_outlined,
-                      message: l10n.emptyNoProducts,
-                      actionLabel: widget.canEdit ? l10n.emptyAddFirstProduct : null,
-                      onAction: widget.canEdit
-                          ? () => _openForm(context, null)
-                          : null,
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final product = filtered[index];
-                        return ListTile(
-                          leading: ProductImage(storagePath: product.imageUrl),
-                          title: Text(product.name),
-                          subtitle: Text(
-                            [
-                              if (product.categoryName != null) product.categoryName,
-                              if (product.sku != null) product.sku,
-                            ].whereType<String>().join(' · '),
-                          ),
-                          trailing: StockBadge(product: product),
-                          onTap: () => _openDetail(context, product),
-                        );
-                      },
+  Widget _buildListBody(AppLocalizations l10n, PaginatedListState<Product>? pager) {
+    if (pager == null || pager.initialLoading) {
+      return const ListSkeleton();
+    }
+    if (pager.error != null && pager.items.isEmpty) {
+      return ErrorState(onRetry: () => pager.refresh());
+    }
+    final filtered = _filtered;
+    if (filtered.isEmpty) {
+      return EmptyState(
+        icon: Icons.inventory_2_outlined,
+        message: l10n.emptyNoProducts,
+        actionLabel: widget.canEdit ? l10n.emptyAddFirstProduct : null,
+        onAction: widget.canEdit ? () => _openForm(context, null) : null,
+      );
+    }
+    return ListView.separated(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        if (index >= filtered.length) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: pager.loading
+                  ? const CircularProgressIndicator()
+                  : TextButton(
+                      onPressed: pager.loadMore,
+                      child: Text(l10n.loadMore),
                     ),
             ),
-          ],
+          );
+        }
+        final product = filtered[index];
+        return ListTile(
+          leading: ProductImage(storagePath: product.imageUrl),
+          title: Text(product.name),
+          subtitle: Text(
+            [
+              if (product.categoryName != null) product.categoryName,
+              if (product.sku != null) product.sku,
+            ].whereType<String>().join(' · '),
+          ),
+          trailing: StockBadge(product: product),
+          onTap: () => _openDetail(context, product),
         );
       },
     );
@@ -132,7 +182,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         builder: (_) => ProductFormScreen(product: product),
       ),
     );
-    if (saved == true) ref.invalidate(productListProvider);
+    if (saved == true) await _pager?.refresh();
   }
 
   Future<void> _openDetail(BuildContext context, Product product) async {
@@ -147,7 +197,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       ),
     );
     if (changed == true) {
-      ref.invalidate(productListProvider);
+      await _pager?.refresh();
       ref.invalidate(lowStockCountProvider);
     }
   }

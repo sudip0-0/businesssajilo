@@ -19,7 +19,11 @@ final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
 });
 
 abstract class ProductsRepository {
-  Future<List<Product>> list({bool activeOnly = true});
+  Future<List<Product>> list({
+    bool activeOnly = true,
+    int offset = 0,
+    int? limit,
+  });
   Future<int> lowStockCount();
   Future<Product> get(String id);
   Future<Product> create({

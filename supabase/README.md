@@ -8,7 +8,7 @@ Prerequisites: Docker Desktop, Supabase CLI (`npm i -g supabase`).
 supabase start          # starts Postgres, Auth, API, Studio
 supabase status         # copy Publishable key → .env.local
 supabase db reset       # apply migrations + seed
-supabase test db        # RLS policy tests (pgTAP)
+supabase test db        # RLS policy tests (pgTAP) — also runs in CI
 supabase functions serve  # hot-reload Edge Functions (optional)
 supabase stop           # tear down containers
 ```
@@ -30,7 +30,7 @@ Run Flutter against local stack:
 
 | Function | Auth | Purpose |
 |---|---|---|
-| `register-business` | Public | Owner signup: creates auth user + business + owner member |
+| `register-business` | Public | Owner signup: creates auth user + business + owner member (rate-limited via `[auth.rate_limit]` in `config.toml`) |
 | `create-member` | Owner JWT | Creates staff/customer login (+ customer profile if role=customer) |
 | `notify` | Service role | Sends FCM push for a `notifications` row (optional when FCM not configured) |
 

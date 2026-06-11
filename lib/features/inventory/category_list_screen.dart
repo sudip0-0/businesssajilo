@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/async_body.dart';
+import '../../core/ui/empty_state.dart';
 import '../../data/repositories/categories_repository.dart';
 import '../../domain/models/category.dart';
 
@@ -19,10 +21,19 @@ class CategoryListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.categories)),
-      body: categoriesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
-        data: (categories) => ListView.separated(
+      body: AsyncBody(
+        value: categoriesAsync,
+        onRetry: () => ref.invalidate(categoryListProvider),
+        data: (categories) {
+          if (categories.isEmpty) {
+            return EmptyState(
+              icon: Icons.category_outlined,
+              message: l10n.noCategories,
+              actionLabel: l10n.addCategory,
+              onAction: () => _addCategory(context, ref),
+            );
+          }
+          return ListView.separated(
           itemCount: categories.length,
           separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, index) {
@@ -40,7 +51,8 @@ class CategoryListScreen extends ConsumerWidget {
               onTap: () => _editCategory(context, ref, cat),
             );
           },
-        ),
+        );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addCategory(context, ref),

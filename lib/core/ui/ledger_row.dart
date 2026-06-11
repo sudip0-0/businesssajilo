@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
+import '../layout/adaptive_scaffold.dart';
 import '../theme/app_theme.dart';
+import '../utils/bs_date.dart';
 import '../utils/money.dart';
 import 'money_text.dart';
 
@@ -23,8 +23,9 @@ class LedgerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat.yMMMd().format(date);
+    final dateStr = BsDate.both(date);
     final theme = Theme.of(context).textTheme;
+    final dateWidth = isWideLayout(context) ? 200.0 : 120.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -32,7 +33,7 @@ class LedgerRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 88,
+            width: dateWidth,
             child: Text(dateStr, style: theme.bodySmall),
           ),
           Expanded(

@@ -86,6 +86,8 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
             error: (e, _) => Text(e.toString()),
             data: (rows) => _RankedList(
               wide: isWideLayout(context),
+              nameLabel: l10n.name,
+              revenueLabel: l10n.revenue,
               items: rows
                   .map((r) => (r.nameSnapshot, formatNpr(Paisa(r.revenue), showPaisa: false)))
                   .toList(),
@@ -98,6 +100,8 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
             error: (e, _) => Text(e.toString()),
             data: (rows) => _RankedList(
               wide: isWideLayout(context),
+              nameLabel: l10n.name,
+              revenueLabel: l10n.revenue,
               items: rows
                   .map((r) => (r.shopName, formatNpr(Paisa(r.revenue), showPaisa: false)))
                   .toList(),
@@ -110,10 +114,17 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
 }
 
 class _RankedList extends StatelessWidget {
-  const _RankedList({required this.wide, required this.items});
+  const _RankedList({
+    required this.wide,
+    required this.items,
+    required this.nameLabel,
+    required this.revenueLabel,
+  });
 
   final bool wide;
   final List<(String, String)> items;
+  final String nameLabel;
+  final String revenueLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -128,10 +139,10 @@ class _RankedList extends StatelessWidget {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          columns: const [
-            DataColumn(label: Text('#')),
-            DataColumn(label: Text('Name')),
-            DataColumn(label: Text('Revenue'), numeric: true),
+          columns: [
+            const DataColumn(label: Text('#')),
+            DataColumn(label: Text(nameLabel)),
+            DataColumn(label: Text(revenueLabel), numeric: true),
           ],
           rows: [
             for (var i = 0; i < items.length; i++)

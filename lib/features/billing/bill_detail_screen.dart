@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
+import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
 import 'providers.dart';
 
@@ -28,7 +27,7 @@ class BillDetailScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text(e.toString())),
         data: (bill) {
           final dateStr = bill.createdAt != null
-              ? DateFormat.yMMMd().add_jm().format(bill.createdAt!.toLocal())
+              ? BsDate.both(bill.createdAt!)
               : '—';
 
           return ListView(

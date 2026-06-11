@@ -32,8 +32,9 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Release signing: set KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+            // env vars and configure signingConfigs.release before shipping to Play Store.
+            // Debug signing below allows CI AAB artifacts until a keystore is provided.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

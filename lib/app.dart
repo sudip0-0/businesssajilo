@@ -5,20 +5,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/locale_prefs.dart';
 
-/// App locale; persisted per user in later phases.
+/// App locale; persisted per device via SharedPreferences.
 final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
   LocaleNotifier.new,
 );
 
 class LocaleNotifier extends Notifier<Locale> {
   @override
-  Locale build() => const Locale('en');
+  Locale build() {
+    _loadSaved();
+    return const Locale('en');
+  }
+
+  Future<void> _loadSaved() async {
+    final saved = await loadSavedLocale();
+    if (saved != null) state = saved;
+  }
+
+  void setLocale(Locale locale) {
+    state = locale;
+    saveLocale(locale);
+  }
 
   void toggle() {
-    state = state.languageCode == 'en'
-        ? const Locale('ne')
-        : const Locale('en');
+    setLocale(
+      state.languageCode == 'en' ? const Locale('ne') : const Locale('en'),
+    );
   }
 }
 

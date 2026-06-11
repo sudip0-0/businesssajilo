@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/auth_errors.dart';
 import 'providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -57,7 +59,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 _addressController.text.isEmpty ? null : _addressController.text,
           );
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = localizeAuthError(e, AppLocalizations.of(context)));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -66,6 +68,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final locale = ref.watch(localeProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.registerBusiness)),
       body: SafeArea(
@@ -79,6 +82,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.language),
+                      trailing: SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(value: 'en', label: Text(l10n.english)),
+                          ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
+                        ],
+                        selected: {locale.languageCode},
+                        onSelectionChanged: (selected) {
+                          ref
+                              .read(localeProvider.notifier)
+                              .setLocale(Locale(selected.first));
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _businessNameController,
                       decoration: InputDecoration(labelText: l10n.businessName),

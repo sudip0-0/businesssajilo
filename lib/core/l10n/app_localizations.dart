@@ -1483,6 +1483,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select an item'**
   String get selectItem;
+
+  /// No description provided for @somethingWentWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get somethingWentWrong;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// No description provided for @loadingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load data'**
+  String get loadingFailed;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutApp;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String appVersion(String version);
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @revenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue'**
+  String get revenue;
+
+  /// No description provided for @syncEntityBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get syncEntityBill;
+
+  /// No description provided for @syncEntityPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get syncEntityPayment;
+
+  /// No description provided for @syncEntityStockMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock movement'**
+  String get syncEntityStockMovement;
+
+  /// No description provided for @syncEntityCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get syncEntityCustomer;
+
+  /// No description provided for @syncEntityProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get syncEntityProduct;
+
+  /// No description provided for @syncStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get syncStatusPending;
+
+  /// No description provided for @syncStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get syncStatusFailed;
+
+  /// No description provided for @syncStatusSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncStatusSynced;
+
+  /// No description provided for @loadDemoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Load sample data'**
+  String get loadDemoData;
+
+  /// No description provided for @loadDemoDataConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Add sample products and a customer to get started?'**
+  String get loadDemoDataConfirm;
+
+  /// No description provided for @demoDataLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample data added'**
+  String get demoDataLoaded;
+
+  /// No description provided for @demoDataSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample data already exists'**
+  String get demoDataSkipped;
+
+  /// No description provided for @onboardingWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to BusinessSajilo'**
+  String get onboardingWelcome;
+
+  /// No description provided for @onboardingKpis.
+  ///
+  /// In en, this message translates to:
+  /// **'Your dashboard shows today\'s sales, dues, stock alerts, and orders.'**
+  String get onboardingKpis;
+
+  /// No description provided for @onboardingProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add products in Inventory to start billing.'**
+  String get onboardingProducts;
+
+  /// No description provided for @onboardingCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add customers to track udharo and payments.'**
+  String get onboardingCustomers;
+
+  /// No description provided for @onboardingBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Create bills from the Billing tab.'**
+  String get onboardingBills;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingDone;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip tour'**
+  String get onboardingSkip;
+
+  /// No description provided for @invalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password'**
+  String get invalidCredentials;
+
+  /// No description provided for @emailAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered'**
+  String get emailAlreadyRegistered;
+
+  /// No description provided for @weakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak'**
+  String get weakPassword;
+
+  /// No description provided for @networkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error — check your connection'**
+  String get networkError;
+
+  /// No description provided for @loadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get loadMore;
+
+  /// No description provided for @noStaff.
+  ///
+  /// In en, this message translates to:
+  /// **'No staff members yet'**
+  String get noStaff;
+
+  /// No description provided for @noCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get noCategories;
 }
 
 class _AppLocalizationsDelegate

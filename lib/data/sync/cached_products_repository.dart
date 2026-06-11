@@ -19,14 +19,20 @@ class CachedProductsRepository implements ProductsRepository {
   final SupabaseProductsRepository _remote;
 
   @override
-  Future<List<Product>> list({bool activeOnly = true}) async {
+  Future<List<Product>> list({
+    bool activeOnly = true,
+    int offset = 0,
+    int? limit,
+  }) async {
     var query = _db.select(_db.localProducts);
     if (activeOnly) {
       query = query..where((p) => p.isActive.equals(true));
     }
     final rows = await query.get();
     rows.sort((a, b) => a.name.compareTo(b.name));
-    return rows.map(mapLocalProduct).toList();
+    final mapped = rows.map(mapLocalProduct).toList();
+    if (limit == null) return mapped;
+    return mapped.skip(offset).take(limit).toList();
   }
 
   @override

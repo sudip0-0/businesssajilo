@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("register-business request", { method: req.method });
     const body = await req.json();
     const {
       email,

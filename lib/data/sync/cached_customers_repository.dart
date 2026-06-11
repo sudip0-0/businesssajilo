@@ -19,10 +19,12 @@ class CachedCustomersRepository implements CustomersRepository {
   final SupabaseClient? _client;
 
   @override
-  Future<List<Customer>> list() async {
+  Future<List<Customer>> list({int offset = 0, int? limit}) async {
     final rows = await _db.select(_db.localCustomers).get();
     rows.sort((a, b) => a.shopName.compareTo(b.shopName));
-    return rows.map(mapLocalCustomer).toList();
+    final mapped = rows.map(mapLocalCustomer).toList();
+    if (limit == null) return mapped;
+    return mapped.skip(offset).take(limit).toList();
   }
 
   @override

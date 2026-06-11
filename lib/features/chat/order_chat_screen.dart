@@ -144,6 +144,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
                                     child: CachedNetworkImage(
                                       imageUrl: url,
                                       height: 160,
+                                      memCacheWidth: 480,
                                       fit: BoxFit.cover,
                                     ),
                                   );

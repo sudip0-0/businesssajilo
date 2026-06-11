@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/utils/sync_labels.dart';
 import '../../data/sync/sync_providers.dart';
 
 class PendingSyncScreen extends ConsumerWidget {
@@ -70,9 +71,11 @@ class PendingSyncScreen extends ConsumerWidget {
                                   ? BsColors.danger
                                   : BsColors.accent,
                             ),
-                            title: Text('${item.entityType} · ${item.entityId}'),
+                            title: Text(
+                              '${syncEntityLabel(l10n, item.entityType)} · ${item.entityId}',
+                            ),
                             subtitle: item.lastError == null
-                                ? Text(item.status)
+                                ? Text(syncStatusLabel(l10n, item.status))
                                 : Text(
                                     '${l10n.syncFailed}: ${item.lastError}',
                                     maxLines: 2,

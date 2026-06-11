@@ -20,7 +20,7 @@ final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
 });
 
 abstract class CustomersRepository {
-  Future<List<Customer>> list();
+  Future<List<Customer>> list({int offset = 0, int? limit});
   Future<Customer> get(String id);
   Future<Customer?> getOwnProfile();
   Future<List<LedgerEntry>> ledger(String customerId);
@@ -50,12 +50,16 @@ class SupabaseCustomersRepository implements CustomersRepository {
   final SupabaseClient? _client;
 
   @override
-  Future<List<Customer>> list() async {
+  Future<List<Customer>> list({int offset = 0, int? limit}) async {
     final client = _requireClient();
-    final rows = await client
+    var query = client
         .from('customer_balances')
         .select()
         .order('shop_name', ascending: true);
+    if (limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+    final rows = await query;
     return (rows as List).map(_mapBalanceRow).toList();
   }
 

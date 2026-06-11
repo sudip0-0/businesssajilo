@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/bs_date.dart';
+import '../../core/ui/async_body.dart';
 import '../../core/ui/empty_state.dart';
 import '../../data/repositories/notifications_repository.dart';
 import '../../domain/models/notification_item.dart';
@@ -30,9 +30,9 @@ class NotificationListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: notificationsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(e.toString())),
+      body: AsyncBody(
+        value: notificationsAsync,
+        onRetry: () => ref.invalidate(notificationListProvider),
         data: (items) {
           if (items.isEmpty) {
             return EmptyState(
@@ -64,7 +64,7 @@ class _NotificationTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final dateStr = item.createdAt != null
-        ? DateFormat.MMMd().add_jm().format(item.createdAt!.toLocal())
+        ? BsDate.both(item.createdAt!)
         : '—';
 
     return ListTile(

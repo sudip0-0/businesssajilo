@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/bs_date.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/utils/money.dart';
@@ -35,7 +34,7 @@ class CustomerBillListScreen extends ConsumerWidget {
           itemBuilder: (context, index) {
             final bill = bills[index];
             final dateStr = bill.createdAt != null
-                ? DateFormat.MMMd().format(bill.createdAt!.toLocal())
+                ? BsDate.both(bill.createdAt!)
                 : '—';
             return ListTile(
               title: Text(bill.billNo),

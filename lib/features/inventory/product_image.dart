@@ -32,6 +32,7 @@ class ProductImage extends ConsumerWidget {
             imageUrl: url,
             width: size,
             height: size,
+            memCacheWidth: (size * 2).round(),
             fit: BoxFit.cover,
             errorWidget: (_, _, _) => _placeholder(),
           ),

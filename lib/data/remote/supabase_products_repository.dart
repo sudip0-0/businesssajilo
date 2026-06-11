@@ -11,13 +11,21 @@ class SupabaseProductsRepository implements ProductsRepository {
   static const _bucket = 'product-images';
 
   @override
-  Future<List<Product>> list({bool activeOnly = true}) async {
+  Future<List<Product>> list({
+    bool activeOnly = true,
+    int offset = 0,
+    int? limit,
+  }) async {
     final client = _requireClient();
     var query = client.from('products').select('*, categories(name)');
     if (activeOnly) {
       query = query.eq('is_active', true);
     }
-    final rows = await query.order('name', ascending: true);
+    var ordered = query.order('name', ascending: true);
+    if (limit != null) {
+      ordered = ordered.range(offset, offset + limit - 1);
+    }
+    final rows = await ordered;
     return (rows as List).map(_mapProduct).toList();
   }
 
