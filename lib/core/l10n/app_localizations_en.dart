@@ -603,4 +603,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customerNote => 'Customer note';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications => 'No notifications yet';
+
+  @override
+  String get notifOrderPlaced => 'New order placed';
+
+  @override
+  String get notifQuoteReceived => 'New quote received';
+
+  @override
+  String get notifQuoteAccepted => 'Quote accepted';
+
+  @override
+  String get notifQuoteRejected => 'Quote rejected';
+
+  @override
+  String get notifOrderStatus => 'Order status updated';
+
+  @override
+  String get notifChatMessage => 'New chat message';
+
+  @override
+  String get notifPaymentRecorded => 'Payment recorded';
+
+  @override
+  String get notifLowStock => 'Low stock alert';
 }

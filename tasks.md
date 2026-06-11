@@ -51,9 +51,9 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Customer "My Dues" + own bill history
 
 ## Phase 6 — Notifications
-- ⬜ FCM setup (Android/iOS/Web), token registration
-- ⬜ Edge Function `notify` + DB webhooks for order/quote/chat/low-stock/payment events
-- ⬜ In-app notification center with read states
+- ✅ FCM setup (Android/iOS/Web), token registration
+- ✅ Edge Function `notify` + DB webhooks for order/quote/chat/low-stock/payment events
+- ✅ In-app notification center with read states
 
 ## Phase 7 — Offline Sync (staff mobile)
 - ⬜ Drift schema mirroring core tables; repository swap (local-first on mobile staff)

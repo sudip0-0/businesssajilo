@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/money.dart';
 import '../customers/customer_ledger_screen.dart';
 import '../customers/providers.dart';
+import '../notifications/notification_bell_action.dart';
 import '../orders/catalog_screen.dart';
 import '../orders/order_list_screen.dart';
 import '../orders/providers.dart';
@@ -68,7 +69,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
             _ => l10n.myDues,
           },
         ),
-        actions: const [LogoutAction()],
+        actions: const [NotificationBellAction(), LogoutAction()],
       ),
       body: IndexedStack(
         index: _index,

@@ -603,4 +603,37 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get customerNote => 'ग्राहक नोट';
+
+  @override
+  String get notifications => 'सूचनाहरू';
+
+  @override
+  String get markAllRead => 'सबै पढिएको';
+
+  @override
+  String get noNotifications => 'अहिलेसम्म कुनै सूचना छैन';
+
+  @override
+  String get notifOrderPlaced => 'नयाँ अर्डर आयो';
+
+  @override
+  String get notifQuoteReceived => 'नयाँ कोटेशन प्राप्त';
+
+  @override
+  String get notifQuoteAccepted => 'कोटेशन स्वीकार भयो';
+
+  @override
+  String get notifQuoteRejected => 'कोटेशन अस्वीकार भयो';
+
+  @override
+  String get notifOrderStatus => 'अर्डर स्थिति अद्यावधिक';
+
+  @override
+  String get notifChatMessage => 'नयाँ च्याट सन्देश';
+
+  @override
+  String get notifPaymentRecorded => 'भुक्तानी रेकर्ड भयो';
+
+  @override
+  String get notifLowStock => 'कम स्टक चेतावनी';
 }

@@ -1273,6 +1273,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customer note'**
   String get customerNote;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotifications;
+
+  /// No description provided for @notifOrderPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'New order placed'**
+  String get notifOrderPlaced;
+
+  /// No description provided for @notifQuoteReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'New quote received'**
+  String get notifQuoteReceived;
+
+  /// No description provided for @notifQuoteAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote accepted'**
+  String get notifQuoteAccepted;
+
+  /// No description provided for @notifQuoteRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote rejected'**
+  String get notifQuoteRejected;
+
+  /// No description provided for @notifOrderStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Order status updated'**
+  String get notifOrderStatus;
+
+  /// No description provided for @notifChatMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat message'**
+  String get notifChatMessage;
+
+  /// No description provided for @notifPaymentRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment recorded'**
+  String get notifPaymentRecorded;
+
+  /// No description provided for @notifLowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock alert'**
+  String get notifLowStock;
 }
 
 class _AppLocalizationsDelegate

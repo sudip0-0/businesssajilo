@@ -216,5 +216,16 @@
   "fulfillmentQueue": "Orders to fulfill",
   "noMessages": "No messages yet",
   "attachImage": "Attach image",
-  "customerNote": "Customer note"
+  "customerNote": "Customer note",
+  "notifications": "Notifications",
+  "markAllRead": "Mark all read",
+  "noNotifications": "No notifications yet",
+  "notifOrderPlaced": "New order placed",
+  "notifQuoteReceived": "New quote received",
+  "notifQuoteAccepted": "Quote accepted",
+  "notifQuoteRejected": "Quote rejected",
+  "notifOrderStatus": "Order status updated",
+  "notifChatMessage": "New chat message",
+  "notifPaymentRecorded": "Payment recorded",
+  "notifLowStock": "Low stock alert"
 }

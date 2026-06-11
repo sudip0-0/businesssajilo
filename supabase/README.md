@@ -32,6 +32,22 @@ Run Flutter against local stack:
 |---|---|---|
 | `register-business` | Public | Owner signup: creates auth user + business + owner member |
 | `create-member` | Owner JWT | Creates staff/customer login (+ customer profile if role=customer) |
+| `notify` | Service role | Sends FCM push for a `notifications` row (optional when FCM not configured) |
+
+### Push notifications (optional)
+
+Set Edge Function secrets on the linked project:
+
+```bash
+supabase secrets set FCM_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'
+```
+
+In-app notifications work without FCM. When FCM is configured, either:
+
+1. Rely on the `pg_net` hook from migration `00007` (local default URL), or
+2. Create a **Database Webhook** on `notifications` INSERT → `https://<project>.supabase.co/functions/v1/notify` with `Authorization: Bearer <service_role_key>`.
+
+Flutter FCM is also optional — pass Firebase `--dart-define` values documented in `.env.example`.
 
 ## Conventions
 

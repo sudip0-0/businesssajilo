@@ -209,5 +209,16 @@
   "fulfillmentQueue": "पूर्ति गर्न बाँकी अर्डर",
   "noMessages": "अहिलेसम्म कुनै सन्देश छैन",
   "attachImage": "फोटो संलग्न",
-  "customerNote": "ग्राहक नोट"
+  "customerNote": "ग्राहक नोट",
+  "notifications": "सूचनाहरू",
+  "markAllRead": "सबै पढिएको",
+  "noNotifications": "अहिलेसम्म कुनै सूचना छैन",
+  "notifOrderPlaced": "नयाँ अर्डर आयो",
+  "notifQuoteReceived": "नयाँ कोटेशन प्राप्त",
+  "notifQuoteAccepted": "कोटेशन स्वीकार भयो",
+  "notifQuoteRejected": "कोटेशन अस्वीकार भयो",
+  "notifOrderStatus": "अर्डर स्थिति अद्यावधिक",
+  "notifChatMessage": "नयाँ च्याट सन्देश",
+  "notifPaymentRecorded": "भुक्तानी रेकर्ड भयो",
+  "notifLowStock": "कम स्टक चेतावनी"
 }

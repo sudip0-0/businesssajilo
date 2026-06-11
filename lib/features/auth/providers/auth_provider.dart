@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/notifications/push_service_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../domain/models/session_state.dart';
 
@@ -26,6 +27,10 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     state = await AsyncValue.guard(
       () => ref.read(authRepositoryProvider).loadSession(),
     );
+    final member = state.value?.member;
+    if (member != null) {
+      await ref.read(pushServiceProvider).registerForMember(member.id);
+    }
   }
 
   Future<void> signIn(String email, String password) async {
@@ -41,6 +46,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   }
 
   Future<void> signOut() async {
+    await ref.read(pushServiceProvider).unregister();
     await ref.read(authRepositoryProvider).signOut();
     state = const AsyncValue.data(SessionState.empty);
   }

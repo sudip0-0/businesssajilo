@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/stock_in_picker_sheet.dart';
+import '../notifications/notification_bell_action.dart';
 import '../orders/fulfillment_list_screen.dart';
 import '../orders/providers.dart';
 import 'logout_action.dart';
@@ -35,7 +36,7 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_index == 0 ? l10n.stock : l10n.fulfillment),
-        actions: const [LogoutAction()],
+        actions: const [NotificationBellAction(), LogoutAction()],
       ),
       body: _index == 0
           ? const ProductListScreen(canEdit: false, canManageStock: true)

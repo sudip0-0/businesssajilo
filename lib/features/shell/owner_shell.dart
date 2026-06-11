@@ -14,6 +14,7 @@ import '../inventory/product_list_screen.dart';
 import '../inventory/providers.dart';
 import '../orders/order_queue_screen.dart';
 import '../orders/providers.dart';
+import '../notifications/notification_bell_action.dart';
 import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
 import 'logout_action.dart';
@@ -99,7 +100,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
     return Scaffold(
       appBar: AppBar(
         title: Text(titles[_index]),
-        actions: const [LogoutAction()],
+        actions: const [NotificationBellAction(), LogoutAction()],
       ),
       body: pages[_index],
       floatingActionButton: switch (_index) {
