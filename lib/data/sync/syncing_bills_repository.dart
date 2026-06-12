@@ -72,6 +72,30 @@ class SyncingBillsRepository implements BillsRepository {
   }
 
   @override
+  Future<int> yesterdaysSales() async {
+    final todayStart = nptDayStartUtc();
+    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+    final bills = await _db.select(_db.localBills).get();
+    return bills
+        .where(
+          (b) =>
+              !b.createdAt.toUtc().isBefore(yesterdayStart) &&
+              b.createdAt.toUtc().isBefore(todayStart),
+        )
+        .fold<int>(0, (sum, b) => sum + b.grandTotal);
+  }
+
+  @override
+  Future<List<Bill>> listTodaysBills({int limit = 20}) async {
+    final start = nptDayStartUtc();
+    final all = await list();
+    return all
+        .where((b) => b.createdAt != null && !b.createdAt!.toUtc().isBefore(start))
+        .take(limit)
+        .toList();
+  }
+
+  @override
   Future<List<Bill>> search(String query, {int limit = 50}) async {
     final q = query.toLowerCase();
     final all = await list();

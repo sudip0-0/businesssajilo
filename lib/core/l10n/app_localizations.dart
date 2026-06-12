@@ -509,7 +509,7 @@ abstract class AppLocalizations {
   /// No description provided for @businessName.
   ///
   /// In en, this message translates to:
-  /// **'Business name'**
+  /// **'Business Name'**
   String get businessName;
 
   /// No description provided for @businessNameNp.
@@ -677,7 +677,7 @@ abstract class AppLocalizations {
   /// No description provided for @productName.
   ///
   /// In en, this message translates to:
-  /// **'Product name'**
+  /// **'Product Name'**
   String get productName;
 
   /// No description provided for @productNameNp.
@@ -1957,6 +1957,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync status'**
   String get syncStatus;
+
+  /// No description provided for @namasteGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Namaste, {name}!'**
+  String namasteGreeting(String name);
+
+  /// No description provided for @dashboardTodaySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s what\'s happening in your business today.'**
+  String get dashboardTodaySummary;
+
+  /// No description provided for @salesPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Performance'**
+  String get salesPerformance;
+
+  /// No description provided for @salesPerformanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'7-day revenue trend analysis'**
+  String get salesPerformanceSubtitle;
+
+  /// No description provided for @quickStockCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Stock Check'**
+  String get quickStockCheck;
+
+  /// No description provided for @recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
+  String get recentActivity;
+
+  /// No description provided for @todaysTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Transactions'**
+  String get todaysTransactions;
+
+  /// No description provided for @addNewCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Customer'**
+  String get addNewCustomer;
+
+  /// No description provided for @addCustomerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new profile for your business client to manage credit and sales.'**
+  String get addCustomerSubtitle;
+
+  /// No description provided for @customerIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Identity'**
+  String get customerIdentity;
+
+  /// No description provided for @customerIdentityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the basic and legal information of the business.'**
+  String get customerIdentityHint;
+
+  /// No description provided for @contactAndLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact & Location'**
+  String get contactAndLocation;
+
+  /// No description provided for @financialInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Information'**
+  String get financialInformation;
+
+  /// No description provided for @ownerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner Name'**
+  String get ownerName;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address'**
+  String get emailAddress;
+
+  /// No description provided for @city.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get city;
+
+  /// No description provided for @district.
+  ///
+  /// In en, this message translates to:
+  /// **'District'**
+  String get district;
+
+  /// No description provided for @selectCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Select City'**
+  String get selectCity;
+
+  /// No description provided for @panVatNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'PAN/VAT Number'**
+  String get panVatNumber;
+
+  /// No description provided for @creditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Limit (NPR)'**
+  String get creditLimit;
+
+  /// No description provided for @saveCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Customer'**
+  String get saveCustomer;
+
+  /// No description provided for @createNewBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Bill'**
+  String get createNewBill;
+
+  /// No description provided for @createBillSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate professional invoices for your wholesale orders.'**
+  String get createBillSubtitle;
+
+  /// No description provided for @saveAsDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as Draft'**
+  String get saveAsDraft;
+
+  /// No description provided for @printAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Print & Save'**
+  String get printAndSave;
+
+  /// No description provided for @needsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Attention'**
+  String get needsAttention;
+
+  /// No description provided for @reorderSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder Soon'**
+  String get reorderSoon;
+
+  /// No description provided for @viewAllHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View All Transaction History'**
+  String get viewAllHistory;
+
+  /// No description provided for @smeManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'SME Management'**
+  String get smeManagement;
+
+  /// No description provided for @globalSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products, orders, bills...'**
+  String get globalSearchHint;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// No description provided for @reportOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Business analytics overview'**
+  String get reportOverview;
+
+  /// No description provided for @billNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill Number'**
+  String get billNumber;
+
+  /// No description provided for @billDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill Date'**
+  String get billDate;
+
+  /// No description provided for @customerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Name'**
+  String get customerName;
+
+  /// No description provided for @remarksTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Remarks / Terms'**
+  String get remarksTerms;
+
+  /// No description provided for @subtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotal;
+
+  /// No description provided for @taxableAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxable Amount'**
+  String get taxableAmount;
+
+  /// No description provided for @verificationTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Always verify the PAN/VAT number for tax compliance.'**
+  String get verificationTip;
+
+  /// No description provided for @creditPolicyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Set realistic credit limits based on transaction history.'**
+  String get creditPolicyTip;
+
+  /// No description provided for @privacyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'All customer data is encrypted and stored securely.'**
+  String get privacyTip;
+
+  /// No description provided for @newBillCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'New Bill Created #{billNo}'**
+  String newBillCreated(String billNo);
+
+  /// No description provided for @lowStockAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock Alert: {product}'**
+  String lowStockAlert(String product);
+
+  /// No description provided for @newCustomerAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'New Customer: {name}'**
+  String newCustomerAdded(String name);
+
+  /// No description provided for @walkInCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in Customer'**
+  String get walkInCustomer;
+
+  /// No description provided for @storeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Owner'**
+  String get storeOwner;
+
+  /// No description provided for @portalAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal Access'**
+  String get portalAccess;
+
+  /// No description provided for @portalAccessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials for the customer to log in and view orders.'**
+  String get portalAccessHint;
+
+  /// No description provided for @amountNpr.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (NPR)'**
+  String get amountNpr;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get payment;
+
+  /// No description provided for @status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// No description provided for @sn.
+  ///
+  /// In en, this message translates to:
+  /// **'S.N.'**
+  String get sn;
+
+  /// No description provided for @qty.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get qty;
+
+  /// No description provided for @amountRs.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (Rs.)'**
+  String get amountRs;
+
+  /// No description provided for @rateRs.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate (Rs.)'**
+  String get rateRs;
+
+  /// No description provided for @discountPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount (%)'**
+  String get discountPercent;
+
+  /// No description provided for @madeForNepal.
+  ///
+  /// In en, this message translates to:
+  /// **'Made for Nepal SME Ecosystem'**
+  String get madeForNepal;
 }
 
 class _AppLocalizationsDelegate

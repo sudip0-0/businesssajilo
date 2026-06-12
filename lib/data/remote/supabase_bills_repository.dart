@@ -77,6 +77,36 @@ class SupabaseBillsRepository implements BillsRepository {
   }
 
   @override
+  Future<int> yesterdaysSales() async {
+    final client = _requireClient();
+    final todayStart = nptDayStartUtc();
+    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+    final rows = await client
+        .from('bills')
+        .select('grand_total')
+        .gte('created_at', yesterdayStart.toIso8601String())
+        .lt('created_at', todayStart.toIso8601String());
+    var total = 0;
+    for (final row in rows as List) {
+      total += ((row as Map)['grand_total'] as num?)?.toInt() ?? 0;
+    }
+    return total;
+  }
+
+  @override
+  Future<List<Bill>> listTodaysBills({int limit = 20}) async {
+    final client = _requireClient();
+    final start = nptDayStartUtc();
+    final rows = await client
+        .from('bills')
+        .select('*, customers(shop_name)')
+        .gte('created_at', start.toIso8601String())
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return (rows as List).map(_mapBillRow).toList();
+  }
+
+  @override
   Future<Bill> create({
     required String createdByMemberId,
     String? customerId,

@@ -9,10 +9,8 @@ import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../domain/models/customer.dart';
-import '../../../features/customers/add_customer_sheet.dart';
 import '../../../features/customers/customer_detail_screen.dart';
 import '../../../features/customers/providers.dart';
-import '../../ui/web_sheet_bridge.dart';
 import '../../layout/web_master_detail.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
@@ -99,19 +97,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
       actions: widget.canEdit
           ? [
               FilledButton.icon(
-                onPressed: () async {
-                  final created = await showAdaptiveSheet<bool>(
-                    context: context,
-                    title: l10n.addCustomer,
-                    child: const AddCustomerSheet(embedded: true),
-                  );
-                  if (created == true) {
-                    await _pager?.refresh();
-                    ref.invalidate(customerListProvider);
-                    ref.invalidate(totalDuesProvider);
-                    setState(() {});
-                  }
-                },
+                onPressed: () => context.go('${_webRolePrefix(context)}/customers/new'),
                 icon: Icon(PhosphorIconsRegular.userPlus),
                 label: Text(l10n.addCustomer),
               ),

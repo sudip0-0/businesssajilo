@@ -29,7 +29,9 @@ abstract class BillsRepository {
   Future<List<Bill>> search(String query, {int limit = 50});
   Future<Bill> get(String id);
   Future<int> todaysSales();
+  Future<int> yesterdaysSales();
   Future<int> todaysBillCount();
+  Future<List<Bill>> listTodaysBills({int limit = 20});
   Future<Bill> create({
     required String createdByMemberId,
     String? customerId,

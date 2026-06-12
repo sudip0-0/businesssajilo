@@ -11,6 +11,7 @@ import '../auth/web_login_page.dart';
 import '../auth/web_register_page.dart';
 import '../features/billing/web_bill_form_page.dart';
 import '../features/billing/web_bill_list_page.dart';
+import '../features/customers/web_customer_form_page.dart';
 import '../features/customers/web_customer_ledger_page.dart';
 import '../features/customers/web_customer_list_page.dart';
 import '../features/dashboard/web_customer_dashboard_page.dart';
@@ -138,6 +139,10 @@ ShellRoute _ownerRoutes() {
           canRecordPayments: true,
         ),
         routes: [
+          GoRoute(
+            path: 'new',
+            builder: (_, _) => const WebCustomerFormPage(),
+          ),
           GoRoute(
             path: ':customerId',
             builder: (_, state) => WebCustomerListPage(

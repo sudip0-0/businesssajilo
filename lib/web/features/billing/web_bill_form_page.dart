@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../features/billing/bill_form_screen.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
+import 'web_bill_form_content.dart';
 import '../web_page_scaffold.dart';
 
 String _billingListPath(BuildContext context) {
@@ -20,32 +21,54 @@ String _billingListPath(BuildContext context) {
   return path;
 }
 
-class WebBillFormPage extends ConsumerWidget {
+class WebBillFormPage extends ConsumerStatefulWidget {
   const WebBillFormPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WebBillFormPage> createState() => _WebBillFormPageState();
+}
+
+class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
+  final _formKey = GlobalKey<WebBillFormContentState>();
+
+  void _onSaved() {
+    ref.invalidate(billListProvider);
+    ref.invalidate(todaysSalesProvider);
+    ref.invalidate(todaysBillCountProvider);
+    ref.invalidate(todaysBillsProvider);
+    ref.invalidate(totalDuesProvider);
+    context.go(_billingListPath(context));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final backPath = _billingListPath(context);
 
     return WebPageScaffold(
-      title: l10n.newBill,
-      breadcrumbs: [l10n.billing],
+      title: l10n.createNewBill,
+      subtitle: l10n.createBillSubtitle,
+      breadcrumbs: [l10n.billing, l10n.createNewBill],
       actions: [
-        TextButton(
+        OutlinedButton(
           onPressed: () => context.go(backPath),
           child: Text(l10n.cancel),
         ),
+        const SizedBox(width: 8),
+        OutlinedButton(
+          onPressed: () => _formKey.currentState?.saveDraft(),
+          child: Text(l10n.saveAsDraft),
+        ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed: () => _formKey.currentState?.saveAndPrint(),
+          icon: Icon(PhosphorIconsRegular.printer, size: 18),
+          label: Text(l10n.printAndSave),
+        ),
       ],
-      body: BillFormScreen(
-        embedded: true,
-        onSaved: () {
-          ref.invalidate(billListProvider);
-          ref.invalidate(todaysSalesProvider);
-          ref.invalidate(todaysBillCountProvider);
-          ref.invalidate(totalDuesProvider);
-          context.go(backPath);
-        },
+      body: WebBillFormContent(
+        key: _formKey,
+        onSaved: _onSaved,
       ),
     );
   }

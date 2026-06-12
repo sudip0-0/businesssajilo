@@ -356,5 +356,97 @@
   "decreaseQuantity": "Decrease quantity",
   "onboardingOrders": "Track customer orders and quotes from the Orders tab.",
   "onboardingReports": "See sales, dues, and stock reports in Reports.",
-  "syncStatus": "Sync status"
+  "syncStatus": "Sync status",
+  "namasteGreeting": "Namaste, {name}!",
+  "@namasteGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardTodaySummary": "Here's what's happening in your business today.",
+  "salesPerformance": "Sales Performance",
+  "salesPerformanceSubtitle": "7-day revenue trend analysis",
+  "quickStockCheck": "Quick Stock Check",
+  "recentActivity": "Recent Activity",
+  "todaysTransactions": "Today's Transactions",
+  "addNewCustomer": "Add New Customer",
+  "addCustomerSubtitle": "Create a new profile for your business client to manage credit and sales.",
+  "customerIdentity": "Customer Identity",
+  "customerIdentityHint": "Fill in the basic and legal information of the business.",
+  "contactAndLocation": "Contact & Location",
+  "financialInformation": "Financial Information",
+  "businessName": "Business Name",
+  "ownerName": "Owner Name",
+  "emailAddress": "Email Address",
+  "city": "City",
+  "district": "District",
+  "selectCity": "Select City",
+  "panVatNumber": "PAN/VAT Number",
+  "creditLimit": "Credit Limit (NPR)",
+  "saveCustomer": "Save Customer",
+  "createNewBill": "Create New Bill",
+  "createBillSubtitle": "Generate professional invoices for your wholesale orders.",
+  "saveAsDraft": "Save as Draft",
+  "printAndSave": "Print & Save",
+  "needsAttention": "Needs Attention",
+  "reorderSoon": "Reorder Soon",
+  "viewAllHistory": "View All Transaction History",
+  "smeManagement": "SME Management",
+  "globalSearchHint": "Search products, orders, bills...",
+  "export": "Export",
+  "filter": "Filter",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "reportOverview": "Business analytics overview",
+  "billNumber": "Bill Number",
+  "billDate": "Bill Date",
+  "customerName": "Customer Name",
+  "remarksTerms": "Remarks / Terms",
+  "subtotal": "Subtotal",
+  "taxableAmount": "Taxable Amount",
+  "verificationTip": "Always verify the PAN/VAT number for tax compliance.",
+  "creditPolicyTip": "Set realistic credit limits based on transaction history.",
+  "privacyTip": "All customer data is encrypted and stored securely.",
+  "newBillCreated": "New Bill Created #{billNo}",
+  "@newBillCreated": {
+    "placeholders": {
+      "billNo": {
+        "type": "String"
+      }
+    }
+  },
+  "lowStockAlert": "Low Stock Alert: {product}",
+  "@lowStockAlert": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "newCustomerAdded": "New Customer: {name}",
+  "@newCustomerAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "walkInCustomer": "Walk-in Customer",
+  "storeOwner": "Store Owner",
+  "portalAccess": "Portal Access",
+  "portalAccessHint": "Credentials for the customer to log in and view orders.",
+  "amountNpr": "Amount (NPR)",
+  "time": "Time",
+  "payment": "Payment",
+  "status": "Status",
+  "sn": "S.N.",
+  "productName": "Product Name",
+  "qty": "Qty",
+  "unit": "Unit",
+  "amountRs": "Amount (Rs.)",
+  "rateRs": "Rate (Rs.)",
+  "discountPercent": "Discount (%)",
+  "madeForNepal": "Made for Nepal SME Ecosystem"
 }

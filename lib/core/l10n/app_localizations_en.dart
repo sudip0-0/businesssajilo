@@ -215,7 +215,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerBusiness => 'Register your business';
 
   @override
-  String get businessName => 'Business name';
+  String get businessName => 'Business Name';
 
   @override
   String get businessNameNp => 'Business name (Nepali)';
@@ -302,7 +302,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProduct => 'Edit product';
 
   @override
-  String get productName => 'Product name';
+  String get productName => 'Product Name';
 
   @override
   String get productNameNp => 'Product name (Nepali)';
@@ -966,4 +966,203 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncStatus => 'Sync status';
+
+  @override
+  String namasteGreeting(String name) {
+    return 'Namaste, $name!';
+  }
+
+  @override
+  String get dashboardTodaySummary =>
+      'Here\'s what\'s happening in your business today.';
+
+  @override
+  String get salesPerformance => 'Sales Performance';
+
+  @override
+  String get salesPerformanceSubtitle => '7-day revenue trend analysis';
+
+  @override
+  String get quickStockCheck => 'Quick Stock Check';
+
+  @override
+  String get recentActivity => 'Recent Activity';
+
+  @override
+  String get todaysTransactions => 'Today\'s Transactions';
+
+  @override
+  String get addNewCustomer => 'Add New Customer';
+
+  @override
+  String get addCustomerSubtitle =>
+      'Create a new profile for your business client to manage credit and sales.';
+
+  @override
+  String get customerIdentity => 'Customer Identity';
+
+  @override
+  String get customerIdentityHint =>
+      'Fill in the basic and legal information of the business.';
+
+  @override
+  String get contactAndLocation => 'Contact & Location';
+
+  @override
+  String get financialInformation => 'Financial Information';
+
+  @override
+  String get ownerName => 'Owner Name';
+
+  @override
+  String get emailAddress => 'Email Address';
+
+  @override
+  String get city => 'City';
+
+  @override
+  String get district => 'District';
+
+  @override
+  String get selectCity => 'Select City';
+
+  @override
+  String get panVatNumber => 'PAN/VAT Number';
+
+  @override
+  String get creditLimit => 'Credit Limit (NPR)';
+
+  @override
+  String get saveCustomer => 'Save Customer';
+
+  @override
+  String get createNewBill => 'Create New Bill';
+
+  @override
+  String get createBillSubtitle =>
+      'Generate professional invoices for your wholesale orders.';
+
+  @override
+  String get saveAsDraft => 'Save as Draft';
+
+  @override
+  String get printAndSave => 'Print & Save';
+
+  @override
+  String get needsAttention => 'Needs Attention';
+
+  @override
+  String get reorderSoon => 'Reorder Soon';
+
+  @override
+  String get viewAllHistory => 'View All Transaction History';
+
+  @override
+  String get smeManagement => 'SME Management';
+
+  @override
+  String get globalSearchHint => 'Search products, orders, bills...';
+
+  @override
+  String get export => 'Export';
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get reportOverview => 'Business analytics overview';
+
+  @override
+  String get billNumber => 'Bill Number';
+
+  @override
+  String get billDate => 'Bill Date';
+
+  @override
+  String get customerName => 'Customer Name';
+
+  @override
+  String get remarksTerms => 'Remarks / Terms';
+
+  @override
+  String get subtotal => 'Subtotal';
+
+  @override
+  String get taxableAmount => 'Taxable Amount';
+
+  @override
+  String get verificationTip =>
+      'Always verify the PAN/VAT number for tax compliance.';
+
+  @override
+  String get creditPolicyTip =>
+      'Set realistic credit limits based on transaction history.';
+
+  @override
+  String get privacyTip =>
+      'All customer data is encrypted and stored securely.';
+
+  @override
+  String newBillCreated(String billNo) {
+    return 'New Bill Created #$billNo';
+  }
+
+  @override
+  String lowStockAlert(String product) {
+    return 'Low Stock Alert: $product';
+  }
+
+  @override
+  String newCustomerAdded(String name) {
+    return 'New Customer: $name';
+  }
+
+  @override
+  String get walkInCustomer => 'Walk-in Customer';
+
+  @override
+  String get storeOwner => 'Store Owner';
+
+  @override
+  String get portalAccess => 'Portal Access';
+
+  @override
+  String get portalAccessHint =>
+      'Credentials for the customer to log in and view orders.';
+
+  @override
+  String get amountNpr => 'Amount (NPR)';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get payment => 'Payment';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get sn => 'S.N.';
+
+  @override
+  String get qty => 'Qty';
+
+  @override
+  String get amountRs => 'Amount (Rs.)';
+
+  @override
+  String get rateRs => 'Rate (Rs.)';
+
+  @override
+  String get discountPercent => 'Discount (%)';
+
+  @override
+  String get madeForNepal => 'Made for Nepal SME Ecosystem';
 }

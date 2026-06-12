@@ -302,7 +302,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get editProduct => 'उत्पादन सम्पादन';
 
   @override
-  String get productName => 'उत्पादनको नाम';
+  String get productName => 'सामानको नाम';
 
   @override
   String get productNameNp => 'उत्पादनको नाम (नेपाली)';
@@ -311,7 +311,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get sku => 'SKU';
 
   @override
-  String get unit => 'इकाई';
+  String get unit => 'एकाइ';
 
   @override
   String get costPrice => 'लागत मूल्य';
@@ -963,4 +963,202 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get syncStatus => 'सिंक स्थिति';
+
+  @override
+  String namasteGreeting(String name) {
+    return 'नमस्ते, $name!';
+  }
+
+  @override
+  String get dashboardTodaySummary => 'आज तपाईंको व्यवसायमा के भइरहेको छ।';
+
+  @override
+  String get salesPerformance => 'बिक्री प्रदर्शन';
+
+  @override
+  String get salesPerformanceSubtitle => '७-दिने राजस्व प्रवृत्ति विश्लेषण';
+
+  @override
+  String get quickStockCheck => 'छिटो स्टक जाँच';
+
+  @override
+  String get recentActivity => 'हालैको गतिविधि';
+
+  @override
+  String get todaysTransactions => 'आजका कारोबार';
+
+  @override
+  String get addNewCustomer => 'नयाँ ग्राहक थप्नुहोस्';
+
+  @override
+  String get addCustomerSubtitle =>
+      'क्रेडिट र बिक्री व्यवस्थापनका लागि नयाँ ग्राहक प्रोफाइल बनाउनुहोस्।';
+
+  @override
+  String get customerIdentity => 'ग्राहक पहिचान';
+
+  @override
+  String get customerIdentityHint =>
+      'व्यवसायको आधारभूत र कानूनी जानकारी भर्नुहोस्।';
+
+  @override
+  String get contactAndLocation => 'सम्पर्क र स्थान';
+
+  @override
+  String get financialInformation => 'वित्तीय जानकारी';
+
+  @override
+  String get ownerName => 'मालिकको नाम';
+
+  @override
+  String get emailAddress => 'इमेल ठेगाना';
+
+  @override
+  String get city => 'शहर';
+
+  @override
+  String get district => 'जिल्ला';
+
+  @override
+  String get selectCity => 'शहर छान्नुहोस्';
+
+  @override
+  String get panVatNumber => 'PAN/VAT नम्बर';
+
+  @override
+  String get creditLimit => 'क्रेडिट सीमा (NPR)';
+
+  @override
+  String get saveCustomer => 'ग्राहक सुरक्षित गर्नुहोस्';
+
+  @override
+  String get createNewBill => 'नयाँ बिल बनाउनुहोस्';
+
+  @override
+  String get createBillSubtitle =>
+      'थोक अर्डरका लागि व्यावसायिक इन्भाइस बनाउनुहोस्।';
+
+  @override
+  String get saveAsDraft => 'ड्राफ्ट सुरक्षित गर्नुहोस्';
+
+  @override
+  String get printAndSave => 'प्रिन्ट र सुरक्षित';
+
+  @override
+  String get needsAttention => 'ध्यान चाहिन्छ';
+
+  @override
+  String get reorderSoon => 'चाँडै पुनः अर्डर';
+
+  @override
+  String get viewAllHistory => 'सबै कारोबार इतिहास हेर्नुहोस्';
+
+  @override
+  String get smeManagement => 'SME व्यवस्थापन';
+
+  @override
+  String get globalSearchHint => 'सामान, अर्डर, बिल खोज्नुहोस्...';
+
+  @override
+  String get export => 'निर्यात';
+
+  @override
+  String get filter => 'फिल्टर';
+
+  @override
+  String get weekly => 'साप्ताहिक';
+
+  @override
+  String get monthly => 'मासिक';
+
+  @override
+  String get reportOverview => 'व्यवसाय विश्लेषण अवलोकन';
+
+  @override
+  String get billNumber => 'बिल नम्बर';
+
+  @override
+  String get billDate => 'बिल मिति';
+
+  @override
+  String get customerName => 'ग्राहकको नाम';
+
+  @override
+  String get remarksTerms => 'कैफियत / सर्त';
+
+  @override
+  String get subtotal => 'उप-योग';
+
+  @override
+  String get taxableAmount => 'कर योग्य रकम';
+
+  @override
+  String get verificationTip =>
+      'कर अनुपालनका लागi PAN/VAT नम्बर सधैं प्रमाणित गर्नुहोस्।';
+
+  @override
+  String get creditPolicyTip =>
+      'कारोबार इतिहास अनुसार वास्तविक क्रेडिट सीमा तोक्नुहोस्।';
+
+  @override
+  String get privacyTip =>
+      'सबै ग्राहक डाटा इन्क्रिप्टेड र सुरक्षित रूपमा भण्डारण गरिन्छ।';
+
+  @override
+  String newBillCreated(String billNo) {
+    return 'नयाँ बिल #$billNo';
+  }
+
+  @override
+  String lowStockAlert(String product) {
+    return 'कम स्टक: $product';
+  }
+
+  @override
+  String newCustomerAdded(String name) {
+    return 'नयाँ ग्राहक: $name';
+  }
+
+  @override
+  String get walkInCustomer => 'वाक-इन ग्राहक';
+
+  @override
+  String get storeOwner => 'स्टोर मालिक';
+
+  @override
+  String get portalAccess => 'पोर्टल पहुँच';
+
+  @override
+  String get portalAccessHint =>
+      'ग्राहकले लग-इन गरी अर्डर हेर्नका लागि प्रमाणपत्र।';
+
+  @override
+  String get amountNpr => 'रकम (NPR)';
+
+  @override
+  String get time => 'समय';
+
+  @override
+  String get payment => 'भुक्तानी';
+
+  @override
+  String get status => 'स्थिति';
+
+  @override
+  String get sn => 'क्र.सं.';
+
+  @override
+  String get qty => 'मात्रा';
+
+  @override
+  String get amountRs => 'रकम (Rs.)';
+
+  @override
+  String get rateRs => 'दर (Rs.)';
+
+  @override
+  String get discountPercent => 'छुट (%)';
+
+  @override
+  String get madeForNepal => 'नेपाल SME इकोसिस्टमका लागि';
 }

@@ -27,12 +27,14 @@ class WebSidebar extends StatelessWidget {
     required this.collapsed,
     required this.onToggleCollapse,
     this.footer,
+    this.inDrawer = false,
   });
 
   final List<WebNavItem> items;
   final bool collapsed;
   final VoidCallback onToggleCollapse;
   final Widget? footer;
+  final bool inDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -42,17 +44,15 @@ class WebSidebar extends StatelessWidget {
     final width =
         collapsed ? tokens.sidebarCollapsedWidth : tokens.sidebarWidth;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      width: width,
+    return Container(
+      width: inDrawer ? null : width,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        border: Border(
-          right: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
-          ),
-        ),
+        color: Colors.white,
+        border: inDrawer
+            ? null
+            : Border(
+                right: const BorderSide(color: BsColors.border),
+              ),
       ),
       child: Column(
         children: [
@@ -60,30 +60,54 @@ class WebSidebar extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(collapsed ? 12 : 20, 20, 12, 16),
             child: Row(
               children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: BsColors.primary,
+                    borderRadius: BorderRadius.circular(BsRadii.md),
+                  ),
+                  child: Icon(
+                    PhosphorIconsRegular.storefront,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
                 if (!collapsed) ...[
-                  Icon(PhosphorIconsRegular.storefront,
-                      color: BsColors.primary, size: 24),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.appTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: BsColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.appTitle,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: BsColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        Text(
+                          l10n.smeManagement,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: BsColors.outline,
+                              ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-                IconButton(
-                  tooltip: collapsed ? 'Expand' : 'Collapse',
-                  onPressed: onToggleCollapse,
-                  icon: Icon(
-                    collapsed
-                        ? PhosphorIconsRegular.caretRight
-                        : PhosphorIconsRegular.caretLeft,
-                    size: 18,
+                if (!inDrawer)
+                  IconButton(
+                    tooltip: collapsed ? 'Expand' : 'Collapse',
+                    onPressed: onToggleCollapse,
+                    icon: Icon(
+                      collapsed
+                          ? PhosphorIconsRegular.caretRight
+                          : PhosphorIconsRegular.caretLeft,
+                      size: 18,
+                      color: BsColors.outline,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -98,8 +122,11 @@ class WebSidebar extends StatelessWidget {
                 return _SidebarTile(
                   item: item,
                   selected: selected,
-                  collapsed: collapsed,
-                  onTap: () => context.go(item.path),
+                  collapsed: collapsed && !inDrawer,
+                  onTap: () {
+                    context.go(item.path);
+                    if (inDrawer) Navigator.of(context).pop();
+                  },
                 );
               },
             ),
@@ -146,14 +173,14 @@ class _SidebarTileState extends State<_SidebarTile> {
         onExit: (_) => setState(() => _hovered = false),
         child: Material(
           color: widget.selected
-              ? scheme.primary.withValues(alpha: 0.1)
+              ? BsColors.secondary.withValues(alpha: 0.12)
               : _hovered
-                  ? scheme.surfaceContainerLow
+                  ? BsColors.rowHover
                   : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(BsRadii.lg),
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(BsRadii.lg),
             child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: widget.collapsed ? 12 : 14,
@@ -164,7 +191,7 @@ class _SidebarTileState extends State<_SidebarTile> {
                   Icon(
                     widget.item.icon,
                     size: 20,
-                    color: widget.selected ? BsColors.primary : scheme.onSurface,
+                    color: widget.selected ? BsColors.secondary : scheme.onSurface,
                   ),
                   if (!widget.collapsed) ...[
                     const SizedBox(width: 12),
@@ -176,7 +203,7 @@ class _SidebarTileState extends State<_SidebarTile> {
                                   ? FontWeight.w600
                                   : FontWeight.w500,
                               color: widget.selected
-                                  ? BsColors.primary
+                                  ? BsColors.secondary
                                   : scheme.onSurface,
                             ),
                       ),
@@ -189,11 +216,13 @@ class _SidebarTileState extends State<_SidebarTile> {
                         ),
                         decoration: BoxDecoration(
                           color: BsColors.accent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(BsRadii.full),
                         ),
                         child: Text(
                           widget.item.badge!,
-                          style: Theme.of(context).textTheme.labelSmall,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: BsColors.amberTextOnTint,
+                              ),
                         ),
                       ),
                   ],

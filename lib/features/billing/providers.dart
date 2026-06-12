@@ -19,3 +19,19 @@ final todaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
 final todaysBillCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(billsRepositoryProvider).todaysBillCount();
 });
+
+final yesterdaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(billsRepositoryProvider).yesterdaysSales();
+});
+
+final todaysBillsProvider = FutureProvider.autoDispose<List<Bill>>((ref) {
+  return ref.watch(billsRepositoryProvider).listTodaysBills(limit: 20);
+});
+
+/// Percent change in today's sales vs yesterday (null when no baseline).
+final salesTrendProvider = FutureProvider.autoDispose<double?>((ref) async {
+  final today = await ref.watch(todaysSalesProvider.future);
+  final yesterday = await ref.watch(yesterdaysSalesProvider.future);
+  if (yesterday == 0) return today > 0 ? 100.0 : null;
+  return ((today - yesterday) / yesterday) * 100;
+});
