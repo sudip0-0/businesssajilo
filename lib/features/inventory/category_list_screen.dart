@@ -6,10 +6,7 @@ import '../../core/ui/async_body.dart';
 import '../../core/ui/empty_state.dart';
 import '../../data/repositories/categories_repository.dart';
 import '../../domain/models/category.dart';
-
-final categoryListProvider = FutureProvider.autoDispose<List<Category>>((ref) {
-  return ref.watch(categoriesRepositoryProvider).list();
-});
+import 'providers.dart';
 
 class CategoryListScreen extends ConsumerWidget {
   const CategoryListScreen({super.key});

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/theme/app_theme.dart';
+import '../../web/theme/web_theme.dart';
 import 'demo_data_seeder.dart';
 import 'onboarding_prefs.dart';
 
@@ -35,8 +37,12 @@ class _OwnerOnboardingOverlayState
   }
 
   Future<void> _finish() async {
-    await setOnboardingComplete();
     if (mounted) setState(() => _visible = false);
+    try {
+      await setOnboardingComplete();
+    } catch (_) {
+      // Dismiss the overlay even if persistence fails so the UI stays usable.
+    }
   }
 
   Future<void> _seedAndFinish() async {
@@ -68,23 +74,28 @@ class _OwnerOnboardingOverlayState
       children: [
         widget.child,
         if (_visible) ...[
-          const ModalBarrier(
-            dismissible: false,
-            color: Colors.black54,
+          Positioned.fill(
+            child: ModalBarrier(
+              dismissible: false,
+              color: Colors.black54,
+            ),
           ),
           Center(
-            child: _OnboardingCard(
-              step: _step,
-              seeding: _seeding,
-              onNext: () {
-                if (_step >= _stepCount - 1) {
-                  _finish();
-                } else {
-                  setState(() => _step++);
-                }
-              },
-              onSkip: _seeding ? null : _finish,
-              onLoadSampleData: _seeding ? null : _seedAndFinish,
+            child: Theme(
+              data: WebTheme.light(),
+              child: _OnboardingCard(
+                step: _step,
+                seeding: _seeding,
+                onNext: () {
+                  if (_step >= _stepCount - 1) {
+                    _finish();
+                  } else {
+                    setState(() => _step++);
+                  }
+                },
+                onSkip: _seeding ? null : _finish,
+                onLoadSampleData: _seeding ? null : _seedAndFinish,
+              ),
             ),
           ),
         ],
@@ -111,7 +122,7 @@ class _OnboardingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     final steps = [
       (Icons.dashboard, l10n.onboardingWelcome, l10n.onboardingKpis),
       (Icons.inventory_2, l10n.inventory, l10n.onboardingProducts),
@@ -123,8 +134,10 @@ class _OnboardingCard extends StatelessWidget {
     final (icon, title, body) = steps[step];
     final isLast = step >= steps.length - 1;
 
-    return Card(
-      margin: const EdgeInsets.all(24),
+    return Material(
+      color: Colors.white,
+      elevation: 8,
+      borderRadius: BorderRadius.circular(BsRadii.lg),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
@@ -132,11 +145,22 @@ class _OnboardingCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 48),
+              Icon(icon, size: 48, color: BsColors.primary),
               const SizedBox(height: 16),
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: BsColors.textCharcoal,
+                ),
+              ),
               const SizedBox(height: 12),
-              Text(body, textAlign: TextAlign.center),
+              Text(
+                body,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: BsColors.outline,
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -149,8 +173,8 @@ class _OnboardingCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: i == step
-                            ? scheme.primary
-                            : scheme.outlineVariant,
+                            ? BsColors.primary
+                            : BsColors.outlineVariant,
                       ),
                     ),
                 ],

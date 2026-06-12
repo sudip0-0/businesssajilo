@@ -103,7 +103,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
                   final created = await showAdaptiveSheet<bool>(
                     context: context,
                     title: l10n.addCustomer,
-                    child: const AddCustomerSheet(),
+                    child: const AddCustomerSheet(embedded: true),
                   );
                   if (created == true) {
                     await _pager?.refresh();

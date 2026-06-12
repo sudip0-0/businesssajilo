@@ -7,80 +7,129 @@ import 'web_typography.dart';
 
 abstract final class WebTheme {
   static ThemeData light() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: BsColors.primary,
-      primary: BsColors.primary,
-      secondary: BsColors.accent,
-      error: BsColors.danger,
-      surface: BsColors.surface,
-      onSurface: const Color(0xFF1D2421),
-      outline: const Color(0xFF94A3B8),
-      surfaceContainerLowest: Colors.white,
-      surfaceContainerLow: const Color(0xFFF8F6F3),
-      surfaceContainer: const Color(0xFFF1EFEC),
-      surfaceContainerHigh: const Color(0xFFE8E6E3),
-    );
+    final scheme = AppTheme.lightScheme;
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: BsColors.surface,
+      scaffoldBackgroundColor: BsColors.background,
       textTheme: WebTypography.textTheme(scheme),
-      fontFamily: GoogleFonts.outfit().fontFamily,
+      fontFamily: GoogleFonts.inter().fontFamily,
       fontFamilyFallback: const ['Noto Sans Devanagari'],
       extensions: const [WebTokens.light],
-      dividerTheme: DividerThemeData(
-        color: scheme.outline.withValues(alpha: 0.2),
+      dividerTheme: const DividerThemeData(
+        color: BsColors.border,
         thickness: 1,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(64, 44),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          backgroundColor: BsColors.primary,
+          foregroundColor: BsColors.onPrimary,
+          minimumSize: const Size(64, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(BsRadii.md),
           ),
+          elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(64, 44),
+          foregroundColor: BsColors.primary,
+          minimumSize: const Size(64, 40),
+          side: const BorderSide(color: BsColors.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(BsRadii.md),
           ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: BsColors.primary,
+          minimumSize: const Size(48, 40),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
+        labelStyle: WebTypography.textTheme(scheme).labelLarge,
+        floatingLabelBehavior: FloatingLabelBehavior.always,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(BsRadii.md),
+          borderSide: const BorderSide(color: BsColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.25)),
+          borderRadius: BorderRadius.circular(BsRadii.md),
+          borderSide: const BorderSide(color: BsColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(BsRadii.md),
           borderSide: const BorderSide(color: BsColors.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: scheme.outline.withValues(alpha: 0.15)),
+          borderRadius: BorderRadius.circular(BsRadii.lg),
+          side: const BorderSide(color: BsColors.border),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BsRadii.full),
+        ),
+        side: BorderSide.none,
+        labelStyle: WebTypography.textTheme(scheme).labelLarge,
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: WidgetStateProperty.all(const Size(88, 36)),
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 14),
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(BsRadii.md),
+            ),
+          ),
         ),
       ),
       dataTableTheme: DataTableThemeData(
-        headingTextStyle: WebTypography.textTheme(scheme).labelLarge,
-        dataTextStyle: GoogleFonts.jetBrainsMono(fontSize: 13),
-        headingRowColor: WidgetStateProperty.all(
-          scheme.surfaceContainerLow,
+        headingTextStyle: WebTypography.textTheme(scheme).labelLarge?.copyWith(
+              letterSpacing: 0.8,
+              color: scheme.onSurface.withValues(alpha: 0.7),
+            ),
+        dataTextStyle: GoogleFonts.inter(
+          fontSize: 13,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
+        headingRowColor: WidgetStateProperty.all(Colors.white),
+        dataRowColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return BsColors.rowHover;
+          }
+          return null;
+        }),
+        dividerThickness: 1,
+        horizontalMargin: 16,
+        columnSpacing: 24,
+      ),
+      dialogTheme: DialogThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BsRadii.lg),
+          side: const BorderSide(color: BsColors.border),
+        ),
+        backgroundColor: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: BsColors.text,
+        surfaceTintColor: Colors.transparent,
       ),
     );
   }
@@ -89,7 +138,7 @@ abstract final class WebTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: BsColors.primary,
       brightness: Brightness.dark,
-      secondary: BsColors.accentDark,
+      secondary: BsColors.successDark,
       error: BsColors.dangerDark,
     );
 
@@ -101,15 +150,15 @@ abstract final class WebTheme {
         elevation: 0,
         color: scheme.surfaceContainer,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
+          borderRadius: BorderRadius.circular(BsRadii.lg),
+          side: BorderSide(color: scheme.outline.withValues(alpha: 0.3)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainerHigh,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(BsRadii.md)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

@@ -6,7 +6,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/ui/stock_badge.dart';
-import '../../../data/repositories/categories_repository.dart';
 import '../../../data/repositories/products_repository.dart';
 import '../../../domain/models/category.dart';
 import '../../../domain/models/product.dart';
@@ -88,11 +87,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final categoriesAsync = ref.watch(
-      FutureProvider.autoDispose(
-        (ref) => ref.watch(categoriesRepositoryProvider).list(),
-      ),
-    );
+    final categoriesAsync = ref.watch(categoryListProvider);
     final pager = _pager;
     final filtered = _filtered;
     final loading = pager == null || pager.initialLoading;

@@ -8,8 +8,9 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/utils/money.dart';
-import '../../data/repositories/categories_repository.dart';
 import '../../data/repositories/products_repository.dart';
+import 'providers.dart';
+import '../../domain/models/category.dart';
 import '../../domain/models/product.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import 'product_image.dart';
@@ -172,116 +173,129 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final categoriesAsync = ref.watch(
-      FutureProvider.autoDispose((ref) => ref.watch(categoriesRepositoryProvider).list()),
-    );
+    final categoriesAsync = ref.watch(categoryListProvider);
+
+    if (widget.embedded) {
+      return categoriesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => ErrorState(message: l10n.loadingFailed),
+        data: (categories) => _buildForm(context, l10n, categories),
+      );
+    }
 
     final formBody = categoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(message: l10n.loadingFailed),
-        data: (categories) => SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_imageBytes != null)
-                  Image.memory(_imageBytes!, height: 120, fit: BoxFit.cover)
-                else if (_isEdit)
-                  ProductImage(storagePath: widget.product!.imageUrl, size: 120),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _pickImage,
-                  icon: const Icon(Icons.image_outlined),
-                  label: Text(l10n.pickImage),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: l10n.productName),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nameNpController,
-                  decoration: InputDecoration(labelText: l10n.productNameNp),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _skuController,
-                  decoration: InputDecoration(labelText: l10n.sku),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String?>(
-                  // ignore: deprecated_member_use
-                  value: _categoryId,
-                  decoration: InputDecoration(labelText: l10n.categories),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('—')),
-                    ...categories.map(
-                      (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
-                    ),
-                  ],
-                  onChanged: (v) => setState(() => _categoryId = v),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _unitController,
-                  decoration: InputDecoration(labelText: l10n.unit),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _costController,
-                  decoration: InputDecoration(labelText: l10n.costPrice),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => _validateMoney(v, l10n),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _refController,
-                  decoration: InputDecoration(labelText: l10n.referencePrice),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => _validateMoney(v, l10n),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _thresholdController,
-                  decoration: InputDecoration(labelText: l10n.lowStockThreshold),
-                  keyboardType: TextInputType.number,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return null;
-                    final n = int.tryParse(v.trim());
-                    if (n == null || n < 0) return l10n.invalidNumber;
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.save),
-                ),
-              ],
-            ),
-          ),
-        ),
+        data: (categories) => _buildForm(context, l10n, categories),
     );
 
-    if (widget.embedded) return formBody;
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? l10n.editProduct : l10n.addProduct),
       ),
       body: formBody,
+    );
+  }
+
+  Widget _buildForm(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<Category> categories,
+  ) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(widget.embedded ? 0 : 24),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_imageBytes != null)
+              Image.memory(_imageBytes!, height: 120, fit: BoxFit.cover)
+            else if (_isEdit)
+              ProductImage(storagePath: widget.product!.imageUrl, size: 120),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.image_outlined),
+              label: Text(l10n.pickImage),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: l10n.productName),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _nameNpController,
+              decoration: InputDecoration(labelText: l10n.productNameNp),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _skuController,
+              decoration: InputDecoration(labelText: l10n.sku),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String?>(
+              // ignore: deprecated_member_use
+              value: _categoryId,
+              decoration: InputDecoration(labelText: l10n.categories),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('—')),
+                ...categories.map(
+                  (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+                ),
+              ],
+              onChanged: (v) => setState(() => _categoryId = v),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _unitController,
+              decoration: InputDecoration(labelText: l10n.unit),
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _costController,
+              decoration: InputDecoration(labelText: l10n.costPrice),
+              keyboardType: TextInputType.number,
+              validator: (v) => _validateMoney(v, l10n),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _refController,
+              decoration: InputDecoration(labelText: l10n.referencePrice),
+              keyboardType: TextInputType.number,
+              validator: (v) => _validateMoney(v, l10n),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _thresholdController,
+              decoration: InputDecoration(labelText: l10n.lowStockThreshold),
+              keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null;
+                final n = int.tryParse(v.trim());
+                if (n == null || n < 0) return l10n.invalidNumber;
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _loading ? null : _submit,
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.save),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

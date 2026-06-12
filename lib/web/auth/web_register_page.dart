@@ -9,6 +9,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../theme/web_theme.dart';
 
 class WebRegisterPage extends ConsumerStatefulWidget {
   const WebRegisterPage({super.key});
@@ -73,8 +74,13 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
     final l10n = AppLocalizations.of(context);
     final locale = ref.watch(localeProvider);
 
+    final compact = MediaQuery.sizeOf(context).width < 768;
+
     return Scaffold(
-      body: Row(
+      backgroundColor: BsColors.background,
+      body: compact
+          ? _buildFormOnly(context, l10n, locale)
+          : Row(
         children: [
           Expanded(
             flex: 4,
@@ -85,16 +91,24 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(PhosphorIconsRegular.buildings,
-                      size: 48, color: Colors.white),
-                  const SizedBox(height: 24),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(BsRadii.lg),
+                    ),
+                    child: Icon(PhosphorIconsRegular.buildings,
+                        size: 28, color: Colors.white),
+                  ),
+                  const SizedBox(height: 32),
                   Text(
                     l10n.registerBusiness,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
                           color: Colors.white,
                         ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Text(
                     l10n.tagline,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -107,125 +121,166 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
           ),
           Expanded(
             flex: 5,
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(48),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: _buildFormOnly(context, l10n, locale),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormOnly(
+    BuildContext context,
+    AppLocalizations l10n,
+    Locale locale,
+  ) {
+    return ColoredBox(
+      color: Colors.white,
+      child: Theme(
+        data: WebTheme.light(),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(48),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.registerBusiness,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: BsColors.textCharcoal,
+                          ),
+                    ),
+                    const SizedBox(height: 20),
+                    SegmentedButton<String>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(value: 'en', label: Text(l10n.english)),
+                        ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
+                      ],
+                      selected: {locale.languageCode},
+                      onSelectionChanged: (s) => ref
+                          .read(localeProvider.notifier)
+                          .setLocale(Locale(s.first)),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _businessNameController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration: InputDecoration(labelText: l10n.businessName),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? l10n.fieldRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _businessNameNpController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration:
+                          InputDecoration(labelText: l10n.businessNameNp),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _displayNameController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration: InputDecoration(labelText: l10n.displayName),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? l10n.fieldRequired
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _emailController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration: InputDecoration(labelText: l10n.email),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return l10n.fieldRequired;
+                        }
+                        if (!emailRegex.hasMatch(v.trim())) {
+                          return l10n.invalidEmail;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _passwordController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration: InputDecoration(labelText: l10n.password),
+                      obscureText: _obscurePassword,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return l10n.fieldRequired;
+                        if (v.length < 6) return l10n.weakPassword;
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _phoneController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration: InputDecoration(labelText: l10n.phoneNumber),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _addressController,
+                      style: const TextStyle(color: BsColors.text),
+                      decoration: InputDecoration(labelText: l10n.address),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: BsColors.danger.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(BsRadii.md),
+                          border: Border.all(
+                            color: BsColors.danger.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Text(
+                          _error!,
+                          style: const TextStyle(color: BsColors.danger),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _loading ? null : _submit,
+                      child: _loading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.createAccount),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        SegmentedButton<String>(
-                          segments: [
-                            ButtonSegment(
-                                value: 'en', label: Text(l10n.english)),
-                            ButtonSegment(
-                                value: 'ne', label: Text(l10n.nepali)),
-                          ],
-                          selected: {locale.languageCode},
-                          onSelectionChanged: (s) => ref
-                              .read(localeProvider.notifier)
-                              .setLocale(Locale(s.first)),
+                        Text(
+                          l10n.hasAccount,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: BsColors.outline,
+                              ),
                         ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _businessNameController,
-                          decoration:
-                              InputDecoration(labelText: l10n.businessName),
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? l10n.fieldRequired
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _businessNameNpController,
-                          decoration:
-                              InputDecoration(labelText: l10n.businessNameNp),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _displayNameController,
-                          decoration:
-                              InputDecoration(labelText: l10n.displayName),
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? l10n.fieldRequired
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: InputDecoration(labelText: l10n.email),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return l10n.fieldRequired;
-                            }
-                            if (!emailRegex.hasMatch(v.trim())) {
-                              return l10n.invalidEmail;
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: InputDecoration(labelText: l10n.password),
-                          obscureText: _obscurePassword,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return l10n.fieldRequired;
-                            if (v.length < 6) return l10n.weakPassword;
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _phoneController,
-                          decoration:
-                              InputDecoration(labelText: l10n.phoneNumber),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _addressController,
-                          decoration: InputDecoration(labelText: l10n.address),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 12),
-                          Text(_error!,
-                              style: const TextStyle(color: BsColors.danger)),
-                        ],
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _loading ? null : _submit,
-                          child: _loading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : Text(l10n.createAccount),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          children: [
-                            Text(l10n.hasAccount),
-                            TextButton(
-                              onPressed: () => context.go('/login'),
-                              child: Text(l10n.signIn),
-                            ),
-                          ],
+                        TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: Text(l10n.signIn),
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

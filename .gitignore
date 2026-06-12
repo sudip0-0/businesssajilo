@@ -4,6 +4,8 @@
 *.pyc
 *.swp
 .DS_Store
+Thumbs.db
+Desktop.ini
 .atom/
 .build/
 .buildlog/
@@ -12,38 +14,60 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# IntelliJ / Android Studio
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# VS Code — uncomment to ignore local editor settings
 #.vscode/
 
-# Flutter/Dart/Pub related
+# Cursor / local agent artifacts
+.cursor/
+
+# Flutter/Dart/Pub
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
-/coverage/
+build/
+coverage/
+.fvm/
 
-# Symbolication related
+# Symbolication / obfuscation
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Local env (Supabase keys)
-.env.local
+# Environment (keep checked-in examples)
+.env
+.env.*
+!.env.example
+!.env.*.example
 
-# Android Studio will place build artifacts here
+# Node / Playwright (web e2e scripts)
+node_modules/
+package-lock.json
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Android
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.gradle/
+/android/local.properties
+/android/key.properties
+
+# iOS / macOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/macos/Flutter/ephemeral/
+
+# Local-only docs
 docs/enhancement-prompt.md

@@ -55,7 +55,8 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
     _loadSaved();
-    return ThemeMode.system;
+    // Web admin UI is designed for light mode; system dark caused unreadable forms.
+    return kIsWeb ? ThemeMode.light : ThemeMode.system;
   }
 
   Future<void> _loadSaved() async {

@@ -7,7 +7,9 @@ import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 
 class AddCustomerSheet extends ConsumerStatefulWidget {
-  const AddCustomerSheet({super.key});
+  const AddCustomerSheet({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   ConsumerState<AddCustomerSheet> createState() => _AddCustomerSheetState();
@@ -78,35 +80,44 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
 
-    return Material(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        widget.embedded ? 24 : 24,
+        widget.embedded ? 0 : 24,
+        24,
+        24 + bottom,
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!widget.embedded) ...[
                 Text(
                   l10n.addCustomer,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _shopNameController,
-                  decoration: InputDecoration(labelText: l10n.shopName),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-                ),
+              ],
+              TextFormField(
+                controller: _shopNameController,
+                style: const TextStyle(color: BsColors.text),
+                decoration: InputDecoration(labelText: l10n.shopName),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _contactNameController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.contactName),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _displayNameController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.displayName),
                   validator: (v) =>
                       v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
@@ -114,6 +125,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.email),
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) =>
@@ -122,6 +134,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _passwordController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.password),
                   obscureText: true,
                   validator: (v) =>
@@ -130,17 +143,20 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _phoneController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.phoneNumber),
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _addressController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.address),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _openingBalanceController,
+                  style: const TextStyle(color: BsColors.text),
                   decoration: InputDecoration(labelText: l10n.openingBalance),
                   keyboardType: TextInputType.number,
                 ),
@@ -159,8 +175,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                         )
                       : Text(l10n.save),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
