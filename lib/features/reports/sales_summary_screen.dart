@@ -7,8 +7,8 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
 import '../../domain/enums.dart';
+import '../../core/ui/bs_sales_line_chart.dart';
 import 'providers.dart';
-import 'sales_bar_chart.dart';
 
 class SalesSummaryScreen extends ConsumerStatefulWidget {
   const SalesSummaryScreen({super.key, this.embedded = false});
@@ -74,7 +74,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
                       message: l10n.noSalesInPeriod,
                     )
                   else
-                    SalesBarChart(points: points),
+                    BsSalesLineChart(points: points),
                 ],
               );
             },

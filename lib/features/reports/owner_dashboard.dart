@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bill_status_chip.dart';
+import '../../core/ui/bs_sales_line_chart.dart';
+import '../../core/ui/bs_stat_tile.dart';
+import '../../core/ui/bs_success_button.dart';
+import '../../core/utils/money.dart';
+import '../../domain/enums.dart';
+import '../../domain/models/bill.dart';
+import '../../domain/models/customer.dart';
+import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
 import '../billing/providers.dart';
 import '../customers/providers.dart';
@@ -11,153 +21,440 @@ import '../inventory/providers.dart';
 import '../orders/providers.dart' as orders;
 import 'dues_aging_screen.dart';
 import 'providers.dart';
-import 'sales_bar_chart.dart';
 import 'sales_summary_screen.dart';
 import 'stock_valuation_screen.dart';
 
-typedef DashboardStat = ({IconData icon, String label, String value, VoidCallback? onTap});
+class OwnerDashboard extends ConsumerStatefulWidget {
+  const OwnerDashboard({super.key, this.onOrdersTap});
 
-class OwnerDashboard extends ConsumerWidget {
-  const OwnerDashboard({
-    super.key,
-    required this.stats,
-    this.onOrdersTap,
-  });
-
-  final List<DashboardStat> stats;
   final VoidCallback? onOrdersTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OwnerDashboard> createState() => _OwnerDashboardState();
+}
+
+class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
+  bool _weeklyChart = true;
+
+  Future<void> _refresh() async {
+    ref.invalidate(last7DaySalesProvider);
+    ref.invalidate(salesDailyProvider(ReportRange.month));
+    ref.invalidate(todaysSalesProvider);
+    ref.invalidate(yesterdaysSalesProvider);
+    ref.invalidate(salesTrendProvider);
+    ref.invalidate(totalDuesProvider);
+    ref.invalidate(lowStockCountProvider);
+    ref.invalidate(orders.pendingOrdersCountProvider);
+    ref.invalidate(todaysBillsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final session = ref.watch(authProvider).value;
     final name = session?.member?.displayName ?? '';
     final wide = isWideLayout(context);
-    final last7Async = ref.watch(last7DaySalesProvider);
+    final todaysSales = ref.watch(todaysSalesProvider);
+    final salesTrend = ref.watch(salesTrendProvider);
+    final totalDues = ref.watch(totalDuesProvider);
+    final lowStock = ref.watch(lowStockCountProvider);
+    final pendingOrders = ref.watch(orders.pendingOrdersCountProvider);
+    final chartRange = _weeklyChart ? ReportRange.last7Days : ReportRange.month;
+    final chartData = ref.watch(salesDailyProvider(chartRange));
+    final todaysBills = ref.watch(todaysBillsProvider);
+    final products = ref.watch(productListProvider);
+    final customers = ref.watch(customerListProvider);
 
     return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(last7DaySalesProvider);
-        ref.invalidate(todaysSalesProvider);
-        ref.invalidate(totalDuesProvider);
-        ref.invalidate(lowStockCountProvider);
-        ref.invalidate(orders.pendingOrdersCountProvider);
-      },
+      onRefresh: _refresh,
       child: ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          l10n.welcomeUser(name),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            l10n.namasteGreeting(name),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: BsColors.textCharcoal,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.dashboardTodaySummary,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: BsColors.outline,
+                ),
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: wide ? 4 : 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: wide ? 1.5 : 1.15,
+            children: [
+              BsStatTile(
+                compact: !wide,
+                label: l10n.todaysSales,
+                value: todaysSales.when(
+                  data: (d) => formatNpr(Paisa(d), showPaisa: false),
+                  loading: () => '…',
+                  error: (_, _) => '—',
+                ),
+                icon: Icons.payments_outlined,
+                trend: salesTrend.when(
+                  data: (pct) => pct == null
+                      ? null
+                      : pct >= 0
+                          ? BsTrendDirection.up
+                          : BsTrendDirection.down,
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                trendLabel: salesTrend.when(
+                  data: (pct) =>
+                      pct == null ? null : '${pct.abs().toStringAsFixed(0)}%',
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
+                ),
               ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: wide ? 4 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.4,
-          children: stats
-              .map(
-                (s) => Semantics(
-                  button: s.onTap != null,
-                  label: '${s.label}: ${s.value}',
-                  child: Card(
-                  child: InkWell(
-                    onTap: s.onTap,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(s.icon, color: BsColors.primary),
-                          const Spacer(),
-                          Text(
-                            s.label,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            s.value,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ],
+              BsStatTile(
+                compact: !wide,
+                label: l10n.totalDues,
+                value: totalDues.when(
+                  data: (d) => formatNpr(Paisa(d), showPaisa: false),
+                  loading: () => '…',
+                  error: (_, _) => '—',
+                ),
+                icon: Icons.account_balance_wallet_outlined,
+                subtitle: totalDues.when(
+                  data: (d) => d > 0 ? l10n.needsAttention : null,
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
+                ),
+              ),
+              BsStatTile(
+                compact: !wide,
+                label: l10n.lowStock,
+                value: lowStock.when(
+                  data: (c) => '$c',
+                  loading: () => '…',
+                  error: (_, _) => '—',
+                ),
+                icon: Icons.inventory_2_outlined,
+                subtitle: lowStock.when(
+                  data: (c) => c > 0 ? l10n.reorderSoon : null,
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StockValuationScreen(lowStockOnly: true),
+                  ),
+                ),
+              ),
+              BsStatTile(
+                compact: !wide,
+                label: l10n.pendingOrders,
+                value: pendingOrders.when(
+                  data: (c) => '$c',
+                  loading: () => '…',
+                  error: (_, _) => '—',
+                ),
+                icon: Icons.shopping_cart_outlined,
+                trendLabel: pendingOrders.when(
+                  data: (c) => c > 0 ? '$c NEW' : null,
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                trend: pendingOrders.when(
+                  data: (c) => c > 0 ? BsTrendDirection.neutral : null,
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                onTap: widget.onOrdersTap,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.salesPerformance,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              l10n.salesPerformanceSubtitle,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: BsColors.outline,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      SegmentedButton<bool>(
+                        showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(value: true, label: Text(l10n.weekly)),
+                          ButtonSegment(value: false, label: Text(l10n.monthly)),
+                        ],
+                        selected: {_weeklyChart},
+                        onSelectionChanged: (s) =>
+                            setState(() => _weeklyChart = s.first),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                  chartData.when(
+                    data: (points) => BsSalesLineChart(points: points),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.recentActivity,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  _RecentActivityList(
+                    bills: todaysBills,
+                    products: products,
+                    customers: customers,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.todaysTransactions,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  todaysBills.when(
+                    data: (bills) => _TransactionsList(bills: bills),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (_, _) => Text(l10n.loadingFailed),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              BsSuccessButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
+                ),
+                label: l10n.salesSummary,
+                icon: const Icon(Icons.trending_up, size: 18, color: Colors.white),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
+                ),
+                child: Text(l10n.duesAging),
+              ),
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StockValuationScreen(),
                   ),
                 ),
-              )
-              .toList(),
+                child: Text(l10n.stockValuation),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentActivityList extends StatelessWidget {
+  const _RecentActivityList({
+    required this.bills,
+    required this.products,
+    required this.customers,
+  });
+
+  final AsyncValue<List<Bill>> bills;
+  final AsyncValue<List<Product>> products;
+  final AsyncValue<List<Customer>> customers;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final items = <Widget>[];
+
+    bills.whenData((list) {
+      for (final bill in list.take(3)) {
+        items.add(_ActivityRow(
+          icon: Icons.shopping_cart_outlined,
+          color: BsColors.primary,
+          text: l10n.newBillCreated(bill.billNo),
+        ));
+      }
+    });
+
+    products.whenData((list) {
+      for (final p in list
+          .where((p) =>
+              p.lowStockThreshold > 0 && p.stockCached <= p.lowStockThreshold)
+          .take(2)) {
+        items.add(_ActivityRow(
+          icon: Icons.warning_amber_outlined,
+          color: BsColors.danger,
+          text: l10n.lowStockAlert(p.name),
+        ));
+      }
+    });
+
+    if (items.isEmpty) {
+      return Text(
+        l10n.noSalesInPeriod,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: BsColors.outline,
+            ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < items.length.clamp(0, 5); i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          items[i],
+        ],
+      ],
+    );
+  }
+}
+
+class _ActivityRow extends StatelessWidget {
+  const _ActivityRow({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(BsRadii.md),
+          ),
+          child: Icon(icon, size: 14, color: color),
         ),
-        SizedBox(height: wide ? 24 : 16),
-        Text(l10n.last7DaysSales,
-            style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        last7Async.when(
-          loading: () => const LinearProgressIndicator(),
-          error: (_, _) => const SizedBox.shrink(),
-          data: (points) => wide
-              ? SalesBarChart(points: points)
-              // Compact, scrollable chart on mobile.
-              : SizedBox(
-                  height: 160,
-                  child: SingleChildScrollView(
-                    child: SalesBarChart(points: points),
-                  ),
-                ),
-        ),
-        const SizedBox(height: 16),
-        Text(l10n.viewReport, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            ActionChip(
-              avatar: const Icon(Icons.trending_up, size: 18),
-              label: Text(l10n.salesSummary),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
-              ),
-            ),
-            ActionChip(
-              avatar: const Icon(Icons.hourglass_bottom, size: 18),
-              label: Text(l10n.duesAging),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
-              ),
-            ),
-            ActionChip(
-              avatar: const Icon(Icons.inventory, size: 18),
-              label: Text(l10n.stockValuation),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const StockValuationScreen(),
-                ),
-              ),
-            ),
-            if (onOrdersTap != null)
-              ActionChip(
-                avatar: const Icon(Icons.shopping_cart, size: 18),
-                label: Text(l10n.pendingOrders),
-                onPressed: onOrdersTap,
-              ),
-          ],
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.bodySmall),
         ),
       ],
-      ),
+    );
+  }
+}
+
+class _TransactionsList extends StatelessWidget {
+  const _TransactionsList({required this.bills});
+
+  final List<Bill> bills;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final timeFmt = DateFormat.jm();
+
+    if (bills.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text(
+          l10n.noSalesInPeriod,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: BsColors.outline,
+              ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (final bill in bills.take(8))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(bill.customerShopName ?? l10n.walkInCustomer),
+            subtitle: Text(
+              bill.createdAt != null
+                  ? timeFmt.format(bill.createdAt!.toLocal())
+                  : bill.billNo,
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  formatNpr(Paisa(bill.grandTotal), showPaisa: false),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                BillStatusChip(bill.status),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

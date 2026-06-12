@@ -12,6 +12,7 @@ import '../../data/repositories/bills_repository.dart';
 import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customers/providers.dart';
+import '../../core/ui/bs_success_button.dart';
 import '../inventory/product_image.dart';
 import '../inventory/providers.dart';
 import '../../web/ui/web_sheet_bridge.dart';
@@ -261,21 +262,22 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                 grandTotal: _grandTotal,
                 onDiscountChanged: () => setState(() {}),
               ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: FilledButton(
-                    onPressed: _loading ? null : _save,
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.reviewAndSave),
+              if (widget.embedded)
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: FilledButton(
+                      onPressed: _loading ? null : _save,
+                      child: _loading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.reviewAndSave),
+                    ),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -283,8 +285,26 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
     if (widget.embedded) return body;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.newBill)),
+      appBar: AppBar(
+        title: Text(l10n.createNewBill),
+        actions: [
+          TextButton(
+            onPressed: _loading ? null : () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
       body: body,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: BsSuccessButton(
+            onPressed: _loading ? null : _save,
+            label: l10n.printAndSave,
+            icon: const Icon(Icons.print_outlined, size: 18, color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -391,59 +411,68 @@ class _TotalsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Material(
-      elevation: 8,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(l10n.total),
-                Text(formatNpr(Paisa(itemsTotal), showPaisa: false)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: billDiscountController,
-              decoration: InputDecoration(
-                labelText: l10n.billDiscount,
-                errorText: () {
-                  final discount =
-                      parseNpr(billDiscountController.text)?.value ?? 0;
-                  if (discount < 0 || discount > itemsTotal) {
-                    return l10n.discountExceedsItems;
-                  }
-                  return null;
-                }(),
-              ),
-              keyboardType: TextInputType.number,
-              onChanged: (_) => onDiscountChanged(),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.grandTotal,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                Text(
-                  formatNpr(Paisa(grandTotal), showPaisa: false),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: BsColors.primary,
-                      ),
-                ),
-              ],
-            ),
-          ],
-        ),
+    final discount = parseNpr(billDiscountController.text)?.value ?? 0;
+    final taxable = itemsTotal - discount;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: BsColors.primary.withValues(alpha: 0.04),
+        border: const Border(top: BorderSide(color: BsColors.border)),
       ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _summaryRow(context, l10n.subtotal, itemsTotal),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: billDiscountController,
+            decoration: InputDecoration(
+              labelText: l10n.billDiscount,
+              isDense: true,
+              errorText: () {
+                if (discount < 0 || discount > itemsTotal) {
+                  return l10n.discountExceedsItems;
+                }
+                return null;
+              }(),
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (_) => onDiscountChanged(),
+          ),
+          const SizedBox(height: 8),
+          _summaryRow(context, l10n.taxableAmount, taxable),
+          const Divider(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.grandTotal,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              Text(
+                formatNpr(Paisa(grandTotal), showPaisa: false),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: BsColors.primary,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryRow(BuildContext context, String label, int amount) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label),
+        Text(formatNpr(Paisa(amount), showPaisa: false)),
+      ],
     );
   }
 }

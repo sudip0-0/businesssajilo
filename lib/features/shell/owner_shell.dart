@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
-import '../../core/utils/money.dart';
+import '../../core/theme/app_theme.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
 import '../billing/providers.dart';
@@ -15,12 +15,8 @@ import '../inventory/product_form_screen.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/providers.dart';
 import '../orders/order_queue_screen.dart';
-import '../orders/providers.dart';
 import '../notifications/notification_bell_action.dart';
-import '../reports/dues_aging_screen.dart';
 import '../reports/owner_dashboard.dart';
-import '../reports/sales_summary_screen.dart';
-import '../reports/stock_valuation_screen.dart';
 import '../reports/reports_hub_screen.dart';
 import '../settings/settings_screen.dart';
 import '../onboarding/owner_onboarding_overlay.dart';
@@ -64,68 +60,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final wide = isWideLayout(context);
-    final lowStockAsync = ref.watch(lowStockCountProvider);
-    final totalDuesAsync = ref.watch(totalDuesProvider);
-    final todaysSalesAsync = ref.watch(todaysSalesProvider);
-    final pendingOrdersAsync = ref.watch(pendingOrdersCountProvider);
-
     final pages = [
-      OwnerDashboard(
-        onOrdersTap: () => _openOrders(wide),
-        stats: [
-          (
-            icon: Icons.payments,
-            label: l10n.todaysSales,
-            value: todaysSalesAsync.when(
-              data: (d) => formatNpr(Paisa(d), showPaisa: false),
-              loading: () => '…',
-              error: (_, _) => '—',
-            ),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
-            ),
-          ),
-          (
-            icon: Icons.account_balance_wallet,
-            label: l10n.totalDues,
-            value: totalDuesAsync.when(
-              data: (d) => formatNpr(Paisa(d), showPaisa: false),
-              loading: () => '…',
-              error: (_, _) => '—',
-            ),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
-            ),
-          ),
-          (
-            icon: Icons.inventory_2,
-            label: l10n.lowStock,
-            value: lowStockAsync.when(
-              data: (c) => '$c',
-              loading: () => '…',
-              error: (_, _) => '—',
-            ),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const StockValuationScreen(lowStockOnly: true),
-              ),
-            ),
-          ),
-          (
-            icon: Icons.shopping_cart,
-            label: l10n.pendingOrders,
-            value: pendingOrdersAsync.when(
-              data: (c) => '$c',
-              loading: () => '…',
-              error: (_, _) => '—',
-            ),
-            onTap: () => _openOrders(wide),
-          ),
-        ],
-      ),
+      OwnerDashboard(onOrdersTap: () => _openOrders(wide)),
       const ProductListScreen(canEdit: true, canManageStock: true),
       const CustomerListScreen(canEdit: true, canRecordPayments: true),
       const BillListScreen(),
@@ -242,6 +178,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         body: body,
       floatingActionButton: switch (_index) {
         1 => FloatingActionButton.extended(
+            backgroundColor: BsColors.secondary,
+            foregroundColor: BsColors.onSecondary,
             onPressed: () async {
               final saved = await Navigator.push<bool>(
                 context,
@@ -256,6 +194,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             label: Text(l10n.addProduct),
           ),
         2 => FloatingActionButton.extended(
+            backgroundColor: BsColors.secondary,
+            foregroundColor: BsColors.onSecondary,
             onPressed: () async {
               final created = await showAdaptiveSheet<bool>(
                 context: context,
@@ -271,6 +211,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             label: Text(l10n.addCustomer),
           ),
         3 => FloatingActionButton.extended(
+            backgroundColor: BsColors.secondary,
+            foregroundColor: BsColors.onSecondary,
             onPressed: () async {
               final saved = await Navigator.push<bool>(
                 context,
@@ -287,6 +229,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             label: Text(l10n.newBill),
           ),
         5 => FloatingActionButton.extended(
+            backgroundColor: BsColors.secondary,
+            foregroundColor: BsColors.onSecondary,
             onPressed: () async {
               final created = await showAdaptiveSheet<bool>(
                 context: context,
@@ -342,8 +286,17 @@ class _MorePage extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         return Card(
+          margin: EdgeInsets.zero,
           child: ListTile(
-            leading: Icon(item.icon),
+            leading: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: BsColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(BsRadii.lg),
+              ),
+              child: Icon(item.icon, color: BsColors.primary),
+            ),
             title: Text(item.title),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(

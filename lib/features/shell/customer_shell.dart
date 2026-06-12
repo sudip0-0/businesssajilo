@@ -32,8 +32,8 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
     final pages = [
       RoleDashboard(
         stats: [
-          (icon: Icons.storefront, label: l10n.catalog, value: '—'),
-          (
+          DashboardStat(icon: Icons.storefront, label: l10n.catalog, value: '—'),
+          DashboardStat(
             icon: Icons.shopping_bag_outlined,
             label: l10n.myOrders,
             value: ownOrdersAsync.when(
@@ -42,7 +42,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
               error: (_, _) => '—',
             ),
           ),
-          (
+          DashboardStat(
             icon: Icons.account_balance_wallet,
             label: l10n.myDues,
             value: ownCustomerAsync.when(

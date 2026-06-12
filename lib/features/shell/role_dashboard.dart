@@ -3,7 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_stat_tile.dart';
 import '../auth/providers/auth_provider.dart';
+
+class DashboardStat {
+  const DashboardStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.onTap,
+    this.subtitle,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback? onTap;
+  final String? subtitle;
+}
 
 class RoleDashboard extends ConsumerWidget {
   const RoleDashboard({
@@ -11,56 +28,49 @@ class RoleDashboard extends ConsumerWidget {
     required this.stats,
   });
 
-  final List<({IconData icon, String label, String value})> stats;
+  final List<DashboardStat> stats;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final session = ref.watch(authProvider).value;
     final name = session?.member?.displayName ?? '';
+    final wide = MediaQuery.sizeOf(context).width > 600;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          l10n.welcomeUser(name),
+          l10n.namasteGreeting(name),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                color: BsColors.textCharcoal,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.dashboardTodaySummary,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: BsColors.outline,
               ),
         ),
         const SizedBox(height: 16),
         GridView.count(
-          crossAxisCount: MediaQuery.sizeOf(context).width > 600 ? 3 : 2,
+          crossAxisCount: wide ? 3 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 1.4,
+          childAspectRatio: wide ? 1.5 : 1.15,
           children: stats
               .map(
-                (s) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(s.icon, color: BsColors.primary),
-                        const Spacer(),
-                        Text(
-                          s.label,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          s.value,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  ),
+                (s) => BsStatTile(
+                  compact: !wide,
+                  label: s.label,
+                  value: s.value,
+                  icon: s.icon,
+                  subtitle: s.subtitle,
+                  onTap: s.onTap,
                 ),
               )
               .toList(),

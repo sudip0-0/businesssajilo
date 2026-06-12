@@ -6,6 +6,7 @@ import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/utils/money.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
+import '../../core/theme/app_theme.dart';
 import '../billing/providers.dart';
 import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
@@ -40,7 +41,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
     final pages = [
       RoleDashboard(
         stats: [
-          (
+          DashboardStat(
             icon: Icons.shopping_cart,
             label: l10n.pendingOrders,
             value: pendingOrdersAsync.when(
@@ -49,7 +50,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
               error: (_, _) => '—',
             ),
           ),
-          (
+          DashboardStat(
             icon: Icons.request_quote,
             label: l10n.quotes,
             value: quotesAsync.when(
@@ -58,7 +59,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
               error: (_, _) => '—',
             ),
           ),
-          (
+          DashboardStat(
             icon: Icons.receipt_long,
             label: l10n.todaysBills,
             value: todaysBillsAsync.when(
@@ -67,7 +68,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
               error: (_, _) => '—',
             ),
           ),
-          (
+          DashboardStat(
             icon: Icons.account_balance_wallet,
             label: l10n.dues,
             value: totalDuesAsync.when(
@@ -144,6 +145,8 @@ class _SalesShellState extends ConsumerState<SalesShell> {
             label: Text(l10n.recordPayment),
           ),
         4 => FloatingActionButton.extended(
+            backgroundColor: BsColors.secondary,
+            foregroundColor: BsColors.onSecondary,
             onPressed: () async {
               final saved = await Navigator.push<bool>(
                 context,

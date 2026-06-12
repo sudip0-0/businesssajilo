@@ -3,8 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_form_section.dart';
+import '../../core/ui/bs_success_button.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
+
+const _nepalCities = [
+  'Kathmandu',
+  'Lalitpur',
+  'Bhaktapur',
+  'Pokhara',
+  'Biratnagar',
+  'Birgunj',
+  'Dharan',
+  'Butwal',
+  'Hetauda',
+  'Nepalgunj',
+];
 
 class AddCustomerSheet extends ConsumerStatefulWidget {
   const AddCustomerSheet({super.key, this.embedded = false});
@@ -23,8 +38,10 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
   final _phoneController = TextEditingController();
   final _shopNameController = TextEditingController();
   final _contactNameController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _openingBalanceController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _panController = TextEditingController();
+  final _creditLimitController = TextEditingController(text: '0');
+  String? _city;
   bool _loading = false;
   String? _error;
 
@@ -36,9 +53,21 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
     _phoneController.dispose();
     _shopNameController.dispose();
     _contactNameController.dispose();
-    _addressController.dispose();
-    _openingBalanceController.dispose();
+    _districtController.dispose();
+    _panController.dispose();
+    _creditLimitController.dispose();
     super.dispose();
+  }
+
+  String? _buildAddress() {
+    final parts = <String>[
+      if (_city != null) _city!,
+      if (_districtController.text.trim().isNotEmpty)
+        _districtController.text.trim(),
+      if (_panController.text.trim().isNotEmpty)
+        'PAN: ${_panController.text.trim()}',
+    ];
+    return parts.isEmpty ? null : parts.join(', ');
   }
 
   Future<void> _submit() async {
@@ -58,14 +87,14 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 : _contactNameController.text.trim(),
             phone: _phoneController.text.trim().isEmpty
                 ? null
-                : _phoneController.text.trim(),
-            address: _addressController.text.trim().isEmpty
-                ? null
-                : _addressController.text.trim(),
+                : '+977${_phoneController.text.trim()}',
+            address: _buildAddress(),
             openingBalance:
-                parseNpr(_openingBalanceController.text)?.value ?? 0,
+                parseNpr(_creditLimitController.text)?.value ?? 0,
           );
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(true);
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _error = AppLocalizations.of(context).actionFailed);
@@ -75,106 +104,173 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
     }
   }
 
+  Widget _formBody(AppLocalizations l10n) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BsFormCard(
+            margin: EdgeInsets.zero,
+            title: l10n.customerIdentity,
+            subtitle: l10n.customerIdentityHint,
+            icon: Icons.person_add_outlined,
+            children: [
+              TextFormField(
+                controller: _shopNameController,
+                decoration: InputDecoration(
+                  labelText: '${l10n.businessName} *',
+                ),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _contactNameController,
+                decoration: InputDecoration(
+                  labelText: '${l10n.ownerName} *',
+                ),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const BsFormSectionLabel('Contact & Location'),
+              TextFormField(
+                controller: _phoneController,
+                decoration: InputDecoration(
+                  labelText: '${l10n.phoneNumber} *',
+                  prefixText: '+977 ',
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _city,
+                decoration: InputDecoration(labelText: '${l10n.city} *'),
+                items: _nepalCities
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (v) => setState(() => _city = v),
+                validator: (v) =>
+                    v == null || v.isEmpty ? l10n.fieldRequired : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _districtController,
+                decoration: InputDecoration(
+                  labelText: '${l10n.district} *',
+                ),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const BsFormSectionLabel('Financial Information'),
+              TextFormField(
+                controller: _creditLimitController,
+                decoration: InputDecoration(
+                  labelText: l10n.creditLimit,
+                  prefixText: 'Rs. ',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const BsFormSectionLabel('Portal Access'),
+              TextFormField(
+                controller: _displayNameController,
+                decoration: InputDecoration(labelText: l10n.displayName),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: '${l10n.email} *'),
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(labelText: '${l10n.password} *'),
+                obscureText: true,
+                validator: (v) =>
+                    v == null || v.isEmpty ? l10n.fieldRequired : null,
+              ),
+              Text(
+                l10n.portalAccessHint,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: BsColors.outline,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          BsInfoTipCard(
+            message: l10n.verificationTip,
+            color: BsColors.secondary,
+            icon: Icons.verified_user_outlined,
+          ),
+          BsInfoTipCard(
+            message: l10n.creditPolicyTip,
+            color: BsColors.accent,
+            icon: Icons.account_balance_wallet_outlined,
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: BsColors.danger)),
+          ],
+          const SizedBox(height: 16),
+          BsSuccessButton(
+            onPressed: _loading ? null : _submit,
+            label: l10n.saveCustomer,
+            icon: _loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.save_outlined, size: 18, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        widget.embedded ? 24 : 24,
-        widget.embedded ? 0 : 24,
-        24,
-        24 + bottom,
-      ),
-      child: Form(
-        key: _formKey,
+    if (widget.embedded) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottom),
+        child: _formBody(l10n),
+      );
+    }
+
+    return Material(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (!widget.embedded) ...[
-                Text(
-                  l10n.addCustomer,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-              ],
-              TextFormField(
-                controller: _shopNameController,
-                style: const TextStyle(color: BsColors.text),
-                decoration: InputDecoration(labelText: l10n.shopName),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              Text(
+                l10n.addNewCustomer,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _contactNameController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.contactName),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _displayNameController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.displayName),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _emailController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.email),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _passwordController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.password),
-                  obscureText: true,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? l10n.fieldRequired : null,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _phoneController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.phoneNumber),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _addressController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.address),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _openingBalanceController,
-                  style: const TextStyle(color: BsColors.text),
-                  decoration: InputDecoration(labelText: l10n.openingBalance),
-                  keyboardType: TextInputType.number,
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(_error!, style: const TextStyle(color: BsColors.danger)),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.save),
-                ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.addCustomerSubtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: BsColors.outline,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              _formBody(l10n),
             ],
           ),
         ),
