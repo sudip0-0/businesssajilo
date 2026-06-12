@@ -10,6 +10,7 @@ import '../../core/ui/list_skeleton.dart';
 import '../../core/utils/money.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'record_payment_sheet.dart';
 
 class CustomerDetailScreen extends ConsumerWidget {
@@ -175,10 +176,10 @@ class CustomerDetailScreen extends ConsumerWidget {
               onPressed: () async {
                 final customer = customerAsync.value;
                 if (customer == null) return;
-                final saved = await showModalBottomSheet<bool>(
+                final saved = await showAdaptiveSheet<bool>(
                   context: context,
-                  isScrollControlled: true,
-                  builder: (_) => RecordPaymentSheet(
+                  title: l10n.recordPayment,
+                  child: RecordPaymentSheet(
                     customerId: customerId,
                     customerName: customer.shopName,
                   ),

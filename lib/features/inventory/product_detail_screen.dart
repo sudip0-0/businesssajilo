@@ -15,6 +15,7 @@ import '../../domain/models/stock_movement.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'stock_adjust_sheet.dart';
 import 'stock_in_sheet.dart';
 
@@ -29,11 +30,13 @@ class ProductDetailScreen extends ConsumerWidget {
     required this.productId,
     required this.canManageStock,
     required this.canEditProduct,
+    this.embedded = false,
   });
 
   final String productId;
   final bool canManageStock;
   final bool canEditProduct;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,48 +45,26 @@ class ProductDetailScreen extends ConsumerWidget {
     final movementsAsync = ref.watch(movementListProvider(productId));
 
     return productAsync.when(
-      loading: () => Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => Scaffold(
-        appBar: AppBar(),
-        body: ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () => ref.invalidate(productDetailProvider(productId)),
-        ),
-      ),
-      data: (product) => Scaffold(
-        appBar: AppBar(
-          title: Text(product.name),
-          actions: [
-            if (canEditProduct)
-              IconButton(
-                icon: const Icon(Icons.edit),
-                tooltip: l10n.editProduct,
-                onPressed: () async {
-                  final saved = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductFormScreen(product: product),
-                    ),
-                  );
-                  if (saved == true) {
-                    ref.invalidate(productDetailProvider(productId));
-                    ref.invalidate(productListProvider);
-                    if (context.mounted) Navigator.pop(context, true);
-                  }
-                },
+      loading: () => embedded
+          ? const Center(child: CircularProgressIndicator())
+          : Scaffold(
+              appBar: AppBar(),
+              body: const Center(child: CircularProgressIndicator()),
+            ),
+      error: (e, _) => embedded
+          ? ErrorState(
+              message: l10n.loadingFailed,
+              onRetry: () => ref.invalidate(productDetailProvider(productId)),
+            )
+          : Scaffold(
+              appBar: AppBar(),
+              body: ErrorState(
+                message: l10n.loadingFailed,
+                onRetry: () => ref.invalidate(productDetailProvider(productId)),
               ),
-            if (canEditProduct)
-              IconButton(
-                icon: const Icon(Icons.visibility_off_outlined),
-                tooltip: l10n.deactivateProduct,
-                onPressed: () => _deactivate(context, ref, product.id, l10n),
-              ),
-          ],
-        ),
-        body: ListView(
+            ),
+      data: (product) {
+        final body = ListView(
           padding: const EdgeInsets.all(16),
           children: [
             Row(
@@ -151,16 +132,51 @@ class ProductDetailScreen extends ConsumerWidget {
                     ),
             ),
           ],
-        ),
-      ),
+        );
+
+        if (embedded) return body;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(product.name),
+            actions: [
+              if (canEditProduct)
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: l10n.editProduct,
+                  onPressed: () async {
+                    final saved = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductFormScreen(product: product),
+                      ),
+                    );
+                    if (saved == true) {
+                      ref.invalidate(productDetailProvider(productId));
+                      ref.invalidate(productListProvider);
+                      if (context.mounted) Navigator.pop(context, true);
+                    }
+                  },
+                ),
+              if (canEditProduct)
+                IconButton(
+                  icon: const Icon(Icons.visibility_off_outlined),
+                  tooltip: l10n.deactivateProduct,
+                  onPressed: () => _deactivate(context, ref, product.id, l10n),
+                ),
+            ],
+          ),
+          body: body,
+        );
+      },
     );
   }
 
   Future<void> _stockIn(BuildContext context, WidgetRef ref, String productId) async {
-    final saved = await showModalBottomSheet<bool>(
+    final l10n = AppLocalizations.of(context);
+    final saved = await showAdaptiveSheet<bool>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => StockInSheet(productId: productId),
+      title: l10n.stockIn,
+      child: StockInSheet(productId: productId),
     );
     if (saved == true) {
       ref.invalidate(productDetailProvider(productId));
@@ -171,10 +187,11 @@ class ProductDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _adjust(BuildContext context, WidgetRef ref, String productId) async {
-    final saved = await showModalBottomSheet<bool>(
+    final l10n = AppLocalizations.of(context);
+    final saved = await showAdaptiveSheet<bool>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => StockAdjustSheet(productId: productId),
+      title: l10n.stockAdjust,
+      child: StockAdjustSheet(productId: productId),
     );
     if (saved == true) {
       ref.invalidate(productDetailProvider(productId));

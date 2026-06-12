@@ -11,7 +11,9 @@ import 'providers.dart';
 import 'sales_bar_chart.dart';
 
 class SalesSummaryScreen extends ConsumerStatefulWidget {
-  const SalesSummaryScreen({super.key});
+  const SalesSummaryScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   ConsumerState<SalesSummaryScreen> createState() => _SalesSummaryScreenState();
@@ -27,9 +29,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
     final productsAsync = ref.watch(topProductsProvider(_range));
     final customersAsync = ref.watch(topCustomersProvider(_range));
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.salesSummary)),
-      body: ListView(
+    final body = ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Wrap(
@@ -108,7 +108,12 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
             ),
           ),
         ],
-      ),
+    );
+
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.salesSummary)),
+      body: body,
     );
   }
 }

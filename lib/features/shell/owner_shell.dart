@@ -7,6 +7,7 @@ import '../../core/utils/money.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
 import '../billing/providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import '../customers/add_customer_sheet.dart';
 import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
@@ -256,10 +257,10 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
           ),
         2 => FloatingActionButton.extended(
             onPressed: () async {
-              final created = await showModalBottomSheet<bool>(
+              final created = await showAdaptiveSheet<bool>(
                 context: context,
-                isScrollControlled: true,
-                builder: (_) => const AddCustomerSheet(),
+                title: l10n.addCustomer,
+                child: const AddCustomerSheet(),
               );
               if (created == true) {
                 ref.invalidate(customerListProvider);
@@ -287,10 +288,10 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
           ),
         5 => FloatingActionButton.extended(
             onPressed: () async {
-              final created = await showModalBottomSheet<bool>(
+              final created = await showAdaptiveSheet<bool>(
                 context: context,
-                isScrollControlled: true,
-                builder: (_) => const AddMemberSheet(),
+                title: l10n.addMember,
+                child: const AddMemberSheet(),
               );
               if (created == true) ref.invalidate(staffListProvider);
             },

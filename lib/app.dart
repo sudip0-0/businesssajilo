@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,8 @@ import 'core/l10n/app_localizations.dart';
 import 'core/notifications/push_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'web/navigation/web_notification_navigation.dart';
+import 'web/theme/web_theme.dart';
 import 'core/utils/locale_prefs.dart';
 import 'core/utils/theme_prefs.dart';
 import 'domain/models/notification_item.dart';
@@ -87,7 +90,11 @@ class BusinessSajiloApp extends ConsumerWidget {
         type: data['type'] as String? ?? '',
         payload: data,
       );
-      openNotificationTarget(navContext, item, role: role);
+      if (kIsWeb) {
+        openWebNotificationTarget(navContext, item, role: role);
+      } else {
+        openNotificationTarget(navContext, item, role: role);
+      }
     };
     PushService.onForegroundMessage = (message) {
       final title = message.notification?.title ?? message.data['title'];
@@ -102,8 +109,8 @@ class BusinessSajiloApp extends ConsumerWidget {
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'BusinessSajilo',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: kIsWeb ? WebTheme.light() : AppTheme.light(),
+      darkTheme: kIsWeb ? WebTheme.dark() : AppTheme.dark(),
       themeMode: themeMode,
       locale: locale,
       builder: (context, child) {

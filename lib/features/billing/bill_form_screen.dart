@@ -14,6 +14,7 @@ import '../auth/providers/auth_provider.dart';
 import '../customers/providers.dart';
 import '../inventory/product_image.dart';
 import '../inventory/providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'bill_payment_sheet.dart';
 
 class _DraftLine {
@@ -38,7 +39,10 @@ class _DraftLine {
 }
 
 class BillFormScreen extends ConsumerStatefulWidget {
-  const BillFormScreen({super.key});
+  const BillFormScreen({super.key, this.embedded = false, this.onSaved});
+
+  final bool embedded;
+  final VoidCallback? onSaved;
 
   @override
   ConsumerState<BillFormScreen> createState() => _BillFormScreenState();
@@ -109,10 +113,10 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       return;
     }
 
-    final paymentResult = await showModalBottomSheet<BillPaymentResult>(
+    final paymentResult = await showAdaptiveSheet<BillPaymentResult>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => BillPaymentSheet(grandTotal: _grandTotal),
+      title: l10n.saveBill,
+      child: BillPaymentSheet(grandTotal: _grandTotal),
     );
     if (paymentResult == null) return;
 
@@ -156,7 +160,11 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.billSaved)),
         );
-        Navigator.pop(context, true);
+        if (widget.onSaved != null) {
+          widget.onSaved!();
+        } else {
+          Navigator.pop(context, true);
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -177,9 +185,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     final l10n = AppLocalizations.of(context);
     final productsAsync = ref.watch(productListProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.newBill)),
-      body: productsAsync.when(
+    final body = productsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
           message: l10n.loadingFailed,
@@ -273,7 +279,12 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
             ],
           );
         },
-      ),
+      );
+
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.newBill)),
+      body: body,
     );
   }
 }

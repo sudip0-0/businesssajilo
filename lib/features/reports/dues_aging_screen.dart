@@ -12,7 +12,9 @@ import '../../domain/models/aging_customer_row.dart';
 import 'providers.dart';
 
 class DuesAgingScreen extends ConsumerStatefulWidget {
-  const DuesAgingScreen({super.key});
+  const DuesAgingScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   ConsumerState<DuesAgingScreen> createState() => _DuesAgingScreenState();
@@ -28,9 +30,7 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
     final l10n = AppLocalizations.of(context);
     final reportAsync = ref.watch(duesAgingProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.duesAging)),
-      body: reportAsync.when(
+    final body = reportAsync.when(
         loading: () => const ListSkeleton(),
         error: (e, _) => ErrorState(
           message: l10n.loadingFailed,
@@ -114,7 +114,12 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
             ],
           );
         },
-      ),
+    );
+
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.duesAging)),
+      body: body,
     );
   }
 

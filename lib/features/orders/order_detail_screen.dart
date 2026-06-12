@@ -10,6 +10,7 @@ import '../../core/utils/money.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/enums.dart';
 import '../auth/providers/auth_provider.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import '../billing/bill_from_order_sheet.dart';
 import '../chat/order_chat_screen.dart';
 import '../inventory/product_image.dart';
@@ -19,9 +20,14 @@ import '../quotes/quote_detail_screen.dart';
 import 'providers.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
-  const OrderDetailScreen({super.key, required this.orderId});
+  const OrderDetailScreen({
+    super.key,
+    required this.orderId,
+    this.embedded = false,
+  });
 
   final String orderId;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,9 +37,7 @@ class OrderDetailScreen extends ConsumerWidget {
     final session = ref.watch(authProvider).value;
     final role = session?.member?.role;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.orderDetail)),
-      body: orderAsync.when(
+    final body = orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
           message: l10n.loadingFailed,
@@ -137,7 +141,12 @@ class OrderDetailScreen extends ConsumerWidget {
             ],
           );
         },
-      ),
+    );
+
+    if (embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.orderDetail)),
+      body: body,
     );
   }
 }
@@ -234,10 +243,10 @@ class _ActionButtons extends ConsumerWidget {
         if (canQuote && status == OrderStatus.dispatched)
           FilledButton(
             onPressed: () async {
-              final saved = await showModalBottomSheet<bool>(
+              final saved = await showAdaptiveSheet<bool>(
                 context: context,
-                isScrollControlled: true,
-                builder: (_) => BillFromOrderSheet(
+                title: l10n.generateBill,
+                child: BillFromOrderSheet(
                   orderId: orderId,
                   customerId: customerId,
                 ),

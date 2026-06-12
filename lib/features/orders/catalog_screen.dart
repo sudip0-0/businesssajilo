@@ -9,6 +9,7 @@ import '../../core/ui/qty_stepper.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../domain/models/catalog_product.dart';
 import '../inventory/product_image.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'cart_sheet.dart';
 import 'providers.dart';
 
@@ -130,10 +131,10 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
               onPressed: () async {
                 final catalog = await ref.read(catalogListProvider.future);
                 if (!context.mounted) return;
-                final placed = await showModalBottomSheet<bool>(
+                final placed = await showAdaptiveSheet<bool>(
                   context: context,
-                  isScrollControlled: true,
-                  builder: (_) => CartSheet(
+                  title: l10n.placeOrder,
+                  child: CartSheet(
                     products: catalog
                         .where((p) => _cart.containsKey(p.id))
                         .toList(),

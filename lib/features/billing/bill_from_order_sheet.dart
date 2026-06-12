@@ -11,6 +11,7 @@ import '../auth/providers/auth_provider.dart';
 import '../billing/providers.dart';
 import '../customers/providers.dart';
 import '../orders/providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'bill_payment_sheet.dart';
 
 class BillFromOrderSheet extends ConsumerStatefulWidget {
@@ -79,10 +80,10 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
     final member = ref.read(authProvider).value?.member;
     if (member == null || _lines.isEmpty) return;
 
-    final payment = await showModalBottomSheet<BillPaymentResult>(
+    final payment = await showAdaptiveSheet<BillPaymentResult>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => BillPaymentSheet(grandTotal: _itemsTotal - _discount),
+      title: l10n.saveBill,
+      child: BillPaymentSheet(grandTotal: _itemsTotal - _discount),
     );
     if (payment == null) return;
 

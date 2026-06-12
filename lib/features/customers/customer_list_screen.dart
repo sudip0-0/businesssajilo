@@ -12,6 +12,7 @@ import '../../core/ui/paginated_list_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'add_customer_sheet.dart';
 import 'customer_detail_screen.dart';
 import 'customer_form_screen.dart';
@@ -184,10 +185,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   }
 
   Future<void> _openAddCustomer(BuildContext context) async {
-    final created = await showModalBottomSheet<bool>(
+    final created = await showAdaptiveSheet<bool>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => const AddCustomerSheet(),
+      title: AppLocalizations.of(context).addCustomer,
+      child: const AddCustomerSheet(),
     );
     if (created == true) {
       await _pager?.refresh();

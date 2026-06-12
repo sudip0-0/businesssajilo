@@ -12,9 +12,14 @@ import '../../domain/models/stock_valuation_row.dart';
 import 'providers.dart';
 
 class StockValuationScreen extends ConsumerStatefulWidget {
-  const StockValuationScreen({super.key, this.lowStockOnly = false});
+  const StockValuationScreen({
+    super.key,
+    this.lowStockOnly = false,
+    this.embedded = false,
+  });
 
   final bool lowStockOnly;
+  final bool embedded;
 
   @override
   ConsumerState<StockValuationScreen> createState() =>
@@ -32,13 +37,7 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
     final rowsAsync =
         ref.watch(stockValuationProvider(widget.lowStockOnly));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.lowStockOnly ? l10n.lowStock : l10n.stockValuation,
-        ),
-      ),
-      body: rowsAsync.when(
+    final body = rowsAsync.when(
         loading: () => const ListSkeleton(),
         error: (e, _) => ErrorState(
           message: l10n.loadingFailed,
@@ -119,7 +118,16 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
             ],
           );
         },
+    );
+
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.lowStockOnly ? l10n.lowStock : l10n.stockValuation,
+        ),
       ),
+      body: body,
     );
   }
 

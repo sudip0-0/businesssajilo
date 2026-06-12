@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/error_state.dart';
 import '../../domain/models/product.dart';
 import 'providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import 'stock_in_sheet.dart';
 
 class StockInPickerSheet extends ConsumerWidget {
@@ -56,10 +57,11 @@ class StockInPickerSheet extends ConsumerWidget {
     Product product,
   ) async {
     Navigator.pop(context);
-    final saved = await showModalBottomSheet<bool>(
+    final l10n = AppLocalizations.of(context);
+    final saved = await showAdaptiveSheet<bool>(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => StockInSheet(productId: product.id),
+      title: l10n.stockIn,
+      child: StockInSheet(productId: product.id),
     );
     if (saved == true) {
       ref.invalidate(productListProvider);

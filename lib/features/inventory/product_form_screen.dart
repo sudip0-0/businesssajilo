@@ -15,9 +15,10 @@ import '../../features/auth/providers/auth_provider.dart';
 import 'product_image.dart';
 
 class ProductFormScreen extends ConsumerStatefulWidget {
-  const ProductFormScreen({super.key, this.product});
+  const ProductFormScreen({super.key, this.product, this.embedded = false});
 
   final Product? product;
+  final bool embedded;
 
   @override
   ConsumerState<ProductFormScreen> createState() => _ProductFormScreenState();
@@ -175,11 +176,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       FutureProvider.autoDispose((ref) => ref.watch(categoriesRepositoryProvider).list()),
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEdit ? l10n.editProduct : l10n.addProduct),
-      ),
-      body: categoriesAsync.when(
+    final formBody = categoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(message: l10n.loadingFailed),
         data: (categories) => SingleChildScrollView(
@@ -277,7 +274,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             ),
           ),
         ),
+    );
+
+    if (widget.embedded) return formBody;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_isEdit ? l10n.editProduct : l10n.addProduct),
       ),
+      body: formBody,
     );
   }
 }

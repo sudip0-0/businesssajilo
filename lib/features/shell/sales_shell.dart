@@ -9,6 +9,7 @@ import '../billing/bill_list_screen.dart';
 import '../billing/providers.dart';
 import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import '../customers/record_payment_sheet.dart';
 import '../inventory/product_list_screen.dart';
 import '../notifications/notification_bell_action.dart';
@@ -129,10 +130,10 @@ class _SalesShellState extends ConsumerState<SalesShell> {
       floatingActionButton: switch (_index) {
         3 => FloatingActionButton.extended(
             onPressed: () async {
-              final saved = await showModalBottomSheet<bool>(
+              final saved = await showAdaptiveSheet<bool>(
                 context: context,
-                isScrollControlled: true,
-                builder: (_) => const RecordPaymentSheet(showCustomerPicker: true),
+                title: l10n.recordPayment,
+                child: const RecordPaymentSheet(showCustomerPicker: true),
               );
               if (saved == true) {
                 ref.invalidate(customerListProvider);

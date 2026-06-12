@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../inventory/product_list_screen.dart';
+import '../../web/ui/web_sheet_bridge.dart';
 import '../inventory/stock_in_picker_sheet.dart';
 import '../notifications/notification_bell_action.dart';
 import '../sync/sync_badge_action.dart';
@@ -61,10 +62,10 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
             ),
       floatingActionButton: _index == 0
           ? FloatingActionButton.extended(
-              onPressed: () => showModalBottomSheet(
+              onPressed: () => showAdaptiveSheet(
                 context: context,
-                isScrollControlled: true,
-                builder: (_) => const StockInPickerSheet(),
+                title: l10n.stockIn,
+                child: const StockInPickerSheet(),
               ),
               icon: const Icon(Icons.add_box_outlined),
               label: Text(l10n.stockIn),

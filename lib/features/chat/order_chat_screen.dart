@@ -13,9 +13,14 @@ import '../auth/providers/auth_provider.dart';
 import 'providers.dart';
 
 class OrderChatScreen extends ConsumerStatefulWidget {
-  const OrderChatScreen({super.key, required this.orderId});
+  const OrderChatScreen({
+    super.key,
+    required this.orderId,
+    this.embedded = false,
+  });
 
   final String orderId;
+  final bool embedded;
 
   @override
   ConsumerState<OrderChatScreen> createState() => _OrderChatScreenState();
@@ -108,9 +113,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     final messagesAsync = ref.watch(orderMessagesProvider(widget.orderId));
     final myMemberId = ref.watch(authProvider).value?.member?.id;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.orderChat)),
-      body: Column(
+    final chatBody = Column(
         children: [
           Expanded(
             child: messagesAsync.when(
@@ -228,7 +231,12 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
             ),
           ),
         ],
-      ),
+    );
+
+    if (widget.embedded) return chatBody;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.orderChat)),
+      body: chatBody,
     );
   }
 }
