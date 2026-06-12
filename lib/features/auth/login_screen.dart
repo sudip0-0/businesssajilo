@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/auth_errors.dart';
 import 'providers/auth_provider.dart';
 
@@ -53,7 +53,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = ref.watch(localeProvider);
     // Surface session-restore errors (e.g. deactivated account) too.
     ref.listen(authProvider, (_, next) {
       final error = next.error;
@@ -94,20 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                     ),
                     const SizedBox(height: 16),
-                    Center(
-                      child: SegmentedButton<String>(
-                        segments: [
-                          ButtonSegment(value: 'en', label: Text(l10n.english)),
-                          ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
-                        ],
-                        selected: {locale.languageCode},
-                        onSelectionChanged: (selected) {
-                          ref
-                              .read(localeProvider.notifier)
-                              .setLocale(Locale(selected.first));
-                        },
-                      ),
-                    ),
+                    const LocaleToggle(fullWidth: true),
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,

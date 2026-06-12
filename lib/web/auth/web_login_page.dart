@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -54,7 +54,6 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = ref.watch(localeProvider);
     final compact = MediaQuery.sizeOf(context).width < 768;
 
     ref.listen(authProvider, (_, next) {
@@ -67,11 +66,11 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
     return Scaffold(
       backgroundColor: BsColors.background,
       body: compact
-          ? _buildForm(context, l10n, locale, showBranding: true)
+          ? _buildForm(context, l10n, showBranding: true)
           : Row(
               children: [
                 Expanded(flex: 5, child: _buildBrandPanel(context, l10n)),
-                Expanded(flex: 4, child: _buildForm(context, l10n, locale)),
+                Expanded(flex: 4, child: _buildForm(context, l10n)),
               ],
             ),
     );
@@ -132,8 +131,7 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
 
   Widget _buildForm(
     BuildContext context,
-    AppLocalizations l10n,
-    Locale locale, {
+    AppLocalizations l10n, {
     bool showBranding = false,
   }) {
     return ColoredBox(
@@ -176,20 +174,7 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
                           ),
                     ),
                     const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: SegmentedButton<String>(
-                        showSelectedIcon: false,
-                        segments: [
-                          ButtonSegment(value: 'en', label: Text(l10n.english)),
-                          ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
-                        ],
-                        selected: {locale.languageCode},
-                        onSelectionChanged: (s) => ref
-                            .read(localeProvider.notifier)
-                            .setLocale(Locale(s.first)),
-                      ),
-                    ),
+                    const LocaleToggle(fullWidth: true),
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,

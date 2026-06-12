@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/notifications/providers.dart';
 import '../../features/shell/logout_action.dart';
 import '../theme/web_tokens.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../ui/web_search_field.dart';
 
 class WebTopBar extends ConsumerWidget {
@@ -25,7 +25,6 @@ class WebTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final locale = ref.watch(localeProvider);
     final unread = ref.watch(unreadNotificationCountProvider);
     final tokens = context.webTokens;
     final auth = ref.watch(authProvider).value;
@@ -60,17 +59,7 @@ class WebTopBar extends ConsumerWidget {
             ),
           ] else
             const Spacer(),
-          SegmentedButton<String>(
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(value: 'en', label: Text(l10n.english)),
-              ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
-            ],
-            selected: {locale.languageCode},
-            onSelectionChanged: (s) => ref
-                .read(localeProvider.notifier)
-                .setLocale(Locale(s.first)),
-          ),
+          const LocaleToggle(compact: true),
           const SizedBox(width: 8),
           IconButton(
             tooltip: l10n.notifications,
