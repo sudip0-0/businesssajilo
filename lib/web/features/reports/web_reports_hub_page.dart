@@ -12,7 +12,7 @@ import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../../features/reports/providers.dart';
 import '../../layout/web_bento_grid.dart';
-import '../../ui/web_sales_line_chart.dart';
+import '../../../core/ui/bs_sales_line_chart.dart';
 import '../../ui/web_stat_tile.dart';
 import '../web_page_scaffold.dart';
 
@@ -109,7 +109,10 @@ class WebReportsHubPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       salesWeek.when(
-                        data: (points) => WebSalesLineChart(points: points),
+                        data: (points) => BsSalesLineChart(
+                          points: points,
+                          height: 200,
+                        ),
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
                         error: (_, _) => Text(l10n.loadingFailed),

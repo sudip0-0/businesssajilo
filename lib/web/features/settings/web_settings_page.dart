@@ -9,7 +9,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../features/onboarding/demo_data_seeder.dart';
 import '../../../features/onboarding/onboarding_prefs.dart';
 import '../../../features/sync/pending_sync_screen.dart';
-import '../../layout/web_breakpoints.dart';
+import '../../theme/web_tokens.dart';
 import '../web_page_scaffold.dart';
 
 class WebSettingsPage extends ConsumerStatefulWidget {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/notifications/notification_payload.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/notification_item.dart';
 import '../billing/bill_detail_screen.dart';
@@ -15,11 +16,7 @@ void openNotificationTarget(
   NotificationItem item, {
   Role? role,
 }) {
-  final payload = item.payload;
-  final orderId = payload['order_id'] as String?;
-  final quoteId = payload['quote_id'] as String?;
-  final billId = payload['bill_id'] as String?;
-  final productId = payload['product_id'] as String?;
+  final ids = NotificationPayloadIds.fromItem(item);
 
   // Role guards: warehouse/customer never see bill detail; warehouse never
   // sees quote detail.
@@ -28,50 +25,50 @@ void openNotificationTarget(
 
   switch (item.type) {
     case 'chat_message':
-      if (orderId != null) {
+      if (ids.orderId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OrderChatScreen(orderId: orderId),
+            builder: (_) => OrderChatScreen(orderId: ids.orderId!),
           ),
         );
       }
     case 'quote_received':
     case 'quote_accepted':
     case 'quote_rejected':
-      if (quoteId != null) {
+      if (ids.quoteId != null) {
         if (!canViewQuotes) return;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => QuoteDetailScreen(quoteId: quoteId),
+            builder: (_) => QuoteDetailScreen(quoteId: ids.quoteId!),
           ),
         );
-      } else if (orderId != null) {
+      } else if (ids.orderId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OrderDetailScreen(orderId: orderId),
+            builder: (_) => OrderDetailScreen(orderId: ids.orderId!),
           ),
         );
       }
     case 'payment_recorded':
-      if (billId != null) {
+      if (ids.billId != null) {
         if (!canViewBills) return;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => BillDetailScreen(billId: billId),
+            builder: (_) => BillDetailScreen(billId: ids.billId!),
           ),
         );
       }
     case 'low_stock':
-      if (productId != null) {
+      if (ids.productId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ProductDetailScreen(
-              productId: productId,
+              productId: ids.productId!,
               canEditProduct: false,
               canManageStock: false,
             ),
@@ -80,11 +77,11 @@ void openNotificationTarget(
       }
     case 'order_placed':
     case 'order_status':
-      if (orderId != null) {
+      if (ids.orderId != null) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OrderDetailScreen(orderId: orderId),
+            builder: (_) => OrderDetailScreen(orderId: ids.orderId!),
           ),
         );
       }

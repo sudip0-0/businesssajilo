@@ -20,10 +20,10 @@ import '../../../features/orders/providers.dart' as orders;
 import '../../../features/reports/providers.dart';
 import '../web_page_scaffold.dart';
 import '../../layout/web_bento_grid.dart';
-import '../../ui/web_sales_line_chart.dart';
+import '../../../core/ui/bs_sales_line_chart.dart';
+import '../../../core/ui/bs_success_button.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_stat_tile.dart';
-import '../../ui/web_success_button.dart';
 import '../../../core/testing/integration_keys.dart';
 
 class WebOwnerDashboardPage extends ConsumerStatefulWidget {
@@ -79,7 +79,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
           child: Text(l10n.addProduct),
         ),
         const SizedBox(width: 8),
-        WebSuccessButton(
+        BsSuccessButton(
           key: IntegrationKeys.dashboardNewBill,
           onPressed: () => context.push('/owner/billing/new'),
           icon: Icon(PhosphorIconsRegular.receipt, size: 18),
@@ -223,7 +223,10 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                         ),
                         const SizedBox(height: 20),
                         chartData.when(
-                          data: (data) => WebSalesLineChart(points: data),
+                          data: (data) => BsSalesLineChart(
+                            points: data,
+                            height: 200,
+                          ),
                           loading: () => const SizedBox(
                             height: 200,
                             child: Center(child: CircularProgressIndicator()),

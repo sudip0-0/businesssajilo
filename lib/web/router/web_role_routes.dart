@@ -1,5 +1,13 @@
 import '../../domain/enums.dart';
 
+/// Role-scoped URL prefix for web navigation.
+String webRoleBasePath(Role role) => switch (role) {
+      Role.owner => '/owner',
+      Role.sales => '/sales',
+      Role.warehouse => '/warehouse',
+      Role.customer => '/customer',
+    };
+
 /// Web role home paths use nested routes for bookmarkable URLs.
 String webRoleHomePath(Role? role) => switch (role) {
       Role.owner => '/owner/dashboard',

@@ -15,7 +15,6 @@ import 'category_list_screen.dart';
 import 'product_detail_screen.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
-import 'providers.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({
