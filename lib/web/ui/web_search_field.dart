@@ -7,18 +7,21 @@ class WebSearchField extends StatelessWidget {
     required this.hint,
     this.onChanged,
     this.controller,
+    this.focusNode,
     this.autofocus = false,
   });
 
   final String hint;
   final ValueChanged<String>? onChanged;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       autofocus: autofocus,
       onChanged: onChanged,
       decoration: InputDecoration(

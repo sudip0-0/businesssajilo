@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
@@ -70,10 +71,14 @@ class _OwnerOnboardingOverlayState
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.path;
+    final onDashboard = location.endsWith('/dashboard');
+    final showOverlay = _visible && onDashboard;
+
     return Stack(
       children: [
         widget.child,
-        if (_visible) ...[
+        if (showOverlay) ...[
           Positioned.fill(
             child: ModalBarrier(
               dismissible: false,

@@ -36,7 +36,7 @@ class _DraftLine {
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
 }
 
-/// Web-native bill form layout inspired by reference invoice screens.
+/// Web-native bill form layout with row-wise line items.
 class WebBillFormContent extends ConsumerStatefulWidget {
   const WebBillFormContent({super.key, this.onSaved});
 
@@ -51,6 +51,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   final _billDiscountController = TextEditingController(text: '0');
   final _remarksController = TextEditingController();
   final _productQueryController = TextEditingController();
+  final _productSearchFocus = FocusNode();
   String? _customerId;
   String _productQuery = '';
   bool _loading = false;
@@ -60,6 +61,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     _billDiscountController.dispose();
     _remarksController.dispose();
     _productQueryController.dispose();
+    _productSearchFocus.dispose();
     super.dispose();
   }
 
@@ -72,6 +74,10 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         itemsTotal: _itemsTotal,
         billDiscountPaisa: _billDiscount,
       );
+
+  void _focusProductSearch() {
+    _productSearchFocus.requestFocus();
+  }
 
   void _addProduct(Product product) {
     final index = _lines.indexWhere((l) => l.product.id == product.id);
@@ -197,7 +203,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               return p.name.toLowerCase().contains(_productQuery) ||
                   (p.sku?.toLowerCase().contains(_productQuery) ?? false);
             })
-            .take(6)
+            .take(8)
             .toList();
 
         return Column(
@@ -215,178 +221,211 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               ),
             ),
             const SizedBox(height: 16),
-            WebBentoTile(
-              minHeight: 280,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        l10n.orders,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: () {},
-                        icon: Icon(PhosphorIconsRegular.plus, size: 16),
-                        label: Text(l10n.addProduct),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: DataTable(
-                        headingRowHeight: 44,
-                        dataRowMinHeight: 48,
-                        columnSpacing: 16,
-                        columns: [
-                          DataColumn(label: Text(l10n.sn)),
-                          DataColumn(label: Text(l10n.productName)),
-                          DataColumn(label: Text(l10n.qty)),
-                          DataColumn(label: Text(l10n.unit)),
-                          DataColumn(label: Text(l10n.rateRs)),
-                          DataColumn(label: Text(l10n.amountRs)),
-                          const DataColumn(label: SizedBox(width: 40)),
-                        ],
-                        rows: [
-                          for (var i = 0; i < _lines.length; i++)
-                            _lineRow(context, l10n, i, _lines[i]),
-                          DataRow(
-                            cells: [
-                              DataCell(Text('${_lines.length + 1}')),
-                              DataCell(
-                                SizedBox(
-                                  width: 240,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      WebSearchField(
-                                        controller: _productQueryController,
-                                        hint: l10n.filterProducts,
-                                        onChanged: (v) => setState(
-                                          () => _productQuery =
-                                              v.trim().toLowerCase(),
-                                        ),
-                                      ),
-                                      if (suggestions.isNotEmpty)
-                                        Material(
-                                          elevation: 4,
-                                          borderRadius: BorderRadius.circular(
-                                            BsRadii.lg,
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              for (final p in suggestions)
-                                                ListTile(
-                                                  dense: true,
-                                                  title: Text(p.name),
-                                                  subtitle: Text(
-                                                    formatNpr(
-                                                      Paisa(p.referencePrice),
-                                                      showPaisa: false,
-                                                    ),
-                                                  ),
-                                                  onTap: () => _addProduct(p),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    WebBentoTile(
+                      minHeight: 0,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                l10n.orders,
+                                style: Theme.of(context).textTheme.titleSmall,
                               ),
-                              const DataCell(Text('—')),
-                              const DataCell(Text('—')),
-                              const DataCell(Text('—')),
-                              const DataCell(Text('—')),
-                              const DataCell(SizedBox.shrink()),
+                              const Spacer(),
+                              TextButton.icon(
+                                onPressed: _focusProductSearch,
+                                icon: Icon(PhosphorIconsRegular.plus, size: 16),
+                                label: Text(l10n.addProduct),
+                              ),
                             ],
+                          ),
+                          const SizedBox(height: 12),
+                          _BillItemsTableHeader(l10n: l10n),
+                          const SizedBox(height: 8),
+                          if (_lines.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Text(
+                                l10n.noBillLines,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: BsColors.outline),
+                              ),
+                            )
+                          else
+                            for (var i = 0; i < _lines.length; i++)
+                              _BillItemRow(
+                                index: i,
+                                line: _lines[i],
+                                l10n: l10n,
+                                onChanged: () => setState(() {}),
+                                onRemove: () =>
+                                    setState(() => _lines.removeAt(i)),
+                              ),
+                          const SizedBox(height: 8),
+                          _AddProductRow(
+                            l10n: l10n,
+                            controller: _productQueryController,
+                            focusNode: _productSearchFocus,
+                            onChanged: (v) => setState(
+                              () => _productQuery = v.trim().toLowerCase(),
+                            ),
+                            suggestions: suggestions,
+                            onProductSelected: _addProduct,
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final wide = constraints.maxWidth >= 768;
-                final summary = _BillSummaryPanel(
-                  l10n: l10n,
-                  itemsTotal: _itemsTotal,
-                  billDiscountController: _billDiscountController,
-                  grandTotal: _grandTotal,
-                  onDiscountChanged: () => setState(() {}),
-                );
-                final remarks = TextField(
-                  controller: _remarksController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: l10n.remarksTerms,
-                    hintText: l10n.remarksTerms,
-                    alignLabelWithHint: true,
-                    border: const OutlineInputBorder(),
-                  ),
-                );
+                    const SizedBox(height: 16),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final wide = constraints.maxWidth >= 768;
+                        final summary = _BillSummaryPanel(
+                          l10n: l10n,
+                          itemsTotal: _itemsTotal,
+                          billDiscountController: _billDiscountController,
+                          grandTotal: _grandTotal,
+                          onDiscountChanged: () => setState(() {}),
+                        );
+                        final remarks = TextField(
+                          controller: _remarksController,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            labelText: l10n.remarksTerms,
+                            hintText: l10n.remarksTerms,
+                            alignLabelWithHint: true,
+                            border: const OutlineInputBorder(),
+                          ),
+                        );
 
-                if (wide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: remarks),
-                      const SizedBox(width: 16),
-                      SizedBox(width: 340, child: summary),
+                        if (wide) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: remarks),
+                              const SizedBox(width: 16),
+                              SizedBox(width: 340, child: summary),
+                            ],
+                          );
+                        }
+                        return Column(
+                          children: [
+                            remarks,
+                            const SizedBox(height: 16),
+                            summary,
+                          ],
+                        );
+                      },
+                    ),
+                    if (_loading) ...[
+                      const SizedBox(height: 16),
+                      const LinearProgressIndicator(),
                     ],
-                  );
-                }
-                return Column(
-                  children: [remarks, const SizedBox(height: 16), summary],
-                );
-              },
-            ),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: LinearProgressIndicator(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
+            ),
           ],
         );
       },
     );
   }
+}
 
-  DataRow _lineRow(
-    BuildContext context,
-    AppLocalizations l10n,
-    int index,
-    _DraftLine line,
-  ) {
-    return DataRow(
-      cells: [
-        DataCell(Text('${index + 1}')),
-        DataCell(Text(line.product.name)),
-        DataCell(
+class _BillItemsTableHeader extends StatelessWidget {
+  const _BillItemsTableHeader({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: BsColors.outline,
+          fontWeight: FontWeight.w600,
+        );
+
+    return Row(
+      children: [
+        SizedBox(width: 36, child: Text(l10n.sn, style: style)),
+        Expanded(flex: 3, child: Text(l10n.productName, style: style)),
+        SizedBox(width: 72, child: Text(l10n.qty, style: style)),
+        SizedBox(width: 56, child: Text(l10n.unit, style: style)),
+        SizedBox(width: 96, child: Text(l10n.rateRs, style: style)),
+        SizedBox(width: 96, child: Text(l10n.amountRs, style: style)),
+        const SizedBox(width: 40),
+      ],
+    );
+  }
+}
+
+class _BillItemRow extends StatelessWidget {
+  const _BillItemRow({
+    required this.index,
+    required this.line,
+    required this.l10n,
+    required this.onChanged,
+    required this.onRemove,
+  });
+
+  final int index;
+  final _DraftLine line;
+  final AppLocalizations l10n;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: BsColors.border.withValues(alpha: 0.6)),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 36,
+            child: Text('${index + 1}'),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              line.product.name,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
           SizedBox(
             width: 72,
             child: TextFormField(
               initialValue: '${line.qty}',
               keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
               onChanged: (v) {
                 line.qty = int.tryParse(v) ?? line.qty;
                 if (line.qty < 1) line.qty = 1;
-                setState(() {});
+                onChanged();
               },
             ),
           ),
-        ),
-        DataCell(Text(line.product.unit)),
-        DataCell(
+          SizedBox(
+            width: 56,
+            child: Text(line.product.unit),
+          ),
           SizedBox(
             width: 96,
             child: TextFormField(
@@ -396,21 +435,105 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                 showPaisa: false,
               ),
               keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
               onChanged: (v) {
                 line.rate = parseNpr(v)?.value ?? line.rate;
-                setState(() {});
+                onChanged();
               },
             ),
           ),
-        ),
-        DataCell(
-          Text(formatNpr(Paisa(line.lineTotal), showPaisa: false)),
-        ),
-        DataCell(
-          IconButton(
-            icon: Icon(PhosphorIconsRegular.trash, color: BsColors.danger),
-            onPressed: () => setState(() => _lines.removeAt(index)),
+          SizedBox(
+            width: 96,
+            child: Text(
+              formatNpr(Paisa(line.lineTotal), showPaisa: false),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
           ),
+          IconButton(
+            tooltip: l10n.remove,
+            icon: Icon(PhosphorIconsRegular.trash, color: BsColors.danger),
+            onPressed: onRemove,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddProductRow extends StatelessWidget {
+  const _AddProductRow({
+    required this.l10n,
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+    required this.suggestions,
+    required this.onProductSelected,
+  });
+
+  final AppLocalizations l10n;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+  final List<Product> suggestions;
+  final ValueChanged<Product> onProductSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 36,
+              child: Text(
+                '…',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: BsColors.outline,
+                    ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  WebSearchField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    hint: l10n.filterProducts,
+                    onChanged: onChanged,
+                  ),
+                  if (suggestions.isNotEmpty)
+                    Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(BsRadii.lg),
+                      child: Column(
+                        children: [
+                          for (final p in suggestions)
+                            ListTile(
+                              dense: true,
+                              title: Text(p.name),
+                              subtitle: Text(
+                                formatNpr(
+                                  Paisa(p.referencePrice),
+                                  showPaisa: false,
+                                ),
+                              ),
+                              onTap: () => onProductSelected(p),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

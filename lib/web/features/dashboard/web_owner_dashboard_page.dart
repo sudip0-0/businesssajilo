@@ -70,14 +70,15 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
     return WebPageScaffold(
       title: l10n.namasteGreeting(name),
       subtitle: l10n.dashboardTodaySummary,
+      fillHeight: false,
       actions: [
         OutlinedButton(
-          onPressed: () => context.go('/owner/inventory/new'),
+          onPressed: () => context.push('/owner/inventory/new'),
           child: Text(l10n.addProduct),
         ),
         const SizedBox(width: 8),
         WebSuccessButton(
-          onPressed: () => context.go('/owner/billing/new'),
+          onPressed: () => context.push('/owner/billing/new'),
           icon: Icon(PhosphorIconsRegular.receipt, size: 18),
           label: l10n.newBill,
         ),
@@ -260,7 +261,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
                             const SizedBox(height: 12),
-                            Expanded(
+                            SizedBox(
+                              height: 160,
                               child: _RecentActivityList(
                                 bills: todaysBills,
                                 products: products,

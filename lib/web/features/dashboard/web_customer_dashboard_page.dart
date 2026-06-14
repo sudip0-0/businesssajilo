@@ -70,7 +70,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                       PhosphorIconsRegular.storefront,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 16),
                     Text(
                       l10n.catalog,
                       style: Theme.of(context).textTheme.titleMedium,
@@ -95,7 +95,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                       PhosphorIconsRegular.package,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 16),
                     Text(
                       l10n.myOrders,
                       style: Theme.of(context).textTheme.titleMedium,
@@ -120,7 +120,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                       PhosphorIconsRegular.receipt,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 16),
                     Text(
                       l10n.myDues,
                       style: Theme.of(context).textTheme.titleMedium,

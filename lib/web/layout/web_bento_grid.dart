@@ -4,12 +4,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
 import '../theme/web_tokens.dart';
 
-/// Asymmetric bento grid for dashboards (design variance 8).
+/// Dashboard metric grid with 3-4 column layout per Design.md.
 class WebBentoGrid extends StatelessWidget {
   const WebBentoGrid({
     super.key,
     required this.children,
-    this.columns = 3,
+    this.columns = 4,
   });
 
   final List<Widget> children;
@@ -18,11 +18,12 @@ class WebBentoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = context.isWebCompact;
-    final cols = compact ? 1 : columns;
+    final tokens = context.webTokens;
+    final cols = compact ? 1 : (columns > 2 ? columns : 3);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final gap = 16.0;
+        final gap = tokens.gutter;
         final cellWidth = (constraints.maxWidth - gap * (cols - 1)) / cols;
 
         return Wrap(
@@ -33,11 +34,11 @@ class WebBentoGrid extends StatelessWidget {
               SizedBox(
                 width: compact
                     ? constraints.maxWidth
-                    : _spanWidth(i, cellWidth, gap, cols),
+                    : _spanWidth(i, cellWidth, gap, cols, children.length),
                 child: children[i]
                     .animate()
-                    .fadeIn(duration: 400.ms, delay: (i * 80).ms)
-                    .slideY(begin: 0.05, end: 0, duration: 400.ms),
+                    .fadeIn(duration: 300.ms, delay: (i * 60).ms)
+                    .slideY(begin: 0.03, end: 0, duration: 300.ms),
               ),
           ],
         );
@@ -45,27 +46,30 @@ class WebBentoGrid extends StatelessWidget {
     );
   }
 
-  double _spanWidth(int index, double cell, double gap, int cols) {
-    // First tile spans 2 columns on wide layouts for asymmetry.
-    if (index == 0 && cols >= 3) return cell * 2 + gap;
+  double _spanWidth(int index, double cell, double gap, int cols, int count) {
+    if (index == count - 1 && cols >= 2) {
+      return cell * cols + gap * (cols - 1);
+    }
     return cell;
   }
 }
 
-/// Bento tile with diffusion shadow and hover elevation.
+/// Metric / content card with Level 2 elevation on hover.
 class WebBentoTile extends StatefulWidget {
   const WebBentoTile({
     super.key,
     required this.child,
-    this.minHeight = 160,
+    this.minHeight = 140,
     this.onTap,
-    this.padding = const EdgeInsets.all(24),
+    this.padding = const EdgeInsets.all(20),
+    this.elevated = false,
   });
 
   final Widget child;
   final double minHeight;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry padding;
+  final bool elevated;
 
   @override
   State<WebBentoTile> createState() => _WebBentoTileState();
@@ -77,7 +81,6 @@ class _WebBentoTileState extends State<WebBentoTile> {
   @override
   Widget build(BuildContext context) {
     final tokens = context.webTokens;
-    final scheme = Theme.of(context).colorScheme;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -87,29 +90,22 @@ class _WebBentoTileState extends State<WebBentoTile> {
         curve: Curves.easeOutCubic,
         constraints: BoxConstraints(minHeight: widget.minHeight),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(tokens.bentoRadius),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(tokens.cardRadius),
           border: Border.all(
-            color: scheme.outline.withValues(alpha: _hovered ? 0.25 : 0.12),
+            color: _hovered ? BsColors.outlineVariant : BsColors.border,
           ),
-          boxShadow: _hovered
-              ? [
-                  ...tokens.diffusionShadow,
-                  BoxShadow(
-                    color: BsColors.primary.withValues(alpha: 0.06),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : tokens.diffusionShadow,
+          boxShadow: widget.elevated || _hovered ? tokens.metricShadow : null,
         ),
         child: Material(
           color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(tokens.bentoRadius),
-            child: Padding(padding: widget.padding, child: widget.child),
-          ),
+          child: widget.onTap == null
+              ? Padding(padding: widget.padding, child: widget.child)
+              : InkWell(
+                  onTap: widget.onTap,
+                  borderRadius: BorderRadius.circular(tokens.cardRadius),
+                  child: Padding(padding: widget.padding, child: widget.child),
+                ),
         ),
       ),
     );

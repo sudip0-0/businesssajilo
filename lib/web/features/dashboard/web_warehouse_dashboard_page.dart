@@ -77,7 +77,7 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
                       PhosphorIconsRegular.listChecks,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 16),
                     Text(
                       l10n.fulfillment,
                       style: Theme.of(context).textTheme.titleMedium,
@@ -102,7 +102,7 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
                       PhosphorIconsRegular.warehouse,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 16),
                     Text(
                       l10n.stock,
                       style: Theme.of(context).textTheme.titleMedium,

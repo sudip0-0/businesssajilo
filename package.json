@@ -1,0 +1,24 @@
+{
+  "name": "businesssajilo",
+  "version": "1.0.0",
+  "description": "**Tapaiko business, sajilo tarika le.**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "dependencies": {
+    "playwright-core": "^1.60.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  },
+  "scripts": {
+    "e2e:web": "node scripts/e2e_web.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
