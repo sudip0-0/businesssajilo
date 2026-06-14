@@ -4,7 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../onboarding/demo_data_seeder.dart';
+import '../onboarding/demo_data_actions.dart';
 import '../onboarding/onboarding_prefs.dart';
 import '../sync/pending_sync_screen.dart';
 
@@ -100,7 +100,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           leading: const Icon(Icons.dataset_outlined),
           title: Text(l10n.loadDemoData),
           subtitle: _seeding ? const LinearProgressIndicator() : null,
-          onTap: _seeding ? null : () => _loadDemoData(context),
+          onTap: _seeding
+              ? null
+              : () => confirmAndSeedDemoData(
+                    context: context,
+                    ref: ref,
+                    onSeedingChanged: (seeding) =>
+                        setState(() => _seeding = seeding),
+                  ),
         ),
         ListTile(
           leading: const Icon(Icons.replay_outlined),
@@ -122,45 +129,5 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ],
     );
-  }
-
-  Future<void> _loadDemoData(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.loadDemoData),
-        content: Text(l10n.loadDemoDataConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.loadDemoData),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _seeding = true);
-    try {
-      final result = await DemoDataSeeder(ref).seed();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            result == DemoSeedResult.loaded
-                ? l10n.demoDataLoaded
-                : l10n.demoDataSkipped,
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _seeding = false);
-    }
   }
 }

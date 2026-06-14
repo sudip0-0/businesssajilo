@@ -6,7 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../app.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../features/onboarding/demo_data_seeder.dart';
+import '../../../features/onboarding/demo_data_actions.dart';
 import '../../../features/onboarding/onboarding_prefs.dart';
 import '../../../features/sync/pending_sync_screen.dart';
 import '../../theme/web_tokens.dart';
@@ -34,45 +34,11 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
     if (mounted) setState(() => _version = info.version);
   }
 
-  Future<void> _loadDemoData() async {
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.loadDemoData),
-        content: Text(l10n.loadDemoDataConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.loadDemoData),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _seeding = true);
-    try {
-      final result = await DemoDataSeeder(ref).seed();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            result == DemoSeedResult.loaded
-                ? l10n.demoDataLoaded
-                : l10n.demoDataSkipped,
-          ),
-        ),
+  Future<void> _loadDemoData() => confirmAndSeedDemoData(
+        context: context,
+        ref: ref,
+        onSeedingChanged: (seeding) => setState(() => _seeding = seeding),
       );
-    } finally {
-      if (mounted) setState(() => _seeding = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
