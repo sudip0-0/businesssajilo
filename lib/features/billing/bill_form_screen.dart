@@ -8,7 +8,9 @@ import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
+import '../../domain/models/bill.dart';
 import '../../data/repositories/bills_repository.dart';
+import 'invoice_export_actions.dart';
 import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customers/providers.dart';
@@ -78,13 +80,13 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     }
   }
 
-  Future<void> _save() async {
+  Future<Bill?> _save({bool exportAfterSave = false}) async {
     final l10n = AppLocalizations.of(context);
     if (_lines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.noBillLines), backgroundColor: BsColors.danger),
       );
-      return;
+      return null;
     }
     if (_lines.any((l) => !l.discountValid)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +95,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           backgroundColor: BsColors.danger,
         ),
       );
-      return;
+      return null;
     }
     if (_billDiscount < 0 || _billDiscount > _itemsTotal) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +104,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           backgroundColor: BsColors.danger,
         ),
       );
-      return;
+      return null;
     }
     if (_grandTotal < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +113,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           backgroundColor: BsColors.danger,
         ),
       );
-      return;
+      return null;
     }
 
     final paymentResult = await showAdaptiveSheet<BillPaymentResult>(
@@ -119,14 +121,15 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       title: l10n.saveBill,
       child: BillPaymentSheet(grandTotal: _grandTotal),
     );
-    if (paymentResult == null) return;
+    if (paymentResult == null) return null;
 
     final memberId = ref.read(authProvider).value?.member?.id;
-    if (memberId == null) return;
+    if (memberId == null) return null;
 
     setState(() => _loading = true);
+    Bill? savedBill;
     try {
-      await ref.read(billsRepositoryProvider).create(
+      savedBill = await ref.read(billsRepositoryProvider).create(
             createdByMemberId: memberId,
             customerId: paymentResult.customerId,
             status: paymentResult.status,
@@ -161,12 +164,16 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.billSaved)),
         );
+        if (exportAfterSave && savedBill != null) {
+          await exportBillAfterSave(ref, context, savedBill);
+        }
         if (widget.onSaved != null) {
           widget.onSaved!();
         } else {
           Navigator.pop(context, true);
         }
       }
+      return savedBill;
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -176,6 +183,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           ),
         );
       }
+      return null;
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -299,7 +307,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: BsSuccessButton(
-            onPressed: _loading ? null : _save,
+            onPressed: _loading ? null : () => _save(exportAfterSave: true),
             label: l10n.printAndSave,
             icon: const Icon(Icons.print_outlined, size: 18, color: Colors.white),
           ),

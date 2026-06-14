@@ -1165,4 +1165,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get madeForNepal => 'Made for Nepal SME Ecosystem';
+
+  @override
+  String get shareViaWhatsApp => 'Share via WhatsApp';
+
+  @override
+  String get downloadPdf => 'Download PDF';
+
+  @override
+  String get printInvoice => 'Print invoice';
+
+  @override
+  String get returnItems => 'Return items';
+
+  @override
+  String get creditNote => 'Credit note';
+
+  @override
+  String get qtyReturned => 'Qty returned';
+
+  @override
+  String get restockInventory => 'Restock inventory';
+
+  @override
+  String get returnReason => 'Return reason';
+
+  @override
+  String get exportCsv => 'Export CSV';
+
+  @override
+  String get provisionalBillNotice => 'Provisional bill number — sync pending';
+
+  @override
+  String get invoiceThankYou => 'Thank you for your business!';
+
+  @override
+  String get creditNoteSaved => 'Credit note saved';
+
+  @override
+  String get returnsOnlineOnly => 'Returns require an internet connection';
+
+  @override
+  String get noReturnableQty => 'No returnable quantity remaining on this bill';
+
+  @override
+  String get returnQtyExceeds => 'Return quantity exceeds remaining quantity';
+
+  @override
+  String get submitReturn => 'Submit return';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/export/export_actions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/ui/empty_state.dart';
@@ -49,6 +50,11 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
                 label: Text(l10n.periodMonth),
                 selected: _range == ReportRange.month,
                 onSelected: (_) => setState(() => _range = ReportRange.month),
+              ),
+              IconButton(
+                tooltip: l10n.exportCsv,
+                onPressed: () => exportSalesReportCsv(ref, context, _range),
+                icon: const Icon(Icons.download_outlined),
               ),
             ],
           ),

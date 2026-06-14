@@ -448,5 +448,21 @@
   "amountRs": "Amount (Rs.)",
   "rateRs": "Rate (Rs.)",
   "discountPercent": "Discount (%)",
-  "madeForNepal": "Made for Nepal SME Ecosystem"
+  "madeForNepal": "Made for Nepal SME Ecosystem",
+  "shareViaWhatsApp": "Share via WhatsApp",
+  "downloadPdf": "Download PDF",
+  "printInvoice": "Print invoice",
+  "returnItems": "Return items",
+  "creditNote": "Credit note",
+  "qtyReturned": "Qty returned",
+  "restockInventory": "Restock inventory",
+  "returnReason": "Return reason",
+  "exportCsv": "Export CSV",
+  "provisionalBillNotice": "Provisional bill number — sync pending",
+  "invoiceThankYou": "Thank you for your business!",
+  "creditNoteSaved": "Credit note saved",
+  "returnsOnlineOnly": "Returns require an internet connection",
+  "noReturnableQty": "No returnable quantity remaining on this bill",
+  "returnQtyExceeds": "Return quantity exceeds remaining quantity",
+  "submitReturn": "Submit return"
 }

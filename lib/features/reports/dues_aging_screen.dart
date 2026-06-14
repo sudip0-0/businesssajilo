@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/export/export_actions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/ui/empty_state.dart';
@@ -41,6 +42,15 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (widget.embedded)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: l10n.exportCsv,
+                    onPressed: () => exportDuesAgingCsv(ref, context, report),
+                    icon: const Icon(Icons.download_outlined),
+                  ),
+                ),
               Row(
                 children: [
                   Expanded(
@@ -118,7 +128,22 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
 
     if (widget.embedded) return body;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.duesAging)),
+      appBar: AppBar(
+        title: Text(l10n.duesAging),
+        actions: [
+          IconButton(
+            tooltip: l10n.exportCsv,
+            onPressed: reportAsync.hasValue
+                ? () => exportDuesAgingCsv(
+                      ref,
+                      context,
+                      reportAsync.requireValue,
+                    )
+                : null,
+            icon: const Icon(Icons.download_outlined),
+          ),
+        ],
+      ),
       body: body,
     );
   }

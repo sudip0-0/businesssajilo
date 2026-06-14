@@ -1161,4 +1161,52 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get madeForNepal => 'नेपाल SME इकोसिस्टमका लागि';
+
+  @override
+  String get shareViaWhatsApp => 'WhatsApp मार्फत पठाउनुहोस्';
+
+  @override
+  String get downloadPdf => 'PDF डाउनलोड';
+
+  @override
+  String get printInvoice => 'बिल प्रिन्ट';
+
+  @override
+  String get returnItems => 'सामान फिर्ता';
+
+  @override
+  String get creditNote => 'क्रेडिट नोट';
+
+  @override
+  String get qtyReturned => 'फिर्ता परिमाण';
+
+  @override
+  String get restockInventory => 'स्टकमा फिर्ता राख्नुहोस्';
+
+  @override
+  String get returnReason => 'फिर्ताको कारण';
+
+  @override
+  String get exportCsv => 'CSV निर्यात';
+
+  @override
+  String get provisionalBillNotice => 'अस्थायी बिल नम्बर — सिङ्क बाँकी';
+
+  @override
+  String get invoiceThankYou => 'व्यापार गर्नुभएकोमा धन्यवाद!';
+
+  @override
+  String get creditNoteSaved => 'क्रेडिट नोट सुरक्षित भयो';
+
+  @override
+  String get returnsOnlineOnly => 'फिर्ताका लागि इन्टरनेट आवश्यक छ';
+
+  @override
+  String get noReturnableQty => 'यस बिलमा फिर्ता गर्न बाँकी परिमाण छैन';
+
+  @override
+  String get returnQtyExceeds => 'फिर्ता परिमाण बाँकी भन्दा बढी छ';
+
+  @override
+  String get submitReturn => 'फिर्ता पेश गर्नुहोस्';
 }

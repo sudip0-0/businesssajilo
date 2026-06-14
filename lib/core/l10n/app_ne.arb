@@ -408,5 +408,21 @@
   "amountRs": "रकम (Rs.)",
   "rateRs": "दर (Rs.)",
   "discountPercent": "छुट (%)",
-  "madeForNepal": "नेपाल SME इकोसिस्टमका लागि"
+  "madeForNepal": "नेपाल SME इकोसिस्टमका लागि",
+  "shareViaWhatsApp": "WhatsApp मार्फत पठाउनुहोस्",
+  "downloadPdf": "PDF डाउनलोड",
+  "printInvoice": "बिल प्रिन्ट",
+  "returnItems": "सामान फिर्ता",
+  "creditNote": "क्रेडिट नोट",
+  "qtyReturned": "फिर्ता परिमाण",
+  "restockInventory": "स्टकमा फिर्ता राख्नुहोस्",
+  "returnReason": "फिर्ताको कारण",
+  "exportCsv": "CSV निर्यात",
+  "provisionalBillNotice": "अस्थायी बिल नम्बर — सिङ्क बाँकी",
+  "invoiceThankYou": "व्यापार गर्नुभएकोमा धन्यवाद!",
+  "creditNoteSaved": "क्रेडिट नोट सुरक्षित भयो",
+  "returnsOnlineOnly": "फिर्ताका लागि इन्टरनेट आवश्यक छ",
+  "noReturnableQty": "यस बिलमा फिर्ता गर्न बाँकी परिमाण छैन",
+  "returnQtyExceeds": "फिर्ता परिमाण बाँकी भन्दा बढी छ",
+  "submitReturn": "फिर्ता पेश गर्नुहोस्"
 }

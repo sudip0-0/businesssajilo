@@ -9,6 +9,8 @@ import '../../../core/ui/error_state.dart';
 import '../../../core/utils/bill_totals.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
+import '../../../domain/models/bill.dart';
+import '../../../features/billing/invoice_export_actions.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
@@ -95,9 +97,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   Future<void> saveDraft() => _save(forceStatus: BillStatus.due);
 
-  Future<void> saveAndPrint() => _save();
+  Future<void> saveAndPrint() => _save(exportAfterSave: true);
 
-  Future<void> _save({BillStatus? forceStatus}) async {
+  Future<Bill?> _save({BillStatus? forceStatus, bool exportAfterSave = false}) async {
     final l10n = AppLocalizations.of(context);
     if (_lines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,7 +108,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
           backgroundColor: BsColors.danger,
         ),
       );
-      return;
+      return null;
     }
 
     BillPaymentResult? paymentResult;
@@ -125,14 +127,15 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         ),
       );
     }
-    if (paymentResult == null) return;
+    if (paymentResult == null) return null;
 
     final memberId = ref.read(authProvider).value?.member?.id;
-    if (memberId == null) return;
+    if (memberId == null) return null;
 
     setState(() => _loading = true);
+    Bill? savedBill;
     try {
-      await ref.read(billsRepositoryProvider).create(
+      savedBill = await ref.read(billsRepositoryProvider).create(
             createdByMemberId: memberId,
             customerId: paymentResult.customerId ?? _customerId,
             status: paymentResult.status,
@@ -168,6 +171,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.billSaved)),
         );
+        if (exportAfterSave && savedBill != null) {
+          await exportBillAfterSave(ref, context, savedBill);
+        }
         widget.onSaved?.call();
       }
     } catch (_) {
@@ -182,6 +188,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+    return savedBill;
   }
 
   @override

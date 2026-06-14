@@ -2323,6 +2323,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Made for Nepal SME Ecosystem'**
   String get madeForNepal;
+
+  /// No description provided for @shareViaWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share via WhatsApp'**
+  String get shareViaWhatsApp;
+
+  /// No description provided for @downloadPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF'**
+  String get downloadPdf;
+
+  /// No description provided for @printInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Print invoice'**
+  String get printInvoice;
+
+  /// No description provided for @returnItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Return items'**
+  String get returnItems;
+
+  /// No description provided for @creditNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit note'**
+  String get creditNote;
+
+  /// No description provided for @qtyReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty returned'**
+  String get qtyReturned;
+
+  /// No description provided for @restockInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Restock inventory'**
+  String get restockInventory;
+
+  /// No description provided for @returnReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Return reason'**
+  String get returnReason;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportCsv;
+
+  /// No description provided for @provisionalBillNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Provisional bill number — sync pending'**
+  String get provisionalBillNotice;
+
+  /// No description provided for @invoiceThankYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your business!'**
+  String get invoiceThankYou;
+
+  /// No description provided for @creditNoteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit note saved'**
+  String get creditNoteSaved;
+
+  /// No description provided for @returnsOnlineOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns require an internet connection'**
+  String get returnsOnlineOnly;
+
+  /// No description provided for @noReturnableQty.
+  ///
+  /// In en, this message translates to:
+  /// **'No returnable quantity remaining on this bill'**
+  String get noReturnableQty;
+
+  /// No description provided for @returnQtyExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Return quantity exceeds remaining quantity'**
+  String get returnQtyExceeds;
+
+  /// No description provided for @submitReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit return'**
+  String get submitReturn;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/export/export_actions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
@@ -117,8 +118,23 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
             else ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(l10n.ledger,
-                    style: Theme.of(context).textTheme.titleMedium),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(l10n.ledger,
+                          style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    IconButton(
+                      tooltip: l10n.exportCsv,
+                      onPressed: () => exportCustomerLedgerCsv(
+                            ref,
+                            context,
+                            customer.id,
+                          ),
+                      icon: const Icon(Icons.download_outlined),
+                    ),
+                  ],
+                ),
               ),
               const Divider(height: 1),
               Expanded(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../core/export/export_actions.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/bill_status_chip.dart';
@@ -320,7 +321,9 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: todaysBills.hasValue
+                              ? () => exportTodaysBillsCsv(ref, context)
+                              : null,
                           icon: Icon(PhosphorIconsRegular.export, size: 16),
                           label: Text(l10n.export),
                         ),

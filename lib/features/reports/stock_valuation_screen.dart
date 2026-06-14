@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/export/export_actions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/ui/empty_state.dart';
@@ -57,11 +58,33 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(l10n.totalValuation,
-                  style: Theme.of(context).textTheme.titleMedium),
-              MoneyText(
-                Paisa(total),
-                style: Theme.of(context).textTheme.headlineSmall,
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.totalValuation,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        MoneyText(
+                          Paisa(total),
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.exportCsv,
+                    onPressed: _sorted.isEmpty
+                        ? null
+                        : () => exportStockValuationCsv(
+                              ref,
+                              context,
+                              _sorted,
+                            ),
+                    icon: const Icon(Icons.download_outlined),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               if (isWideLayout(context))
@@ -126,6 +149,15 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
         title: Text(
           widget.lowStockOnly ? l10n.lowStock : l10n.stockValuation,
         ),
+        actions: [
+          IconButton(
+            tooltip: l10n.exportCsv,
+            onPressed: _sorted.isEmpty
+                ? null
+                : () => exportStockValuationCsv(ref, context, _sorted),
+            icon: const Icon(Icons.download_outlined),
+          ),
+        ],
       ),
       body: body,
     );

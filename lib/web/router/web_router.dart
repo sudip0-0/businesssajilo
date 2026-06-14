@@ -11,6 +11,7 @@ import '../auth/web_login_page.dart';
 import '../auth/web_register_page.dart';
 import '../features/billing/web_bill_form_page.dart';
 import '../features/billing/web_bill_list_page.dart';
+import '../features/billing/web_credit_note_form_page.dart';
 import '../features/customers/web_customer_form_page.dart';
 import '../features/customers/web_customer_ledger_page.dart';
 import '../features/customers/web_customer_list_page.dart';
@@ -168,6 +169,14 @@ ShellRoute _ownerRoutes() {
             builder: (_, state) => WebBillListPage(
               selectedBillId: state.pathParameters['billId'],
             ),
+            routes: [
+              GoRoute(
+                path: 'return',
+                builder: (_, state) => WebCreditNoteFormPage(
+                  billId: state.pathParameters['billId']!,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -297,6 +306,14 @@ ShellRoute _salesRoutes() {
             builder: (_, state) => WebBillListPage(
               selectedBillId: state.pathParameters['billId'],
             ),
+            routes: [
+              GoRoute(
+                path: 'return',
+                builder: (_, state) => WebCreditNoteFormPage(
+                  billId: state.pathParameters['billId']!,
+                ),
+              ),
+            ],
           ),
         ],
       ),
