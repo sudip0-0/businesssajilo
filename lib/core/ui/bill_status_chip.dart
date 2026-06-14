@@ -19,8 +19,6 @@ class BillStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final dark = scheme.brightness == Brightness.dark;
-    // Icon per state so status is never color-only; partial uses a darker
-    // amber for text contrast on the tinted background.
     final (tint, textColor, icon) = switch (status) {
       BillStatus.paid => (
           scheme.successColor,
@@ -46,7 +44,7 @@ class BillStatusChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: tint.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(BsRadii.full),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

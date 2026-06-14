@@ -1,0 +1,212 @@
+[
+  {
+    "step": "login_page",
+    "ok": true,
+    "detail": "http://localhost:52200/#/login"
+  },
+  {
+    "step": "login_screenshot",
+    "ok": true,
+    "detail": "e2e-login.png"
+  },
+  {
+    "step": "auth_api",
+    "ok": true,
+    "detail": "e2e-owner@test.com"
+  },
+  {
+    "step": "onboarding_skipped",
+    "ok": true,
+    "detail": "localStorage flag set"
+  },
+  {
+    "step": "after_login",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/dashboard"
+  },
+  {
+    "step": "dashboard_no_crash",
+    "ok": true,
+    "detail": "layout ok"
+  },
+  {
+    "step": "dashboard_screenshot",
+    "ok": true,
+    "detail": "e2e-after-login.png"
+  },
+  {
+    "step": "route_dashboard",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/dashboard"
+  },
+  {
+    "step": "route_dashboard_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-dashboard.png"
+  },
+  {
+    "step": "route_dashboard_no_crash",
+    "ok": true,
+    "detail": "dashboard"
+  },
+  {
+    "step": "route_inventory",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/inventory"
+  },
+  {
+    "step": "route_inventory_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-inventory.png"
+  },
+  {
+    "step": "route_inventory_no_crash",
+    "ok": true,
+    "detail": "inventory"
+  },
+  {
+    "step": "route_customers",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/customers"
+  },
+  {
+    "step": "route_customers_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-customers.png"
+  },
+  {
+    "step": "route_customers_no_crash",
+    "ok": true,
+    "detail": "customers"
+  },
+  {
+    "step": "route_billing",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/billing"
+  },
+  {
+    "step": "route_billing_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-billing.png"
+  },
+  {
+    "step": "route_billing_no_crash",
+    "ok": true,
+    "detail": "billing"
+  },
+  {
+    "step": "route_orders",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/orders"
+  },
+  {
+    "step": "route_orders_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-orders.png"
+  },
+  {
+    "step": "route_orders_no_crash",
+    "ok": true,
+    "detail": "orders"
+  },
+  {
+    "step": "route_staff",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/staff"
+  },
+  {
+    "step": "route_staff_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-staff.png"
+  },
+  {
+    "step": "route_staff_no_crash",
+    "ok": true,
+    "detail": "staff"
+  },
+  {
+    "step": "route_reports",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/reports"
+  },
+  {
+    "step": "route_reports_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-reports.png"
+  },
+  {
+    "step": "route_reports_no_crash",
+    "ok": true,
+    "detail": "reports"
+  },
+  {
+    "step": "route_settings",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/settings"
+  },
+  {
+    "step": "route_settings_screenshot",
+    "ok": true,
+    "detail": "e2e-owner-settings.png"
+  },
+  {
+    "step": "route_settings_no_crash",
+    "ok": true,
+    "detail": "settings"
+  },
+  {
+    "step": "bill_form_route",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/billing/new"
+  },
+  {
+    "step": "bill_form_screenshot",
+    "ok": true,
+    "detail": "e2e-bill-form.png"
+  },
+  {
+    "step": "dashboard_new_bill_nav",
+    "ok": false,
+    "detail": "http://localhost:52200/#/owner/dashboard"
+  },
+  {
+    "step": "dashboard_new_bill_nav_fallback",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/billing/new"
+  },
+  {
+    "step": "bill_form_cancel",
+    "ok": false,
+    "detail": "http://localhost:52200/#/owner/billing/new"
+  },
+  {
+    "step": "bill_form_cancel_fallback",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/billing"
+  },
+  {
+    "step": "dashboard_add_product_nav",
+    "ok": false,
+    "detail": "http://localhost:52200/#/owner/dashboard"
+  },
+  {
+    "step": "dashboard_add_product_nav_fallback",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/inventory/new"
+  },
+  {
+    "step": "sidebar_billing",
+    "ok": false,
+    "detail": "http://localhost:52200/#/owner/dashboard"
+  },
+  {
+    "step": "sidebar_billing_fallback",
+    "ok": true,
+    "detail": "http://localhost:52200/#/owner/billing"
+  },
+  {
+    "step": "locale_toggle",
+    "ok": true,
+    "detail": "clicked"
+  }
+]

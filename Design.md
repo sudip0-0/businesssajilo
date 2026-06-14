@@ -1,69 +1,171 @@
-# BusinessSajilo — Design Guidelines
+---
+name: BusinessSajilo
+colors:
+  surface: '#faf8ff'
+  surface-dim: '#dad9e1'
+  surface-bright: '#faf8ff'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#f4f3fa'
+  surface-container: '#eeedf4'
+  surface-container-high: '#e9e7ef'
+  surface-container-highest: '#e3e1e9'
+  on-surface: '#1a1b21'
+  on-surface-variant: '#444651'
+  inverse-surface: '#2f3036'
+  inverse-on-surface: '#f1f0f7'
+  outline: '#757682'
+  outline-variant: '#c5c5d3'
+  surface-tint: '#4059aa'
+  primary: '#00236f'
+  on-primary: '#ffffff'
+  primary-container: '#1e3a8a'
+  on-primary-container: '#90a8ff'
+  inverse-primary: '#b6c4ff'
+  secondary: '#006c49'
+  on-secondary: '#ffffff'
+  secondary-container: '#6cf8bb'
+  on-secondary-container: '#00714d'
+  tertiary: '#4b1c00'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#6e2c00'
+  on-tertiary-container: '#f39461'
+  error: '#ba1a1a'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#dce1ff'
+  primary-fixed-dim: '#b6c4ff'
+  on-primary-fixed: '#00164e'
+  on-primary-fixed-variant: '#264191'
+  secondary-fixed: '#6ffbbe'
+  secondary-fixed-dim: '#4edea3'
+  on-secondary-fixed: '#002113'
+  on-secondary-fixed-variant: '#005236'
+  tertiary-fixed: '#ffdbcb'
+  tertiary-fixed-dim: '#ffb691'
+  on-tertiary-fixed: '#341100'
+  on-tertiary-fixed-variant: '#773205'
+  background: '#faf8ff'
+  on-background: '#1a1b21'
+  surface-variant: '#e3e1e9'
+typography:
+  display-lg:
+    fontFamily: Inter
+    fontSize: 32px
+    fontWeight: '700'
+    lineHeight: 40px
+    letterSpacing: -0.02em
+  display-md:
+    fontFamily: Inter
+    fontSize: 24px
+    fontWeight: '700'
+    lineHeight: 32px
+    letterSpacing: -0.01em
+  headline-sm:
+    fontFamily: Inter
+    fontSize: 20px
+    fontWeight: '600'
+    lineHeight: 28px
+  body-lg:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: '400'
+    lineHeight: 24px
+  body-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: '400'
+    lineHeight: 20px
+  label-md:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: '600'
+    lineHeight: 16px
+  label-sm:
+    fontFamily: Inter
+    fontSize: 11px
+    fontWeight: '500'
+    lineHeight: 14px
+  display-md-mobile:
+    fontFamily: Inter
+    fontSize: 20px
+    fontWeight: '700'
+    lineHeight: 28px
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  base: 4px
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 32px
+  container-margin: 24px
+  gutter: 16px
+---
 
-## 1. Design Principles
+## Brand & Style
 
-1. **Sajilo first** — every core action (make a bill, check dues, place order) reachable in ≤2 taps from the role's home screen. Users may be non-technical shopkeepers.
-2. **Role-shaped UI** — each role gets a purpose-built home, not a generic menu with disabled items. Hide what a role can't do; don't grey it out.
-3. **Numbers are the hero** — dues, stock, totals rendered large and unambiguous; NPR formatted Nepali-style (रू 1,23,456.00).
-4. **Offline honesty** — always show sync state; never let a user wonder if a bill "went through".
-5. **Bilingual by design** — every label has EN + NP from day one; layouts must tolerate longer Devanagari strings.
+The design system is engineered for efficiency, reliability, and local relevance. It targets small to medium enterprise owners who require a stable tool to manage complex business operations. The brand personality is **Professional, Trustworthy, and Efficient**.
 
-## 2. Brand & Visual Language
+The design style follows a **Corporate / Modern** aesthetic, prioritizing clarity and utility over decorative elements. It utilizes a structured grid, subtle elevation to denote information hierarchy, and a clear functional color language that resonates with financial and operational workflows. The UI must feel grounded and institutional yet accessible to users who may be transitioning from paper-based systems to digital management.
 
-- **Personality:** trustworthy, practical, local. A digital khata, not a Silicon Valley dashboard.
-- **Palette:**
-  - Primary: deep teal `#0F6E5F` (trust, commerce)
-  - Accent: marigold `#F2A33C` (CTAs, highlights — familiar/festive in Nepal)
-  - Success `#2E7D32`, Danger/dues `#C62828`, Info `#1565C0`
-  - Surfaces: warm off-white `#FAF8F5`, dark text `#1D2421`
-- **Typography:** Inter (Latin) + Noto Sans Devanagari (Nepali), single type scale shared across scripts. Numerals always Latin digits for clarity on bills.
-- **Shape:** 12px radius cards, 8pt spacing grid, generous touch targets (min 48dp) — used outdoors, on cheap devices, sometimes with dusty fingers.
-- Material 3 as the base system, themed with the palette above.
+## Colors
 
-## 3. Role Home Screens
+This design system uses a logic-driven color palette to facilitate quick decision-making:
 
-| Role | Home contents |
-|---|---|
-| Owner | Today's sales, total dues, low-stock count, pending orders; quick actions: New Bill, Add Stock, Add Customer |
-| Sales | Pending orders/quotes queue, quick New Bill, recent payments, dues hot-list |
-| Warehouse | Confirmed orders to pack/dispatch, low-stock list, quick Stock-In |
-| Customer | Product catalog (no prices), My Orders with status chips, My Dues, order chat |
+- **Primary (Navy Blue):** Used for primary actions, branding, and navigation. It establishes authority and stability.
+- **Secondary (Vibrant Green):** Reserved for "Success" states, "Paid" statuses, and positive growth indicators like "Add New" or "Income."
+- **Accent (Amber):** Used exclusively for "Warning" states, "Pending" payments, and items requiring attention.
+- **Neutrals:** A range of cool greys ensures a "clean" feel. The background is a crisp `#F9FAFB` to reduce eye strain during long working hours.
 
-## 4. Key Screen Patterns
+Text utilizes Deep Charcoal (`#111827`) for maximum contrast against white backgrounds, ensuring high legibility for financial data.
 
-- **Billing screen:** product search with big result rows (image, name, stock badge), qty steppers, sticky running total bar, one-tap save → payment sheet (Paid / Partial / Due).
-- **Order detail (staff):** timeline of states, quote builder inline, chat thread tab.
-- **Quote (customer):** clear per-item pricing table, big Accept / Reject buttons, comment box on reject.
-- **Ledger:** statement-style list (debit red / credit green) with running balance, BS+AD dates, filter chips.
-- **Stock-in/adjust:** reason required for adjustments; movements list is read-only history.
-- **Status chips:** Placed (blue) → Quoted (amber) → Accepted (teal) → Packed/Dispatched (purple) → Billed (green) / Rejected, Cancelled (grey/red).
+## Typography
 
-## 5. Offline & Sync UX
+The design system uses **Inter** for its exceptional legibility and support for both Latin and Devanagari scripts. 
 
-- Persistent subtle indicator: green dot "Synced", amber "X pending", grey "Offline".
-- Locally-created bills show provisional number (`D2-17`) with a small clock icon until final number assigned.
-- Sync failures surface in a "Pending items" screen with retry; never silent loss.
+- **Bi-lingual Balance:** Ensure the line-height is generous enough (minimum 1.4x) to prevent Devanagari vowel signs (matras) from clipping or overlapping between lines.
+- **Numerical Clarity:** Use tabular lining for figures in tables and invoices to ensure that currency values align vertically for easy scanning.
+- **Hierarchy:** Headlines use tighter tracking and heavier weights to stand out, while labels use all-caps with subtle tracking (0.05em) for category identification.
 
-## 6. Responsive Behavior
+## Layout & Spacing
 
-- **Phone (default):** bottom navigation (4–5 role-specific tabs), single column.
-- **Tablet/Web:** navigation rail + two-pane layouts (list ⇄ detail); owner dashboard becomes a grid of report cards with charts.
-- Web targets desktop browsers for owners doing back-office work; data tables get sortable columns + pagination there.
+The layout utilizes a **Fixed Grid** on desktop (1280px max width) and a **Fluid Grid** on mobile. 
 
-## 7. Localization & Formatting
+- **The 8pt Rhythm:** All padding, margins, and component heights must be multiples of 4px/8px to maintain a rhythmic vertical flow.
+- **Sidebar:** On desktop, the sidebar is a fixed 260px (64px when collapsed). On mobile, it transitions to a bottom navigation bar or a full-screen overlay.
+- **Content Area:** Main content follows a 12-column grid on desktop with 16px gutters. Dashboard metrics should be grouped in 3 or 4 columns, while data tables should span the full width.
+- **Data Density:** Use "Medium" density for general workflows and "Compact" density (8px vertical padding) for data-heavy tables to maximize information visibility without scrolling.
 
-- Language toggle in settings + onboarding; instant switch, persisted per user.
-- Dates: primary BS with AD secondary on bills/ledger (`२०८३ असार २८ · 12 Jul 2026`).
-- All strings via Flutter ARB l10n; no hardcoded text.
+## Elevation & Depth
 
-## 8. Accessibility & Quality Bar
+Visual hierarchy is established through **Tonal Layers** and **Ambient Shadows**.
 
-- Contrast AA minimum; dues/success states never rely on color alone (icons + text).
-- Scales gracefully to 1.3× system font.
-- Empty states with one-line guidance + primary action (e.g. "No products yet — Add your first product").
-- Skeleton loaders for lists; optimistic UI for offline writes.
-- Error copy in plain language, both languages, with a recovery action.
+1.  **Level 0 (Background):** `#F9FAFB` – The base canvas.
+2.  **Level 1 (Cards/Sidebar):** White surface with a `1px` border of `#E5E7EB`.
+3.  **Level 2 (Active States/Metrics):** A soft, diffused shadow (0px 4px 6px -1px rgba(0,0,0,0.1)) to lift key performance indicators (KPIs) above the base layer.
+4.  **Level 3 (Modals/Dropdowns):** Pronounced shadows with higher blur (0px 10px 15px -3px rgba(0,0,0,0.1)) to indicate temporary interaction layers that require focus.
 
-## 9. Components (Flutter)
+Avoid heavy dark shadows; depth should feel like light catching the edge of a physical paper document.
 
-Shared design-system widgets in `core/ui/`: `BsAppBar`, `BsCard`, `MoneyText`, `StatusChip`, `QtyStepper`, `SyncBadge`, `LedgerRow`, `EmptyState`, `BsDatePicker` (BS/AD), `SearchField`. All themed via a single `ThemeExtension` so brand changes propagate.
+## Shapes
+
+The shape language is **Soft**. Standard UI elements like input fields, buttons, and small cards use a `0.25rem` (4px) corner radius. This maintains a professional "business" feel while appearing more modern than sharp edges.
+
+Larger container elements like dashboard sections and main cards may use `rounded-lg` (0.5rem) to create a softer grouping effect. Status badges and tags use a fully rounded "pill" shape to distinguish them from interactive buttons.
+
+## Components
+
+- **Buttons:** Primary buttons are Solid Navy Blue with white text. Success actions ("Add", "Confirm") use Green. Buttons have a height of 40px for standard and 32px for compact views.
+- **Status Badges:** Use a "soft-fill" approach: a light background version of the state color (e.g., Light Green background for "Paid") with dark text in the same hue.
+- **Input Fields:** 1px neutral borders that turn Primary Blue on focus. Labels are always visible above the field in `label-md` style.
+- **Tables:** Row hover states use a light grey tint (`#F3F4F6`). Currency columns (NPR) are right-aligned. The "Status" column is always visible.
+- **Currency Formatting:** All NPR values should use the format `Rs. XX,XXX.XX`. 
+- **Bi-lingual Toggles:** Positioned in the top-right utility bar. Toggling language should not shift the layout; ensure components can handle the slightly longer character counts often found in Nepali translations.
+- **Cards:** Metric cards feature a large `display-md` value, a `label-sm` title, and a small trend indicator (up/down arrow) in green or red.

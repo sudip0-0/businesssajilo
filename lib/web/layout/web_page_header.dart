@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
+
 /// Left-aligned page header with optional breadcrumbs and actions.
 class WebPageHeader extends StatelessWidget {
   const WebPageHeader({
@@ -34,17 +36,23 @@ class WebPageHeader extends StatelessWidget {
                     child: Text(
                       breadcrumbs.join(' / '),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.outline,
+                        color: BsColors.outline,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                Text(title, style: theme.textTheme.headlineSmall),
+                Text(
+                  title,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: BsColors.textCharcoal,
+                  ),
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     subtitle!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.outline,
+                      color: BsColors.outline,
                     ),
                   ),
                 ],

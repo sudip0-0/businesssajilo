@@ -35,7 +35,11 @@ class MoneyText extends StatelessWidget {
       excludeSemantics: true,
       child: Text(
         formatted,
-        style: base?.copyWith(color: color, fontWeight: FontWeight.w600),
+        style: base?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
       ),
     );
   }

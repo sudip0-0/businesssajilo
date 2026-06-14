@@ -1,56 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Premium web typography: Outfit (Geist-like) + JetBrains Mono for data.
+/// Corporate web typography per Design.md: Inter with tabular figures for data.
 abstract final class WebTypography {
   static TextTheme textTheme(ColorScheme scheme) {
-    final outfit = GoogleFonts.outfitTextTheme();
-    return outfit.copyWith(
-      headlineLarge: outfit.headlineLarge?.copyWith(
+    final inter = GoogleFonts.interTextTheme();
+    return inter.copyWith(
+      displayLarge: GoogleFonts.inter(
+        fontSize: 32,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
-        height: 1.1,
+        height: 1.25,
+        letterSpacing: -0.64,
         color: scheme.onSurface,
       ),
-      headlineMedium: outfit.headlineMedium?.copyWith(
+      displayMedium: GoogleFonts.inter(
+        fontSize: 24,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
-        height: 1.15,
+        height: 1.33,
+        letterSpacing: -0.24,
         color: scheme.onSurface,
       ),
-      headlineSmall: outfit.headlineSmall?.copyWith(
+      headlineSmall: GoogleFonts.inter(
+        fontSize: 20,
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.2,
-        height: 1.2,
+        height: 1.4,
         color: scheme.onSurface,
       ),
-      titleLarge: outfit.titleLarge?.copyWith(
+      titleLarge: GoogleFonts.inter(
+        fontSize: 20,
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.1,
+        height: 1.4,
       ),
-      titleMedium: outfit.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      bodyLarge: outfit.bodyLarge?.copyWith(
-        height: 1.55,
+      titleMedium: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1.5,
+      ),
+      bodyLarge: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        color: scheme.onSurface.withValues(alpha: 0.9),
+      ),
+      bodyMedium: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        height: 1.43,
         color: scheme.onSurface.withValues(alpha: 0.85),
       ),
-      bodyMedium: outfit.bodyMedium?.copyWith(
-        height: 1.5,
-        color: scheme.onSurface.withValues(alpha: 0.8),
+      labelLarge: GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        height: 1.33,
+        letterSpacing: 0.6,
       ),
-      labelLarge: outfit.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      labelSmall: GoogleFonts.jetBrainsMono(
+      labelSmall: GoogleFonts.inter(
         fontSize: 11,
-        letterSpacing: 0.5,
         fontWeight: FontWeight.w500,
-        color: scheme.onSurface.withValues(alpha: 0.6),
+        height: 1.27,
+        letterSpacing: 0.55,
+        color: scheme.onSurface.withValues(alpha: 0.65),
       ),
     );
   }
 
   static TextStyle monoData(BuildContext context, {double? fontSize}) {
-    return GoogleFonts.jetBrainsMono(
+    return GoogleFonts.inter(
       fontSize: fontSize ?? 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()],
+      color: Theme.of(context).colorScheme.onSurface,
+    );
+  }
+
+  static TextStyle metricValue(BuildContext context) {
+    return GoogleFonts.inter(
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+      height: 1.33,
+      letterSpacing: -0.24,
+      fontFeatures: const [FontFeature.tabularFigures()],
       color: Theme.of(context).colorScheme.onSurface,
     );
   }

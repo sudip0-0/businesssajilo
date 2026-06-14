@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Premium web design tokens (design-taste variance 8, density 4).
+import '../../core/theme/app_theme.dart';
+
+/// Corporate web design tokens per Design.md.
 @immutable
 class WebTokens extends ThemeExtension<WebTokens> {
   const WebTokens({
@@ -8,46 +10,57 @@ class WebTokens extends ThemeExtension<WebTokens> {
     required this.sidebarCollapsedWidth,
     required this.contentMaxWidth,
     required this.pagePadding,
-    required this.bentoRadius,
-    required this.diffusionShadow,
+    required this.gutter,
+    required this.cardRadius,
+    required this.inputRadius,
+    required this.metricShadow,
+    required this.modalShadow,
     required this.compactBreakpoint,
     required this.desktopBreakpoint,
     required this.wideBreakpoint,
     required this.listPaneWidth,
     required this.wideListPaneWidth,
+    required this.buttonHeight,
+    required this.buttonHeightCompact,
+    required this.topBarHeight,
   });
 
   final double sidebarWidth;
   final double sidebarCollapsedWidth;
   final double contentMaxWidth;
   final double pagePadding;
-  final double bentoRadius;
-  final List<BoxShadow> diffusionShadow;
+  final double gutter;
+  final double cardRadius;
+  final double inputRadius;
+  final List<BoxShadow> metricShadow;
+  final List<BoxShadow> modalShadow;
   final double compactBreakpoint;
   final double desktopBreakpoint;
   final double wideBreakpoint;
   final double listPaneWidth;
   final double wideListPaneWidth;
+  final double buttonHeight;
+  final double buttonHeightCompact;
+  final double topBarHeight;
 
   static const light = WebTokens(
-    sidebarWidth: 240,
-    sidebarCollapsedWidth: 72,
-    contentMaxWidth: 1400,
-    pagePadding: 32,
-    bentoRadius: 24,
-    diffusionShadow: [
-      BoxShadow(
-        color: Color(0x0D000000),
-        blurRadius: 40,
-        offset: Offset(0, 20),
-        spreadRadius: -15,
-      ),
-    ],
+    sidebarWidth: 260,
+    sidebarCollapsedWidth: 64,
+    contentMaxWidth: 1280,
+    pagePadding: 24,
+    gutter: 16,
+    cardRadius: BsRadii.lg,
+    inputRadius: BsRadii.md,
+    metricShadow: BsElevation.level2,
+    modalShadow: BsElevation.level3,
     compactBreakpoint: 768,
-    desktopBreakpoint: 1200,
-    wideBreakpoint: 1200,
+    desktopBreakpoint: 1024,
+    wideBreakpoint: 1280,
     listPaneWidth: 360,
     wideListPaneWidth: 400,
+    buttonHeight: 40,
+    buttonHeightCompact: 32,
+    topBarHeight: 56,
   );
 
   @override
@@ -56,13 +69,19 @@ class WebTokens extends ThemeExtension<WebTokens> {
     double? sidebarCollapsedWidth,
     double? contentMaxWidth,
     double? pagePadding,
-    double? bentoRadius,
-    List<BoxShadow>? diffusionShadow,
+    double? gutter,
+    double? cardRadius,
+    double? inputRadius,
+    List<BoxShadow>? metricShadow,
+    List<BoxShadow>? modalShadow,
     double? compactBreakpoint,
     double? desktopBreakpoint,
     double? wideBreakpoint,
     double? listPaneWidth,
     double? wideListPaneWidth,
+    double? buttonHeight,
+    double? buttonHeightCompact,
+    double? topBarHeight,
   }) {
     return WebTokens(
       sidebarWidth: sidebarWidth ?? this.sidebarWidth,
@@ -70,13 +89,19 @@ class WebTokens extends ThemeExtension<WebTokens> {
           sidebarCollapsedWidth ?? this.sidebarCollapsedWidth,
       contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
       pagePadding: pagePadding ?? this.pagePadding,
-      bentoRadius: bentoRadius ?? this.bentoRadius,
-      diffusionShadow: diffusionShadow ?? this.diffusionShadow,
+      gutter: gutter ?? this.gutter,
+      cardRadius: cardRadius ?? this.cardRadius,
+      inputRadius: inputRadius ?? this.inputRadius,
+      metricShadow: metricShadow ?? this.metricShadow,
+      modalShadow: modalShadow ?? this.modalShadow,
       compactBreakpoint: compactBreakpoint ?? this.compactBreakpoint,
       desktopBreakpoint: desktopBreakpoint ?? this.desktopBreakpoint,
       wideBreakpoint: wideBreakpoint ?? this.wideBreakpoint,
       listPaneWidth: listPaneWidth ?? this.listPaneWidth,
       wideListPaneWidth: wideListPaneWidth ?? this.wideListPaneWidth,
+      buttonHeight: buttonHeight ?? this.buttonHeight,
+      buttonHeightCompact: buttonHeightCompact ?? this.buttonHeightCompact,
+      topBarHeight: topBarHeight ?? this.topBarHeight,
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/config/pagination.dart';
+import '../../core/theme/app_theme.dart';
 
 typedef WebDataRowBuilder<T> = DataRow Function(T item, int index);
 
@@ -22,6 +23,7 @@ class WebDataTable<T> extends StatefulWidget {
     this.sortColumnIndex,
     this.sortAscending = true,
     this.onSort,
+    this.compact = true,
   });
 
   final List<DataColumn> columns;
@@ -37,6 +39,7 @@ class WebDataTable<T> extends StatefulWidget {
   final int? sortColumnIndex;
   final bool sortAscending;
   final void Function(int columnIndex, bool ascending)? onSort;
+  final bool compact;
 
   @override
   State<WebDataTable<T>> createState() => _WebDataTableState<T>();
@@ -48,6 +51,8 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
     if (widget.loading && widget.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final rowHeight = widget.compact ? 40.0 : 48.0;
 
     final rows = <DataRow>[];
     for (var i = 0; i < widget.items.length; i++) {
@@ -62,13 +67,10 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
           selected: selected,
           color: WidgetStateProperty.resolveWith((states) {
             if (selected) {
-              return Theme.of(context)
-                  .colorScheme
-                  .primary
-                  .withValues(alpha: 0.08);
+              return BsColors.primary.withValues(alpha: 0.06);
             }
             if (states.contains(WidgetState.hovered)) {
-              return Theme.of(context).colorScheme.surfaceContainerLow;
+              return BsColors.rowHover;
             }
             return null;
           }),
@@ -83,16 +85,27 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            child: DataTable(
-              sortColumnIndex: widget.sortColumnIndex,
-              sortAscending: widget.sortAscending,
-              columns: widget.columns,
-              rows: rows,
-              headingRowHeight: 44,
-              dataRowMinHeight: 48,
-              dataRowMaxHeight: 56,
-              showCheckboxColumn: false,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(BsRadii.lg),
+              border: Border.all(color: BsColors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(BsRadii.lg),
+              child: SingleChildScrollView(
+                child: DataTable(
+                  sortColumnIndex: widget.sortColumnIndex,
+                  sortAscending: widget.sortAscending,
+                  columns: widget.columns,
+                  rows: rows,
+                  headingRowHeight: 44,
+                  dataRowMinHeight: rowHeight,
+                  dataRowMaxHeight: rowHeight + 8,
+                  showCheckboxColumn: false,
+                  dividerThickness: 1,
+                ),
+              ),
             ),
           ),
         ),
@@ -128,7 +141,10 @@ class _TablePagination extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Text('$from–$to of $totalItems'),
+          Text(
+            '$from-$to of $totalItems',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const Spacer(),
           IconButton(
             onPressed: page > 0 ? () => onPageChanged(page - 1) : null,
@@ -169,8 +185,6 @@ class _WebHoverableRowState extends State<WebHoverableRow> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -178,14 +192,12 @@ class _WebHoverableRowState extends State<WebHoverableRow> {
         duration: 200.ms,
         decoration: BoxDecoration(
           color: widget.selected
-              ? scheme.primary.withValues(alpha: 0.08)
+              ? BsColors.primary.withValues(alpha: 0.06)
               : _hovered
-                  ? scheme.surfaceContainerLow
+                  ? BsColors.rowHover
                   : null,
-          border: Border(
-            bottom: BorderSide(
-              color: scheme.outline.withValues(alpha: 0.12),
-            ),
+          border: const Border(
+            bottom: BorderSide(color: BsColors.border),
           ),
         ),
         child: Material(

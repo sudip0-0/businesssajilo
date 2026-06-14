@@ -18,7 +18,7 @@ Future<T?> showWebSidePanel<T>({
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 280),
     pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
-    transitionBuilder: (ctx, anim, secondaryAnim, child) {
+    transitionBuilder: (ctx, anim, secondaryAnim, _) {
       final offset = Tween<Offset>(
         begin: const Offset(1, 0),
         end: Offset.zero,
@@ -74,7 +74,12 @@ Future<T?> showWebSidePanel<T>({
                             ),
                           ),
                           const Divider(height: 1),
-                          Expanded(child: child),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: child,
+                            ),
+                          ),
                         ],
                       ),
                     ),
