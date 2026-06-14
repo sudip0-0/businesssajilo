@@ -8,6 +8,7 @@ import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import 'web_bill_form_content.dart';
 import '../web_page_scaffold.dart';
+import '../../../core/testing/integration_keys.dart';
 
 String _billingListPath(BuildContext context) {
   final path = GoRouterState.of(context).uri.path;
@@ -51,11 +52,13 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
       breadcrumbs: [l10n.billing, l10n.createNewBill],
       actions: [
         OutlinedButton(
+          key: IntegrationKeys.billFormCancel,
           onPressed: () => context.go(backPath),
           child: Text(l10n.cancel),
         ),
         const SizedBox(width: 8),
         OutlinedButton(
+          key: IntegrationKeys.billFormSaveDraft,
           onPressed: () => _formKey.currentState?.saveDraft(),
           child: Text(l10n.saveAsDraft),
         ),

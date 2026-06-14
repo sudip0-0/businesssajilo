@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/l10n/app_localizations.dart';
+import 'core/config/env.dart';
 import 'core/notifications/push_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -16,6 +17,8 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/notifications/notification_navigation.dart';
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+bool get _useWebUi => kIsWeb || Env.forceWebUi;
 
 /// App locale; persisted per device via SharedPreferences.
 final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
@@ -56,7 +59,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   ThemeMode build() {
     _loadSaved();
     // Web admin UI is designed for light mode; system dark caused unreadable forms.
-    return kIsWeb ? ThemeMode.light : ThemeMode.system;
+    return _useWebUi ? ThemeMode.light : ThemeMode.system;
   }
 
   Future<void> _loadSaved() async {
@@ -91,7 +94,7 @@ class BusinessSajiloApp extends ConsumerWidget {
         type: data['type'] as String? ?? '',
         payload: data,
       );
-      if (kIsWeb) {
+      if (_useWebUi) {
         openWebNotificationTarget(navContext, item, role: role);
       } else {
         openNotificationTarget(navContext, item, role: role);
@@ -110,8 +113,8 @@ class BusinessSajiloApp extends ConsumerWidget {
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'BusinessSajilo',
-      theme: kIsWeb ? WebTheme.light() : AppTheme.light(),
-      darkTheme: kIsWeb ? WebTheme.dark() : AppTheme.dark(),
+      theme: _useWebUi ? WebTheme.light() : AppTheme.light(),
+      darkTheme: _useWebUi ? WebTheme.dark() : AppTheme.dark(),
       themeMode: themeMode,
       locale: locale,
       builder: (context, child) {

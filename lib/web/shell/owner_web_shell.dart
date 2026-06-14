@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/testing/integration_keys.dart';
 import '../../features/orders/providers.dart';
 import '../layout/web_app_shell.dart';
 import '../layout/web_sidebar.dart';
@@ -88,6 +89,7 @@ class _CreateBillButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
+        key: IntegrationKeys.sidebarCreateBill,
         onPressed: onPressed,
         icon: Icon(PhosphorIconsRegular.plus, size: 18),
         label: Text(label),

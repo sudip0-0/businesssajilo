@@ -24,6 +24,7 @@ import '../../ui/web_sales_line_chart.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_stat_tile.dart';
 import '../../ui/web_success_button.dart';
+import '../../../core/testing/integration_keys.dart';
 
 class WebOwnerDashboardPage extends ConsumerStatefulWidget {
   const WebOwnerDashboardPage({super.key});
@@ -73,11 +74,13 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
       fillHeight: false,
       actions: [
         OutlinedButton(
+          key: IntegrationKeys.dashboardAddProduct,
           onPressed: () => context.push('/owner/inventory/new'),
           child: Text(l10n.addProduct),
         ),
         const SizedBox(width: 8),
         WebSuccessButton(
+          key: IntegrationKeys.dashboardNewBill,
           onPressed: () => context.push('/owner/billing/new'),
           icon: Icon(PhosphorIconsRegular.receipt, size: 18),
           label: l10n.newBill,

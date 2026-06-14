@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/testing/integration_keys.dart';
 import '../../core/theme/app_theme.dart';
 import '../theme/web_tokens.dart';
 
@@ -179,6 +180,7 @@ class _SidebarTileState extends State<_SidebarTile> {
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(BsRadii.lg),
           child: InkWell(
+            key: IntegrationKeys.sidebarNav(widget.item.path),
             onTap: widget.onTap,
             borderRadius: BorderRadius.circular(BsRadii.lg),
             child: Padding(

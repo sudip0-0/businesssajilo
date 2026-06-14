@@ -15,6 +15,9 @@ abstract final class Env {
       String.fromEnvironment('FIREBASE_PROJECT_ID');
   static const firebaseVapidKey = String.fromEnvironment('FIREBASE_VAPID_KEY');
 
+  /// Integration tests on desktop use the web shell when true.
+  static const forceWebUi = bool.fromEnvironment('FORCE_WEB_UI');
+
   static bool get isConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 

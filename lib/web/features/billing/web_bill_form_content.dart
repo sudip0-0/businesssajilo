@@ -20,6 +20,7 @@ import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_sheet_bridge.dart';
+import '../../../core/testing/integration_keys.dart';
 
 class _DraftLine {
   _DraftLine({required this.product})
@@ -240,6 +241,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                               ),
                               const Spacer(),
                               TextButton.icon(
+                                key: IntegrationKeys.billFormAddProduct,
                                 onPressed: _focusProductSearch,
                                 icon: Icon(PhosphorIconsRegular.plus, size: 16),
                                 label: Text(l10n.addProduct),
