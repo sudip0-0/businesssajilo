@@ -15,6 +15,7 @@ abstract class Member with _$Member {
     required String displayName,
     String? phone,
     @Default(true) bool isActive,
+    @Default(false) bool mustChangePassword,
     DateTime? createdAt,
   }) = _Member;
 

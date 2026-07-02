@@ -1213,4 +1213,128 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get submitReturn => 'Submit return';
+
+  @override
+  String get emailOrPhone => 'Email or phone number';
+
+  @override
+  String get invalidEmailOrPhone => 'Enter a valid email or phone number';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get resetPasswordEmailHint =>
+      'Enter your account email and we\'ll send a password reset link.';
+
+  @override
+  String get sendResetLink => 'Send reset link';
+
+  @override
+  String get resetEmailSent => 'Password reset email sent. Check your inbox.';
+
+  @override
+  String get resetPassword => 'Reset password';
+
+  @override
+  String resetPasswordFor(String name) {
+    return 'Reset password for $name';
+  }
+
+  @override
+  String get temporaryPassword => 'Temporary password';
+
+  @override
+  String get temporaryPasswordHint =>
+      'Share this password with the member. They must choose a new one on next login.';
+
+  @override
+  String get passwordResetDone =>
+      'Password reset. Existing sessions were signed out.';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Confirm password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordTooShort => 'Password must be at least 8 characters';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get passwordChanged => 'Password updated';
+
+  @override
+  String get setNewPasswordTitle => 'Set a new password';
+
+  @override
+  String get setNewPasswordHint =>
+      'Your password was reset by the business owner. Choose a new password to continue.';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get deleteAccount => 'Delete my account';
+
+  @override
+  String get deleteAccountWarning =>
+      'This permanently deletes your login. Order and payment records stay with the business. This cannot be undone.';
+
+  @override
+  String get deleteBusiness => 'Delete business';
+
+  @override
+  String get deleteBusinessWarning =>
+      'This permanently deletes the business and ALL its data: products, bills, orders, customers, and every staff and customer login. This cannot be undone.';
+
+  @override
+  String typeToConfirm(String word) {
+    return 'Type $word to confirm';
+  }
+
+  @override
+  String get accountDeleted => 'Account deleted';
+
+  @override
+  String get reorder => 'Reorder';
+
+  @override
+  String get statement => 'Statement';
+
+  @override
+  String get shareStatement => 'Share statement';
+
+  @override
+  String get statementPeriod => 'Period';
+
+  @override
+  String get statementDate => 'Date';
+
+  @override
+  String get statementDescription => 'Description';
+
+  @override
+  String get rangeLast30Days => 'Last 30 days';
+
+  @override
+  String get rangeLast90Days => 'Last 90 days';
+
+  @override
+  String get rangeAllTime => 'All time';
+
+  @override
+  String get closingBalance => 'Closing balance';
+
+  @override
+  String get shareAsImage => 'Share as image';
+
+  @override
+  String get shareAsPdf => 'Share as PDF';
 }

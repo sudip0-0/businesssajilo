@@ -9,6 +9,7 @@ import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/order_item.dart';
 import '../auth/providers/auth_provider.dart';
 import '../../web/ui/web_sheet_bridge.dart';
 import '../billing/bill_from_order_sheet.dart';
@@ -17,6 +18,8 @@ import '../inventory/product_image.dart';
 import '../quotes/providers.dart';
 import '../quotes/quote_builder_screen.dart';
 import '../quotes/quote_detail_screen.dart';
+import 'cart_sheet.dart';
+import 'catalog_screen.dart';
 import 'providers.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
@@ -137,6 +140,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 role: role,
                 latestSentQuoteId: latestSent?.id,
                 customerId: order.customerId,
+                items: order.items,
               ),
             ],
           );
@@ -158,6 +162,7 @@ class _ActionButtons extends ConsumerWidget {
     required this.role,
     required this.latestSentQuoteId,
     required this.customerId,
+    required this.items,
   });
 
   final String orderId;
@@ -165,6 +170,7 @@ class _ActionButtons extends ConsumerWidget {
   final Role? role;
   final String? latestSentQuoteId;
   final String customerId;
+  final List<OrderItem> items;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -187,6 +193,12 @@ class _ActionButtons extends ConsumerWidget {
             ),
             icon: const Icon(Icons.chat_bubble_outline),
             label: Text(l10n.openChat),
+          ),
+        if (isCustomer && items.isNotEmpty)
+          OutlinedButton.icon(
+            onPressed: () => _reorder(context, ref),
+            icon: const Icon(Icons.replay_outlined),
+            label: Text(l10n.reorder),
           ),
         if (isCustomer && latestSentQuoteId != null)
           FilledButton(
@@ -277,6 +289,47 @@ class _ActionButtons extends ConsumerWidget {
           ),
       ],
     );
+  }
+
+  /// One-tap repeat purchase: prefill a cart with this order's items and
+  /// open the place-order sheet. Products no longer in the catalog
+  /// (deactivated) are skipped with a notice.
+  Future<void> _reorder(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final catalog = await ref.read(catalogListProvider.future);
+    if (!context.mounted) return;
+
+    final catalogById = {for (final p in catalog) p.id: p};
+    final quantities = <String, int>{};
+    var skipped = 0;
+    for (final item in items) {
+      if (catalogById.containsKey(item.productId)) {
+        quantities[item.productId] =
+            (quantities[item.productId] ?? 0) + item.qty;
+      } else {
+        skipped++;
+      }
+    }
+
+    if (skipped > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.removedUnavailableItems)),
+      );
+    }
+    if (quantities.isEmpty) return;
+
+    final placed = await showAdaptiveSheet<bool>(
+      context: context,
+      title: l10n.placeOrder,
+      child: CartSheet(
+        products:
+            quantities.keys.map((id) => catalogById[id]!).toList(),
+        quantities: quantities,
+      ),
+    );
+    if (placed == true) {
+      ref.invalidate(ownOrderListProvider);
+    }
   }
 
   Future<void> _updateStatus(

@@ -10,6 +10,7 @@ import '../../../data/repositories/members_repository.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/member.dart';
 import '../../../features/staff/add_member_sheet.dart';
+import '../../../features/staff/reset_member_password_sheet.dart';
 import '../../../features/staff/staff_list_screen.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
@@ -168,10 +169,24 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                 DataCell(
                   member.role == Role.owner
                       ? const SizedBox.shrink()
-                      : IconButton(
-                          tooltip: l10n.deactivate,
-                          icon: Icon(PhosphorIconsRegular.userMinus),
-                          onPressed: () => _deactivate(member),
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: l10n.resetPassword,
+                              icon: Icon(PhosphorIconsRegular.lockKey),
+                              onPressed: () => showResetMemberPasswordSheet(
+                                context,
+                                memberId: member.id,
+                                memberName: member.displayName,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: l10n.deactivate,
+                              icon: Icon(PhosphorIconsRegular.userMinus),
+                              onPressed: () => _deactivate(member),
+                            ),
+                          ],
                         ),
                 ),
               ],

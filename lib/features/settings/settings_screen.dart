@@ -7,6 +7,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../onboarding/demo_data_actions.dart';
 import '../onboarding/onboarding_prefs.dart';
 import '../sync/pending_sync_screen.dart';
+import 'account_section.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -127,6 +128,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ? null
               : Text(l10n.appVersion(_version!)),
         ),
+        const AccountSettingsTiles(),
       ],
     );
   }

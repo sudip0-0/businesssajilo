@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Member {
 
- String get id; String get businessId; String get authUserId; Role get role; String get displayName; String? get phone; bool get isActive; DateTime? get createdAt;
+ String get id; String get businessId; String get authUserId; Role get role; String get displayName; String? get phone; bool get isActive; bool get mustChangePassword; DateTime? get createdAt;
 /// Create a copy of Member
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $MemberCopyWith<Member> get copyWith => _$MemberCopyWithImpl<Member>(this as Mem
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Member&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.authUserId, authUserId) || other.authUserId == authUserId)&&(identical(other.role, role) || other.role == role)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Member&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.authUserId, authUserId) || other.authUserId == authUserId)&&(identical(other.role, role) || other.role == role)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,authUserId,role,displayName,phone,isActive,createdAt);
+int get hashCode => Object.hash(runtimeType,id,businessId,authUserId,role,displayName,phone,isActive,mustChangePassword,createdAt);
 
 @override
 String toString() {
-  return 'Member(id: $id, businessId: $businessId, authUserId: $authUserId, role: $role, displayName: $displayName, phone: $phone, isActive: $isActive, createdAt: $createdAt)';
+  return 'Member(id: $id, businessId: $businessId, authUserId: $authUserId, role: $role, displayName: $displayName, phone: $phone, isActive: $isActive, mustChangePassword: $mustChangePassword, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $MemberCopyWith<$Res>  {
   factory $MemberCopyWith(Member value, $Res Function(Member) _then) = _$MemberCopyWithImpl;
 @useResult
 $Res call({
- String id, String businessId, String authUserId, Role role, String displayName, String? phone, bool isActive, DateTime? createdAt
+ String id, String businessId, String authUserId, Role role, String displayName, String? phone, bool isActive, bool mustChangePassword, DateTime? createdAt
 });
 
 
@@ -65,7 +65,7 @@ class _$MemberCopyWithImpl<$Res>
 
 /// Create a copy of Member
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? authUserId = null,Object? role = null,Object? displayName = null,Object? phone = freezed,Object? isActive = null,Object? createdAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? authUserId = null,Object? role = null,Object? displayName = null,Object? phone = freezed,Object? isActive = null,Object? mustChangePassword = null,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
@@ -74,6 +74,7 @@ as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non
 as Role,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
 as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
@@ -160,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String authUserId,  Role role,  String displayName,  String? phone,  bool isActive,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String authUserId,  Role role,  String displayName,  String? phone,  bool isActive,  bool mustChangePassword,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Member() when $default != null:
-return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.displayName,_that.phone,_that.isActive,_that.createdAt);case _:
+return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.displayName,_that.phone,_that.isActive,_that.mustChangePassword,_that.createdAt);case _:
   return orElse();
 
 }
@@ -181,10 +182,10 @@ return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.disp
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String authUserId,  Role role,  String displayName,  String? phone,  bool isActive,  DateTime? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String authUserId,  Role role,  String displayName,  String? phone,  bool isActive,  bool mustChangePassword,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Member():
-return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.displayName,_that.phone,_that.isActive,_that.createdAt);case _:
+return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.displayName,_that.phone,_that.isActive,_that.mustChangePassword,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +202,10 @@ return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.disp
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String authUserId,  Role role,  String displayName,  String? phone,  bool isActive,  DateTime? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String authUserId,  Role role,  String displayName,  String? phone,  bool isActive,  bool mustChangePassword,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Member() when $default != null:
-return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.displayName,_that.phone,_that.isActive,_that.createdAt);case _:
+return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.displayName,_that.phone,_that.isActive,_that.mustChangePassword,_that.createdAt);case _:
   return null;
 
 }
@@ -216,7 +217,7 @@ return $default(_that.id,_that.businessId,_that.authUserId,_that.role,_that.disp
 @JsonSerializable()
 
 class _Member implements Member {
-  const _Member({required this.id, required this.businessId, required this.authUserId, required this.role, required this.displayName, this.phone, this.isActive = true, this.createdAt});
+  const _Member({required this.id, required this.businessId, required this.authUserId, required this.role, required this.displayName, this.phone, this.isActive = true, this.mustChangePassword = false, this.createdAt});
   factory _Member.fromJson(Map<String, dynamic> json) => _$MemberFromJson(json);
 
 @override final  String id;
@@ -226,6 +227,7 @@ class _Member implements Member {
 @override final  String displayName;
 @override final  String? phone;
 @override@JsonKey() final  bool isActive;
+@override@JsonKey() final  bool mustChangePassword;
 @override final  DateTime? createdAt;
 
 /// Create a copy of Member
@@ -241,16 +243,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Member&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.authUserId, authUserId) || other.authUserId == authUserId)&&(identical(other.role, role) || other.role == role)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Member&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.authUserId, authUserId) || other.authUserId == authUserId)&&(identical(other.role, role) || other.role == role)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.mustChangePassword, mustChangePassword) || other.mustChangePassword == mustChangePassword)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,authUserId,role,displayName,phone,isActive,createdAt);
+int get hashCode => Object.hash(runtimeType,id,businessId,authUserId,role,displayName,phone,isActive,mustChangePassword,createdAt);
 
 @override
 String toString() {
-  return 'Member(id: $id, businessId: $businessId, authUserId: $authUserId, role: $role, displayName: $displayName, phone: $phone, isActive: $isActive, createdAt: $createdAt)';
+  return 'Member(id: $id, businessId: $businessId, authUserId: $authUserId, role: $role, displayName: $displayName, phone: $phone, isActive: $isActive, mustChangePassword: $mustChangePassword, createdAt: $createdAt)';
 }
 
 
@@ -261,7 +263,7 @@ abstract mixin class _$MemberCopyWith<$Res> implements $MemberCopyWith<$Res> {
   factory _$MemberCopyWith(_Member value, $Res Function(_Member) _then) = __$MemberCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String businessId, String authUserId, Role role, String displayName, String? phone, bool isActive, DateTime? createdAt
+ String id, String businessId, String authUserId, Role role, String displayName, String? phone, bool isActive, bool mustChangePassword, DateTime? createdAt
 });
 
 
@@ -278,7 +280,7 @@ class __$MemberCopyWithImpl<$Res>
 
 /// Create a copy of Member
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? authUserId = null,Object? role = null,Object? displayName = null,Object? phone = freezed,Object? isActive = null,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? authUserId = null,Object? role = null,Object? displayName = null,Object? phone = freezed,Object? isActive = null,Object? mustChangePassword = null,Object? createdAt = freezed,}) {
   return _then(_Member(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
@@ -287,6 +289,7 @@ as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non
 as Role,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
 as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,mustChangePassword: null == mustChangePassword ? _self.mustChangePassword : mustChangePassword // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));

@@ -1209,4 +1209,129 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get submitReturn => 'फिर्ता पेश गर्नुहोस्';
+
+  @override
+  String get emailOrPhone => 'इमेल वा फोन नम्बर';
+
+  @override
+  String get invalidEmailOrPhone => 'मान्य इमेल वा फोन नम्बर लेख्नुहोस्';
+
+  @override
+  String get forgotPassword => 'पासवर्ड बिर्सनुभयो?';
+
+  @override
+  String get resetPasswordEmailHint =>
+      'आफ्नो खाताको इमेल लेख्नुहोस्, हामी पासवर्ड रिसेट लिंक पठाउँछौं।';
+
+  @override
+  String get sendResetLink => 'रिसेट लिंक पठाउनुहोस्';
+
+  @override
+  String get resetEmailSent =>
+      'पासवर्ड रिसेट इमेल पठाइयो। आफ्नो इनबक्स हेर्नुहोस्।';
+
+  @override
+  String get resetPassword => 'पासवर्ड रिसेट';
+
+  @override
+  String resetPasswordFor(String name) {
+    return '$name को पासवर्ड रिसेट गर्नुहोस्';
+  }
+
+  @override
+  String get temporaryPassword => 'अस्थायी पासवर्ड';
+
+  @override
+  String get temporaryPasswordHint =>
+      'यो पासवर्ड सदस्यलाई दिनुहोस्। अर्को लगइनमा नयाँ पासवर्ड रोज्नुपर्छ।';
+
+  @override
+  String get passwordResetDone =>
+      'पासवर्ड रिसेट भयो। पुराना सेसनहरू साइन आउट गरियो।';
+
+  @override
+  String get newPassword => 'नयाँ पासवर्ड';
+
+  @override
+  String get confirmPassword => 'पासवर्ड पुष्टि गर्नुहोस्';
+
+  @override
+  String get passwordsDoNotMatch => 'पासवर्डहरू मिलेनन्';
+
+  @override
+  String get passwordTooShort => 'पासवर्ड कम्तीमा ८ अक्षरको हुनुपर्छ';
+
+  @override
+  String get changePassword => 'पासवर्ड परिवर्तन';
+
+  @override
+  String get passwordChanged => 'पासवर्ड अद्यावधिक भयो';
+
+  @override
+  String get setNewPasswordTitle => 'नयाँ पासवर्ड सेट गर्नुहोस्';
+
+  @override
+  String get setNewPasswordHint =>
+      'व्यवसाय मालिकले तपाईंको पासवर्ड रिसेट गर्नुभयो। जारी राख्न नयाँ पासवर्ड रोज्नुहोस्।';
+
+  @override
+  String get account => 'खाता';
+
+  @override
+  String get deleteAccount => 'मेरो खाता मेटाउनुहोस्';
+
+  @override
+  String get deleteAccountWarning =>
+      'यसले तपाईंको लगइन स्थायी रूपमा मेटाउँछ। अर्डर र भुक्तानी रेकर्ड व्यवसायसँग रहन्छ। यो फिर्ता गर्न सकिँदैन।';
+
+  @override
+  String get deleteBusiness => 'व्यवसाय मेटाउनुहोस्';
+
+  @override
+  String get deleteBusinessWarning =>
+      'यसले व्यवसाय र सबै डाटा स्थायी रूपमा मेटाउँछ: उत्पादन, बिल, अर्डर, ग्राहक, र सबै लगइनहरू। यो फिर्ता गर्न सकिँदैन।';
+
+  @override
+  String typeToConfirm(String word) {
+    return 'पुष्टि गर्न $word लेख्नुहोस्';
+  }
+
+  @override
+  String get accountDeleted => 'खाता मेटाइयो';
+
+  @override
+  String get reorder => 'पुनः अर्डर';
+
+  @override
+  String get statement => 'विवरण';
+
+  @override
+  String get shareStatement => 'विवरण सेयर गर्नुहोस्';
+
+  @override
+  String get statementPeriod => 'अवधि';
+
+  @override
+  String get statementDate => 'मिति';
+
+  @override
+  String get statementDescription => 'विवरण';
+
+  @override
+  String get rangeLast30Days => 'पछिल्लो ३० दिन';
+
+  @override
+  String get rangeLast90Days => 'पछिल्लो ९० दिन';
+
+  @override
+  String get rangeAllTime => 'सबै समय';
+
+  @override
+  String get closingBalance => 'अन्तिम मौज्दात';
+
+  @override
+  String get shareAsImage => 'फोटोको रूपमा सेयर';
+
+  @override
+  String get shareAsPdf => 'PDF को रूपमा सेयर';
 }

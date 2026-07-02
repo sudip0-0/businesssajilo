@@ -62,6 +62,41 @@ class AuthRepository {
     await client.auth.signInWithPassword(email: email, password: password);
   }
 
+  /// Sends a password recovery email (owner self-service reset).
+  Future<void> sendPasswordResetEmail(String email) async {
+    final client = _requireClient();
+    await client.auth.resetPasswordForEmail(email);
+  }
+
+  /// Sets a new password for the signed-in user and clears the
+  /// owner-initiated forced-change flag.
+  Future<void> updateOwnPassword(String newPassword) async {
+    final client = _requireClient();
+    await client.auth.updateUser(UserAttributes(password: newPassword));
+    await client.rpc('clear_must_change_password');
+  }
+
+  /// Deletes the current account via the `delete-account` Edge Function.
+  /// [deleteBusiness] is only valid for owners and purges the whole tenant.
+  Future<void> deleteAccount({bool deleteBusiness = false}) async {
+    final client = _requireClient();
+    final response = await client.functions.invoke(
+      'delete-account',
+      body: {'mode': deleteBusiness ? 'business' : 'self'},
+    );
+    if (response.status != 200) {
+      final data = response.data;
+      final message = data is Map ? data['error']?.toString() : null;
+      throw AuthException(message ?? 'Account deletion failed');
+    }
+    // Local session is now orphaned; sign out best-effort.
+    try {
+      await client.auth.signOut();
+    } catch (_) {
+      // The auth user no longer exists; ignore sign-out errors.
+    }
+  }
+
   Future<void> signOut() async {
     final client = _client;
     if (client == null) return;

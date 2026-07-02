@@ -2419,6 +2419,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submit return'**
   String get submitReturn;
+
+  /// No description provided for @emailOrPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or phone number'**
+  String get emailOrPhone;
+
+  /// No description provided for @invalidEmailOrPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email or phone number'**
+  String get invalidEmailOrPhone;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @resetPasswordEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your account email and we\'ll send a password reset link.'**
+  String get resetPasswordEmailHint;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get sendResetLink;
+
+  /// No description provided for @resetEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset email sent. Check your inbox.'**
+  String get resetEmailSent;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get resetPassword;
+
+  /// No description provided for @resetPasswordFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password for {name}'**
+  String resetPasswordFor(String name);
+
+  /// No description provided for @temporaryPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary password'**
+  String get temporaryPassword;
+
+  /// No description provided for @temporaryPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this password with the member. They must choose a new one on next login.'**
+  String get temporaryPasswordHint;
+
+  /// No description provided for @passwordResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset. Existing sessions were signed out.'**
+  String get passwordResetDone;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get passwordTooShort;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePassword;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated'**
+  String get passwordChanged;
+
+  /// No description provided for @setNewPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a new password'**
+  String get setNewPasswordTitle;
+
+  /// No description provided for @setNewPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was reset by the business owner. Choose a new password to continue.'**
+  String get setNewPasswordHint;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your login. Order and payment records stay with the business. This cannot be undone.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete business'**
+  String get deleteBusiness;
+
+  /// No description provided for @deleteBusinessWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes the business and ALL its data: products, bills, orders, customers, and every staff and customer login. This cannot be undone.'**
+  String get deleteBusinessWarning;
+
+  /// No description provided for @typeToConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word} to confirm'**
+  String typeToConfirm(String word);
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get accountDeleted;
+
+  /// No description provided for @reorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder'**
+  String get reorder;
+
+  /// No description provided for @statement.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement'**
+  String get statement;
+
+  /// No description provided for @shareStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Share statement'**
+  String get shareStatement;
+
+  /// No description provided for @statementPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get statementPeriod;
+
+  /// No description provided for @statementDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get statementDate;
+
+  /// No description provided for @statementDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get statementDescription;
+
+  /// No description provided for @rangeLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get rangeLast30Days;
+
+  /// No description provided for @rangeLast90Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 90 days'**
+  String get rangeLast90Days;
+
+  /// No description provided for @rangeAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get rangeAllTime;
+
+  /// No description provided for @closingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing balance'**
+  String get closingBalance;
+
+  /// No description provided for @shareAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as image'**
+  String get shareAsImage;
+
+  /// No description provided for @shareAsPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as PDF'**
+  String get shareAsPdf;
 }
 
 class _AppLocalizationsDelegate

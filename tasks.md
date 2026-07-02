@@ -78,7 +78,22 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Play Store + App Store listings, web deploy to prod
 - ✅ Onboarding tour + seed/demo data for new businesses
 
-## Backlog (post-v1, see product.md roadmap)
-- PDF invoices + thermal printing · sales returns · Excel export
-- Price tiers · supplier purchases · multi-warehouse · unit conversions · batch/expiry
+## Phase 10 — Post-v1 Increments (shipped)
+- ✅ Security & integrity hardening (migration 10): bill_sequences lockdown, cross-tenant FK guards, transactional billing/quoting RPCs, bill status lifecycle, composite indexes, NPT report timezones
+- ✅ Credit notes / sales returns (migration 11): per-business CN numbering, optional restock (`return` stock movement), ledger & report integration (`lib/features/billing/credit_note_*`)
+- ✅ Invoice export & share: PDF + image builders, OS share sheet (`lib/core/invoicing/`)
+- ✅ Report CSV export: sales summary, dues aging, stock valuation (`lib/core/export/`)
+
+## Phase 11 — Launch Hardening (pre-release blockers + quick wins)
+- ✅ T-101 Password reset: forgot-password email flow (login screens) + `reset-member-password` Edge Function (owner resets any member from staff list / customer detail; sessions revoked; forced change on next login via `/change-password` router guard); pgTAP tests in `rls_phase12_launch_hardening_test.sql`
+- ✅ T-102 Phone-number login: login accepts email or phone (`core/utils/login_identifier.dart` ↔ synthetic email in `create-member`); email now optional on member/customer creation; phone normalized to `+977…` and globally unique (`members_phone_unique_idx`)
+- ✅ T-103 Account deletion (store compliance): `delete-account` Edge Function — customer/staff self-delete (anonymize, financial snapshots retained) + owner business purge (`purge_business` incl. storage cleanup, type-DELETE-to-confirm); account menu in customer shell, settings tiles for owner; privacy policy updated
+- ✅ T-104 Reorder from past order: one-tap cart prefill from order detail, inactive products skipped with notice
+- ✅ T-105 Shareable customer statement: 30/90-day/all-time ledger statement (BS+AD dates, opening/closing balance) as PDF/image via share sheet; totals invariant covered by `statement_document_test.dart`
+- ✅ T-108 Registration hardening: min password length 8 (config + all validators); prod captcha/CORS/leaked-password steps documented in `docs/SECURITY.md` checklist (dashboard-side, do before launch)
+
+## Backlog (post-launch, see product.md roadmap)
+- Bill-level payment allocation (oldest-first auto-allocation; accurate aging) · quote expiry + stale-order nudges · dues reminders (push) · last-quoted-rate memory per customer
+- Server-side report aggregation (Postgres RPCs) · client image compression before upload
+- Thermal printing · price tiers · supplier purchases · multi-warehouse · unit conversions · batch/expiry
 - Payment gateways (eSewa/Khalti) · SMS reminders · subscriptions/feature gating · VAT mode

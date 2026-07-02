@@ -25,8 +25,10 @@ class MembersRepository {
         .toList();
   }
 
+  /// [email] may be omitted when [phone] is given; the Edge Function then
+  /// derives a synthetic login email from the phone number.
   Future<({String memberId, String? customerId})> createMember({
-    required String email,
+    String? email,
     required String password,
     required Role role,
     required String displayName,
@@ -40,7 +42,7 @@ class MembersRepository {
     final response = await client.functions.invoke(
       'create-member',
       body: {
-        'email': email,
+        'email': ?email,
         'password': password,
         'role': role.name,
         'displayName': displayName,
@@ -63,6 +65,27 @@ class MembersRepository {
       memberId: data['memberId'] as String,
       customerId: data['customerId'] as String?,
     );
+  }
+
+  /// Owner sets a temporary password for a member (staff or customer).
+  /// The member is forced to choose a new password on next login.
+  Future<void> resetMemberPassword({
+    required String memberId,
+    required String newPassword,
+  }) async {
+    final client = _requireClient();
+    final response = await client.functions.invoke(
+      'reset-member-password',
+      body: {
+        'memberId': memberId,
+        'newPassword': newPassword,
+      },
+    );
+    if (response.status != 200) {
+      final data = response.data;
+      final message = data is Map ? data['error']?.toString() : null;
+      throw Exception(message ?? 'Failed to reset password');
+    }
   }
 
   Future<void> deactivateMember(String memberId) async {

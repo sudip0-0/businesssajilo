@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/ledger_balance.dart';
 import '../../domain/enums.dart';
@@ -40,7 +40,7 @@ abstract class CustomersRepository {
     required int openingBalance,
   });
   Future<Customer> createWithCredentials({
-    required String email,
+    String? email,
     required String password,
     required String displayName,
     required String shopName,
@@ -150,7 +150,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
 
   @override
   Future<Customer> createWithCredentials({
-    required String email,
+    String? email,
     required String password,
     required String displayName,
     required String shopName,

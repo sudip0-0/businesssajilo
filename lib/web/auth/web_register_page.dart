@@ -214,7 +214,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                       obscureText: _obscurePassword,
                       validator: (v) {
                         if (v == null || v.isEmpty) return l10n.fieldRequired;
-                        if (v.length < 6) return l10n.weakPassword;
+                        if (v.length < 8) return l10n.passwordTooShort;
                         return null;
                       },
                     ),

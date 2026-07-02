@@ -14,6 +14,7 @@ _Member _$MemberFromJson(Map<String, dynamic> json) => _Member(
   displayName: json['display_name'] as String,
   phone: json['phone'] as String?,
   isActive: json['is_active'] as bool? ?? true,
+  mustChangePassword: json['must_change_password'] as bool? ?? false,
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
@@ -27,6 +28,7 @@ Map<String, dynamic> _$MemberToJson(_Member instance) => <String, dynamic>{
   'display_name': instance.displayName,
   'phone': instance.phone,
   'is_active': instance.isActive,
+  'must_change_password': instance.mustChangePassword,
   'created_at': instance.createdAt?.toIso8601String(),
 };
 

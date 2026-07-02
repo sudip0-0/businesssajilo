@@ -9,6 +9,7 @@ import '../../core/utils/role_label.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/member.dart';
+import 'reset_member_password_sheet.dart';
 
 final staffListProvider = FutureProvider.autoDispose<List<Member>>((ref) {
   return ref.watch(membersRepositoryProvider).listMembers();
@@ -55,10 +56,24 @@ class StaffListScreen extends ConsumerWidget {
               ),
               trailing: member.role == Role.owner
                   ? Chip(label: Text(l10n.roleOwner))
-                  : IconButton(
-                      tooltip: l10n.deactivate,
-                      icon: const Icon(Icons.person_off_outlined),
-                      onPressed: () => _deactivate(context, ref, member),
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: l10n.resetPassword,
+                          icon: const Icon(Icons.lock_reset_outlined),
+                          onPressed: () => showResetMemberPasswordSheet(
+                            context,
+                            memberId: member.id,
+                            memberName: member.displayName,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: l10n.deactivate,
+                          icon: const Icon(Icons.person_off_outlined),
+                          onPressed: () => _deactivate(context, ref, member),
+                        ),
+                      ],
                     ),
             );
           },

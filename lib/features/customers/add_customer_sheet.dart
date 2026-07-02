@@ -7,6 +7,7 @@ import '../../core/ui/bs_form_section.dart';
 import '../../core/ui/bs_success_button.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
+import '../auth/login_screen.dart' show emailRegex;
 
 const _nepalCities = [
   'Kathmandu',
@@ -78,7 +79,9 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
     });
     try {
       await ref.read(customersRepositoryProvider).createWithCredentials(
-            email: _emailController.text.trim(),
+            email: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
             password: _passwordController.text,
             displayName: _displayNameController.text.trim(),
             shopName: _shopNameController.text.trim(),
@@ -181,20 +184,27 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                     v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
               ),
               const SizedBox(height: 12),
+              // Email optional: phone doubles as the login identifier.
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: '${l10n.email} *'),
+                decoration: InputDecoration(labelText: l10n.email),
                 keyboardType: TextInputType.emailAddress,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return null;
+                  if (!emailRegex.hasMatch(v.trim())) return l10n.invalidEmail;
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: '${l10n.password} *'),
                 obscureText: true,
-                validator: (v) =>
-                    v == null || v.isEmpty ? l10n.fieldRequired : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return l10n.fieldRequired;
+                  if (v.length < 8) return l10n.passwordTooShort;
+                  return null;
+                },
               ),
               Text(
                 l10n.portalAccessHint,

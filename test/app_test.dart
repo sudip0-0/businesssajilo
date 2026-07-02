@@ -8,6 +8,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sign in'), findsOneWidget);
-    expect(find.text('Email'), findsOneWidget);
+    expect(find.text('Email or phone number'), findsOneWidget);
   });
 }

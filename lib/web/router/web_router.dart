@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/mobile_router.dart';
 import '../../core/router/router_keys.dart';
+import '../../features/auth/change_password_screen.dart';
 import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/onboarding/owner_onboarding_overlay.dart';
@@ -64,6 +65,12 @@ final webRouterProvider = Provider<GoRouter>((ref) {
       final role = session.member!.role;
       final home = webRoleHomePath(role);
 
+      // Owner reset this member's password: block the app until changed.
+      if (session.mustChangePassword) {
+        return path == '/change-password' ? null : '/change-password';
+      }
+      if (path == '/change-password') return home;
+
       if (isAuthRoute || path == '/') return home;
       if (!webPathAllowedForRole(path, role)) return home;
 
@@ -79,6 +86,10 @@ final webRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, _) => const RouterSplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const WebLoginPage()),
       GoRoute(path: '/register', builder: (_, _) => const WebRegisterPage()),
+      GoRoute(
+        path: '/change-password',
+        builder: (_, _) => const ForcedChangePasswordScreen(),
+      ),
       GoRoute(
         path: '/notifications',
         builder: (_, _) => const WebNotificationsPage(),

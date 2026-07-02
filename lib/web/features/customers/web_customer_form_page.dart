@@ -7,6 +7,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
+import '../../../features/auth/login_screen.dart' show emailRegex;
 import '../../../features/customers/providers.dart';
 import '../../ui/web_form_card.dart';
 import '../web_page_scaffold.dart';
@@ -76,7 +77,9 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
     setState(() => _loading = true);
     try {
       await ref.read(customersRepositoryProvider).createWithCredentials(
-            email: _emailController.text.trim(),
+            email: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
             password: _passwordController.text,
             displayName: _displayNameController.text.trim().isEmpty
                 ? _contactNameController.text.trim()
@@ -185,16 +188,21 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                             ? l10n.fieldRequired
                             : null,
                       ),
+                      // Email optional: phone doubles as the login identifier.
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          labelText: '${l10n.emailAddress} *',
+                          labelText: l10n.emailAddress,
                           hintText: 'customer@example.com',
                         ),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? l10n.fieldRequired
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          if (!emailRegex.hasMatch(v.trim())) {
+                            return l10n.invalidEmail;
+                          }
+                          return null;
+                        },
                       ),
                     ],
                   ),
@@ -264,8 +272,11 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                           labelText: '${l10n.password} *',
                         ),
                         obscureText: true,
-                        validator: (v) =>
-                            v == null || v.isEmpty ? l10n.fieldRequired : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return l10n.fieldRequired;
+                          if (v.length < 8) return l10n.passwordTooShort;
+                          return null;
+                        },
                       ),
                     ],
                   ),

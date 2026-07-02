@@ -54,7 +54,7 @@ supabase test db               # RLS policy tests
 
 ## Status
 
-Phase 0 complete. Phase 1 (auth, roles, staff management) implemented against local Supabase — see [tasks.md](tasks.md).
+Phases 0–10 complete: full v1 (auth/roles, inventory, ledger, billing, orders/quotes/chat, notifications, offline sync, reports, release polish) plus credit notes, invoice PDF/image export, and report CSV export. Current work: Phase 11 — Launch Hardening (password reset, phone login, account deletion, reorder, statement share, registration captcha) — see [tasks.md](tasks.md).
 
 ## License
 

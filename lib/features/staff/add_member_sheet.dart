@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/role_label.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../domain/enums.dart';
+import '../auth/login_screen.dart' show emailRegex;
 
 class AddMemberSheet extends ConsumerStatefulWidget {
   const AddMemberSheet({super.key});
@@ -47,7 +48,9 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
     });
     try {
       await ref.read(membersRepositoryProvider).createMember(
-            email: _emailController.text.trim(),
+            email: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
             password: _passwordController.text,
             role: _role,
             displayName: _displayNameController.text.trim(),
@@ -117,20 +120,33 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
                     v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
               ),
               const SizedBox(height: 12),
+              // Email or phone is required; phone doubles as a login
+              // identifier when email is left empty.
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: l10n.email),
                 keyboardType: TextInputType.emailAddress,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+                validator: (v) {
+                  final email = v?.trim() ?? '';
+                  if (email.isEmpty) {
+                    return _phoneController.text.trim().isEmpty
+                        ? l10n.fieldRequired
+                        : null;
+                  }
+                  if (!emailRegex.hasMatch(email)) return l10n.invalidEmail;
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(labelText: l10n.password),
                 obscureText: true,
-                validator: (v) =>
-                    v == null || v.length < 6 ? l10n.fieldRequired : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return l10n.fieldRequired;
+                  if (v.length < 8) return l10n.passwordTooShort;
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(

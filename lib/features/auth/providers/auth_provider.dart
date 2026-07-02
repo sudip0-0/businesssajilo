@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/notifications/push_service_provider.dart';
+import '../../../core/utils/login_identifier.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/sync/sync_providers.dart';
 import '../../../domain/models/session_state.dart';
@@ -54,11 +55,13 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     if (session != null) _startSessionSideEffects(session);
   }
 
-  Future<void> signIn(String email, String password) async {
+  /// [identifier] may be an email address or a Nepali phone number
+  /// (phone-created accounts use a synthetic email under the hood).
+  Future<void> signIn(String identifier, String password) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(authRepositoryProvider).signIn(
-            email: email.trim(),
+            email: loginEmailForIdentifier(identifier),
             password: password,
           );
       return ref.read(authRepositoryProvider).loadSession();
@@ -66,6 +69,33 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     if (state.hasError) throw state.error!;
     final session = state.value;
     if (session != null) _startSessionSideEffects(session);
+  }
+
+  Future<void> sendPasswordResetEmail(String email) {
+    return ref.read(authRepositoryProvider).sendPasswordResetEmail(email.trim());
+  }
+
+  /// Sets a new password for the signed-in member and refreshes the session
+  /// so the forced-change flag clears.
+  Future<void> updateOwnPassword(String newPassword) async {
+    await ref.read(authRepositoryProvider).updateOwnPassword(newPassword);
+    await _reload();
+    if (state.hasError) throw state.error!;
+  }
+
+  /// Deletes the account (or entire business for owners) and clears session.
+  Future<void> deleteAccount({bool deleteBusiness = false}) async {
+    try {
+      await ref.read(pushServiceProvider).unregister();
+    } catch (e) {
+      debugPrint('Push unregister failed: $e');
+    }
+    await ref.read(authRepositoryProvider).deleteAccount(
+          deleteBusiness: deleteBusiness,
+        );
+    await disposeSyncBundle();
+    ref.read(syncBundleVersionProvider.notifier).bump();
+    state = const AsyncValue.data(SessionState.empty);
   }
 
   Future<void> signOut() async {

@@ -464,5 +464,57 @@
   "returnsOnlineOnly": "Returns require an internet connection",
   "noReturnableQty": "No returnable quantity remaining on this bill",
   "returnQtyExceeds": "Return quantity exceeds remaining quantity",
-  "submitReturn": "Submit return"
+  "submitReturn": "Submit return",
+  "emailOrPhone": "Email or phone number",
+  "invalidEmailOrPhone": "Enter a valid email or phone number",
+  "forgotPassword": "Forgot password?",
+  "resetPasswordEmailHint": "Enter your account email and we'll send a password reset link.",
+  "sendResetLink": "Send reset link",
+  "resetEmailSent": "Password reset email sent. Check your inbox.",
+  "resetPassword": "Reset password",
+  "resetPasswordFor": "Reset password for {name}",
+  "@resetPasswordFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "temporaryPassword": "Temporary password",
+  "temporaryPasswordHint": "Share this password with the member. They must choose a new one on next login.",
+  "passwordResetDone": "Password reset. Existing sessions were signed out.",
+  "newPassword": "New password",
+  "confirmPassword": "Confirm password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "changePassword": "Change password",
+  "passwordChanged": "Password updated",
+  "setNewPasswordTitle": "Set a new password",
+  "setNewPasswordHint": "Your password was reset by the business owner. Choose a new password to continue.",
+  "account": "Account",
+  "deleteAccount": "Delete my account",
+  "deleteAccountWarning": "This permanently deletes your login. Order and payment records stay with the business. This cannot be undone.",
+  "deleteBusiness": "Delete business",
+  "deleteBusinessWarning": "This permanently deletes the business and ALL its data: products, bills, orders, customers, and every staff and customer login. This cannot be undone.",
+  "typeToConfirm": "Type {word} to confirm",
+  "@typeToConfirm": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "accountDeleted": "Account deleted",
+  "reorder": "Reorder",
+  "statement": "Statement",
+  "shareStatement": "Share statement",
+  "statementPeriod": "Period",
+  "statementDate": "Date",
+  "statementDescription": "Description",
+  "rangeLast30Days": "Last 30 days",
+  "rangeLast90Days": "Last 90 days",
+  "rangeAllTime": "All time",
+  "closingBalance": "Closing balance",
+  "shareAsImage": "Share as image",
+  "shareAsPdf": "Share as PDF"
 }

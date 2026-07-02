@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../../features/auth/change_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -40,6 +41,12 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
       final role = session.member!.role;
       final home = roleHomePath(role);
 
+      // Owner reset this member's password: block the app until changed.
+      if (session.mustChangePassword) {
+        return path == '/change-password' ? null : '/change-password';
+      }
+      if (path == '/change-password') return home;
+
       if (isAuthRoute || path == '/') return home;
       if (!pathAllowedForRole(path, role)) return home;
       return null;
@@ -49,6 +56,10 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, _) => const RouterSplashScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(
+        path: '/change-password',
+        builder: (_, _) => const ForcedChangePasswordScreen(),
+      ),
       GoRoute(path: '/owner', builder: (_, _) => const OwnerShell()),
       GoRoute(path: '/sales', builder: (_, _) => const SalesShell()),
       GoRoute(path: '/warehouse', builder: (_, _) => const WarehouseShell()),

@@ -6,6 +6,9 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/auth_errors.dart';
+import '../../core/utils/login_identifier.dart';
+import '../../web/ui/web_sheet_bridge.dart';
+import 'forgot_password_sheet.dart';
 import 'providers/auth_provider.dart';
 
 final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -97,15 +100,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,
-                      decoration: InputDecoration(labelText: l10n.email),
+                      decoration: InputDecoration(labelText: l10n.emailOrPhone),
                       keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
+                      autofillHints: const [AutofillHints.username],
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
                           return l10n.fieldRequired;
                         }
-                        if (!emailRegex.hasMatch(v.trim())) {
-                          return l10n.invalidEmail;
+                        if (!isValidLoginIdentifier(v)) {
+                          return l10n.invalidEmailOrPhone;
                         }
                         return null;
                       },
@@ -133,6 +136,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       autofillHints: const [AutofillHints.password],
                       validator: (v) =>
                           v == null || v.isEmpty ? l10n.fieldRequired : null,
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          final identifier = _emailController.text.trim();
+                          showAdaptiveSheet<void>(
+                            context: context,
+                            title: l10n.resetPassword,
+                            child: ForgotPasswordSheet(
+                              initialEmail: identifier.contains('@')
+                                  ? identifier
+                                  : null,
+                            ),
+                          );
+                        },
+                        child: Text(l10n.forgotPassword),
+                      ),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),

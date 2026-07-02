@@ -8,6 +8,7 @@ import '../../../app.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../features/onboarding/demo_data_actions.dart';
 import '../../../features/onboarding/onboarding_prefs.dart';
+import '../../../features/settings/account_section.dart';
 import '../../../features/sync/pending_sync_screen.dart';
 import '../../theme/web_tokens.dart';
 import '../web_page_scaffold.dart';
@@ -137,6 +138,7 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
               ? null
               : Text(l10n.appVersion(_version!)),
         ),
+        const AccountSettingsTiles(),
       ],
     );
 

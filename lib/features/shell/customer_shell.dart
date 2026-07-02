@@ -8,6 +8,7 @@ import '../customers/customer_ledger_screen.dart';
 import '../customers/providers.dart';
 import '../notifications/notification_bell_action.dart';
 import '../orders/catalog_screen.dart';
+import '../settings/account_section.dart';
 import '../orders/order_list_screen.dart';
 import '../orders/providers.dart';
 import 'logout_action.dart';
@@ -64,7 +65,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
       selectedIndex: _index,
       onDestinationSelected: (i) => setState(() => _index = i),
       titles: [l10n.dashboard, l10n.catalog, l10n.myOrders, l10n.myDues],
-      actions: const [NotificationBellAction(), LogoutAction()],
+      actions: const [NotificationBellAction(), AccountAction(), LogoutAction()],
       body: IndexedStack(
         index: _index,
         children: pages,

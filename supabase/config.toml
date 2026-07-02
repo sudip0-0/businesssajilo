@@ -179,10 +179,18 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""
+
+# Production: enable captcha (Turnstile recommended) in the hosted dashboard
+# or here when self-hosting, plus leaked-password protection. Kept disabled
+# locally so `supabase start` flows and tests run without captcha tokens.
+# [auth.captcha]
+# enabled = true
+# provider = "turnstile"
+# secret = "env(AUTH_CAPTCHA_SECRET)"
 
 # Configure passkey sign-ins.
 # [auth.passkey]
@@ -412,6 +420,12 @@ verify_jwt = true
 
 [functions.notify]
 verify_jwt = false
+
+[functions.reset-member-password]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
 
 # [experimental.pgdelta]
 # When enabled, pg-delta becomes the active engine for supported schema flows.

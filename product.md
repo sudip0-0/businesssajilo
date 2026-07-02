@@ -60,7 +60,8 @@ Order states: `draft → placed → quoted → accepted | rejected → confirmed
 - Itemized invoice: items, qty, rate, line discount, bill discount, grand total. No VAT/tax fields in v1.
 - Walk-in billing also supported (bill without prior order, for counter sales).
 - Bill numbering: per-business sequential (`BS-0001`), works offline (device prefix to avoid collisions, reconciled on sync).
-- PDF generation & share (Viber/WhatsApp/print) — v1.1.
+- Invoice PDF/image generation & share (Viber/WhatsApp) — **shipped**.
+- Sales returns via credit notes (per-business CN numbering, optional restock, ledger integration) — **shipped**.
 
 ### 5.3 Credit / Udharo & Ledger
 
@@ -86,6 +87,7 @@ Order states: `draft → placed → quoted → accepted | rejected → confirmed
 - Sales summary: daily / weekly / monthly, top products, top customers.
 - Outstanding dues with aging buckets (0–30 / 31–60 / 60+ days).
 - Stock valuation (qty × cost) and low-stock list.
+- CSV export & share for all reports — **shipped**.
 
 ## 6. Localization
 
@@ -120,11 +122,13 @@ Free during launch. Architecture keeps a `subscription` concept on the business 
 - Multi-business per user, accounting (P&L, balance sheet)
 - SMS notifications
 
-## 12. Roadmap (post-v1)
+## 12. Roadmap
 
-1. **v1.1** — PDF invoices + thermal print, sales returns/credit notes, Excel export.
-2. **v1.2** — Price tiers per customer, supplier purchases + supplier ledger.
-3. **v1.3** — Multi-warehouse, unit conversions, batch/expiry.
+Already shipped from the original v1.1 scope: PDF/image invoices, sales returns (credit notes), report CSV export.
+
+1. **Launch hardening (pre-release)** — password reset, phone-number login, account deletion (store compliance), reorder from past order, shareable customer statement, registration captcha. See tasks.md Phase 11.
+2. **v1.2** — Bill-level payment allocation, quote expiry + stale-order nudges, dues reminders (push), last-quoted-rate memory; thermal print only if pilot users ask.
+3. **v1.3** — Price tiers per customer, supplier purchases + supplier ledger, multi-warehouse, unit conversions, batch/expiry.
 4. **v2** — Payment gateways, SMS reminders (Sparrow SMS), subscriptions/feature gating, sales-person performance & route planning, VAT billing mode.
 
 ## 13. Success Metrics

@@ -15,6 +15,7 @@ import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../billing/customer_bill_list_screen.dart';
 import 'providers.dart';
+import 'statement_share_sheet.dart';
 
 class CustomerLedgerScreen extends ConsumerStatefulWidget {
   const CustomerLedgerScreen({super.key, this.showBillHistory = false});
@@ -123,6 +124,14 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
                     Expanded(
                       child: Text(l10n.ledger,
                           style: Theme.of(context).textTheme.titleMedium),
+                    ),
+                    IconButton(
+                      tooltip: l10n.shareStatement,
+                      onPressed: () => showStatementShareSheet(
+                        context,
+                        customer: customer,
+                      ),
+                      icon: const Icon(Icons.ios_share_outlined),
                     ),
                     IconButton(
                       tooltip: l10n.exportCsv,

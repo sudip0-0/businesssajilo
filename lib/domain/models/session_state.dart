@@ -10,5 +10,8 @@ class SessionState {
 
   bool get isAuthenticated => user != null && member != null && member!.isActive;
 
+  /// Owner reset this member's password; force a new one before app access.
+  bool get mustChangePassword => member?.mustChangePassword ?? false;
+
   static const empty = SessionState();
 }

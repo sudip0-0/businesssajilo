@@ -12,6 +12,31 @@ const allowedRoles = ["sales", "warehouse", "customer"] as const;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FIELD_LEN = 200;
 
+// Members without a real email log in by phone: the auth account is created
+// with a synthetic email derived from the normalized phone number. Must stay
+// in sync with lib/core/utils/login_identifier.dart.
+const PHONE_LOGIN_DOMAIN = "phone.businesssajilo.app";
+
+/** Normalizes a Nepali phone number to +977XXXXXXXXXX, or null if invalid. */
+function normalizePhone(raw: string): string | null {
+  const digits = raw.replace(/[\s\-()]/g, "").replace(/^\+/, "");
+  let local: string;
+  if (digits.startsWith("977")) {
+    local = digits.slice(3);
+  } else if (/^0\d{9,}$/.test(digits)) {
+    local = digits.slice(1);
+  } else {
+    local = digits;
+  }
+  if (!/^9\d{9}$/.test(local)) return null;
+  return `+977${local}`;
+}
+
+/** Synthetic auth email for phone-based logins: 98XXXXXXXX@phone.… */
+function phoneLoginEmail(normalizedPhone: string): string {
+  return `${normalizedPhone.slice(4)}@${PHONE_LOGIN_DOMAIN}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -61,21 +86,49 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid request body" }, 400);
   }
 
-  const email = str(body.email)?.trim().toLowerCase();
+  let email = str(body.email)?.trim().toLowerCase() || null;
   const password = str(body.password);
   const role = str(body.role);
   const displayName = str(body.displayName)?.trim();
-  const phone = str(body.phone)?.trim() || null;
+  const rawPhone = str(body.phone)?.trim() || null;
   const shopName = str(body.shopName)?.trim() || null;
   const contactName = str(body.contactName)?.trim() || null;
   const address = str(body.address)?.trim() || null;
   const openingBalance = body.openingBalance;
 
-  if (!email || !password || !role || !displayName) {
+  // Normalize phone if provided; it doubles as a login identifier.
+  let phone: string | null = null;
+  if (rawPhone) {
+    phone = normalizePhone(rawPhone);
+    if (!phone) {
+      return json({ error: "Invalid phone number" }, 400);
+    }
+  }
+
+  if (!password || !role || !displayName) {
     return json({ error: "Missing required fields" }, 400);
+  }
+  // Email is optional when a phone is given: derive a synthetic login email.
+  if (!email) {
+    if (!phone) {
+      return json({ error: "Email or phone number is required" }, 400);
+    }
+    email = phoneLoginEmail(phone);
   }
   if (!EMAIL_RE.test(email) || email.length > MAX_FIELD_LEN) {
     return json({ error: "Invalid email address" }, 400);
+  }
+  // Phone doubles as a global login identifier — enforce uniqueness early
+  // for a clear error (DB unique index is the backstop).
+  if (phone) {
+    const { data: phoneClash } = await supabaseAdmin
+      .from("members")
+      .select("id")
+      .eq("phone", phone)
+      .maybeSingle();
+    if (phoneClash) {
+      return json({ error: "Phone number already registered" }, 409);
+    }
   }
   if (password.length < 8 || password.length > 72) {
     return json({ error: "Password must be 8-72 characters" }, 400);

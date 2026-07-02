@@ -93,7 +93,7 @@ class CachedCustomersRepository implements CustomersRepository {
 
   @override
   Future<Customer> createWithCredentials({
-    required String email,
+    String? email,
     required String password,
     required String displayName,
     required String shopName,
