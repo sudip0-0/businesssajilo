@@ -28,7 +28,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   bool _loading = false;
-  final bool _obscurePassword = true;
+  bool _obscurePassword = true;
   String? _error;
 
   @override
@@ -213,7 +213,19 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     TextFormField(
                       controller: _passwordController,
                       style: const TextStyle(color: BsColors.text),
-                      decoration: InputDecoration(labelText: l10n.password),
+                      decoration: InputDecoration(
+                        labelText: l10n.password,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? PhosphorIconsRegular.eye
+                                : PhosphorIconsRegular.eyeSlash,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
+                      ),
                       obscureText: _obscurePassword,
                       validator: (v) {
                         if (v == null || v.isEmpty) return l10n.fieldRequired;

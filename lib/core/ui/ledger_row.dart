@@ -13,7 +13,10 @@ const _creditColumnWidth = 108.0;
 const _balanceColumnWidth = 108.0;
 
 double ledgerDateColumnWidth(BuildContext context) =>
-    isWideLayout(context) ? 200.0 : 132.0;
+    isWideLayout(context) ? 200.0 : 100.0;
+
+bool _isCompactLedger(BuildContext context) =>
+    MediaQuery.sizeOf(context).width < 600;
 
 /// Column headers aligned with [LedgerRow].
 class LedgerTableHeader extends StatelessWidget {
@@ -36,6 +39,7 @@ class LedgerTableHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme.labelSmall;
     final dateWidth = ledgerDateColumnWidth(context);
+    final compact = _isCompactLedger(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -50,16 +54,18 @@ class LedgerTableHeader extends StatelessWidget {
             child: Text(descriptionLabel, style: theme),
           ),
           const SizedBox(width: _descriptionAmountGap),
-          SizedBox(
-            width: _debitColumnWidth,
-            child: Text(debitLabel, style: theme, textAlign: TextAlign.end),
-          ),
-          const SizedBox(width: _amountColumnGap),
-          SizedBox(
-            width: _creditColumnWidth,
-            child: Text(creditLabel, style: theme, textAlign: TextAlign.end),
-          ),
-          const SizedBox(width: _amountColumnGap),
+          if (!compact) ...[
+            SizedBox(
+              width: _debitColumnWidth,
+              child: Text(debitLabel, style: theme, textAlign: TextAlign.end),
+            ),
+            const SizedBox(width: _amountColumnGap),
+            SizedBox(
+              width: _creditColumnWidth,
+              child: Text(creditLabel, style: theme, textAlign: TextAlign.end),
+            ),
+            const SizedBox(width: _amountColumnGap),
+          ],
           SizedBox(
             width: _balanceColumnWidth,
             child: Text(balanceLabel, style: theme, textAlign: TextAlign.end),
@@ -91,6 +97,7 @@ class LedgerRow extends StatelessWidget {
     final dateStr = BsDate.both(date, locale: Localizations.localeOf(context));
     final theme = Theme.of(context).textTheme;
     final dateWidth = ledgerDateColumnWidth(context);
+    final compact = _isCompactLedger(context);
 
     // Negative amounts flip columns: a negative debit (e.g. negative opening
     // balance) renders as a positive credit, and vice versa.
@@ -103,6 +110,7 @@ class LedgerRow extends StatelessWidget {
           (debit.value < 0 ? -debit.value : 0),
     );
     final isCreditBalance = runningBalance.value < 0;
+    final netChange = effectiveDebit.value - effectiveCredit.value;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -115,32 +123,52 @@ class LedgerRow extends StatelessWidget {
           ),
           const SizedBox(width: _dateDescriptionGap),
           Expanded(
-            child: Text(description, style: theme.bodyMedium),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(description, style: theme.bodyMedium),
+                if (compact && netChange != 0)
+                  Text(
+                    netChange > 0
+                        ? '+${formatNpr(Paisa(netChange), showPaisa: false)}'
+                        : '-${formatNpr(Paisa(-netChange), showPaisa: false)}',
+                    style: theme.bodySmall?.copyWith(
+                      color: netChange > 0
+                          ? BsColors.danger
+                          : BsColors.success,
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: _descriptionAmountGap),
-          SizedBox(
-            width: _debitColumnWidth,
-            child: effectiveDebit.value > 0
-                ? Text(
-                    // "+" prefix so debits aren't distinguished by color alone.
-                    '+${formatNpr(effectiveDebit, showPaisa: false)}',
-                    textAlign: TextAlign.end,
-                    style: theme.bodyMedium?.copyWith(color: BsColors.danger),
-                  )
-                : null,
-          ),
-          const SizedBox(width: _amountColumnGap),
-          SizedBox(
-            width: _creditColumnWidth,
-            child: effectiveCredit.value > 0
-                ? Text(
-                    '-${formatNpr(effectiveCredit, showPaisa: false)}',
-                    textAlign: TextAlign.end,
-                    style: theme.bodyMedium?.copyWith(color: BsColors.success),
-                  )
-                : null,
-          ),
-          const SizedBox(width: _amountColumnGap),
+          if (!compact) ...[
+            SizedBox(
+              width: _debitColumnWidth,
+              child: effectiveDebit.value > 0
+                  ? Text(
+                      // "+" prefix so debits aren't distinguished by color alone.
+                      '+${formatNpr(effectiveDebit, showPaisa: false)}',
+                      textAlign: TextAlign.end,
+                      style:
+                          theme.bodyMedium?.copyWith(color: BsColors.danger),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: _amountColumnGap),
+            SizedBox(
+              width: _creditColumnWidth,
+              child: effectiveCredit.value > 0
+                  ? Text(
+                      '-${formatNpr(effectiveCredit, showPaisa: false)}',
+                      textAlign: TextAlign.end,
+                      style:
+                          theme.bodyMedium?.copyWith(color: BsColors.success),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: _amountColumnGap),
+          ],
           SizedBox(
             width: _balanceColumnWidth,
             child: Align(

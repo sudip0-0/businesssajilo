@@ -23,7 +23,6 @@ import '../onboarding/owner_onboarding_overlay.dart';
 import '../sync/sync_badge_action.dart';
 import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
-import 'logout_action.dart';
 
 class OwnerShell extends ConsumerStatefulWidget {
   const OwnerShell({super.key});
@@ -173,7 +172,6 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         actions: const [
           SyncBadgeAction(),
           NotificationBellAction(),
-          LogoutAction(),
         ],
         body: body,
       floatingActionButton: switch (_index) {

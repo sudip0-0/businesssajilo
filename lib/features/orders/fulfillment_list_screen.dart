@@ -37,7 +37,7 @@ class FulfillmentListScreen extends ConsumerWidget {
               children: [
                 EmptyState(
                   icon: Icons.local_shipping_outlined,
-                  message: l10n.fulfillmentQueue,
+                  message: l10n.emptyFulfillment,
                 ),
               ],
             ),

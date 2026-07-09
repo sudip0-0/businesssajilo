@@ -86,7 +86,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                 loading: () => const WebListSkeleton(),
                 error: (_, _) => WebEmptyState(
                   message: l10n.loadingFailed,
-                  actionLabel: l10n.retrySync,
+                  actionLabel: l10n.tryAgain,
                   onAction: () => ref.invalidate(ordersProvider),
                   icon: PhosphorIconsRegular.warning,
                 ),
@@ -94,8 +94,15 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                   final filtered = _filterOrders(orders);
                   if (filtered.isEmpty) {
                     return WebEmptyState(
-                      message: l10n.noOrders,
+                      message: _query.isNotEmpty
+                          ? l10n.noSearchResults
+                          : l10n.noOrders,
                       icon: PhosphorIconsRegular.shoppingCart,
+                      actionLabel:
+                          _query.isNotEmpty ? l10n.clearSearch : null,
+                      onAction: _query.isNotEmpty
+                          ? () => setState(() => _query = '')
+                          : null,
                     );
                   }
 

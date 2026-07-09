@@ -1044,8 +1044,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get createNewBill => 'नयाँ बिल बनाउनुहोस्';
 
   @override
-  String get createBillSubtitle =>
-      'थोक अर्डरका लागि व्यावसायिक इन्भाइस बनाउनुहोस्।';
+  String get createBillSubtitle => 'नगद वा उधारो ग्राहकका लागि बिल बनाउनुहोस्।';
 
   @override
   String get saveAsDraft => 'ड्राफ्ट सुरक्षित गर्नुहोस्';
@@ -1343,4 +1342,26 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get shareAsPdf => 'PDF को रूपमा सेयर';
+
+  @override
+  String get enablePortalAccess => 'पोर्टल लगइन सक्षम गर्नुहोस्';
+
+  @override
+  String get moreDetails => 'थप विवरण';
+
+  @override
+  String get noSearchResults => 'कुनै मिल्दो परिणाम छैन';
+
+  @override
+  String get clearSearch => 'खोज हटाउनुहोस्';
+
+  @override
+  String get noRecentActivity => 'हालको गतिविधि छैन';
+
+  @override
+  String get emptyFulfillment => 'पूरा गर्नुपर्ने अर्डर छैन';
+
+  @override
+  String get syncErrorGeneric =>
+      'सिंक गर्न सकिएन। इन्टरनेट जाँच गरी फेरि प्रयास गर्नुहोस्।';
 }

@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../auth/providers/auth_provider.dart';
 import '../onboarding/demo_data_actions.dart';
 import '../onboarding/onboarding_prefs.dart';
 import '../sync/pending_sync_screen.dart';
@@ -129,6 +130,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               : Text(l10n.appVersion(_version!)),
         ),
         const AccountSettingsTiles(),
+        const Divider(height: 1),
+        ListTile(
+          leading: const Icon(Icons.logout),
+          title: Text(l10n.logout),
+          onTap: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(l10n.logout),
+                content: Text(l10n.logoutConfirm),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(l10n.cancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(l10n.logout),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true) {
+              await ref.read(authProvider.notifier).signOut();
+            }
+          },
+        ),
       ],
     );
   }

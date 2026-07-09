@@ -20,7 +20,6 @@ import '../features/dashboard/web_customer_dashboard_page.dart';
 import '../features/dashboard/web_owner_dashboard_page.dart';
 import '../features/dashboard/web_sales_dashboard_page.dart';
 import '../features/dashboard/web_warehouse_dashboard_page.dart';
-import '../features/inventory/web_product_detail_page.dart';
 import '../features/inventory/web_product_form_page.dart';
 import '../features/inventory/web_product_list_page.dart';
 import '../features/notifications/web_notifications_page.dart';
@@ -114,7 +113,8 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/inventory',
-        builder: (_, _) => const WebProductListPage(
+        builder: (_, state) => WebProductListPage(
+          selectedProductId: state.uri.queryParameters['id'],
           canEdit: true,
           canManageStock: true,
         ),
@@ -127,9 +127,10 @@ ShellRoute _ownerRoutes() {
           ),
           GoRoute(
             path: ':productId',
-            builder: (_, state) => WebProductDetailPage(
-              productId: state.pathParameters['productId']!,
-              inventoryListPath: '/owner/inventory',
+            builder: (_, state) => WebProductListPage(
+              selectedProductId: state.pathParameters['productId'],
+              canEdit: true,
+              canManageStock: true,
             ),
             routes: [
               GoRoute(
@@ -253,13 +254,14 @@ ShellRoute _salesRoutes() {
       ),
       GoRoute(
         path: '/sales/stock',
-        builder: (_, _) => const WebProductListPage(),
+        builder: (_, state) => WebProductListPage(
+          selectedProductId: state.uri.queryParameters['id'],
+        ),
         routes: [
           GoRoute(
             path: ':productId',
-            builder: (_, state) => WebProductDetailPage(
-              productId: state.pathParameters['productId']!,
-              inventoryListPath: '/sales/stock',
+            builder: (_, state) => WebProductListPage(
+              selectedProductId: state.pathParameters['productId'],
             ),
           ),
         ],
@@ -338,15 +340,16 @@ ShellRoute _warehouseRoutes() {
     routes: [
       GoRoute(
         path: '/warehouse/stock',
-        builder: (_, _) => const WebProductListPage(
+        builder: (_, state) => WebProductListPage(
+          selectedProductId: state.uri.queryParameters['id'],
           canManageStock: true,
         ),
         routes: [
           GoRoute(
             path: ':productId',
-            builder: (_, state) => WebProductDetailPage(
-              productId: state.pathParameters['productId']!,
-              inventoryListPath: '/warehouse/stock',
+            builder: (_, state) => WebProductListPage(
+              selectedProductId: state.pathParameters['productId'],
+              canManageStock: true,
             ),
           ),
         ],

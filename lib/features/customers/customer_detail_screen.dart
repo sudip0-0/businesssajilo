@@ -20,7 +20,6 @@ Future<void> _openRecordPaymentSheet(
   WidgetRef ref, {
   required String customerId,
   required String customerName,
-  bool popOnSuccess = false,
 }) async {
   final l10n = AppLocalizations.of(context);
   final saved = await showAdaptiveSheet<bool>(
@@ -36,9 +35,6 @@ Future<void> _openRecordPaymentSheet(
     ref.invalidate(customerLedgerProvider(customerId));
     ref.invalidate(customerListProvider);
     ref.invalidate(totalDuesProvider);
-    if (popOnSuccess && context.mounted) {
-      Navigator.pop(context, true);
-    }
   }
 }
 
@@ -80,6 +76,17 @@ class CustomerDetailScreen extends ConsumerWidget {
                   child: Wrap(
                     spacing: 8,
                     children: [
+                      if (canRecordPayments && customer.balanceDue > 0)
+                        FilledButton.icon(
+                          icon: const Icon(Icons.payments_outlined, size: 18),
+                          label: Text(l10n.recordPayment),
+                          onPressed: () => _openRecordPaymentSheet(
+                            context,
+                            ref,
+                            customerId: customerId,
+                            customerName: customer.shopName,
+                          ),
+                        ),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.ios_share_outlined, size: 18),
                         label: Text(l10n.shareStatement),
@@ -88,7 +95,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                           customer: customer,
                         ),
                       ),
-                      if (canRecordPayments)
+                      if (canRecordPayments && customer.balanceDue <= 0)
                         OutlinedButton.icon(
                           icon: const Icon(Icons.payments_outlined, size: 18),
                           label: Text(l10n.recordPayment),
@@ -263,7 +270,6 @@ class CustomerDetailScreen extends ConsumerWidget {
                   ref,
                   customerId: customerId,
                   customerName: customer.shopName,
-                  popOnSuccess: true,
                 );
               },
               icon: const Icon(Icons.payments_outlined),

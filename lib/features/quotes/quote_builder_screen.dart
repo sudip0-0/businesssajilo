@@ -107,10 +107,10 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
         );
         Navigator.pop(context, true);
       }
-    } on QuoteSendException catch (e) {
+    } on QuoteSendException catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
+          SnackBar(content: Text(l10n.actionFailed)),
         );
       }
     } catch (_) {

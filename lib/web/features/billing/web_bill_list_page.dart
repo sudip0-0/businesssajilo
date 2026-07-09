@@ -152,10 +152,13 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
       final results = _searchResults ?? const <Bill>[];
       if (results.isEmpty) {
         return WebEmptyState(
-          message: l10n.noBills,
+          message: l10n.noSearchResults,
           icon: PhosphorIconsRegular.receipt,
-          actionLabel: l10n.newBill,
-          onAction: () => context.push('${_webRolePrefix(context)}/billing/new'),
+          actionLabel: l10n.clearSearch,
+          onAction: () => setState(() {
+            _query = '';
+            _searchResults = null;
+          }),
         );
       }
       return ListView.separated(
@@ -178,7 +181,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     if (pager.error != null && pager.items.isEmpty) {
       return WebEmptyState(
         message: l10n.loadingFailed,
-        actionLabel: l10n.retrySync,
+        actionLabel: l10n.tryAgain,
         onAction: () => pager.refresh(),
         icon: PhosphorIconsRegular.warning,
       );

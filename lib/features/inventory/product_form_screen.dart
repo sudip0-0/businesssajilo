@@ -22,10 +22,10 @@ class ProductFormScreen extends ConsumerStatefulWidget {
   final bool embedded;
 
   @override
-  ConsumerState<ProductFormScreen> createState() => _ProductFormScreenState();
+  ConsumerState<ProductFormScreen> createState() => ProductFormScreenState();
 }
 
-class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
+class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _nameNpController;
@@ -91,6 +91,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     if (parsed == null || parsed.value < 0) return l10n.invalidNumber;
     return null;
   }
+
+  Future<void> submit() => _submit();
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -283,16 +285,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               },
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _loading ? null : _submit,
-              child: _loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.save),
-            ),
+            if (!widget.embedded)
+              FilledButton(
+                onPressed: _loading ? null : _submit,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.save),
+              ),
           ],
         ),
       ),

@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/customer.dart';
 import '../customers/providers.dart';
 
 class BillPaymentResult {
@@ -44,6 +45,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   String? _customerId;
   final _amountController = TextEditingController();
   final _refController = TextEditingController();
+  final _customerSearchController = TextEditingController();
   PaymentMethod _method = PaymentMethod.cash;
 
   @override
@@ -62,6 +64,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   void dispose() {
     _amountController.dispose();
     _refController.dispose();
+    _customerSearchController.dispose();
     super.dispose();
   }
 
@@ -125,11 +128,31 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     );
   }
 
+  List<Customer> _filterCustomers(List<Customer> customers, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return customers;
+    return customers.where((c) {
+      return c.shopName.toLowerCase().contains(q) ||
+          (c.contactName?.toLowerCase().contains(q) ?? false) ||
+          (c.phone?.contains(q) ?? false);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
     final customersAsync = ref.watch(customerListProvider);
+
+    // Prefill search label once customers load.
+    customersAsync.whenData((customers) {
+      if (_customerId != null && _customerSearchController.text.isEmpty) {
+        final match = customers.where((c) => c.id == _customerId).firstOrNull;
+        if (match != null) {
+          _customerSearchController.text = match.shopName;
+        }
+      }
+    });
 
     return Material(
       child: Padding(
@@ -181,25 +204,85 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                 value: _walkIn,
                 onChanged: (v) => setState(() {
                   _walkIn = v;
-                  if (v) _customerId = null;
+                  if (v) {
+                    _customerId = null;
+                    _customerSearchController.clear();
+                  }
                 }),
               ),
               if (!_walkIn)
                 customersAsync.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (e, _) => Text(l10n.loadingFailed),
-                  data: (customers) => DropdownButtonFormField<String>(
-                    decoration: InputDecoration(labelText: l10n.selectCustomer),
-                    initialValue: _customerId,
-                    items: customers
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.shopName),
+                  data: (customers) => Autocomplete<Customer>(
+                    displayStringForOption: (c) => c.shopName,
+                    optionsBuilder: (textEditingValue) {
+                      return _filterCustomers(customers, textEditingValue.text);
+                    },
+                    onSelected: (c) {
+                      setState(() {
+                        _customerId = c.id;
+                        _customerSearchController.text = c.shopName;
+                      });
+                    },
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onFieldSubmitted) {
+                      // Keep external controller in sync for prefill.
+                      if (controller.text.isEmpty &&
+                          _customerSearchController.text.isNotEmpty) {
+                        controller.text = _customerSearchController.text;
+                      }
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: InputDecoration(
+                          labelText: l10n.selectCustomer,
+                          hintText: l10n.filterCustomers,
+                          prefixIcon: const Icon(Icons.search),
+                        ),
+                        onChanged: (v) {
+                          _customerSearchController.text = v;
+                          // Clear selection if user edits away from match.
+                          if (_customerId != null) {
+                            final selected = customers
+                                .where((c) => c.id == _customerId)
+                                .firstOrNull;
+                            if (selected == null ||
+                                selected.shopName.toLowerCase() !=
+                                    v.trim().toLowerCase()) {
+                              setState(() => _customerId = null);
+                            }
+                          }
+                        },
+                        onSubmitted: (_) => onFieldSubmitted(),
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(BsRadii.md),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 240),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              itemBuilder: (context, index) {
+                                final c = options.elementAt(index);
+                                return ListTile(
+                                  dense: true,
+                                  title: Text(c.shopName),
+                                  subtitle: Text(c.phone ?? c.contactName ?? ''),
+                                  onTap: () => onSelected(c),
+                                );
+                              },
+                            ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (v) => setState(() => _customerId = v),
+                        ),
+                      );
+                    },
                   ),
                 ),
               if (_status == BillStatus.partial) ...[
@@ -210,7 +293,8 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   keyboardType: TextInputType.number,
                 ),
               ],
-              if (_status != BillStatus.due && !_walkIn || _status == BillStatus.partial) ...[
+              if (_status != BillStatus.due && !_walkIn ||
+                  _status == BillStatus.partial) ...[
                 const SizedBox(height: 12),
                 DropdownButtonFormField<PaymentMethod>(
                   decoration: InputDecoration(labelText: l10n.paymentMethod),

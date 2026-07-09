@@ -15,7 +15,6 @@ import '../../domain/models/customer.dart';
 import '../../web/ui/web_sheet_bridge.dart';
 import 'add_customer_sheet.dart';
 import 'customer_detail_screen.dart';
-import 'customer_form_screen.dart';
 import 'providers.dart';
 
 class CustomerListScreen extends ConsumerStatefulWidget {
@@ -117,11 +116,16 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     }
     final filtered = _filtered;
     if (filtered.isEmpty) {
+      final searching = _query.trim().isNotEmpty;
       return EmptyState(
         icon: Icons.storefront_outlined,
-        message: l10n.noCustomers,
-        actionLabel: widget.canEdit ? l10n.addCustomer : null,
-        onAction: widget.canEdit ? () => _openAddCustomer(context) : null,
+        message: searching ? l10n.noSearchResults : l10n.noCustomers,
+        actionLabel: searching
+            ? l10n.clearSearch
+            : (widget.canEdit ? l10n.addCustomer : null),
+        onAction: searching
+            ? () => setState(() => _query = '')
+            : (widget.canEdit ? () => _openAddCustomer(context) : null),
       );
     }
     return RefreshIndicator(
@@ -152,7 +156,6 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
           customer: customer,
           selected: _selectedCustomerId == customer.id,
           onTap: () => _selectCustomer(context, customer),
-          onEdit: widget.canEdit ? () => _openEdit(context, customer) : null,
         );
       },
       ),
@@ -197,31 +200,17 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     }
   }
 
-  Future<void> _openEdit(BuildContext context, Customer customer) async {
-    final saved = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CustomerFormScreen(customerId: customer.id),
-      ),
-    );
-    if (saved == true) {
-      ref.invalidate(customerListProvider);
-      ref.invalidate(totalDuesProvider);
-    }
-  }
 }
 
 class _CustomerTile extends StatelessWidget {
   const _CustomerTile({
     required this.customer,
     required this.onTap,
-    this.onEdit,
     this.selected = false,
   });
 
   final Customer customer;
   final VoidCallback onTap;
-  final VoidCallback? onEdit;
   final bool selected;
 
   @override
@@ -249,11 +238,8 @@ class _CustomerTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (due < 0)
-            Chip(
+      trailing: due < 0
+          ? Chip(
               label: Text(
                 '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}',
               ),
@@ -264,11 +250,9 @@ class _CustomerTile extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               side: const BorderSide(color: BsColors.primary),
             )
-          else
-            Row(
+          : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon prefix so dues vs settled isn't color-only.
                 Icon(
                   due > 0 ? Icons.arrow_upward : Icons.check,
                   size: 14,
@@ -284,14 +268,6 @@ class _CustomerTile extends StatelessWidget {
                 ),
               ],
             ),
-          if (onEdit != null)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: l10n.editCustomer,
-              onPressed: onEdit,
-            ),
-        ],
-      ),
     );
   }
 }

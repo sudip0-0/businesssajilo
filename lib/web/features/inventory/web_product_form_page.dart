@@ -9,7 +9,7 @@ import '../../../features/inventory/product_form_screen.dart';
 import '../../../features/inventory/providers.dart';
 import '../web_page_scaffold.dart';
 
-class WebProductFormPage extends ConsumerWidget {
+class WebProductFormPage extends ConsumerStatefulWidget {
   const WebProductFormPage({
     super.key,
     this.product,
@@ -22,15 +22,22 @@ class WebProductFormPage extends ConsumerWidget {
   final String inventoryListPath;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WebProductFormPage> createState() => _WebProductFormPageState();
+}
+
+class _WebProductFormPageState extends ConsumerState<WebProductFormPage> {
+  final _formKey = GlobalKey<ProductFormScreenState>();
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final resolvedProduct = product ??
-        (productId != null
-            ? ref.watch(productDetailProvider(productId!)).value
+    final resolvedProduct = widget.product ??
+        (widget.productId != null
+            ? ref.watch(productDetailProvider(widget.productId!)).value
             : null);
     final isEdit = resolvedProduct != null;
 
-    if (productId != null && resolvedProduct == null) {
+    if (widget.productId != null && resolvedProduct == null) {
       return WebPageScaffold(
         title: l10n.editProduct,
         body: const Center(child: CircularProgressIndicator()),
@@ -47,16 +54,28 @@ class WebProductFormPage extends ConsumerWidget {
         OutlinedButton.icon(
           onPressed: () {
             if (isEdit) {
-              context.go('$inventoryListPath/${resolvedProduct.id}');
+              context.go(
+                '${widget.inventoryListPath}/${resolvedProduct.id}',
+              );
             } else {
-              context.go(inventoryListPath);
+              context.go(widget.inventoryListPath);
             }
           },
           icon: Icon(PhosphorIconsRegular.x),
           label: Text(l10n.cancel),
         ),
+        const SizedBox(width: 8),
+        FilledButton.icon(
+          onPressed: () => _formKey.currentState?.submit(),
+          icon: Icon(PhosphorIconsRegular.floppyDisk, size: 18),
+          label: Text(l10n.save),
+        ),
       ],
-      body: ProductFormScreen(product: resolvedProduct, embedded: true),
+      body: ProductFormScreen(
+        key: _formKey,
+        product: resolvedProduct,
+        embedded: true,
+      ),
     );
   }
 }

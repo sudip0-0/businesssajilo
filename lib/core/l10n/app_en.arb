@@ -390,7 +390,7 @@
   "creditLimit": "Credit Limit (NPR)",
   "saveCustomer": "Save Customer",
   "createNewBill": "Create New Bill",
-  "createBillSubtitle": "Generate professional invoices for your wholesale orders.",
+  "createBillSubtitle": "Create a bill for a walk-in or credit customer.",
   "saveAsDraft": "Save as Draft",
   "printAndSave": "Print & Save",
   "needsAttention": "Needs Attention",
@@ -454,7 +454,7 @@
   "madeForNepal": "Made for Nepal SME Ecosystem",
   "shareViaWhatsApp": "Share via WhatsApp",
   "downloadPdf": "Download PDF",
-  "printInvoice": "Print invoice",
+  "printInvoice": "Print bill",
   "returnItems": "Return items",
   "creditNote": "Credit note",
   "qtyReturned": "Qty returned",
@@ -519,5 +519,12 @@
   "rangeAllTime": "All time",
   "closingBalance": "Closing balance",
   "shareAsImage": "Share as image",
-  "shareAsPdf": "Share as PDF"
+  "shareAsPdf": "Share as PDF",
+  "enablePortalAccess": "Enable portal login",
+  "moreDetails": "More details",
+  "noSearchResults": "No matches found",
+  "clearSearch": "Clear search",
+  "noRecentActivity": "No recent activity",
+  "emptyFulfillment": "No orders to fulfill",
+  "syncErrorGeneric": "Could not sync. Check your connection and try again."
 }

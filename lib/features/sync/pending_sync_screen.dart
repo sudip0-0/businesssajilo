@@ -119,7 +119,7 @@ class _QueueTile extends StatelessWidget {
       subtitle: item.lastError == null
           ? Text(syncStatusLabel(l10n, item.status))
           : Text(
-              '${l10n.syncFailed}: ${item.lastError}',
+              '${l10n.syncFailed}: ${l10n.syncErrorGeneric}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),

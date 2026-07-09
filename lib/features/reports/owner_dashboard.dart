@@ -8,7 +8,6 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/bs_sales_line_chart.dart';
 import '../../core/ui/bs_stat_tile.dart';
-import '../../core/ui/bs_success_button.dart';
 import '../../core/utils/money.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -280,35 +279,12 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
             ),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              BsSuccessButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
-                ),
-                label: l10n.salesSummary,
-                icon: const Icon(Icons.trending_up, size: 18, color: Colors.white),
-              ),
-              OutlinedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
-                ),
-                child: Text(l10n.duesAging),
-              ),
-              OutlinedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const StockValuationScreen(),
-                  ),
-                ),
-                child: Text(l10n.stockValuation),
-              ),
-            ],
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
+            ),
+            child: Text(l10n.salesSummary),
           ),
         ],
       ),

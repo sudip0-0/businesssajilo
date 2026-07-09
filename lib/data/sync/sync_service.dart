@@ -277,7 +277,7 @@ class SyncService {
           SyncQueueCompanion(
             status: Value(terminal ? 'failed' : 'pending'),
             attempts: Value(attempts),
-            lastError: Value(e.toString()),
+            lastError: const Value('sync_error'),
             nextAttemptAt: Value(
               terminal
                   ? null

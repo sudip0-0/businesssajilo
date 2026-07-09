@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,6 +24,13 @@ const _nepalCities = [
   'Nepalgunj',
 ];
 
+String _autoPassword() {
+  const chars =
+      'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  final rand = Random.secure();
+  return List.generate(12, (_) => chars[rand.nextInt(chars.length)]).join();
+}
+
 class AddCustomerSheet extends ConsumerStatefulWidget {
   const AddCustomerSheet({super.key, this.embedded = false});
 
@@ -45,6 +54,8 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
   String? _city;
   bool _loading = false;
   String? _error;
+  bool _showMore = false;
+  bool _enablePortal = false;
 
   @override
   void dispose() {
@@ -78,16 +89,25 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
       _error = null;
     });
     try {
+      final shop = _shopNameController.text.trim();
+      final contact = _contactNameController.text.trim();
+      final displayName = _enablePortal
+          ? (_displayNameController.text.trim().isEmpty
+              ? (contact.isEmpty ? shop : contact)
+              : _displayNameController.text.trim())
+          : (contact.isEmpty ? shop : contact);
+      final password = _enablePortal
+          ? _passwordController.text
+          : _autoPassword();
+
       await ref.read(customersRepositoryProvider).createWithCredentials(
             email: _emailController.text.trim().isEmpty
                 ? null
                 : _emailController.text.trim(),
-            password: _passwordController.text,
-            displayName: _displayNameController.text.trim(),
-            shopName: _shopNameController.text.trim(),
-            contactName: _contactNameController.text.trim().isEmpty
-                ? null
-                : _contactNameController.text.trim(),
+            password: password,
+            displayName: displayName,
+            shopName: shop,
+            contactName: contact.isEmpty ? null : contact,
             phone: _phoneController.text.trim().isEmpty
                 ? null
                 : '+977${_phoneController.text.trim()}',
@@ -129,15 +149,6 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _contactNameController,
-                decoration: InputDecoration(
-                  labelText: '${l10n.ownerName} *',
-                ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-              ),
-              const BsFormSectionLabel('Contact & Location'),
-              TextFormField(
                 controller: _phoneController,
                 decoration: InputDecoration(
                   labelText: '${l10n.phoneNumber} *',
@@ -147,83 +158,91 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
               ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _city,
-                decoration: InputDecoration(labelText: '${l10n.city} *'),
-                items: _nepalCities
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: (v) => setState(() => _city = v),
-                validator: (v) =>
-                    v == null || v.isEmpty ? l10n.fieldRequired : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _districtController,
-                decoration: InputDecoration(
-                  labelText: '${l10n.district} *',
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => setState(() => _showMore = !_showMore),
+                child: Text(
+                  _showMore ? l10n.contactAndLocation : l10n.moreDetails,
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
               ),
-              const BsFormSectionLabel('Financial Information'),
-              TextFormField(
-                controller: _creditLimitController,
-                decoration: InputDecoration(
-                  labelText: l10n.openingBalance,
-                  prefixText: 'Rs. ',
+              if (_showMore) ...[
+                BsFormSectionLabel(l10n.contactAndLocation),
+                TextFormField(
+                  controller: _contactNameController,
+                  decoration: InputDecoration(labelText: l10n.ownerName),
                 ),
-                keyboardType: TextInputType.number,
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _city,
+                  decoration: InputDecoration(labelText: l10n.city),
+                  items: _nepalCities
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _city = v),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _districtController,
+                  decoration: InputDecoration(labelText: l10n.district),
+                ),
+                BsFormSectionLabel(l10n.financialInformation),
+                TextFormField(
+                  controller: _creditLimitController,
+                  decoration: InputDecoration(
+                    labelText: l10n.openingBalance,
+                    prefixText: 'Rs. ',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _panController,
+                  decoration: InputDecoration(labelText: l10n.panVatNumber),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.enablePortalAccess),
+                subtitle: Text(l10n.portalAccessHint),
+                value: _enablePortal,
+                onChanged: (v) => setState(() => _enablePortal = v),
               ),
-              const BsFormSectionLabel('Portal Access'),
-              TextFormField(
-                controller: _displayNameController,
-                decoration: InputDecoration(labelText: l10n.displayName),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-              ),
-              const SizedBox(height: 12),
-              // Email optional: phone doubles as the login identifier.
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: l10n.email),
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return null;
-                  if (!emailRegex.hasMatch(v.trim())) return l10n.invalidEmail;
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: '${l10n.password} *'),
-                obscureText: true,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return l10n.fieldRequired;
-                  if (v.length < 8) return l10n.passwordTooShort;
-                  return null;
-                },
-              ),
-              Text(
-                l10n.portalAccessHint,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: BsColors.outline,
-                    ),
-              ),
+              if (_enablePortal) ...[
+                BsFormSectionLabel(l10n.portalAccess),
+                TextFormField(
+                  controller: _displayNameController,
+                  decoration: InputDecoration(labelText: l10n.displayName),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(labelText: l10n.email),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if (!_enablePortal) return null;
+                    if (v == null || v.trim().isEmpty) return null;
+                    if (!emailRegex.hasMatch(v.trim())) {
+                      return l10n.invalidEmail;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration:
+                      InputDecoration(labelText: '${l10n.password} *'),
+                  obscureText: true,
+                  validator: (v) {
+                    if (!_enablePortal) return null;
+                    if (v == null || v.isEmpty) return l10n.fieldRequired;
+                    if (v.length < 8) return l10n.passwordTooShort;
+                    return null;
+                  },
+                ),
+              ],
             ],
-          ),
-          const SizedBox(height: 12),
-          BsInfoTipCard(
-            message: l10n.verificationTip,
-            color: BsColors.secondary,
-            icon: Icons.verified_user_outlined,
-          ),
-          BsInfoTipCard(
-            message: l10n.creditPolicyTip,
-            color: BsColors.accent,
-            icon: Icons.account_balance_wallet_outlined,
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),

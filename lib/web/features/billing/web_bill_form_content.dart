@@ -97,6 +97,8 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   Future<void> saveDraft() => _save(forceStatus: BillStatus.due);
 
+  Future<void> saveBill() => _save();
+
   Future<void> saveAndPrint() => _save(exportAfterSave: true);
 
   Future<Bill?> _save({BillStatus? forceStatus, bool exportAfterSave = false}) async {
@@ -276,7 +278,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                           Row(
                             children: [
                               Text(
-                                l10n.orders,
+                                l10n.billLines,
                                 style: Theme.of(context).textTheme.titleSmall,
                               ),
                               const Spacer(),
@@ -715,7 +717,7 @@ class _BillSummaryPanel extends StatelessWidget {
                 child: TextFormField(
                   controller: billDiscountController,
                   decoration: InputDecoration(
-                    labelText: l10n.discountPercent,
+                    labelText: l10n.billDiscount,
                     isDense: true,
                   ),
                   keyboardType: TextInputType.number,

@@ -10,7 +10,6 @@ import '../../features/notifications/providers.dart';
 import '../../features/shell/logout_action.dart';
 import '../theme/web_tokens.dart';
 import '../../core/ui/locale_toggle.dart';
-import '../ui/web_search_field.dart';
 
 class WebTopBar extends ConsumerWidget {
   const WebTopBar({
@@ -46,19 +45,7 @@ class WebTopBar extends ConsumerWidget {
               onPressed: onMenuPressed,
               icon: Icon(PhosphorIconsRegular.list, color: BsColors.primary),
             ),
-          if (!compact) ...[
-            Expanded(
-              flex: 2,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: WebSearchField(
-                  hint: l10n.globalSearchHint,
-                  onChanged: (_) {},
-                ),
-              ),
-            ),
-          ] else
-            const Spacer(),
+          const Spacer(),
           const LocaleToggle(compact: true),
           const SizedBox(width: 8),
           IconButton(

@@ -23,7 +23,6 @@ import '../../../features/reports/providers.dart';
 import '../web_page_scaffold.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../../core/ui/bs_sales_line_chart.dart';
-import '../../../core/ui/bs_success_button.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_stat_tile.dart';
 import '../../../core/testing/integration_keys.dart';
@@ -80,11 +79,11 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
           child: Text(l10n.addProduct),
         ),
         const SizedBox(width: 8),
-        BsSuccessButton(
+        OutlinedButton.icon(
           key: IntegrationKeys.dashboardNewBill,
           onPressed: () => context.push('/owner/billing/new'),
           icon: Icon(PhosphorIconsRegular.receipt, size: 18),
-          label: l10n.newBill,
+          label: Text(l10n.newBill),
         ),
       ],
       body: RefreshIndicator(
@@ -295,7 +294,16 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                             const SizedBox(height: 12),
                             WebSearchField(
                               hint: l10n.filterProducts,
-                              onChanged: (_) {},
+                              onSubmitted: (q) {
+                                final query = q.trim();
+                                if (query.isEmpty) {
+                                  context.go('/owner/inventory');
+                                } else {
+                                  context.go(
+                                    '/owner/inventory?q=${Uri.encodeQueryComponent(query)}',
+                                  );
+                                }
+                              },
                             ),
                           ],
                         ),
@@ -357,12 +365,6 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const Spacer(),
-                        OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: Icon(PhosphorIconsRegular.funnel, size: 16),
-                          label: Text(l10n.filter),
-                        ),
-                        const SizedBox(width: 8),
                         OutlinedButton.icon(
                           onPressed: todaysBills.hasValue
                               ? () => exportTodaysBillsCsv(ref, context)
@@ -433,6 +435,7 @@ class _RecentActivityList extends StatelessWidget {
             icon: PhosphorIconsRegular.shoppingCart,
             color: BsColors.primary,
             text: l10n.newBillCreated(bill.billNo),
+            onTap: () => context.go('/owner/billing/${bill.id}'),
           ),
         );
       }
@@ -448,6 +451,7 @@ class _RecentActivityList extends StatelessWidget {
             icon: PhosphorIconsRegular.warning,
             color: BsColors.danger,
             text: l10n.lowStockAlert(p.name),
+            onTap: () => context.go('/owner/inventory/${p.id}'),
           ),
         );
       }
@@ -463,6 +467,7 @@ class _RecentActivityList extends StatelessWidget {
             icon: PhosphorIconsRegular.user,
             color: BsColors.secondary,
             text: l10n.newCustomerAdded(c.shopName),
+            onTap: () => context.go('/owner/customers/${c.id}'),
           ),
         );
       }
@@ -471,7 +476,7 @@ class _RecentActivityList extends StatelessWidget {
     if (items.isEmpty) {
       return Center(
         child: Text(
-          l10n.noSalesInPeriod,
+          l10n.noRecentActivity,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: BsColors.outline,
               ),
@@ -492,36 +497,42 @@ class _ActivityItem extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.text,
+    this.onTap,
   });
 
   final IconData icon;
   final Color color;
   final String text;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(BsRadii.md),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(BsRadii.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(BsRadii.md),
+            ),
+            child: Icon(icon, size: 14, color: color),
           ),
-          child: Icon(icon, size: 14, color: color),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodySmall,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodySmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -568,6 +579,8 @@ class _TransactionsTable extends StatelessWidget {
         rows: [
           for (var i = 0; i < bills.length; i++)
             DataRow(
+              onSelectChanged: (_) =>
+                  context.go('/owner/billing/${bills[i].id}'),
               cells: [
                 DataCell(Text('#${bills[i].billNo.split('-').last}')),
                 DataCell(Text(

@@ -1049,7 +1049,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createBillSubtitle =>
-      'Generate professional invoices for your wholesale orders.';
+      'Create a bill for a walk-in or credit customer.';
 
   @override
   String get saveAsDraft => 'Save as Draft';
@@ -1182,7 +1182,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadPdf => 'Download PDF';
 
   @override
-  String get printInvoice => 'Print invoice';
+  String get printInvoice => 'Print bill';
 
   @override
   String get returnItems => 'Return items';
@@ -1346,4 +1346,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareAsPdf => 'Share as PDF';
+
+  @override
+  String get enablePortalAccess => 'Enable portal login';
+
+  @override
+  String get moreDetails => 'More details';
+
+  @override
+  String get noSearchResults => 'No matches found';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get noRecentActivity => 'No recent activity';
+
+  @override
+  String get emptyFulfillment => 'No orders to fulfill';
+
+  @override
+  String get syncErrorGeneric =>
+      'Could not sync. Check your connection and try again.';
 }

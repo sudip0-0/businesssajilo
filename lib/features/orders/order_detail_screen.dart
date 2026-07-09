@@ -339,24 +339,29 @@ class _ActionButtons extends ConsumerWidget {
     String label,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(label),
-        content: Text(l10n.areYouSure),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(label),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
+    // Forward workflow steps apply immediately; only cancel/close confirm.
+    final needsConfirm = next == OrderStatus.cancelled ||
+        next == OrderStatus.closed;
+    if (needsConfirm) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(label),
+          content: Text(l10n.areYouSure),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(label),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+    }
     try {
       await ref.read(ordersRepositoryProvider).updateStatus(orderId, next);
       _invalidate(ref);

@@ -59,18 +59,30 @@ class BillDetailScreen extends ConsumerWidget {
                   icon: const Icon(Icons.share_outlined, size: 18),
                   label: Text(l10n.shareViaWhatsApp),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => exportBillPrint(ref, context, bill),
-                  icon: const Icon(Icons.print_outlined, size: 18),
-                  label: Text(l10n.printInvoice),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () => exportBillPdfDownload(ref, context, bill),
-                  icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                  label: Text(l10n.downloadPdf),
-                ),
                 if (canReturn && bill.customerId != null)
                   _ReturnItemsButton(bill: bill, embedded: embedded),
+                PopupMenuButton<String>(
+                  tooltip: l10n.export,
+                  icon: const Icon(Icons.more_horiz),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'print':
+                        exportBillPrint(ref, context, bill);
+                      case 'pdf':
+                        exportBillPdfDownload(ref, context, bill);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'print',
+                      child: Text(l10n.printInvoice),
+                    ),
+                    PopupMenuItem(
+                      value: 'pdf',
+                      child: Text(l10n.downloadPdf),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 16),

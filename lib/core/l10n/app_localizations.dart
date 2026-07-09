@@ -2111,7 +2111,7 @@ abstract class AppLocalizations {
   /// No description provided for @createBillSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Generate professional invoices for your wholesale orders.'**
+  /// **'Create a bill for a walk-in or credit customer.'**
   String get createBillSubtitle;
 
   /// No description provided for @saveAsDraft.
@@ -2357,7 +2357,7 @@ abstract class AppLocalizations {
   /// No description provided for @printInvoice.
   ///
   /// In en, this message translates to:
-  /// **'Print invoice'**
+  /// **'Print bill'**
   String get printInvoice;
 
   /// No description provided for @returnItems.
@@ -2665,6 +2665,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share as PDF'**
   String get shareAsPdf;
+
+  /// No description provided for @enablePortalAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable portal login'**
+  String get enablePortalAccess;
+
+  /// No description provided for @moreDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get moreDetails;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get noSearchResults;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @noRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity'**
+  String get noRecentActivity;
+
+  /// No description provided for @emptyFulfillment.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders to fulfill'**
+  String get emptyFulfillment;
+
+  /// No description provided for @syncErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sync. Check your connection and try again.'**
+  String get syncErrorGeneric;
 }
 
 class _AppLocalizationsDelegate

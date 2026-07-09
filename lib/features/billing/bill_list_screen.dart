@@ -133,7 +133,12 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
       if (results.isEmpty) {
         return EmptyState(
           icon: Icons.receipt_long_outlined,
-          message: l10n.noBills,
+          message: l10n.noSearchResults,
+          actionLabel: l10n.clearSearch,
+          onAction: () => setState(() {
+            _query = '';
+            _searchResults = null;
+          }),
         );
       }
       return ListView.separated(

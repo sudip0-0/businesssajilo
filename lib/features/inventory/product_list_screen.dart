@@ -129,11 +129,19 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     }
     final filtered = _filtered;
     if (filtered.isEmpty) {
+      final searching = _query.trim().isNotEmpty || _categoryId != null;
       return EmptyState(
         icon: Icons.inventory_2_outlined,
-        message: l10n.emptyNoProducts,
-        actionLabel: widget.canEdit ? l10n.emptyAddFirstProduct : null,
-        onAction: widget.canEdit ? () => _openForm(context, null) : null,
+        message: searching ? l10n.noSearchResults : l10n.emptyNoProducts,
+        actionLabel: searching
+            ? l10n.clearSearch
+            : (widget.canEdit ? l10n.emptyAddFirstProduct : null),
+        onAction: searching
+            ? () => setState(() {
+                  _query = '';
+                  _categoryId = null;
+                })
+            : (widget.canEdit ? () => _openForm(context, null) : null),
       );
     }
     return RefreshIndicator(

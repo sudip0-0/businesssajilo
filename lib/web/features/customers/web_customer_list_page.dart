@@ -141,16 +141,25 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     if (pager.error != null && pager.items.isEmpty) {
       return WebEmptyState(
         message: l10n.loadingFailed,
-        actionLabel: l10n.retrySync,
+        actionLabel: l10n.tryAgain,
         onAction: () => pager.refresh(),
         icon: PhosphorIconsRegular.warning,
       );
     }
     final filtered = _filtered;
     if (filtered.isEmpty) {
+      final searching = _query.isNotEmpty;
       return WebEmptyState(
-        message: l10n.noCustomers,
+        message: searching ? l10n.noSearchResults : l10n.noCustomers,
         icon: PhosphorIconsRegular.storefront,
+        actionLabel: searching
+            ? l10n.clearSearch
+            : (widget.canEdit ? l10n.addCustomer : null),
+        onAction: searching
+            ? () => setState(() => _query = '')
+            : (widget.canEdit
+                ? () => context.go('${_webRolePrefix(context)}/customers/new')
+                : null),
       );
     }
 

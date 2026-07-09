@@ -371,7 +371,7 @@
   "creditLimit": "क्रेडिट सीमा (NPR)",
   "saveCustomer": "ग्राहक सुरक्षित गर्नुहोस्",
   "createNewBill": "नयाँ बिल बनाउनुहोस्",
-  "createBillSubtitle": "थोक अर्डरका लागि व्यावसायिक इन्भाइस बनाउनुहोस्।",
+  "createBillSubtitle": "नगद वा उधारो ग्राहकका लागि बिल बनाउनुहोस्।",
   "saveAsDraft": "ड्राफ्ट सुरक्षित गर्नुहोस्",
   "printAndSave": "प्रिन्ट र सुरक्षित",
   "needsAttention": "ध्यान चाहिन्छ",
@@ -465,5 +465,12 @@
   "rangeAllTime": "सबै समय",
   "closingBalance": "अन्तिम मौज्दात",
   "shareAsImage": "फोटोको रूपमा सेयर",
-  "shareAsPdf": "PDF को रूपमा सेयर"
+  "shareAsPdf": "PDF को रूपमा सेयर",
+  "enablePortalAccess": "पोर्टल लगइन सक्षम गर्नुहोस्",
+  "moreDetails": "थप विवरण",
+  "noSearchResults": "कुनै मिल्दो परिणाम छैन",
+  "clearSearch": "खोज हटाउनुहोस्",
+  "noRecentActivity": "हालको गतिविधि छैन",
+  "emptyFulfillment": "पूरा गर्नुपर्ने अर्डर छैन",
+  "syncErrorGeneric": "सिंक गर्न सकिएन। इन्टरनेट जाँच गरी फेरि प्रयास गर्नुहोस्।"
 }
