@@ -75,6 +75,7 @@ class SyncingStockRepository implements StockRepository {
       StockMovementType.stockIn => 'stock_in',
       StockMovementType.adjust => 'adjust',
       StockMovementType.dispatch => 'dispatch',
+      StockMovementType.return_ => 'return',
     };
 
     await _db.into(_db.localStockMovements).insert(

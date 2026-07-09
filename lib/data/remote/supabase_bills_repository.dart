@@ -52,15 +52,16 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<int> todaysSales() async {
+    // Net of credit notes — same source as report_sales_daily.
     final client = _requireClient();
-    final start = nptDayStartUtc();
+    final day = nptDateString(nptDayStartUtc());
     final rows = await client
-        .from('bills')
-        .select('grand_total')
-        .gte('created_at', start.toIso8601String());
+        .from('report_sales_daily')
+        .select('total_sales')
+        .eq('sale_date', day);
     var total = 0;
     for (final row in rows as List) {
-      total += ((row as Map)['grand_total'] as num?)?.toInt() ?? 0;
+      total += ((row as Map)['total_sales'] as num?)?.toInt() ?? 0;
     }
     return total;
   }
@@ -79,16 +80,16 @@ class SupabaseBillsRepository implements BillsRepository {
   @override
   Future<int> yesterdaysSales() async {
     final client = _requireClient();
-    final todayStart = nptDayStartUtc();
-    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+    final yesterdayStart =
+        nptDayStartUtc().subtract(const Duration(days: 1));
+    final day = nptDateString(yesterdayStart);
     final rows = await client
-        .from('bills')
-        .select('grand_total')
-        .gte('created_at', yesterdayStart.toIso8601String())
-        .lt('created_at', todayStart.toIso8601String());
+        .from('report_sales_daily')
+        .select('total_sales')
+        .eq('sale_date', day);
     var total = 0;
     for (final row in rows as List) {
-      total += ((row as Map)['grand_total'] as num?)?.toInt() ?? 0;
+      total += ((row as Map)['total_sales'] as num?)?.toInt() ?? 0;
     }
     return total;
   }

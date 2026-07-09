@@ -250,7 +250,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                       TextFormField(
                         controller: _creditLimitController,
                         decoration: InputDecoration(
-                          labelText: l10n.creditLimit,
+                          labelText: l10n.openingBalance,
                           prefixText: 'Rs. ',
                         ),
                         keyboardType: TextInputType.number,

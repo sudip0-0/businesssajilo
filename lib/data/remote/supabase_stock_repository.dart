@@ -85,6 +85,7 @@ class SupabaseStockRepository implements StockRepository {
         StockMovementType.stockIn => 'stock_in',
         StockMovementType.adjust => 'adjust',
         StockMovementType.dispatch => 'dispatch',
+        StockMovementType.return_ => 'return',
       };
 
   StockMovement _mapMovement(dynamic row) {

@@ -58,4 +58,41 @@ void main() {
       0,
     );
   });
+
+  test('proratedLineDiscountPaisa floors partial return discount', () {
+    // 10 units, NPR 100 line discount → return 1 → floor(100/10) = 10.
+    expect(
+      proratedLineDiscountPaisa(
+        originalDiscountPaisa: 10000,
+        originalQty: 10,
+        returnedQty: 1,
+      ),
+      1000,
+    );
+    // Non-divisible: floor(100 * 1 / 3) = 33.
+    expect(
+      proratedLineDiscountPaisa(
+        originalDiscountPaisa: 100,
+        originalQty: 3,
+        returnedQty: 1,
+      ),
+      33,
+    );
+    expect(
+      proratedLineDiscountPaisa(
+        originalDiscountPaisa: 100,
+        originalQty: 3,
+        returnedQty: 3,
+      ),
+      100,
+    );
+    expect(
+      proratedLineDiscountPaisa(
+        originalDiscountPaisa: 0,
+        originalQty: 5,
+        returnedQty: 2,
+      ),
+      0,
+    );
+  });
 }

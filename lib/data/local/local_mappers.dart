@@ -99,6 +99,7 @@ StockMovement mapLocalMovement(LocalStockMovement row) {
       'stock_in' => StockMovementType.stockIn,
       'adjust' => StockMovementType.adjust,
       'dispatch' => StockMovementType.dispatch,
+      'return' => StockMovementType.return_,
       _ => StockMovementType.adjust,
     },
     qtyDelta: row.qtyDelta,

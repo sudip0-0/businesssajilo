@@ -25,18 +25,20 @@ class SupabasePaymentsRepository implements PaymentsRepository {
 
   @override
   Future<Payment> record({
+    String? id,
     required String customerId,
     required int amount,
     required PaymentMethod method,
     String? refNote,
     String? billId,
     required String receivedByMemberId,
+    bool enqueueRemote = true,
   }) async {
     final client = _requireClient();
     final row = await client
         .from('payments')
         .insert({
-          'id': const Uuid().v4(),
+          'id': id ?? const Uuid().v4(),
           'customer_id': customerId,
           'bill_id': ?billId,
           'amount': amount,

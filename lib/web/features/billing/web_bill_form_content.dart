@@ -110,6 +110,39 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       );
       return null;
     }
+    if (_lines.any(
+      (l) => !isValidLineDiscount(
+        qty: l.qty,
+        ratePaisa: l.rate,
+        discountPaisa: l.discount,
+      ),
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.discountExceedsLine),
+          backgroundColor: BsColors.danger,
+        ),
+      );
+      return null;
+    }
+    if (_billDiscount < 0 || _billDiscount > _itemsTotal) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.discountExceedsItems),
+          backgroundColor: BsColors.danger,
+        ),
+      );
+      return null;
+    }
+    if (_grandTotal < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.amountMustBePositive),
+          backgroundColor: BsColors.danger,
+        ),
+      );
+      return null;
+    }
 
     BillPaymentResult? paymentResult;
     if (forceStatus == BillStatus.due) {

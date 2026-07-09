@@ -37,6 +37,7 @@ class _ReturnLine {
     required this.billItemId,
     required this.name,
     required this.maxQty,
+    required this.originalQty,
     required this.rate,
     required this.discount,
   });
@@ -44,12 +45,24 @@ class _ReturnLine {
   final String billItemId;
   final String name;
   final int maxQty;
+  final int originalQty;
   final int rate;
   final int discount;
   int qty = 0;
 
-  int get lineTotal =>
-      qty > 0 ? lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: 0) : 0;
+  int get proratedDiscount => proratedLineDiscountPaisa(
+        originalDiscountPaisa: discount,
+        originalQty: originalQty,
+        returnedQty: qty,
+      );
+
+  int get lineTotal => qty > 0
+      ? lineTotalPaisa(
+          qty: qty,
+          ratePaisa: rate,
+          discountPaisa: proratedDiscount,
+        )
+      : 0;
 }
 
 class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
@@ -72,6 +85,7 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
         billItemId: item.id,
         name: item.nameSnapshot,
         maxQty: remaining,
+        originalQty: item.qty,
         rate: item.rate,
         discount: item.discount,
       );
@@ -121,7 +135,7 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
                     billItemId: line.billItemId,
                     qtyReturned: line.qty,
                     rate: line.rate,
-                    discount: 0,
+                    discount: line.proratedDiscount,
                   ),
                 )
                 .toList(),

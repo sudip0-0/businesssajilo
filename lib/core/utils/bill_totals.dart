@@ -37,3 +37,18 @@ int grandTotalPaisa({
   int billDiscountPaisa = 0,
 }) =>
     itemsTotal - billDiscountPaisa;
+
+/// Prorates a bill line's discount onto a partial return quantity.
+///
+/// Uses integer floor division to match `create_credit_note` in Postgres:
+/// `floor(originalDiscount * returnedQty / originalQty)`.
+int proratedLineDiscountPaisa({
+  required int originalDiscountPaisa,
+  required int originalQty,
+  required int returnedQty,
+}) {
+  if (originalQty <= 0 || returnedQty <= 0) return 0;
+  if (originalDiscountPaisa <= 0) return 0;
+  final prorated = (originalDiscountPaisa * returnedQty) ~/ originalQty;
+  return prorated < 0 ? 0 : prorated;
+}

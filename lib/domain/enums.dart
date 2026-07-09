@@ -42,6 +42,8 @@ enum StockMovementType {
   adjust,
   @JsonValue('dispatch')
   dispatch,
+  @JsonValue('return')
+  return_,
 }
 
 /// Allowed order state transitions (validated server-side too).

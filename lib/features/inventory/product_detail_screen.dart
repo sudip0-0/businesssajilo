@@ -237,6 +237,7 @@ class _MovementTile extends StatelessWidget {
       StockMovementType.stockIn => l10n.movementTypeStockIn,
       StockMovementType.adjust => l10n.movementTypeAdjust,
       StockMovementType.dispatch => l10n.movementTypeDispatch,
+      StockMovementType.return_ => l10n.movementTypeReturn,
     };
     final sign = movement.qtyDelta > 0 ? '+' : '';
     final when = movement.createdAt != null ? BsDate.both(movement.createdAt!) : '';

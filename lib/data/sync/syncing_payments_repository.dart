@@ -35,18 +35,20 @@ class SyncingPaymentsRepository implements PaymentsRepository {
 
   @override
   Future<Payment> record({
+    String? id,
     required String customerId,
     required int amount,
     required PaymentMethod method,
     String? refNote,
     String? billId,
     required String receivedByMemberId,
+    bool enqueueRemote = true,
   }) async {
-    final id = _uuid.v4();
+    final paymentId = id ?? _uuid.v4();
     await _db.transaction(() async {
       await _db.into(_db.localPayments).insert(
         LocalPaymentsCompanion.insert(
-          id: id,
+          id: paymentId,
           businessId: _businessId,
           customerId: customerId,
           billId: Value(billId),
@@ -65,25 +67,29 @@ class SyncingPaymentsRepository implements PaymentsRepository {
         [amount, customerId],
       );
 
-      await _db.enqueue(
-        entityType: 'payment',
-        entityId: id,
-        dependsOnId: billId,
-        payload: {
-          'id': id,
-          'customer_id': customerId,
-          'bill_id': billId,
-          'amount': amount,
-          'method': method.name,
-          'ref_note': refNote,
-          'received_by': receivedByMemberId,
-        },
-      );
+      if (enqueueRemote) {
+        await _db.enqueue(
+          entityType: 'payment',
+          entityId: paymentId,
+          dependsOnId: billId,
+          payload: {
+            'id': paymentId,
+            'customer_id': customerId,
+            'bill_id': billId,
+            'amount': amount,
+            'method': method.name,
+            'ref_note': refNote,
+            'received_by': receivedByMemberId,
+          },
+        );
+      }
     });
 
-    unawaited(_sync.syncNow());
+    if (enqueueRemote) {
+      unawaited(_sync.syncNow());
+    }
     return mapLocalPayment(
-      await (_db.select(_db.localPayments)..where((p) => p.id.equals(id)))
+      await (_db.select(_db.localPayments)..where((p) => p.id.equals(paymentId)))
           .getSingle(),
     );
   }

@@ -854,6 +854,12 @@ abstract class AppLocalizations {
   /// **'Dispatch'**
   String get movementTypeDispatch;
 
+  /// No description provided for @movementTypeReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return'**
+  String get movementTypeReturn;
+
   /// No description provided for @filterProducts.
   ///
   /// In en, this message translates to:
@@ -919,6 +925,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allocate to bill'**
   String get allocateToBill;
+
+  /// No description provided for @ledgerDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get ledgerDate;
+
+  /// No description provided for @ledgerDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get ledgerDescription;
 
   /// No description provided for @ledgerDebit.
   ///

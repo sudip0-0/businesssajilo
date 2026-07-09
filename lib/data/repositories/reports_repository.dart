@@ -33,6 +33,21 @@ class ReportsRepository {
     return (rows as List).map(_mapSalesDaily).toList();
   }
 
+  /// Net sales (bills minus credit notes) for a single NPT calendar day.
+  Future<int> netSalesForNptDate(DateTime utcInstant) async {
+    final client = _requireClient();
+    final day = nptDateString(utcInstant);
+    final rows = await client
+        .from('report_sales_daily')
+        .select('total_sales')
+        .eq('sale_date', day);
+    var total = 0;
+    for (final row in rows as List) {
+      total += ((row as Map)['total_sales'] as num?)?.toInt() ?? 0;
+    }
+    return total;
+  }
+
   Future<List<TopProductRow>> topProducts({
     required DateTime from,
     required DateTime to,

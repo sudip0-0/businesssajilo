@@ -21,13 +21,17 @@ final paymentsRepositoryProvider = Provider<PaymentsRepository>((ref) {
 
 abstract class PaymentsRepository {
   Future<List<Payment>> listByCustomer(String customerId);
+  /// When [enqueueRemote] is false (offline bill path), the payment is stored
+  /// locally only — the bill sync payload carries it into `create_bill`.
   Future<Payment> record({
+    String? id,
     required String customerId,
     required int amount,
     required PaymentMethod method,
     String? refNote,
     String? billId,
     required String receivedByMemberId,
+    bool enqueueRemote = true,
   });
   Future<int> totalDues();
 }

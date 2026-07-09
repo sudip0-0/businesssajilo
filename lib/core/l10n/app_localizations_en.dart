@@ -393,6 +393,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get movementTypeDispatch => 'Dispatch';
 
   @override
+  String get movementTypeReturn => 'Return';
+
+  @override
   String get filterProducts => 'Search products';
 
   @override
@@ -424,6 +427,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allocateToBill => 'Allocate to bill';
+
+  @override
+  String get ledgerDate => 'Date';
+
+  @override
+  String get ledgerDescription => 'Description';
 
   @override
   String get ledgerDebit => 'Debit';

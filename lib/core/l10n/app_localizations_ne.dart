@@ -393,6 +393,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get movementTypeDispatch => 'पठाइयो';
 
   @override
+  String get movementTypeReturn => 'फिर्ता';
+
+  @override
   String get filterProducts => 'उत्पादन खोज्नुहोस्';
 
   @override
@@ -424,6 +427,12 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get allocateToBill => 'बिलमा जोड्नुहोस्';
+
+  @override
+  String get ledgerDate => 'मिति';
+
+  @override
+  String get ledgerDescription => 'विवरण';
 
   @override
   String get ledgerDebit => 'डेबिट';

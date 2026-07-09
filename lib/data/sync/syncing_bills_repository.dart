@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/utils/report_range.dart';
@@ -18,15 +19,18 @@ class SyncingBillsRepository implements BillsRepository {
     required SyncService sync,
     required PaymentsRepository payments,
     required String businessId,
+    SupabaseClient? client,
   })  : _db = db,
         _sync = sync,
         _payments = payments,
-        _businessId = businessId;
+        _businessId = businessId,
+        _client = client;
 
   final AppDatabase _db;
   final SyncService _sync;
   final PaymentsRepository _payments;
   final String _businessId;
+  final SupabaseClient? _client;
   static const _uuid = Uuid();
 
   @override
@@ -57,6 +61,9 @@ class SyncingBillsRepository implements BillsRepository {
 
   @override
   Future<int> todaysSales() async {
+    final net = await _netSalesFromReport(nptDayStartUtc());
+    if (net != null) return net;
+    // Offline fallback: local bills only (credit notes are online-only).
     final start = nptDayStartUtc();
     final bills = await _db.select(_db.localBills).get();
     return bills
@@ -73,8 +80,11 @@ class SyncingBillsRepository implements BillsRepository {
 
   @override
   Future<int> yesterdaysSales() async {
+    final yesterdayStart =
+        nptDayStartUtc().subtract(const Duration(days: 1));
+    final net = await _netSalesFromReport(yesterdayStart);
+    if (net != null) return net;
     final todayStart = nptDayStartUtc();
-    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
     final bills = await _db.select(_db.localBills).get();
     return bills
         .where(
@@ -83,6 +93,26 @@ class SyncingBillsRepository implements BillsRepository {
               b.createdAt.toUtc().isBefore(todayStart),
         )
         .fold<int>(0, (sum, b) => sum + b.grandTotal);
+  }
+
+  /// Prefer report_sales_daily (nets credit notes) when online.
+  Future<int?> _netSalesFromReport(DateTime dayStartUtc) async {
+    final client = _client;
+    if (client == null) return null;
+    try {
+      final day = nptDateString(dayStartUtc);
+      final rows = await client
+          .from('report_sales_daily')
+          .select('total_sales')
+          .eq('sale_date', day);
+      var total = 0;
+      for (final row in rows as List) {
+        total += ((row as Map)['total_sales'] as num?)?.toInt() ?? 0;
+      }
+      return total;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -171,7 +201,35 @@ class SyncingBillsRepository implements BillsRepository {
       });
     }
 
-    // Pushed via the transactional `create_bill` RPC (items included).
+    // Embed payment in the bill payload so create_bill inserts bill + payment
+    // atomically (avoids paid-without-payment if payment sync fails separately).
+    Map<String, dynamic>? paymentPayload;
+    if (customerId != null &&
+        (status == BillStatus.paid || status == BillStatus.partial)) {
+      final amount =
+          status == BillStatus.paid ? grandTotal : (paymentAmount ?? 0);
+      if (amount > 0) {
+        final paymentId = _uuid.v4();
+        paymentPayload = {
+          'id': paymentId,
+          'amount': amount,
+          'method': paymentMethod.name,
+          'ref_note': paymentRefNote,
+        };
+        // Local row for offline balance/UI; remote insert is via create_bill.
+        await _payments.record(
+          id: paymentId,
+          customerId: customerId,
+          amount: amount,
+          method: paymentMethod,
+          refNote: paymentRefNote,
+          billId: billId,
+          receivedByMemberId: createdByMemberId,
+          enqueueRemote: false,
+        );
+      }
+    }
+
     await _db.enqueue(
       entityType: 'bill',
       entityId: billId,
@@ -183,24 +241,9 @@ class SyncingBillsRepository implements BillsRepository {
         'status': status.name,
         'device_prefix': meta.devicePrefix,
         'items': itemRows,
+        'payment': ?paymentPayload,
       },
     );
-
-    if (customerId != null &&
-        (status == BillStatus.paid || status == BillStatus.partial)) {
-      final amount =
-          status == BillStatus.paid ? grandTotal : (paymentAmount ?? 0);
-      if (amount > 0) {
-        await _payments.record(
-          customerId: customerId,
-          amount: amount,
-          method: paymentMethod,
-          refNote: paymentRefNote,
-          billId: billId,
-          receivedByMemberId: createdByMemberId,
-        );
-      }
-    }
 
     unawaited(_sync.syncNow());
     return get(billId);

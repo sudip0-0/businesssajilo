@@ -16,6 +16,7 @@ final billsRepositoryProvider = Provider<BillsRepository>((ref) {
       sync: syncBundle.sync,
       payments: ref.watch(paymentsRepositoryProvider),
       businessId: syncBundle.businessId,
+      client: ref.watch(supabaseClientProvider),
     );
   }
   return SupabaseBillsRepository(

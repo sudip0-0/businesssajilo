@@ -292,6 +292,7 @@ class SyncService {
   /// Pushes a bill through the transactional `create_bill` RPC. The RPC is
   /// idempotent on the bill id; replays return the existing bill. The
   /// server-assigned `bill_no` finalizes the provisional local number.
+  /// When the payload embeds a payment, that local payment is marked synced.
   Future<void> _pushBill(String billId, Map<String, dynamic> payload) async {
     final result = await _client.rpc<dynamic>(
       'create_bill',
@@ -300,13 +301,19 @@ class SyncService {
     final map = result as Map<String, dynamic>;
     final bill = map['bill'] as Map<String, dynamic>?;
     final serverBillNo = bill?['bill_no'] as String?;
+    final serverStatus = bill?['status'] as String?;
     await (_db.update(_db.localBills)..where((b) => b.id.equals(billId))).write(
       LocalBillsCompanion(
         syncStatus: const Value('synced'),
         billNo:
             serverBillNo != null ? Value(serverBillNo) : const Value.absent(),
+        status: serverStatus != null ? Value(serverStatus) : const Value.absent(),
       ),
     );
+    final payment = payload['payment'];
+    if (payment is Map && payment['id'] is String) {
+      await _markPaymentSynced(payment['id'] as String);
+    }
   }
 
   Future<void> _pushBillItems(Map<String, dynamic> payload) async {

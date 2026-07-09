@@ -40,4 +40,5 @@ const _$StockMovementTypeEnumMap = {
   StockMovementType.stockIn: 'stock_in',
   StockMovementType.adjust: 'adjust',
   StockMovementType.dispatch: 'dispatch',
+  StockMovementType.return_: 'return',
 };
