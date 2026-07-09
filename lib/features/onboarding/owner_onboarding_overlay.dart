@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
-import '../../web/theme/web_theme.dart';
 import 'demo_data_seeder.dart';
 import 'onboarding_prefs.dart';
 
@@ -84,7 +83,7 @@ class _OwnerOnboardingOverlayState
           ),
           Center(
             child: Theme(
-              data: WebTheme.light(),
+              data: AppTheme.light(),
               child: _OnboardingCard(
                 step: _step,
                 seeding: _seeding,

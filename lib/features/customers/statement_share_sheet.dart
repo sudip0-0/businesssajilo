@@ -9,7 +9,7 @@ import '../../data/repositories/businesses_repository.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 
 /// Opens the statement share sheet for [customer].
 Future<void> showStatementShareSheet(

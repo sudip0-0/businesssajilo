@@ -56,7 +56,8 @@ void main() {
   test(
     'InvoiceImageBuilder produces PNG bytes',
     () async {
-      // Rasterization uses a platform channel; covered in integration tests.
+      // Printing.raster uses a platform channel; PNG encode is covered by
+      // test/pdf_raster_isolate_test.dart. Full raster covered in integration.
     },
     skip: 'Requires printing platform channel',
   );

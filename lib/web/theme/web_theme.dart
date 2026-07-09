@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'web_tokens.dart';
@@ -14,7 +13,7 @@ abstract final class WebTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: BsColors.background,
       textTheme: WebTypography.textTheme(scheme),
-      fontFamily: GoogleFonts.inter().fontFamily,
+      fontFamily: WebTypography.fontFamily,
       fontFamilyFallback: const ['Noto Sans Devanagari'],
       extensions: const [WebTokens.light],
       dividerTheme: const DividerThemeData(
@@ -104,9 +103,10 @@ abstract final class WebTheme {
           letterSpacing: 0.8,
           color: scheme.onSurface.withValues(alpha: 0.7),
         ),
-        dataTextStyle: GoogleFonts.inter(
+        dataTextStyle: const TextStyle(
+          fontFamily: WebTypography.fontFamily,
           fontSize: 13,
-          fontFeatures: const [FontFeature.tabularFigures()],
+          fontFeatures: [FontFeature.tabularFigures()],
         ),
         headingRowColor: WidgetStateProperty.all(Colors.white),
         dataRowColor: WidgetStateProperty.resolveWith((states) {

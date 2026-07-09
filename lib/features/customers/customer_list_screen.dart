@@ -12,7 +12,7 @@ import '../../core/ui/paginated_list_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'add_customer_sheet.dart';
 import 'customer_detail_screen.dart';
 import 'providers.dart';

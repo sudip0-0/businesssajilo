@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/enums.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import '../auth/change_password_screen.dart';
 import '../auth/providers/auth_provider.dart';
 

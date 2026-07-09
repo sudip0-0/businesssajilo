@@ -104,8 +104,8 @@ Documented in `Architecture.md`. Evidence:
 |------|--------|
 | Unused packages | No obvious unused deps from spot-check (all major packages referenced). Full unused-dep analysis not run. |
 | Duplicate / overlapping libs | None severe. Web/mobile UI duplication is source duplication, not package overlap. |
-| Outdated / deprecated | Not fully audited. Recommend `dart pub outdated` as follow-up (see backlog N5). |
-| Known CVEs | Not scanned in this pass. Recommend advisory check after `pub outdated`. |
+| Outdated / deprecated | Audited 2026-07-09 — see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) (backlog N5). |
+| Known CVEs | Not scanned in this pass. Recommend advisory check after major bumps; see DEPENDENCIES.md. |
 
 ---
 

@@ -11,7 +11,7 @@ import '../../data/repositories/orders_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/order_item.dart';
 import '../auth/providers/auth_provider.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import '../billing/bill_from_order_sheet.dart';
 import '../chat/order_chat_screen.dart';
 import '../inventory/product_image.dart';

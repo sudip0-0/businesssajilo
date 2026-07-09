@@ -7,7 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../core/utils/login_identifier.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'forgot_password_sheet.dart';
 import 'providers/auth_provider.dart';
 

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../inventory/product_list_screen.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import '../inventory/stock_in_picker_sheet.dart';
 import '../notifications/notification_bell_action.dart';
 import '../sync/sync_badge_action.dart';

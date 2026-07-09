@@ -8,22 +8,9 @@ import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../customers/providers.dart';
+import 'validate_bill_payment.dart';
 
-class BillPaymentResult {
-  const BillPaymentResult({
-    required this.status,
-    this.customerId,
-    this.paymentAmount,
-    this.paymentMethod = PaymentMethod.cash,
-    this.paymentRefNote,
-  });
-
-  final BillStatus status;
-  final String? customerId;
-  final int? paymentAmount;
-  final PaymentMethod paymentMethod;
-  final String? paymentRefNote;
-}
+export 'bill_payment_result.dart';
 
 class BillPaymentSheet extends ConsumerStatefulWidget {
   const BillPaymentSheet({
@@ -71,55 +58,49 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   void _submit() {
     final l10n = AppLocalizations.of(context);
 
-    var status = _status;
-    if (status == BillStatus.partial) {
-      final amount = parseNpr(_amountController.text);
-      if (amount == null) {
-        _showError(l10n.amountRequired);
-        return;
-      }
-      if (amount.value <= 0) {
-        _showError(l10n.amountMustBePositive);
-        return;
-      }
-      if (amount.value > widget.grandTotal) {
-        _showError(l10n.amountExceedsTotal);
-        return;
-      }
-      // A "partial" payment covering the full amount is just a paid bill.
-      if (amount.value == widget.grandTotal) {
-        status = BillStatus.paid;
-      }
-    }
+    final partialAmount = _status == BillStatus.partial
+        ? parseNpr(_amountController.text)?.value
+        : null;
 
-    if (!_walkIn && _customerId == null && status != BillStatus.due) {
-      _showError(l10n.selectCustomer);
+    final error = validateBillPayment(
+      status: _status,
+      grandTotal: widget.grandTotal,
+      walkIn: _walkIn,
+      customerId: _customerId,
+      partialAmountPaisa: partialAmount,
+    );
+    if (error != null) {
+      _showError(_paymentValidationMessage(l10n, error));
       return;
     }
 
-    if (_walkIn && status != BillStatus.paid) {
-      _showError(l10n.selectCustomerForCredit);
-      return;
-    }
-
-    final paymentAmount = switch (status) {
-      BillStatus.partial => parseNpr(_amountController.text)!.value,
-      BillStatus.paid => widget.grandTotal,
-      BillStatus.due => null,
-    };
-
+    final refNote = _refController.text.trim();
     Navigator.pop(
       context,
-      BillPaymentResult(
-        status: status,
-        customerId: _walkIn ? null : _customerId,
-        paymentAmount: paymentAmount,
+      buildBillPaymentResult(
+        status: _status,
+        grandTotal: widget.grandTotal,
+        walkIn: _walkIn,
+        customerId: _customerId,
+        partialAmountPaisa: partialAmount,
         paymentMethod: _method,
-        paymentRefNote: _refController.text.trim().isEmpty
-            ? null
-            : _refController.text.trim(),
+        paymentRefNote: refNote.isEmpty ? null : refNote,
       ),
     );
+  }
+
+  String _paymentValidationMessage(
+    AppLocalizations l10n,
+    BillPaymentValidationError error,
+  ) {
+    return switch (error) {
+      BillPaymentValidationError.amountRequired => l10n.amountRequired,
+      BillPaymentValidationError.amountNotPositive => l10n.amountMustBePositive,
+      BillPaymentValidationError.amountExceedsTotal => l10n.amountExceedsTotal,
+      BillPaymentValidationError.selectCustomer => l10n.selectCustomer,
+      BillPaymentValidationError.walkInCreditNotAllowed =>
+        l10n.selectCustomerForCredit,
+    };
   }
 
   void _showError(String message) {

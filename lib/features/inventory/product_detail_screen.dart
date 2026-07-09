@@ -15,7 +15,7 @@ import '../../domain/models/stock_movement.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'providers.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'stock_adjust_sheet.dart';
 import 'stock_in_sheet.dart';
 

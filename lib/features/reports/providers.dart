@@ -1,9 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/report_range.dart';
+import '../../data/repositories/bills_repository.dart';
+import '../../data/repositories/orders_repository.dart';
+import '../../data/repositories/payments_repository.dart';
+import '../../data/repositories/products_repository.dart';
 import '../../data/repositories/reports_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/dues_aging_report.dart';
+import '../../domain/models/owner_dashboard_stats.dart';
 import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
@@ -50,4 +55,40 @@ final last7DaySalesProvider =
       return ref
           .watch(reportsRepositoryProvider)
           .salesDaily(from: window.from, to: window.to);
+    });
+
+/// Owner dashboard KPI tiles — prefers `owner_dashboard_stats` RPC; on failure
+/// (e.g. offline staff mobile) falls back to existing local-capable methods.
+final ownerDashboardStatsProvider =
+    FutureProvider.autoDispose<OwnerDashboardStats>((ref) async {
+      try {
+        return await ref.watch(reportsRepositoryProvider).ownerDashboardStats();
+      } catch (_) {
+        Future<int> safe(Future<int> Function() load) async {
+          try {
+            return await load();
+          } catch (_) {
+            return 0;
+          }
+        }
+
+        final bills = ref.read(billsRepositoryProvider);
+        final payments = ref.read(paymentsRepositoryProvider);
+        final products = ref.read(productsRepositoryProvider);
+        final orders = ref.read(ordersRepositoryProvider);
+        final results = await Future.wait([
+          safe(bills.todaysSales),
+          safe(bills.yesterdaysSales),
+          safe(payments.totalDues),
+          safe(products.lowStockCount),
+          safe(orders.pendingCount),
+        ]);
+        return OwnerDashboardStats(
+          todaySales: results[0],
+          yesterdaySales: results[1],
+          totalDues: results[2],
+          lowStockCount: results[3],
+          pendingOrders: results[4],
+        );
+      }
     });

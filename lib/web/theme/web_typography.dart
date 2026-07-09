@@ -1,60 +1,83 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Corporate web typography per Design.md: Inter with tabular figures for data.
+///
+/// Uses the bundled `Inter` family from `assets/fonts/` (see pubspec.yaml).
 abstract final class WebTypography {
+  static const String fontFamily = 'Inter';
+
+  static TextStyle _inter({
+    double? fontSize,
+    FontWeight? fontWeight,
+    double? height,
+    double? letterSpacing,
+    Color? color,
+    List<FontFeature>? fontFeatures,
+  }) {
+    return TextStyle(
+      fontFamily: fontFamily,
+      fontFamilyFallback: const ['Noto Sans Devanagari'],
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: letterSpacing,
+      color: color,
+      fontFeatures: fontFeatures,
+    );
+  }
+
   static TextTheme textTheme(ColorScheme scheme) {
-    final inter = GoogleFonts.interTextTheme();
-    return inter.copyWith(
-      displayLarge: GoogleFonts.inter(
+    final base = ThemeData(fontFamily: fontFamily).textTheme;
+    return base.copyWith(
+      displayLarge: _inter(
         fontSize: 32,
         fontWeight: FontWeight.w700,
         height: 1.25,
         letterSpacing: -0.64,
         color: scheme.onSurface,
       ),
-      displayMedium: GoogleFonts.inter(
+      displayMedium: _inter(
         fontSize: 24,
         fontWeight: FontWeight.w700,
         height: 1.33,
         letterSpacing: -0.24,
         color: scheme.onSurface,
       ),
-      headlineSmall: GoogleFonts.inter(
+      headlineSmall: _inter(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         height: 1.4,
         color: scheme.onSurface,
       ),
-      titleLarge: GoogleFonts.inter(
+      titleLarge: _inter(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         height: 1.4,
       ),
-      titleMedium: GoogleFonts.inter(
+      titleMedium: _inter(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         height: 1.5,
       ),
-      bodyLarge: GoogleFonts.inter(
+      bodyLarge: _inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         height: 1.5,
         color: scheme.onSurface.withValues(alpha: 0.9),
       ),
-      bodyMedium: GoogleFonts.inter(
+      bodyMedium: _inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.43,
         color: scheme.onSurface.withValues(alpha: 0.85),
       ),
-      labelLarge: GoogleFonts.inter(
+      labelLarge: _inter(
         fontSize: 12,
         fontWeight: FontWeight.w600,
         height: 1.33,
         letterSpacing: 0.6,
       ),
-      labelSmall: GoogleFonts.inter(
+      labelSmall: _inter(
         fontSize: 11,
         fontWeight: FontWeight.w500,
         height: 1.27,
@@ -65,7 +88,7 @@ abstract final class WebTypography {
   }
 
   static TextStyle monoData(BuildContext context, {double? fontSize}) {
-    return GoogleFonts.inter(
+    return _inter(
       fontSize: fontSize ?? 14,
       fontWeight: FontWeight.w600,
       fontFeatures: const [FontFeature.tabularFigures()],
@@ -74,7 +97,7 @@ abstract final class WebTypography {
   }
 
   static TextStyle metricValue(BuildContext context) {
-    return GoogleFonts.inter(
+    return _inter(
       fontSize: 24,
       fontWeight: FontWeight.w700,
       height: 1.33,

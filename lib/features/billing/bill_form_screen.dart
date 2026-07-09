@@ -13,12 +13,13 @@ import '../../domain/models/product.dart';
 import '../../core/ui/bs_success_button.dart';
 import '../inventory/product_image.dart';
 import '../inventory/providers.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'bill_draft_line.dart';
 import 'bill_form_draft.dart';
 import 'bill_form_save.dart';
 import 'bill_form_validation.dart';
 import 'bill_payment_sheet.dart';
+import 'invalidate_billing.dart';
 
 class BillFormScreen extends ConsumerStatefulWidget {
   const BillFormScreen({super.key, this.embedded = false, this.onSaved});
@@ -82,7 +83,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     Bill? savedBill;
     try {
       savedBill = await saveBillForm(
-        ref,
+        ref.read(billingRefProvider),
         draft: _draft,
         payment: paymentResult,
       );

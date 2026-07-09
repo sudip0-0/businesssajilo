@@ -10,9 +10,6 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/onboarding/owner_onboarding_overlay.dart';
 import '../auth/web_login_page.dart';
 import '../auth/web_register_page.dart';
-import '../features/billing/web_bill_form_page.dart';
-import '../features/billing/web_bill_list_page.dart';
-import '../features/billing/web_credit_note_form_page.dart';
 import '../features/customers/web_customer_form_page.dart';
 import '../features/customers/web_customer_ledger_page.dart';
 import '../features/customers/web_customer_list_page.dart';
@@ -20,24 +17,35 @@ import '../features/dashboard/web_customer_dashboard_page.dart';
 import '../features/dashboard/web_owner_dashboard_page.dart';
 import '../features/dashboard/web_sales_dashboard_page.dart';
 import '../features/dashboard/web_warehouse_dashboard_page.dart';
-import '../features/inventory/web_product_form_page.dart';
-import '../features/inventory/web_product_list_page.dart';
 import '../features/notifications/web_notifications_page.dart';
-import '../features/orders/web_catalog_page.dart';
-import '../features/orders/web_fulfillment_page.dart';
-import '../features/orders/web_order_detail_page.dart';
-import '../features/orders/web_order_list_page.dart';
-import '../features/reports/web_dues_aging_page.dart';
-import '../features/reports/web_reports_hub_page.dart';
-import '../features/reports/web_sales_summary_page.dart';
-import '../features/reports/web_stock_valuation_page.dart';
 import '../features/settings/web_settings_page.dart';
 import '../features/staff/web_staff_list_page.dart';
 import '../shell/customer_web_shell.dart';
 import '../shell/owner_web_shell.dart';
 import '../shell/sales_web_shell.dart';
 import '../shell/warehouse_web_shell.dart';
+import 'deferred_page.dart';
 import 'web_role_routes.dart';
+
+// Heavy feature modules — loaded on first navigation to shrink initial JS.
+import '../features/billing/web_bill_form_page.dart' deferred as bill_form;
+import '../features/billing/web_bill_list_page.dart' deferred as bill_list;
+import '../features/billing/web_credit_note_form_page.dart'
+    deferred as credit_note;
+import '../features/inventory/web_product_form_page.dart'
+    deferred as product_form;
+import '../features/inventory/web_product_list_page.dart'
+    deferred as product_list;
+import '../features/orders/web_catalog_page.dart' deferred as catalog;
+import '../features/orders/web_fulfillment_page.dart' deferred as fulfillment;
+import '../features/orders/web_order_detail_page.dart' deferred as order_detail;
+import '../features/orders/web_order_list_page.dart' deferred as order_list;
+import '../features/reports/web_dues_aging_page.dart' deferred as dues_aging;
+import '../features/reports/web_reports_hub_page.dart' deferred as reports_hub;
+import '../features/reports/web_sales_summary_page.dart'
+    deferred as sales_summary;
+import '../features/reports/web_stock_valuation_page.dart'
+    deferred as stock_valuation;
 
 final webRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
@@ -112,30 +120,43 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/inventory',
-        builder: (_, state) => WebProductListPage(
-          selectedProductId: state.uri.queryParameters['id'],
-          canEdit: true,
-          canManageStock: true,
+        builder: (_, state) => DeferredPage(
+          load: product_list.loadLibrary,
+          builder: () => product_list.WebProductListPage(
+            selectedProductId: state.uri.queryParameters['id'],
+            canEdit: true,
+            canManageStock: true,
+          ),
         ),
         routes: [
           GoRoute(
             path: 'new',
-            builder: (_, _) =>
-                const WebProductFormPage(inventoryListPath: '/owner/inventory'),
+            builder: (_, _) => DeferredPage(
+              load: product_form.loadLibrary,
+              builder: () => product_form.WebProductFormPage(
+                inventoryListPath: '/owner/inventory',
+              ),
+            ),
           ),
           GoRoute(
             path: ':productId',
-            builder: (_, state) => WebProductListPage(
-              selectedProductId: state.pathParameters['productId'],
-              canEdit: true,
-              canManageStock: true,
+            builder: (_, state) => DeferredPage(
+              load: product_list.loadLibrary,
+              builder: () => product_list.WebProductListPage(
+                selectedProductId: state.pathParameters['productId'],
+                canEdit: true,
+                canManageStock: true,
+              ),
             ),
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (_, state) => WebProductFormPage(
-                  productId: state.pathParameters['productId'],
-                  inventoryListPath: '/owner/inventory',
+                builder: (_, state) => DeferredPage(
+                  load: product_form.loadLibrary,
+                  builder: () => product_form.WebProductFormPage(
+                    productId: state.pathParameters['productId'],
+                    inventoryListPath: '/owner/inventory',
+                  ),
                 ),
               ),
             ],
@@ -163,19 +184,36 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/billing',
-        builder: (_, state) =>
-            WebBillListPage(selectedBillId: state.uri.queryParameters['id']),
+        builder: (_, state) => DeferredPage(
+          load: bill_list.loadLibrary,
+          builder: () => bill_list.WebBillListPage(
+            selectedBillId: state.uri.queryParameters['id'],
+          ),
+        ),
         routes: [
-          GoRoute(path: 'new', builder: (_, _) => const WebBillFormPage()),
+          GoRoute(
+            path: 'new',
+            builder: (_, _) => DeferredPage(
+              load: bill_form.loadLibrary,
+              builder: () => bill_form.WebBillFormPage(),
+            ),
+          ),
           GoRoute(
             path: ':billId',
-            builder: (_, state) =>
-                WebBillListPage(selectedBillId: state.pathParameters['billId']),
+            builder: (_, state) => DeferredPage(
+              load: bill_list.loadLibrary,
+              builder: () => bill_list.WebBillListPage(
+                selectedBillId: state.pathParameters['billId'],
+              ),
+            ),
             routes: [
               GoRoute(
                 path: 'return',
-                builder: (_, state) => WebCreditNoteFormPage(
-                  billId: state.pathParameters['billId']!,
+                builder: (_, state) => DeferredPage(
+                  load: credit_note.loadLibrary,
+                  builder: () => credit_note.WebCreditNoteFormPage(
+                    billId: state.pathParameters['billId']!,
+                  ),
                 ),
               ),
             ],
@@ -184,18 +222,25 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/orders',
-        builder: (_, state) =>
-            WebOrderListPage(selectedOrderId: state.uri.queryParameters['id']),
+        builder: (_, state) => DeferredPage(
+          load: order_list.loadLibrary,
+          builder: () => order_list.WebOrderListPage(
+            selectedOrderId: state.uri.queryParameters['id'],
+          ),
+        ),
         routes: [
           GoRoute(
             path: ':orderId',
             builder: (_, state) {
               final tab =
                   int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
-              return WebOrderDetailPage(
-                orderId: state.pathParameters['orderId']!,
-                initialTab: tab,
-                ordersListPath: '/owner/orders',
+              return DeferredPage(
+                load: order_detail.loadLibrary,
+                builder: () => order_detail.WebOrderDetailPage(
+                  orderId: state.pathParameters['orderId']!,
+                  initialTab: tab,
+                  ordersListPath: '/owner/orders',
+                ),
               );
             },
           ),
@@ -207,16 +252,31 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/reports',
-        builder: (_, _) => const WebReportsHubPage(),
+        builder: (_, _) => DeferredPage(
+          load: reports_hub.loadLibrary,
+          builder: () => reports_hub.WebReportsHubPage(),
+        ),
         routes: [
           GoRoute(
             path: 'sales',
-            builder: (_, _) => const WebSalesSummaryPage(),
+            builder: (_, _) => DeferredPage(
+              load: sales_summary.loadLibrary,
+              builder: () => sales_summary.WebSalesSummaryPage(),
+            ),
           ),
-          GoRoute(path: 'dues', builder: (_, _) => const WebDuesAgingPage()),
+          GoRoute(
+            path: 'dues',
+            builder: (_, _) => DeferredPage(
+              load: dues_aging.loadLibrary,
+              builder: () => dues_aging.WebDuesAgingPage(),
+            ),
+          ),
           GoRoute(
             path: 'stock',
-            builder: (_, _) => const WebStockValuationPage(),
+            builder: (_, _) => DeferredPage(
+              load: stock_valuation.loadLibrary,
+              builder: () => stock_valuation.WebStockValuationPage(),
+            ),
           ),
         ],
       ),
@@ -238,32 +298,45 @@ ShellRoute _salesRoutes() {
       ),
       GoRoute(
         path: '/sales/stock',
-        builder: (_, state) => WebProductListPage(
-          selectedProductId: state.uri.queryParameters['id'],
+        builder: (_, state) => DeferredPage(
+          load: product_list.loadLibrary,
+          builder: () => product_list.WebProductListPage(
+            selectedProductId: state.uri.queryParameters['id'],
+          ),
         ),
         routes: [
           GoRoute(
             path: ':productId',
-            builder: (_, state) => WebProductListPage(
-              selectedProductId: state.pathParameters['productId'],
+            builder: (_, state) => DeferredPage(
+              load: product_list.loadLibrary,
+              builder: () => product_list.WebProductListPage(
+                selectedProductId: state.pathParameters['productId'],
+              ),
             ),
           ),
         ],
       ),
       GoRoute(
         path: '/sales/orders',
-        builder: (_, state) =>
-            WebOrderListPage(selectedOrderId: state.uri.queryParameters['id']),
+        builder: (_, state) => DeferredPage(
+          load: order_list.loadLibrary,
+          builder: () => order_list.WebOrderListPage(
+            selectedOrderId: state.uri.queryParameters['id'],
+          ),
+        ),
         routes: [
           GoRoute(
             path: ':orderId',
             builder: (_, state) {
               final tab =
                   int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
-              return WebOrderDetailPage(
-                orderId: state.pathParameters['orderId']!,
-                initialTab: tab,
-                ordersListPath: '/sales/orders',
+              return DeferredPage(
+                load: order_detail.loadLibrary,
+                builder: () => order_detail.WebOrderDetailPage(
+                  orderId: state.pathParameters['orderId']!,
+                  initialTab: tab,
+                  ordersListPath: '/sales/orders',
+                ),
               );
             },
           ),
@@ -287,19 +360,36 @@ ShellRoute _salesRoutes() {
       ),
       GoRoute(
         path: '/sales/billing',
-        builder: (_, state) =>
-            WebBillListPage(selectedBillId: state.uri.queryParameters['id']),
+        builder: (_, state) => DeferredPage(
+          load: bill_list.loadLibrary,
+          builder: () => bill_list.WebBillListPage(
+            selectedBillId: state.uri.queryParameters['id'],
+          ),
+        ),
         routes: [
-          GoRoute(path: 'new', builder: (_, _) => const WebBillFormPage()),
+          GoRoute(
+            path: 'new',
+            builder: (_, _) => DeferredPage(
+              load: bill_form.loadLibrary,
+              builder: () => bill_form.WebBillFormPage(),
+            ),
+          ),
           GoRoute(
             path: ':billId',
-            builder: (_, state) =>
-                WebBillListPage(selectedBillId: state.pathParameters['billId']),
+            builder: (_, state) => DeferredPage(
+              load: bill_list.loadLibrary,
+              builder: () => bill_list.WebBillListPage(
+                selectedBillId: state.pathParameters['billId'],
+              ),
+            ),
             routes: [
               GoRoute(
                 path: 'return',
-                builder: (_, state) => WebCreditNoteFormPage(
-                  billId: state.pathParameters['billId']!,
+                builder: (_, state) => DeferredPage(
+                  load: credit_note.loadLibrary,
+                  builder: () => credit_note.WebCreditNoteFormPage(
+                    billId: state.pathParameters['billId']!,
+                  ),
                 ),
               ),
             ],
@@ -316,30 +406,42 @@ ShellRoute _warehouseRoutes() {
     routes: [
       GoRoute(
         path: '/warehouse/stock',
-        builder: (_, state) => WebProductListPage(
-          selectedProductId: state.uri.queryParameters['id'],
-          canManageStock: true,
+        builder: (_, state) => DeferredPage(
+          load: product_list.loadLibrary,
+          builder: () => product_list.WebProductListPage(
+            selectedProductId: state.uri.queryParameters['id'],
+            canManageStock: true,
+          ),
         ),
         routes: [
           GoRoute(
             path: ':productId',
-            builder: (_, state) => WebProductListPage(
-              selectedProductId: state.pathParameters['productId'],
-              canManageStock: true,
+            builder: (_, state) => DeferredPage(
+              load: product_list.loadLibrary,
+              builder: () => product_list.WebProductListPage(
+                selectedProductId: state.pathParameters['productId'],
+                canManageStock: true,
+              ),
             ),
           ),
         ],
       ),
       GoRoute(
         path: '/warehouse/fulfillment',
-        builder: (_, state) => WebFulfillmentPage(
-          selectedOrderId: state.uri.queryParameters['id'],
+        builder: (_, state) => DeferredPage(
+          load: fulfillment.loadLibrary,
+          builder: () => fulfillment.WebFulfillmentPage(
+            selectedOrderId: state.uri.queryParameters['id'],
+          ),
         ),
         routes: [
           GoRoute(
             path: ':orderId',
-            builder: (_, state) => WebFulfillmentPage(
-              selectedOrderId: state.pathParameters['orderId'],
+            builder: (_, state) => DeferredPage(
+              load: fulfillment.loadLibrary,
+              builder: () => fulfillment.WebFulfillmentPage(
+                selectedOrderId: state.pathParameters['orderId'],
+              ),
             ),
           ),
         ],
@@ -363,20 +465,29 @@ ShellRoute _customerRoutes() {
       ),
       GoRoute(
         path: '/customer/catalog',
-        builder: (_, _) => const WebCatalogPage(),
+        builder: (_, _) => DeferredPage(
+          load: catalog.loadLibrary,
+          builder: () => catalog.WebCatalogPage(),
+        ),
       ),
       GoRoute(
         path: '/customer/orders',
-        builder: (_, state) => WebOrderListPage(
-          selectedOrderId: state.uri.queryParameters['id'],
-          ownOnly: true,
+        builder: (_, state) => DeferredPage(
+          load: order_list.loadLibrary,
+          builder: () => order_list.WebOrderListPage(
+            selectedOrderId: state.uri.queryParameters['id'],
+            ownOnly: true,
+          ),
         ),
         routes: [
           GoRoute(
             path: ':orderId',
-            builder: (_, state) => WebOrderListPage(
-              selectedOrderId: state.pathParameters['orderId'],
-              ownOnly: true,
+            builder: (_, state) => DeferredPage(
+              load: order_list.loadLibrary,
+              builder: () => order_list.WebOrderListPage(
+                selectedOrderId: state.pathParameters['orderId'],
+                ownOnly: true,
+              ),
             ),
           ),
         ],

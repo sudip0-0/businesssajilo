@@ -12,7 +12,7 @@ import '../staff/reset_member_password_sheet.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
 import 'statement_share_sheet.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'record_payment_sheet.dart';
 
 Future<void> _openRecordPaymentSheet(
@@ -22,7 +22,7 @@ Future<void> _openRecordPaymentSheet(
   required String customerName,
 }) async {
   final l10n = AppLocalizations.of(context);
-  final saved = await showAdaptiveSheet<bool>(
+  await showAdaptiveSheet<bool>(
     context: context,
     title: l10n.recordPayment,
     child: RecordPaymentSheet(
@@ -30,12 +30,7 @@ Future<void> _openRecordPaymentSheet(
       customerName: customerName,
     ),
   );
-  if (saved == true) {
-    ref.invalidate(customerDetailProvider(customerId));
-    ref.invalidate(customerLedgerProvider(customerId));
-    ref.invalidate(customerListProvider);
-    ref.invalidate(totalDuesProvider);
-  }
+  // Cache invalidation is handled by recordCustomerPayment.
 }
 
 class CustomerDetailScreen extends ConsumerWidget {

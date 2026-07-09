@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'web_side_panel.dart';
+import '../../web/ui/web_side_panel.dart';
 
 /// Shows a bottom sheet on mobile and a right side panel on web.
 Future<T?> showAdaptiveSheet<T>({

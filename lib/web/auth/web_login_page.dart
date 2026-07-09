@@ -11,7 +11,7 @@ import '../../core/utils/login_identifier.dart';
 import '../../features/auth/forgot_password_sheet.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../theme/web_theme.dart';
-import '../ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 
 class WebLoginPage extends ConsumerStatefulWidget {
   const WebLoginPage({super.key});

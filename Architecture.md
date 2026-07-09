@@ -82,6 +82,23 @@ Notes:
 - **Conflicts**: append-only tables (movements, payments, messages) never conflict; mutable rows (product edits) use last-write-wins + `audit_log`.
 - Customer app and web skip the sync layer entirely (direct online repo implementations behind the same repository interfaces).
 
+### Offline matrix
+
+`syncEnabledFor(role)` (`lib/data/sync/sync_config.dart`) is true only for staff roles on non-web builds (not customer, not web). When a sync bundle is active, providers inject `Syncing*` / `Cached*` repos; otherwise they use direct Supabase implementations behind the same abstracts.
+
+| Repository | Web | Customer mobile | Staff mobile (sync) |
+| --- | --- | --- | --- |
+| BillsRepository | N (Supabase) | N | Y (`SyncingBillsRepository`) |
+| PaymentsRepository | N (Supabase) | N | Y (`SyncingPaymentsRepository`) |
+| StockRepository | N (Supabase) | N | Y (`SyncingStockRepository`) |
+| ProductsRepository | N (Supabase) | N | Y (`CachedProductsRepository`) |
+| CustomersRepository | N (Supabase) | N | Y (`CachedCustomersRepository`) |
+| OrdersRepository | N | N | N (online-only) |
+| ReportsRepository | N | N | N (online-only) |
+| Credit notes / quotes / chat | N | N | N (intentionally online-only) |
+
+**Intentionally online-only:** credit notes, quotes, chat, orders, and reports (no Drift queue / cache). Owner dashboard KPIs use the `owner_dashboard_stats` RPC via `ownerDashboardStatsProvider`; if that call fails on staff mobile (offline / RPC unavailable), the provider falls back to existing local-capable methods (`todaysSales` / `yesterdaysSales` / `totalDues` / `lowStockCount`) plus online `pendingCount` when reachable — section lists (`todaysBillsProvider`, `lowStockAlertsProvider`, `recentCustomersProvider`, `salesDailyProvider`) stay separate loads.
+
 ## 6. Realtime
 
 Supabase Realtime channels (filtered by `business_id` / `order_id`) for: order status changes, new quotes, chat messages, notification feed. Falls back to pull-to-refresh when offline.
@@ -112,6 +129,7 @@ lib/
 
 - Role-aware shell: after login, `go_router` redirects to role-specific home (owner dashboard, sales home, warehouse home, customer catalog).
 - Same codebase, conditional features by role + platform (e.g. sync layer only on mobile staff builds via repository injection).
+- Shared adaptive sheets live in `lib/core/ui/adaptive_sheet.dart`. Feature modules under `lib/features/` must not import `lib/web/` (web UI stays in `lib/web/`).
 
 ## 9. Environments & CI/CD
 

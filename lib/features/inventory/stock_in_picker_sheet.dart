@@ -5,7 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/error_state.dart';
 import '../../domain/models/product.dart';
 import 'providers.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'stock_in_sheet.dart';
 
 class StockInPickerSheet extends ConsumerWidget {

@@ -9,7 +9,7 @@ import '../../core/ui/qty_stepper.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../domain/models/catalog_product.dart';
 import '../inventory/product_image.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import 'cart_sheet.dart';
 import 'providers.dart';
 

@@ -17,11 +17,12 @@ import '../../../features/billing/bill_form_draft.dart';
 import '../../../features/billing/bill_form_save.dart';
 import '../../../features/billing/bill_form_validation.dart';
 import '../../../features/billing/bill_payment_sheet.dart';
+import '../../../features/billing/invalidate_billing.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../ui/web_search_field.dart';
-import '../../ui/web_sheet_bridge.dart';
+import '../../../core/ui/adaptive_sheet.dart';
 import '../../../core/testing/integration_keys.dart';
 
 /// Web-native bill form layout with row-wise line items.
@@ -93,10 +94,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
     BillPaymentResult? paymentResult;
     if (forceStatus == BillStatus.due) {
-      paymentResult = BillPaymentResult(
-        status: BillStatus.due,
-        customerId: _draft.customerId,
-      );
+      paymentResult = duePaymentForDraft(_draft);
     } else {
       paymentResult = await showAdaptiveSheet<BillPaymentResult>(
         context: context,
@@ -113,7 +111,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     Bill? savedBill;
     try {
       savedBill = await saveBillForm(
-        ref,
+        ref.read(billingRefProvider),
         draft: _draft,
         payment: paymentResult,
         fallbackCustomerId: _draft.customerId,

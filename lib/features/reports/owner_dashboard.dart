@@ -14,9 +14,7 @@ import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
 import '../billing/providers.dart';
-import '../customers/providers.dart';
 import '../inventory/providers.dart';
-import '../orders/providers.dart' as orders;
 import 'dues_aging_screen.dart';
 import 'providers.dart';
 import 'sales_summary_screen.dart';
@@ -37,13 +35,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
   Future<void> _refresh() async {
     ref.invalidate(last7DaySalesProvider);
     ref.invalidate(salesDailyProvider(ReportRange.month));
-    ref.invalidate(todaysSalesProvider);
-    ref.invalidate(yesterdaysSalesProvider);
-    ref.invalidate(salesTrendProvider);
-    ref.invalidate(totalDuesProvider);
-    ref.invalidate(lowStockCountProvider);
+    ref.invalidate(ownerDashboardStatsProvider);
     ref.invalidate(lowStockAlertsProvider);
-    ref.invalidate(orders.pendingOrdersCountProvider);
     ref.invalidate(todaysBillsProvider);
   }
 
@@ -53,11 +46,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
     final session = ref.watch(authProvider).value;
     final name = session?.member?.displayName ?? '';
     final wide = isWideLayout(context);
-    final todaysSales = ref.watch(todaysSalesProvider);
-    final salesTrend = ref.watch(salesTrendProvider);
-    final totalDues = ref.watch(totalDuesProvider);
-    final lowStock = ref.watch(lowStockCountProvider);
-    final pendingOrders = ref.watch(orders.pendingOrdersCountProvider);
+    final stats = ref.watch(ownerDashboardStatsProvider);
     final chartRange = _weeklyChart ? ReportRange.last7Days : ReportRange.month;
     final chartData = ref.watch(salesDailyProvider(chartRange));
     final todaysBills = ref.watch(todaysBillsProvider);
@@ -95,24 +84,30 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.todaysSales,
-                value: todaysSales.when(
-                  data: (d) => formatNpr(Paisa(d), showPaisa: false),
+                value: stats.when(
+                  data: (d) => formatNpr(Paisa(d.todaySales), showPaisa: false),
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
                 icon: Icons.payments_outlined,
-                trend: salesTrend.when(
-                  data: (pct) => pct == null
-                      ? null
-                      : pct >= 0
-                      ? BsTrendDirection.up
-                      : BsTrendDirection.down,
+                trend: stats.when(
+                  data: (d) {
+                    final pct = d.salesTrendPercent;
+                    if (pct == null) return null;
+                    return pct >= 0
+                        ? BsTrendDirection.up
+                        : BsTrendDirection.down;
+                  },
                   loading: () => null,
                   error: (_, _) => null,
                 ),
-                trendLabel: salesTrend.when(
-                  data: (pct) =>
-                      pct == null ? null : '${pct.abs().toStringAsFixed(0)}%',
+                trendLabel: stats.when(
+                  data: (d) {
+                    final pct = d.salesTrendPercent;
+                    return pct == null
+                        ? null
+                        : '${pct.abs().toStringAsFixed(0)}%';
+                  },
                   loading: () => null,
                   error: (_, _) => null,
                 ),
@@ -124,14 +119,14 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.totalDues,
-                value: totalDues.when(
-                  data: (d) => formatNpr(Paisa(d), showPaisa: false),
+                value: stats.when(
+                  data: (d) => formatNpr(Paisa(d.totalDues), showPaisa: false),
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
                 icon: Icons.account_balance_wallet_outlined,
-                subtitle: totalDues.when(
-                  data: (d) => d > 0 ? l10n.needsAttention : null,
+                subtitle: stats.when(
+                  data: (d) => d.totalDues > 0 ? l10n.needsAttention : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),
@@ -143,14 +138,14 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.lowStock,
-                value: lowStock.when(
-                  data: (c) => '$c',
+                value: stats.when(
+                  data: (d) => '${d.lowStockCount}',
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
                 icon: Icons.inventory_2_outlined,
-                subtitle: lowStock.when(
-                  data: (c) => c > 0 ? l10n.reorderSoon : null,
+                subtitle: stats.when(
+                  data: (d) => d.lowStockCount > 0 ? l10n.reorderSoon : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),
@@ -165,19 +160,21 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.pendingOrders,
-                value: pendingOrders.when(
-                  data: (c) => '$c',
+                value: stats.when(
+                  data: (d) => '${d.pendingOrders}',
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
                 icon: Icons.shopping_cart_outlined,
-                trendLabel: pendingOrders.when(
-                  data: (c) => c > 0 ? '$c NEW' : null,
+                trendLabel: stats.when(
+                  data: (d) =>
+                      d.pendingOrders > 0 ? '${d.pendingOrders} NEW' : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),
-                trend: pendingOrders.when(
-                  data: (c) => c > 0 ? BsTrendDirection.neutral : null,
+                trend: stats.when(
+                  data: (d) =>
+                      d.pendingOrders > 0 ? BsTrendDirection.neutral : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),

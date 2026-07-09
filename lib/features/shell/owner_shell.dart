@@ -7,7 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
 import '../billing/providers.dart';
-import '../../web/ui/web_sheet_bridge.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import '../customers/add_customer_sheet.dart';
 import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
@@ -17,6 +17,7 @@ import '../inventory/providers.dart';
 import '../orders/order_queue_screen.dart';
 import '../notifications/notification_bell_action.dart';
 import '../reports/owner_dashboard.dart';
+import '../reports/providers.dart';
 import '../reports/reports_hub_screen.dart';
 import '../settings/settings_screen.dart';
 import '../onboarding/owner_onboarding_overlay.dart';
@@ -216,6 +217,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
                 ref.invalidate(todaysSalesProvider);
                 ref.invalidate(todaysBillCountProvider);
                 ref.invalidate(totalDuesProvider);
+                ref.invalidate(ownerDashboardStatsProvider);
               }
             },
             icon: const Icon(Icons.add),

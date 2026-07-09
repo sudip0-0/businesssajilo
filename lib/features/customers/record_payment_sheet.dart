@@ -5,9 +5,9 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
-import '../../data/repositories/payments_repository.dart';
 import '../../domain/enums.dart';
-import '../auth/providers/auth_provider.dart';
+import '../billing/invalidate_billing.dart';
+import '../billing/record_customer_payment.dart';
 import 'providers.dart';
 
 class RecordPaymentSheet extends ConsumerStatefulWidget {
@@ -49,50 +49,35 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context);
     final amount = parseNpr(_amountController.text);
-    if (amount == null) {
+    final error = validateRecordPayment(
+      customerId: _selectedCustomerId,
+      amountPaisa: amount?.value,
+    );
+    if (error != null) {
+      final message = switch (error) {
+        RecordPaymentValidationError.amountRequired => l10n.amountRequired,
+        RecordPaymentValidationError.amountNotPositive =>
+          l10n.amountMustBePositive,
+        RecordPaymentValidationError.noCustomer => l10n.selectCustomer,
+      };
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.amountRequired),
-          backgroundColor: BsColors.danger,
-        ),
+        SnackBar(content: Text(message), backgroundColor: BsColors.danger),
       );
       return;
     }
-    if (amount.value <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.amountMustBePositive),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return;
-    }
-    final customerId = _selectedCustomerId;
-    if (customerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.selectCustomer),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return;
-    }
-    final memberId = ref.read(authProvider).value?.member?.id;
-    if (memberId == null) return;
+
+    final customerId = _selectedCustomerId!;
+    final refNote = _refController.text.trim();
 
     setState(() => _loading = true);
     try {
-      await ref
-          .read(paymentsRepositoryProvider)
-          .record(
-            customerId: customerId,
-            amount: amount.value,
-            method: _method,
-            refNote: _refController.text.trim().isEmpty
-                ? null
-                : _refController.text.trim(),
-            receivedByMemberId: memberId,
-          );
+      await recordCustomerPayment(
+        ref.read(billingRefProvider),
+        customerId: customerId,
+        amountPaisa: amount!.value,
+        method: _method,
+        refNote: refNote.isEmpty ? null : refNote,
+      );
       if (mounted) Navigator.pop(context, true);
     } catch (_) {
       if (mounted) {

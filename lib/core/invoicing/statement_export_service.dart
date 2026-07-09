@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'pdf_raster_isolate.dart';
 import 'statement_document.dart';
 import 'statement_pdf_builder.dart';
 
@@ -36,16 +37,7 @@ class StatementExportService {
     String? text,
   }) async {
     final pdfBytes = await _pdfBuilder.build(doc);
-    final pages = Printing.raster(pdfBytes, pages: [0], dpi: 180);
-    PdfRaster? first;
-    await for (final page in pages) {
-      first = page;
-      break;
-    }
-    if (first == null) {
-      throw StateError('Failed to rasterize statement PDF');
-    }
-    final png = await first.toPng();
+    final png = await rasterPdfFirstPageToPng(pdfBytes);
     final name = _fileName(doc);
     await Share.shareXFiles(
       [XFile.fromData(png, name: '$name.png', mimeType: 'image/png')],
