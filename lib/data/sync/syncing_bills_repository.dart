@@ -35,19 +35,28 @@ class SyncingBillsRepository implements BillsRepository {
 
   @override
   Future<List<Bill>> list({int offset = 0, int? limit}) async {
-    final bills = await _db.select(_db.localBills).get();
-    bills.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final sliced = limit == null
-        ? bills
-        : bills.skip(offset).take(limit).toList();
-    final result = <Bill>[];
-    for (final bill in sliced) {
-      final items = await (_db.select(
-        _db.localBillItems,
-      )..where((i) => i.billId.equals(bill.id))).get();
-      result.add(mapLocalBill(bill, items));
+    final query = _db.select(_db.localBills)
+      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)]);
+    if (limit != null) {
+      query.limit(limit, offset: offset);
     }
-    return result;
+    final bills = await query.get();
+    return _attachItems(bills);
+  }
+
+  Future<List<Bill>> _attachItems(List<LocalBill> bills) async {
+    if (bills.isEmpty) return const [];
+    final ids = bills.map((b) => b.id).toList();
+    final items = await (_db.select(
+      _db.localBillItems,
+    )..where((i) => i.billId.isIn(ids))).get();
+    final byBill = <String, List<LocalBillItem>>{};
+    for (final item in items) {
+      (byBill[item.billId] ??= []).add(item);
+    }
+    return [
+      for (final bill in bills) mapLocalBill(bill, byBill[bill.id] ?? const []),
+    ];
   }
 
   @override
@@ -67,17 +76,21 @@ class SyncingBillsRepository implements BillsRepository {
     if (net != null) return net;
     // Offline fallback: local bills only (credit notes are online-only).
     final start = nptDayStartUtc();
-    final bills = await _db.select(_db.localBills).get();
-    return bills
-        .where((b) => !b.createdAt.toUtc().isBefore(start))
-        .fold<int>(0, (sum, b) => sum + b.grandTotal);
+    final rows = await (_db.select(
+      _db.localBills,
+    )..where((b) => b.createdAt.isBiggerOrEqualValue(start))).get();
+    return rows.fold<int>(0, (sum, b) => sum + b.grandTotal);
   }
 
   @override
   Future<int> todaysBillCount() async {
     final start = nptDayStartUtc();
-    final bills = await _db.select(_db.localBills).get();
-    return bills.where((b) => !b.createdAt.toUtc().isBefore(start)).length;
+    final count = _db.localBills.id.count();
+    final query = _db.selectOnly(_db.localBills)
+      ..addColumns([count])
+      ..where(_db.localBills.createdAt.isBiggerOrEqualValue(start));
+    final row = await query.getSingle();
+    return row.read(count) ?? 0;
   }
 
   @override
@@ -86,14 +99,14 @@ class SyncingBillsRepository implements BillsRepository {
     final net = await _netSalesFromReport(yesterdayStart);
     if (net != null) return net;
     final todayStart = nptDayStartUtc();
-    final bills = await _db.select(_db.localBills).get();
-    return bills
-        .where(
-          (b) =>
-              !b.createdAt.toUtc().isBefore(yesterdayStart) &&
-              b.createdAt.toUtc().isBefore(todayStart),
-        )
-        .fold<int>(0, (sum, b) => sum + b.grandTotal);
+    final rows =
+        await (_db.select(_db.localBills)..where(
+              (b) =>
+                  b.createdAt.isBiggerOrEqualValue(yesterdayStart) &
+                  b.createdAt.isSmallerThanValue(todayStart),
+            ))
+            .get();
+    return rows.fold<int>(0, (sum, b) => sum + b.grandTotal);
   }
 
   /// Prefer report_sales_daily (nets credit notes) when online.
@@ -119,23 +132,27 @@ class SyncingBillsRepository implements BillsRepository {
   @override
   Future<List<Bill>> listTodaysBills({int limit = 20}) async {
     final start = nptDayStartUtc();
-    final all = await list();
-    return all
-        .where(
-          (b) => b.createdAt != null && !b.createdAt!.toUtc().isBefore(start),
-        )
-        .take(limit)
-        .toList();
+    final bills =
+        await (_db.select(_db.localBills)
+              ..where((b) => b.createdAt.isBiggerOrEqualValue(start))
+              ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
+              ..limit(limit))
+            .get();
+    return _attachItems(bills);
   }
 
   @override
   Future<List<Bill>> search(String query, {int limit = 50}) async {
-    final q = query.toLowerCase();
-    final all = await list();
-    return all
-        .where((b) => b.billNo.toLowerCase().contains(q))
-        .take(limit)
-        .toList();
+    final q = query.trim();
+    if (q.isEmpty) return list(limit: limit);
+    final pattern = '%$q%';
+    final bills =
+        await (_db.select(_db.localBills)
+              ..where((b) => b.billNo.like(pattern))
+              ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
+              ..limit(limit))
+            .get();
+    return _attachItems(bills);
   }
 
   @override

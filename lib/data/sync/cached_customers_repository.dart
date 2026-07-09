@@ -6,6 +6,7 @@ import '../local/app_database.dart';
 import '../local/local_mappers.dart';
 import '../repositories/customers_repository.dart';
 import '../repositories/members_repository.dart';
+import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CachedCustomersRepository implements CustomersRepository {
@@ -20,19 +21,26 @@ class CachedCustomersRepository implements CustomersRepository {
 
   @override
   Future<List<Customer>> list({int offset = 0, int? limit}) async {
-    final rows = await _db.select(_db.localCustomers).get();
-    rows.sort((a, b) => a.shopName.compareTo(b.shopName));
-    final mapped = rows.map(mapLocalCustomer).toList();
-    if (limit == null) return mapped;
-    return mapped.skip(offset).take(limit).toList();
+    final query = _db.select(_db.localCustomers)
+      ..orderBy([(c) => OrderingTerm.asc(c.shopName)]);
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+    final rows = await query.get();
+    return rows.map(mapLocalCustomer).toList();
   }
 
   @override
   Future<List<Customer>> listRecent({int limit = 2}) async {
-    final rows = await _db.select(_db.localCustomers).get();
-    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
-    rows.sort((a, b) => (b.createdAt ?? epoch).compareTo(a.createdAt ?? epoch));
-    return rows.take(limit).map(mapLocalCustomer).toList();
+    final rows =
+        await (_db.select(_db.localCustomers)
+              ..orderBy([
+                (c) => OrderingTerm.desc(c.createdAt),
+                (c) => OrderingTerm.asc(c.shopName),
+              ])
+              ..limit(limit))
+            .get();
+    return rows.map(mapLocalCustomer).toList();
   }
 
   @override

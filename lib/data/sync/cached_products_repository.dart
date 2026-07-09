@@ -22,42 +22,48 @@ class CachedProductsRepository implements ProductsRepository {
     int offset = 0,
     int? limit,
   }) async {
-    var query = _db.select(_db.localProducts);
+    final query = _db.select(_db.localProducts)
+      ..orderBy([(p) => OrderingTerm.asc(p.name)]);
     if (activeOnly) {
-      query = query..where((p) => p.isActive.equals(true));
+      query.where((p) => p.isActive.equals(true));
+    }
+    if (limit != null) {
+      query.limit(limit, offset: offset);
     }
     final rows = await query.get();
-    rows.sort((a, b) => a.name.compareTo(b.name));
-    final mapped = rows.map(mapLocalProduct).toList();
-    if (limit == null) return mapped;
-    return mapped.skip(offset).take(limit).toList();
+    return rows.map(mapLocalProduct).toList();
   }
 
   @override
   Future<int> lowStockCount() async {
-    final products = await list();
-    return products
-        .where(
-          (p) =>
-              p.lowStockThreshold > 0 && p.stockCached <= p.lowStockThreshold,
+    // Compare stock_cached <= low_stock_threshold in SQL (not possible via
+    // PostgREST filters; Drift customSelect can do it locally).
+    final rows = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS c FROM local_products '
+          'WHERE is_active = 1 AND low_stock_threshold > 0 '
+          'AND stock_cached <= low_stock_threshold',
+          readsFrom: {_db.localProducts},
         )
-        .length;
+        .get();
+    return rows.first.read<int>('c');
   }
 
   @override
   Future<List<Product>> listLowStock({int limit = 2}) async {
-    final rows =
-        await (_db.select(_db.localProducts)
-              ..where((p) => p.isActive.equals(true))
-              ..where((p) => p.lowStockThreshold.isBiggerThanValue(0)))
-            .get();
-    final low =
-        rows
-            .where((p) => p.stockCached <= p.lowStockThreshold)
-            .map(mapLocalProduct)
-            .toList()
-          ..sort((a, b) => a.name.compareTo(b.name));
-    return low.take(limit).toList();
+    final rows = await _db
+        .customSelect(
+          'SELECT * FROM local_products '
+          'WHERE is_active = 1 AND low_stock_threshold > 0 '
+          'AND stock_cached <= low_stock_threshold '
+          'ORDER BY name ASC '
+          'LIMIT ?',
+          variables: [Variable.withInt(limit)],
+          readsFrom: {_db.localProducts},
+        )
+        .map((row) => _db.localProducts.map(row.data))
+        .get();
+    return rows.map(mapLocalProduct).toList();
   }
 
   @override
