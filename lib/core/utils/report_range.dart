@@ -1,4 +1,5 @@
 import '../../domain/enums.dart';
+import '../../domain/models/sales_period_point.dart';
 
 /// Nepal Time fixed offset (UTC+05:45). No DST.
 const Duration nptOffset = Duration(hours: 5, minutes: 45);
@@ -65,4 +66,23 @@ String bucketFromAgeDays(int ageDays) {
   if (ageDays <= 30) return '0_30';
   if (ageDays <= 60) return '31_60';
   return '60_plus';
+}
+
+/// Fills missing calendar days in [points] between [from] and [to] (exclusive).
+List<SalesPeriodPoint> fillSalesDailyGaps({
+  required List<SalesPeriodPoint> points,
+  required DateTime from,
+  required DateTime to,
+}) {
+  final byDate = {
+    for (final p in points) nptDateString(p.saleDate): p,
+  };
+  final filled = <SalesPeriodPoint>[];
+  var day = from;
+  while (day.isBefore(to)) {
+    final key = nptDateString(day);
+    filled.add(byDate[key] ?? SalesPeriodPoint(saleDate: day));
+    day = day.add(const Duration(days: 1));
+  }
+  return filled;
 }

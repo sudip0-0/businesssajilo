@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/auth_errors.dart';
 import 'login_screen.dart' show emailRegex;
 import 'providers/auth_provider.dart';
@@ -70,13 +70,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = ref.watch(localeProvider);
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.registerBusiness)),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: Form(
@@ -84,22 +86,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.language),
-                      trailing: SegmentedButton<String>(
-                        segments: [
-                          ButtonSegment(value: 'en', label: Text(l10n.english)),
-                          ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
-                        ],
-                        selected: {locale.languageCode},
-                        onSelectionChanged: (selected) {
-                          ref
-                              .read(localeProvider.notifier)
-                              .setLocale(Locale(selected.first));
-                        },
-                      ),
-                    ),
+                    Text(l10n.language, style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 8),
+                    LocaleToggle(fullWidth: true),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _businessNameController,

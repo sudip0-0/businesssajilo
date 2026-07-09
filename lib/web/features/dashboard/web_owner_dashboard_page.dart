@@ -9,6 +9,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/report_range.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
@@ -72,7 +73,6 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
     return WebPageScaffold(
       title: l10n.namasteGreeting(name),
       subtitle: l10n.dashboardTodaySummary,
-      fillHeight: false,
       actions: [
         OutlinedButton(
           key: IntegrationKeys.dashboardAddProduct,
@@ -183,51 +183,94 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.salesPerformance,
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  Text(
-                                    l10n.salesPerformanceSubtitle,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(color: BsColors.outline),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SegmentedButton<bool>(
+                        LayoutBuilder(
+                          builder: (context, headerConstraints) {
+                            final stackHeader =
+                                headerConstraints.maxWidth < 480;
+                            final titleBlock = Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.salesPerformance,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                                Text(
+                                  l10n.salesPerformanceSubtitle,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(color: BsColors.outline),
+                                ),
+                              ],
+                            );
+                            final rangeToggle = SegmentedButton<bool>(
                               showSelectedIcon: false,
+                              style: const ButtonStyle(
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
                               segments: [
                                 ButtonSegment(
                                   value: true,
-                                  label: Text(l10n.weekly),
+                                  label: Text(
+                                    l10n.weekly,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 ButtonSegment(
                                   value: false,
-                                  label: Text(l10n.monthly),
+                                  label: Text(
+                                    l10n.monthly,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                               selected: {_weeklyChart},
                               onSelectionChanged: (s) =>
                                   setState(() => _weeklyChart = s.first),
-                            ),
-                          ],
+                            );
+
+                            if (stackHeader) {
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: [
+                                  titleBlock,
+                                  const SizedBox(height: 12),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: rangeToggle,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                Expanded(child: titleBlock),
+                                rangeToggle,
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 20),
                         chartData.when(
-                          data: (data) => BsSalesLineChart(
-                            points: data,
-                            height: 200,
-                          ),
+                          data: (data) {
+                            final window = dateRangeFor(chartRange);
+                            final filled = fillSalesDailyGaps(
+                              points: data,
+                              from: window.from,
+                              to: window.to,
+                            );
+                            return BsSalesLineChart(
+                              points: filled,
+                              height: 220,
+                            );
+                          },
                           loading: () => const SizedBox(
                             height: 200,
                             child: Center(child: CircularProgressIndicator()),

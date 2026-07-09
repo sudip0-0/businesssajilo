@@ -58,59 +58,89 @@ class WebSidebar extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(collapsed ? 12 : 20, 20, 12, 16),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: BsColors.primary,
-                    borderRadius: BorderRadius.circular(BsRadii.md),
-                  ),
-                  child: Icon(
-                    PhosphorIconsRegular.storefront,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                if (!collapsed) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.appTitle,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: BsColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        Text(
-                          l10n.smeManagement,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: BsColors.outline,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (!inDrawer)
-                  IconButton(
-                    tooltip: collapsed ? 'Expand' : 'Collapse',
-                    onPressed: onToggleCollapse,
-                    icon: Icon(
-                      collapsed
-                          ? PhosphorIconsRegular.caretRight
-                          : PhosphorIconsRegular.caretLeft,
-                      size: 18,
-                      color: BsColors.outline,
-                    ),
-                  ),
-              ],
+            padding: EdgeInsets.fromLTRB(
+              collapsed && !inDrawer ? 8 : 20,
+              20,
+              collapsed && !inDrawer ? 8 : 12,
+              16,
             ),
+            child: collapsed && !inDrawer
+                ? Center(
+                    child: Tooltip(
+                      message: 'Expand sidebar',
+                      child: InkWell(
+                        onTap: onToggleCollapse,
+                        borderRadius: BorderRadius.circular(BsRadii.md),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: BsColors.primary,
+                            borderRadius: BorderRadius.circular(BsRadii.md),
+                          ),
+                          child: Icon(
+                            PhosphorIconsRegular.storefront,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: BsColors.primary,
+                          borderRadius: BorderRadius.circular(BsRadii.md),
+                        ),
+                        child: Icon(
+                          PhosphorIconsRegular.storefront,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.appTitle,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: BsColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            Text(
+                              l10n.smeManagement,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: BsColors.outline,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!inDrawer)
+                        IconButton(
+                          tooltip: 'Collapse',
+                          onPressed: onToggleCollapse,
+                          icon: Icon(
+                            PhosphorIconsRegular.caretLeft,
+                            size: 18,
+                            color: BsColors.outline,
+                          ),
+                        ),
+                    ],
+                  ),
           ),
           Expanded(
             child: ListView.builder(

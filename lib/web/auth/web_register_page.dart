@@ -133,13 +133,16 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
     AppLocalizations l10n,
     Locale locale,
   ) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return ColoredBox(
       color: Colors.white,
       child: Theme(
         data: WebTheme.light(),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(48),
+            padding: EdgeInsets.fromLTRB(48, 48, 48, 48 + bottomInset),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: Form(

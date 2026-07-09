@@ -35,9 +35,10 @@ class WebStatTile extends StatelessWidget {
     return WebBentoTile(
       onTap: onTap,
       elevated: true,
-      minHeight: 132,
+      minHeight: 148,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -50,7 +51,11 @@ class WebStatTile extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 18, color: BsColors.primary),
               ),
-              if (trend != null) _TrendBadge(direction: trend!, label: trendLabel),
+              const Spacer(),
+              if (trend != null)
+                Flexible(
+                  child: _TrendBadge(direction: trend!, label: trendLabel),
+                ),
               if (onTap != null)
                 Icon(
                   PhosphorIconsRegular.arrowRight,
@@ -59,23 +64,39 @@ class WebStatTile extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             label.toUpperCase(),
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.outline,
               letterSpacing: 0.8,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          Text(value, style: WebTypography.metricValue(context)),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(color: scheme.outline),
-            ),
-          ],
+          Text(
+            value,
+            style: WebTypography.metricValue(context),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(
+            height: 18,
+            child: subtitle != null
+                ? Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      subtitle!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.outline,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                : null,
+          ),
         ],
       ),
     );
@@ -97,8 +118,8 @@ class _TrendBadge extends StatelessWidget {
     };
 
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(BsRadii.full),
@@ -106,15 +127,19 @@ class _TrendBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 11, color: color),
           if (label != null) ...[
-            const SizedBox(width: 4),
-            Text(
-              label!,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: color,
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                label!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ),
           ],

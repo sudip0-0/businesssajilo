@@ -119,6 +119,10 @@ extension WebTokensX on BuildContext {
   bool get isWebCompact =>
       MediaQuery.sizeOf(this).width < webTokens.compactBreakpoint;
 
+  bool get isWebTablet =>
+      MediaQuery.sizeOf(this).width >= webTokens.compactBreakpoint &&
+      MediaQuery.sizeOf(this).width < webTokens.desktopBreakpoint;
+
   bool get isWebWide =>
       MediaQuery.sizeOf(this).width >= webTokens.wideBreakpoint;
 }

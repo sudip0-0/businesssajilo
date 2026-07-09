@@ -15,6 +15,33 @@ import 'statement_share_sheet.dart';
 import '../../web/ui/web_sheet_bridge.dart';
 import 'record_payment_sheet.dart';
 
+Future<void> _openRecordPaymentSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required String customerId,
+  required String customerName,
+  bool popOnSuccess = false,
+}) async {
+  final l10n = AppLocalizations.of(context);
+  final saved = await showAdaptiveSheet<bool>(
+    context: context,
+    title: l10n.recordPayment,
+    child: RecordPaymentSheet(
+      customerId: customerId,
+      customerName: customerName,
+    ),
+  );
+  if (saved == true) {
+    ref.invalidate(customerDetailProvider(customerId));
+    ref.invalidate(customerLedgerProvider(customerId));
+    ref.invalidate(customerListProvider);
+    ref.invalidate(totalDuesProvider);
+    if (popOnSuccess && context.mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+}
+
 class CustomerDetailScreen extends ConsumerWidget {
   const CustomerDetailScreen({
     super.key,
@@ -61,6 +88,17 @@ class CustomerDetailScreen extends ConsumerWidget {
                           customer: customer,
                         ),
                       ),
+                      if (canRecordPayments)
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.payments_outlined, size: 18),
+                          label: Text(l10n.recordPayment),
+                          onPressed: () => _openRecordPaymentSheet(
+                            context,
+                            ref,
+                            customerId: customerId,
+                            customerName: customer.shopName,
+                          ),
+                        ),
                       if (canEdit)
                         OutlinedButton.icon(
                           icon: const Icon(Icons.lock_reset_outlined, size: 18),
@@ -109,22 +147,12 @@ class CustomerDetailScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(l10n.ledgerDebit, style: Theme.of(context).textTheme.labelSmall)),
-                    Expanded(child: Text(l10n.ledgerCredit, style: Theme.of(context).textTheme.labelSmall)),
-                    SizedBox(
-                      width: 96,
-                      child: Text(
-                        l10n.runningBalance,
-                        style: Theme.of(context).textTheme.labelSmall,
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ],
-                ),
+              LedgerTableHeader(
+                dateLabel: l10n.ledgerDate,
+                descriptionLabel: l10n.ledgerDescription,
+                debitLabel: l10n.ledgerDebit,
+                creditLabel: l10n.ledgerCredit,
+                balanceLabel: l10n.runningBalance,
               ),
               const Divider(height: 1),
               Expanded(
@@ -230,21 +258,13 @@ class CustomerDetailScreen extends ConsumerWidget {
               onPressed: () async {
                 final customer = customerAsync.value;
                 if (customer == null) return;
-                final saved = await showAdaptiveSheet<bool>(
-                  context: context,
-                  title: l10n.recordPayment,
-                  child: RecordPaymentSheet(
-                    customerId: customerId,
-                    customerName: customer.shopName,
-                  ),
+                await _openRecordPaymentSheet(
+                  context,
+                  ref,
+                  customerId: customerId,
+                  customerName: customer.shopName,
+                  popOnSuccess: true,
                 );
-                if (saved == true) {
-                  ref.invalidate(customerDetailProvider(customerId));
-                  ref.invalidate(customerLedgerProvider(customerId));
-                  ref.invalidate(customerListProvider);
-                  ref.invalidate(totalDuesProvider);
-                  if (context.mounted) Navigator.pop(context, true);
-                }
               },
               icon: const Icon(Icons.payments_outlined),
               label: Text(l10n.recordPayment),
