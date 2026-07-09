@@ -24,10 +24,7 @@ void main() {
   testWidgets('record payment sheet requires amount', (tester) async {
     await tester.pumpWidget(
       wrap(
-        const RecordPaymentSheet(
-          customerId: 'c1',
-          customerName: 'Ram Store',
-        ),
+        const RecordPaymentSheet(customerId: 'c1', customerName: 'Ram Store'),
       ),
     );
     await tester.pumpAndSettle();
@@ -41,10 +38,7 @@ void main() {
   testWidgets('record payment sheet rejects zero amount', (tester) async {
     await tester.pumpWidget(
       wrap(
-        const RecordPaymentSheet(
-          customerId: 'c1',
-          customerName: 'Ram Store',
-        ),
+        const RecordPaymentSheet(customerId: 'c1', customerName: 'Ram Store'),
       ),
     );
     await tester.pumpAndSettle();

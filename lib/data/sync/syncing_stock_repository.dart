@@ -15,9 +15,9 @@ class SyncingStockRepository implements StockRepository {
     required AppDatabase db,
     required SyncService sync,
     required String businessId,
-  })  : _db = db,
-        _sync = sync,
-        _businessId = businessId;
+  }) : _db = db,
+       _sync = sync,
+       _businessId = businessId;
 
   final AppDatabase _db;
   final SyncService _sync;
@@ -26,10 +26,11 @@ class SyncingStockRepository implements StockRepository {
 
   @override
   Future<List<StockMovement>> listMovements(String productId) async {
-    final rows = await (_db.select(_db.localStockMovements)
-          ..where((m) => m.productId.equals(productId))
-          ..orderBy([(m) => OrderingTerm.desc(m.createdAt)]))
-        .get();
+    final rows =
+        await (_db.select(_db.localStockMovements)
+              ..where((m) => m.productId.equals(productId))
+              ..orderBy([(m) => OrderingTerm.desc(m.createdAt)]))
+            .get();
     return rows.map(mapLocalMovement).toList();
   }
 
@@ -78,53 +79,57 @@ class SyncingStockRepository implements StockRepository {
       StockMovementType.return_ => 'return',
     };
 
-    await _db.into(_db.localStockMovements).insert(
-      LocalStockMovementsCompanion.insert(
-        id: id,
-        businessId: _businessId,
-        productId: productId,
-        type: typeDb,
-        qtyDelta: qtyDelta,
-        reason: Value(reason),
-        createdBy: createdByMemberId,
-        syncStatus: const Value('pending'),
-      ),
-    );
+    await _db.transaction(() async {
+      await _db
+          .into(_db.localStockMovements)
+          .insert(
+            LocalStockMovementsCompanion.insert(
+              id: id,
+              businessId: _businessId,
+              productId: productId,
+              type: typeDb,
+              qtyDelta: qtyDelta,
+              reason: Value(reason),
+              createdBy: createdByMemberId,
+              syncStatus: const Value('pending'),
+            ),
+          );
 
-    await (_db.update(_db.localProducts)..where((p) => p.id.equals(productId)))
-        .write(
-      LocalProductsCompanion(
-        stockCached: Value(
-          await _projectedStock(productId, qtyDelta),
+      await (_db.update(
+        _db.localProducts,
+      )..where((p) => p.id.equals(productId))).write(
+        LocalProductsCompanion(
+          stockCached: Value(await _projectedStock(productId, qtyDelta)),
         ),
-      ),
-    );
+      );
 
-    await _db.enqueue(
-      entityType: 'stock_movement',
-      entityId: id,
-      payload: {
-        'id': id,
-        'business_id': _businessId,
-        'product_id': productId,
-        'type': typeDb,
-        'qty_delta': qtyDelta,
-        'reason': reason,
-        'created_by': createdByMemberId,
-      },
-    );
+      await _db.enqueue(
+        entityType: 'stock_movement',
+        entityId: id,
+        payload: {
+          'id': id,
+          'business_id': _businessId,
+          'product_id': productId,
+          'type': typeDb,
+          'qty_delta': qtyDelta,
+          'reason': reason,
+          'created_by': createdByMemberId,
+        },
+      );
+    });
 
     unawaited(_sync.syncNow());
     return mapLocalMovement(
-      await (_db.select(_db.localStockMovements)..where((m) => m.id.equals(id)))
-          .getSingle(),
+      await (_db.select(
+        _db.localStockMovements,
+      )..where((m) => m.id.equals(id))).getSingle(),
     );
   }
 
   Future<int> _projectedStock(String productId, int delta) async {
-    final product = await (_db.select(_db.localProducts)
-          ..where((p) => p.id.equals(productId)))
-        .getSingle();
+    final product = await (_db.select(
+      _db.localProducts,
+    )..where((p) => p.id.equals(productId))).getSingle();
     return product.stockCached + delta;
   }
 }

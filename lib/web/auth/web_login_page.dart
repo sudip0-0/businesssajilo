@@ -42,12 +42,13 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).signIn(
-            _emailController.text,
-            _passwordController.text,
-          );
+      await ref
+          .read(authProvider.notifier)
+          .signIn(_emailController.text, _passwordController.text);
     } catch (e) {
-      setState(() => _error = localizeAuthError(e, AppLocalizations.of(context)));
+      setState(
+        () => _error = localizeAuthError(e, AppLocalizations.of(context)),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -93,39 +94,34 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
               color: Colors.white.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(BsRadii.lg),
             ),
-            child: Icon(PhosphorIconsRegular.storefront, size: 28, color: Colors.white),
+            child: Icon(
+              PhosphorIconsRegular.storefront,
+              size: 28,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 32),
           Text(
             l10n.appTitle,
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             l10n.tagline,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  height: 1.5,
-                ),
+              color: Colors.white.withValues(alpha: 0.85),
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 40),
-          _FeatureRow(
-            icon: PhosphorIconsRegular.receipt,
-            text: l10n.billing,
-          ),
+          _FeatureRow(icon: PhosphorIconsRegular.receipt, text: l10n.billing),
           const SizedBox(height: 12),
-          _FeatureRow(
-            icon: PhosphorIconsRegular.package,
-            text: l10n.inventory,
-          ),
+          _FeatureRow(icon: PhosphorIconsRegular.package, text: l10n.inventory),
           const SizedBox(height: 12),
-          _FeatureRow(
-            icon: PhosphorIconsRegular.chartBar,
-            text: l10n.reports,
-          ),
+          _FeatureRow(icon: PhosphorIconsRegular.chartBar, text: l10n.reports),
         ],
       ),
     );
@@ -151,29 +147,30 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (showBranding) ...[
-                      Icon(PhosphorIconsRegular.storefront,
-                          size: 40, color: BsColors.primary),
+                      Icon(
+                        PhosphorIconsRegular.storefront,
+                        size: 40,
+                        color: BsColors.primary,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         l10n.appTitle,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: BsColors.primary,
-                            ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(color: BsColors.primary),
                       ),
                       const SizedBox(height: 32),
                     ],
                     Text(
                       l10n.signIn,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: BsColors.textCharcoal,
-                          ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(color: BsColors.textCharcoal),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       l10n.tagline,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: BsColors.outline,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
                     ),
                     const SizedBox(height: 24),
                     const LocaleToggle(fullWidth: true),
@@ -200,9 +197,11 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
                       decoration: InputDecoration(
                         labelText: l10n.password,
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword
-                              ? PhosphorIconsRegular.eye
-                              : PhosphorIconsRegular.eyeSlash),
+                          icon: Icon(
+                            _obscurePassword
+                                ? PhosphorIconsRegular.eye
+                                : PhosphorIconsRegular.eyeSlash,
+                          ),
                           onPressed: () => setState(
                             () => _obscurePassword = !_obscurePassword,
                           ),
@@ -265,9 +264,8 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
                       children: [
                         Text(
                           l10n.noAccount,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: BsColors.outline,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: BsColors.outline),
                         ),
                         TextButton(
                           onPressed: () => context.go('/register'),
@@ -301,8 +299,8 @@ class _FeatureRow extends StatelessWidget {
         Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
+            color: Colors.white.withValues(alpha: 0.9),
+          ),
         ),
       ],
     );

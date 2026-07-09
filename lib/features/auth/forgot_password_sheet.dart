@@ -19,8 +19,9 @@ class ForgotPasswordSheet extends ConsumerStatefulWidget {
 
 class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
   final _formKey = GlobalKey<FormState>();
-  late final _emailController =
-      TextEditingController(text: widget.initialEmail ?? '');
+  late final _emailController = TextEditingController(
+    text: widget.initialEmail ?? '',
+  );
   bool _loading = false;
   String? _error;
 
@@ -43,9 +44,9 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
           .sendPasswordResetEmail(_emailController.text);
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.resetEmailSent)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.resetEmailSent)));
       }
     } catch (_) {
       if (mounted) {

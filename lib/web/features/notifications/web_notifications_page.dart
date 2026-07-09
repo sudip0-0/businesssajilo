@@ -70,8 +70,7 @@ class _WebNotificationRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final dateStr =
-        item.createdAt != null ? BsDate.both(item.createdAt!) : '—';
+    final dateStr = item.createdAt != null ? BsDate.both(item.createdAt!) : '—';
 
     return WebHoverableRow(
       onTap: () async {

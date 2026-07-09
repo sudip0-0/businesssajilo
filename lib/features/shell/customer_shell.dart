@@ -33,7 +33,11 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
     final pages = [
       RoleDashboard(
         stats: [
-          DashboardStat(icon: Icons.storefront, label: l10n.catalog, value: '—'),
+          DashboardStat(
+            icon: Icons.storefront,
+            label: l10n.catalog,
+            value: '—',
+          ),
           DashboardStat(
             icon: Icons.shopping_bag_outlined,
             label: l10n.myOrders,
@@ -65,11 +69,12 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
       selectedIndex: _index,
       onDestinationSelected: (i) => setState(() => _index = i),
       titles: [l10n.dashboard, l10n.catalog, l10n.myOrders, l10n.myDues],
-      actions: const [NotificationBellAction(), AccountAction(), LogoutAction()],
-      body: IndexedStack(
-        index: _index,
-        children: pages,
-      ),
+      actions: const [
+        NotificationBellAction(),
+        AccountAction(),
+        LogoutAction(),
+      ],
+      body: IndexedStack(index: _index, children: pages),
       destinations: [
         NavigationDestination(
           icon: const Icon(Icons.dashboard_outlined),

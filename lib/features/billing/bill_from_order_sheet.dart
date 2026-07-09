@@ -89,7 +89,9 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
 
     setState(() => _loading = true);
     try {
-      await ref.read(billsRepositoryProvider).createFromOrder(
+      await ref
+          .read(billsRepositoryProvider)
+          .createFromOrder(
             orderId: widget.orderId,
             customerId: widget.customerId,
             createdByMemberId: member.id,
@@ -108,16 +110,16 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
       ref.invalidate(totalDuesProvider);
       ref.invalidate(orderDetailProvider(widget.orderId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.billSaved)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
         Navigator.pop(context, true);
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.actionFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -152,14 +154,21 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.generateBill, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            l10n.generateBill,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 12),
           ..._lines.map(
             (line) => ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(line.nameSnapshot),
-              subtitle: Text('${line.qty} × ${formatNpr(Paisa(line.rate), showPaisa: false)}'),
-              trailing: Text(formatNpr(Paisa(line.lineTotal), showPaisa: false)),
+              subtitle: Text(
+                '${line.qty} × ${formatNpr(Paisa(line.rate), showPaisa: false)}',
+              ),
+              trailing: Text(
+                formatNpr(Paisa(line.lineTotal), showPaisa: false),
+              ),
             ),
           ),
           Text(

@@ -50,6 +50,27 @@ class SupabaseProductsRepository implements ProductsRepository {
   }
 
   @override
+  Future<List<Product>> listLowStock({int limit = 2}) async {
+    // PostgREST cannot compare two columns; fetch candidates then filter.
+    final client = _requireClient();
+    final rows = await client
+        .from('products')
+        .select('*, categories(name)')
+        .eq('is_active', true)
+        .gt('low_stock_threshold', 0)
+        .order('name', ascending: true);
+    final low = <Product>[];
+    for (final row in rows as List) {
+      final product = _mapProduct(row);
+      if (product.stockCached <= product.lowStockThreshold) {
+        low.add(product);
+        if (low.length >= limit) break;
+      }
+    }
+    return low;
+  }
+
+  @override
   Future<Product> get(String id) async {
     final client = _requireClient();
     final row = await client
@@ -139,10 +160,12 @@ class SupabaseProductsRepository implements ProductsRepository {
     final ext = mimeType.contains('png')
         ? 'png'
         : mimeType.contains('webp')
-            ? 'webp'
-            : 'jpg';
+        ? 'webp'
+        : 'jpg';
     final path = '$businessId/$productId.$ext';
-    await client.storage.from(_bucket).uploadBinary(
+    await client.storage
+        .from(_bucket)
+        .uploadBinary(
           path,
           bytes,
           fileOptions: FileOptions(contentType: mimeType, upsert: true),

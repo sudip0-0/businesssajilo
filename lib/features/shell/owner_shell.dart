@@ -45,9 +45,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         context,
         MaterialPageRoute(
           builder: (_) => Scaffold(
-            appBar: AppBar(
-              title: Text(AppLocalizations.of(context).orders),
-            ),
+            appBar: AppBar(title: Text(AppLocalizations.of(context).orders)),
             body: const OrderQueueScreen(),
           ),
         ),
@@ -169,13 +167,10 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         }),
         destinations: wide ? destinations : mobileDestinations,
         titles: wide ? titles : mobileTitles,
-        actions: const [
-          SyncBadgeAction(),
-          NotificationBellAction(),
-        ],
+        actions: const [SyncBadgeAction(), NotificationBellAction()],
         body: body,
-      floatingActionButton: switch (_index) {
-        1 => FloatingActionButton.extended(
+        floatingActionButton: switch (_index) {
+          1 => FloatingActionButton.extended(
             backgroundColor: BsColors.secondary,
             foregroundColor: BsColors.onSecondary,
             onPressed: () async {
@@ -191,7 +186,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.add),
             label: Text(l10n.addProduct),
           ),
-        2 => FloatingActionButton.extended(
+          2 => FloatingActionButton.extended(
             backgroundColor: BsColors.secondary,
             foregroundColor: BsColors.onSecondary,
             onPressed: () async {
@@ -208,7 +203,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.person_add),
             label: Text(l10n.addCustomer),
           ),
-        3 => FloatingActionButton.extended(
+          3 => FloatingActionButton.extended(
             backgroundColor: BsColors.secondary,
             foregroundColor: BsColors.onSecondary,
             onPressed: () async {
@@ -226,7 +221,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.add),
             label: Text(l10n.newBill),
           ),
-        5 => FloatingActionButton.extended(
+          5 => FloatingActionButton.extended(
             backgroundColor: BsColors.secondary,
             foregroundColor: BsColors.onSecondary,
             onPressed: () async {
@@ -240,8 +235,8 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
             icon: const Icon(Icons.person_add),
             label: Text(l10n.addMember),
           ),
-        _ => null,
-      },
+          _ => null,
+        },
       ),
     );
   }

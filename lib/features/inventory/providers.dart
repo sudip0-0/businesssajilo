@@ -17,7 +17,11 @@ final lowStockCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(productsRepositoryProvider).lowStockCount();
 });
 
-final productDetailProvider =
-    FutureProvider.autoDispose.family<Product, String>((ref, id) {
-  return ref.watch(productsRepositoryProvider).get(id);
+final lowStockAlertsProvider = FutureProvider.autoDispose<List<Product>>((ref) {
+  return ref.watch(productsRepositoryProvider).listLowStock(limit: 2);
 });
+
+final productDetailProvider = FutureProvider.autoDispose
+    .family<Product, String>((ref, id) {
+      return ref.watch(productsRepositoryProvider).get(id);
+    });

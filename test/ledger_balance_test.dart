@@ -37,51 +37,58 @@ void main() {
     expect(result[2].runningBalance, 6000);
   });
 
-  test('same-instant entries order opening_balance < bill < credit_note < payment', () {
-    final at = DateTime(2026, 1, 1);
-    final entries = [
-      LedgerEntry(
-        customerId: 'c1',
-        businessId: 'b1',
-        occurredAt: at,
-        entryType: 'payment',
-        description: 'Cash',
-        creditPaisa: 500,
-        refId: 'p1',
-      ),
-      LedgerEntry(
-        customerId: 'c1',
-        businessId: 'b1',
-        occurredAt: at,
-        entryType: 'credit_note',
-        description: 'CN-0001',
-        creditPaisa: 1000,
-        refId: 'cn1',
-      ),
-      LedgerEntry(
-        customerId: 'c1',
-        businessId: 'b1',
-        occurredAt: at,
-        entryType: 'bill',
-        description: 'Bill',
-        debitPaisa: 2000,
-        refId: 'b1',
-      ),
-      LedgerEntry(
-        customerId: 'c1',
-        businessId: 'b1',
-        occurredAt: at,
-        entryType: 'opening_balance',
-        description: 'Opening',
-        debitPaisa: 1000,
-      ),
-    ];
+  test(
+    'same-instant entries order opening_balance < bill < credit_note < payment',
+    () {
+      final at = DateTime(2026, 1, 1);
+      final entries = [
+        LedgerEntry(
+          customerId: 'c1',
+          businessId: 'b1',
+          occurredAt: at,
+          entryType: 'payment',
+          description: 'Cash',
+          creditPaisa: 500,
+          refId: 'p1',
+        ),
+        LedgerEntry(
+          customerId: 'c1',
+          businessId: 'b1',
+          occurredAt: at,
+          entryType: 'credit_note',
+          description: 'CN-0001',
+          creditPaisa: 1000,
+          refId: 'cn1',
+        ),
+        LedgerEntry(
+          customerId: 'c1',
+          businessId: 'b1',
+          occurredAt: at,
+          entryType: 'bill',
+          description: 'Bill',
+          debitPaisa: 2000,
+          refId: 'b1',
+        ),
+        LedgerEntry(
+          customerId: 'c1',
+          businessId: 'b1',
+          occurredAt: at,
+          entryType: 'opening_balance',
+          description: 'Opening',
+          debitPaisa: 1000,
+        ),
+      ];
 
-    final result = withRunningBalance(entries);
-    expect(result.map((e) => e.entryType).toList(),
-        ['opening_balance', 'bill', 'credit_note', 'payment']);
-    expect(result.last.runningBalance, 1500);
-  });
+      final result = withRunningBalance(entries);
+      expect(result.map((e) => e.entryType).toList(), [
+        'opening_balance',
+        'bill',
+        'credit_note',
+        'payment',
+      ]);
+      expect(result.last.runningBalance, 1500);
+    },
+  );
 
   test('same-instant entries order opening_balance < bill < payment', () {
     final at = DateTime(2026, 1, 1);
@@ -115,8 +122,11 @@ void main() {
     ];
 
     final result = withRunningBalance(entries);
-    expect(result.map((e) => e.entryType).toList(),
-        ['opening_balance', 'bill', 'payment']);
+    expect(result.map((e) => e.entryType).toList(), [
+      'opening_balance',
+      'bill',
+      'payment',
+    ]);
     expect(result.last.runningBalance, 2500);
   });
 

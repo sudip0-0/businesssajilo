@@ -47,10 +47,9 @@ class _EmptyDetailPlaceholder extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             l10n.selectItem,
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: scheme.outline),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: scheme.outline),
           ),
         ],
       ),

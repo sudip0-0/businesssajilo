@@ -3,10 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('orderTransitions allows placed to quoted', () {
-    expect(
-      orderTransitions[OrderStatus.placed],
-      contains(OrderStatus.quoted),
-    );
+    expect(orderTransitions[OrderStatus.placed], contains(OrderStatus.quoted));
   });
 
   test('orderTransitions allows dispatched to billed only', () {

@@ -11,7 +11,8 @@ StockLevel stockLevelFor(Product product) {
   return StockLevel.inStock;
 }
 
-bool isLowStock(Product product) => stockLevelFor(product) == StockLevel.lowStock;
+bool isLowStock(Product product) =>
+    stockLevelFor(product) == StockLevel.lowStock;
 
 int countLowStock(Iterable<Product> products) =>
     products.where(isLowStock).length;

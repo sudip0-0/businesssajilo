@@ -227,36 +227,36 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                     },
                     fieldViewBuilder:
                         (context, controller, focusNode, onFieldSubmitted) {
-                      // Keep external controller in sync for prefill.
-                      if (controller.text.isEmpty &&
-                          _customerSearchController.text.isNotEmpty) {
-                        controller.text = _customerSearchController.text;
-                      }
-                      return TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        decoration: InputDecoration(
-                          labelText: l10n.selectCustomer,
-                          hintText: l10n.filterCustomers,
-                          prefixIcon: const Icon(Icons.search),
-                        ),
-                        onChanged: (v) {
-                          _customerSearchController.text = v;
-                          // Clear selection if user edits away from match.
-                          if (_customerId != null) {
-                            final selected = customers
-                                .where((c) => c.id == _customerId)
-                                .firstOrNull;
-                            if (selected == null ||
-                                selected.shopName.toLowerCase() !=
-                                    v.trim().toLowerCase()) {
-                              setState(() => _customerId = null);
-                            }
+                          // Keep external controller in sync for prefill.
+                          if (controller.text.isEmpty &&
+                              _customerSearchController.text.isNotEmpty) {
+                            controller.text = _customerSearchController.text;
                           }
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            decoration: InputDecoration(
+                              labelText: l10n.selectCustomer,
+                              hintText: l10n.filterCustomers,
+                              prefixIcon: const Icon(Icons.search),
+                            ),
+                            onChanged: (v) {
+                              _customerSearchController.text = v;
+                              // Clear selection if user edits away from match.
+                              if (_customerId != null) {
+                                final selected = customers
+                                    .where((c) => c.id == _customerId)
+                                    .firstOrNull;
+                                if (selected == null ||
+                                    selected.shopName.toLowerCase() !=
+                                        v.trim().toLowerCase()) {
+                                  setState(() => _customerId = null);
+                                }
+                              }
+                            },
+                            onSubmitted: (_) => onFieldSubmitted(),
+                          );
                         },
-                        onSubmitted: (_) => onFieldSubmitted(),
-                      );
-                    },
                     optionsViewBuilder: (context, onSelected, options) {
                       return Align(
                         alignment: Alignment.topLeft,
@@ -274,7 +274,9 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                                 return ListTile(
                                   dense: true,
                                   title: Text(c.shopName),
-                                  subtitle: Text(c.phone ?? c.contactName ?? ''),
+                                  subtitle: Text(
+                                    c.phone ?? c.contactName ?? '',
+                                  ),
                                   onTap: () => onSelected(c),
                                 );
                               },
@@ -318,10 +320,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                 ),
               ],
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _submit,
-                child: Text(l10n.saveBill),
-              ),
+              FilledButton(onPressed: _submit, child: Text(l10n.saveBill)),
             ],
           ),
         ),

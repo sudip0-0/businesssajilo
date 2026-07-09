@@ -39,17 +39,18 @@ class _CartSheetState extends ConsumerState<CartSheet> {
 
     // Drop cart lines whose product was deactivated since it was added.
     final availableIds = widget.products.map((p) => p.id).toSet();
-    final staleIds =
-        _qty.keys.where((id) => !availableIds.contains(id)).toList();
+    final staleIds = _qty.keys
+        .where((id) => !availableIds.contains(id))
+        .toList();
     if (staleIds.isNotEmpty) {
       setState(() {
         for (final id in staleIds) {
           _qty.remove(id);
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.removedUnavailableItems)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.removedUnavailableItems)));
       if (_qty.isEmpty) return;
     }
 
@@ -80,21 +81,21 @@ class _CartSheetState extends ConsumerState<CartSheet> {
 
     setState(() => _loading = true);
     try {
-      await ref.read(ordersRepositoryProvider).placeOrder(
+      await ref
+          .read(ordersRepositoryProvider)
+          .placeOrder(
             customerId: customer.id,
             lines: _qty.entries
-                .map(
-                  (e) => OrderLineInput(productId: e.key, qty: e.value),
-                )
+                .map((e) => OrderLineInput(productId: e.key, qty: e.value))
                 .toList(),
             note: note.isEmpty ? null : note,
           );
       if (mounted) Navigator.pop(context, true);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.orderPlaceFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.orderPlaceFailed)));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

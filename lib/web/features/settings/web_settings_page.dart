@@ -36,10 +36,10 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
   }
 
   Future<void> _loadDemoData() => confirmAndSeedDemoData(
-        context: context,
-        ref: ref,
-        onSeedingChanged: (seeding) => setState(() => _seeding = seeding),
-      );
+    context: context,
+    ref: ref,
+    onSeedingChanged: (seeding) => setState(() => _seeding = seeding),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -134,9 +134,7 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
         ListTile(
           leading: Icon(PhosphorIconsRegular.info),
           title: Text(l10n.aboutApp),
-          subtitle: _version == null
-              ? null
-              : Text(l10n.appVersion(_version!)),
+          subtitle: _version == null ? null : Text(l10n.appVersion(_version!)),
         ),
         const AccountSettingsTiles(),
       ],

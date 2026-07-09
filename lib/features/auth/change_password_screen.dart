@@ -84,9 +84,9 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
           .read(authProvider.notifier)
           .updateOwnPassword(_passwordController.text);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.passwordChanged)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
         widget.onChanged?.call();
       }
     } catch (_) {

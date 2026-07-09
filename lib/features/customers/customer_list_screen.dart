@@ -107,7 +107,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     );
   }
 
-  Widget _buildListBody(AppLocalizations l10n, PaginatedListState<Customer>? pager) {
+  Widget _buildListBody(
+    AppLocalizations l10n,
+    PaginatedListState<Customer>? pager,
+  ) {
     if (pager == null || pager.initialLoading) {
       return const ListSkeleton();
     }
@@ -134,30 +137,30 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         ref.invalidate(totalDuesProvider);
       },
       child: ListView.separated(
-      controller: _scrollController,
-      itemCount: filtered.length + (pager.hasMore ? 1 : 0),
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        if (index >= filtered.length) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: pager.loading
-                  ? const CircularProgressIndicator()
-                  : TextButton(
-                      onPressed: pager.loadMore,
-                      child: Text(l10n.loadMore),
-                    ),
-            ),
+        controller: _scrollController,
+        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          if (index >= filtered.length) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: pager.loading
+                    ? const CircularProgressIndicator()
+                    : TextButton(
+                        onPressed: pager.loadMore,
+                        child: Text(l10n.loadMore),
+                      ),
+              ),
+            );
+          }
+          final customer = filtered[index];
+          return _CustomerTile(
+            customer: customer,
+            selected: _selectedCustomerId == customer.id,
+            onTap: () => _selectCustomer(context, customer),
           );
-        }
-        final customer = filtered[index];
-        return _CustomerTile(
-          customer: customer,
-          selected: _selectedCustomerId == customer.id,
-          onTap: () => _selectCustomer(context, customer),
-        );
-      },
+        },
       ),
     );
   }
@@ -199,7 +202,6 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       ref.invalidate(totalDuesProvider);
     }
   }
-
 }
 
 class _CustomerTile extends StatelessWidget {
@@ -225,7 +227,9 @@ class _CustomerTile extends StatelessWidget {
       leading: CircleAvatar(
         backgroundColor: BsColors.primary.withValues(alpha: 0.12),
         child: Text(
-          customer.shopName.isNotEmpty ? customer.shopName[0].toUpperCase() : '?',
+          customer.shopName.isNotEmpty
+              ? customer.shopName[0].toUpperCase()
+              : '?',
           style: const TextStyle(color: BsColors.primary),
         ),
       ),

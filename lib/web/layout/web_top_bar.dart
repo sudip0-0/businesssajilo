@@ -12,11 +12,7 @@ import '../theme/web_tokens.dart';
 import '../../core/ui/locale_toggle.dart';
 
 class WebTopBar extends ConsumerWidget {
-  const WebTopBar({
-    super.key,
-    this.showMenuButton = false,
-    this.onMenuPressed,
-  });
+  const WebTopBar({super.key, this.showMenuButton = false, this.onMenuPressed});
 
   final bool showMenuButton;
   final VoidCallback? onMenuPressed;
@@ -97,9 +93,9 @@ class WebTopBar extends ConsumerWidget {
                 Text(
                   l10n.storeOwner,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: BsColors.outline,
-                        letterSpacing: 0.5,
-                      ),
+                    color: BsColors.outline,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ],
             ),

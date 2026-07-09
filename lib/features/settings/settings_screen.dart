@@ -105,11 +105,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           onTap: _seeding
               ? null
               : () => confirmAndSeedDemoData(
-                    context: context,
-                    ref: ref,
-                    onSeedingChanged: (seeding) =>
-                        setState(() => _seeding = seeding),
-                  ),
+                  context: context,
+                  ref: ref,
+                  onSeedingChanged: (seeding) =>
+                      setState(() => _seeding = seeding),
+                ),
         ),
         ListTile(
           leading: const Icon(Icons.replay_outlined),
@@ -125,9 +125,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: Text(l10n.aboutApp),
-          subtitle: _version == null
-              ? null
-              : Text(l10n.appVersion(_version!)),
+          subtitle: _version == null ? null : Text(l10n.appVersion(_version!)),
         ),
         const AccountSettingsTiles(),
         const Divider(height: 1),

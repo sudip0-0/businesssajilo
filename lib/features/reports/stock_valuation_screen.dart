@@ -35,120 +35,121 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final rowsAsync =
-        ref.watch(stockValuationProvider(widget.lowStockOnly));
+    final rowsAsync = ref.watch(stockValuationProvider(widget.lowStockOnly));
 
     final body = rowsAsync.when(
-        loading: () => const ListSkeleton(),
-        error: (e, _) => ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () =>
-              ref.invalidate(stockValuationProvider(widget.lowStockOnly)),
-        ),
-        data: (rows) {
-          _sorted = List<StockValuationRow>.from(rows);
-          _applySort();
-          final total = rows.fold<int>(0, (sum, r) => sum + r.valuation);
-          if (rows.isEmpty) {
-            return EmptyState(
-              icon: Icons.inventory_2_outlined,
-              message: l10n.emptyNoProducts,
-            );
-          }
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.totalValuation,
-                            style: Theme.of(context).textTheme.titleMedium),
-                        MoneyText(
-                          Paisa(total),
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: l10n.exportCsv,
-                    onPressed: _sorted.isEmpty
-                        ? null
-                        : () => exportStockValuationCsv(
-                              ref,
-                              context,
-                              _sorted,
-                            ),
-                    icon: const Icon(Icons.download_outlined),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (isWideLayout(context))
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    sortColumnIndex: _sortColumnIndex,
-                    sortAscending: _sortAscending,
-                    columns: [
-                      DataColumn(
-                        label: Text(l10n.products),
-                        onSort: (_, asc) => _onSort(0, asc),
+      loading: () => const ListSkeleton(),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () =>
+            ref.invalidate(stockValuationProvider(widget.lowStockOnly)),
+      ),
+      data: (rows) {
+        _sorted = List<StockValuationRow>.from(rows);
+        _applySort();
+        final total = rows.fold<int>(0, (sum, r) => sum + r.valuation);
+        if (rows.isEmpty) {
+          return EmptyState(
+            icon: Icons.inventory_2_outlined,
+            message: l10n.emptyNoProducts,
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.totalValuation,
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      DataColumn(
-                        label: Text(l10n.stock),
-                        numeric: true,
-                        onSort: (_, asc) => _onSort(1, asc),
-                      ),
-                      DataColumn(
-                        label: Text(l10n.costPrice),
-                        numeric: true,
-                        onSort: (_, asc) => _onSort(2, asc),
-                      ),
-                      DataColumn(
-                        label: Text(l10n.totalValuation),
-                        numeric: true,
-                        onSort: (_, asc) => _onSort(3, asc),
+                      MoneyText(
+                        Paisa(total),
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ],
-                    rows: _sorted
-                        .map(
-                          (r) => DataRow(cells: [
-                            DataCell(Text(r.name)),
-                            DataCell(Text('${r.stockCached}')),
-                            DataCell(Text(
-                              formatNpr(Paisa(r.costPrice), showPaisa: false),
-                            )),
-                            DataCell(Text(
-                              formatNpr(Paisa(r.valuation), showPaisa: false),
-                            )),
-                          ]),
-                        )
-                        .toList(),
-                  ),
-                )
-              else
-                ..._sorted.map(
-                  (r) => ListTile(
-                    title: Text(r.name),
-                    subtitle: Text('${l10n.stock}: ${r.stockCached}'),
-                    trailing: MoneyText(Paisa(r.valuation), showPaisa: false),
                   ),
                 ),
-            ],
-          );
-        },
+                IconButton(
+                  tooltip: l10n.exportCsv,
+                  onPressed: _sorted.isEmpty
+                      ? null
+                      : () => exportStockValuationCsv(ref, context, _sorted),
+                  icon: const Icon(Icons.download_outlined),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (isWideLayout(context))
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  sortColumnIndex: _sortColumnIndex,
+                  sortAscending: _sortAscending,
+                  columns: [
+                    DataColumn(
+                      label: Text(l10n.products),
+                      onSort: (_, asc) => _onSort(0, asc),
+                    ),
+                    DataColumn(
+                      label: Text(l10n.stock),
+                      numeric: true,
+                      onSort: (_, asc) => _onSort(1, asc),
+                    ),
+                    DataColumn(
+                      label: Text(l10n.costPrice),
+                      numeric: true,
+                      onSort: (_, asc) => _onSort(2, asc),
+                    ),
+                    DataColumn(
+                      label: Text(l10n.totalValuation),
+                      numeric: true,
+                      onSort: (_, asc) => _onSort(3, asc),
+                    ),
+                  ],
+                  rows: _sorted
+                      .map(
+                        (r) => DataRow(
+                          cells: [
+                            DataCell(Text(r.name)),
+                            DataCell(Text('${r.stockCached}')),
+                            DataCell(
+                              Text(
+                                formatNpr(Paisa(r.costPrice), showPaisa: false),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                formatNpr(Paisa(r.valuation), showPaisa: false),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      .toList(),
+                ),
+              )
+            else
+              ..._sorted.map(
+                (r) => ListTile(
+                  title: Text(r.name),
+                  subtitle: Text('${l10n.stock}: ${r.stockCached}'),
+                  trailing: MoneyText(Paisa(r.valuation), showPaisa: false),
+                ),
+              ),
+          ],
+        );
+      },
     );
 
     if (widget.embedded) return body;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.lowStockOnly ? l10n.lowStock : l10n.stockValuation,
-        ),
+        title: Text(widget.lowStockOnly ? l10n.lowStock : l10n.stockValuation),
         actions: [
           IconButton(
             tooltip: l10n.exportCsv,

@@ -44,7 +44,9 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
 
     setState(() => _sending = true);
     try {
-      await ref.read(messagesRepositoryProvider).sendText(
+      await ref
+          .read(messagesRepositoryProvider)
+          .sendText(
             orderId: widget.orderId,
             senderMemberId: member.id,
             body: body,
@@ -60,9 +62,9 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   void _showSendFailed() {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.messageSendFailed)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.messageSendFailed)));
   }
 
   Future<void> _attachImage() async {
@@ -77,7 +79,9 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     final bytes = await file.readAsBytes();
     setState(() => _sending = true);
     try {
-      await ref.read(messagesRepositoryProvider).sendImage(
+      await ref
+          .read(messagesRepositoryProvider)
+          .sendImage(
             orderId: widget.orderId,
             senderMemberId: member.id,
             businessId: businessId,
@@ -96,7 +100,8 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     final local = createdAtUtc.toLocal();
     final now = DateTime.now();
     final time = DateFormat.jm().format(local);
-    final sameDay = local.year == now.year &&
+    final sameDay =
+        local.year == now.year &&
         local.month == now.month &&
         local.day == now.day;
     if (sameDay) return time;
@@ -114,123 +119,123 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     final myMemberId = ref.watch(authProvider).value?.member?.id;
 
     final chatBody = Column(
-        children: [
-          Expanded(
-            child: messagesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ErrorState(
-                message: l10n.loadingFailed,
-                onRetry: () =>
-                    ref.invalidate(orderMessagesProvider(widget.orderId)),
-              ),
-              data: (messages) {
-                if (messages.isEmpty) {
-                  return EmptyState(
-                    icon: Icons.chat_bubble_outline,
-                    message: l10n.noMessages,
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final isMine = msg.senderMemberId == myMemberId;
-                    return Align(
-                      alignment: isMine
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(12),
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.sizeOf(context).width * 0.75,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isMine
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : Theme.of(context).colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (msg.senderName != null)
-                              Text(
-                                msg.senderName!,
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            if (msg.imageUrl != null)
-                              FutureBuilder<String?>(
-                                future: ref
-                                    .read(messagesRepositoryProvider)
-                                    .signedImageUrl(msg.imageUrl),
-                                builder: (context, snap) {
-                                  final url = snap.data;
-                                  if (url == null) {
-                                    return const SizedBox(
-                                      height: 120,
-                                      width: 120,
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    );
-                                  }
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: CachedNetworkImage(
-                                      imageUrl: url,
-                                      height: 160,
-                                      memCacheWidth: 480,
-                                      fit: BoxFit.cover,
+      children: [
+        Expanded(
+          child: messagesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => ErrorState(
+              message: l10n.loadingFailed,
+              onRetry: () =>
+                  ref.invalidate(orderMessagesProvider(widget.orderId)),
+            ),
+            data: (messages) {
+              if (messages.isEmpty) {
+                return EmptyState(
+                  icon: Icons.chat_bubble_outline,
+                  message: l10n.noMessages,
+                );
+              }
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isMine = msg.senderMemberId == myMemberId;
+                  return Align(
+                    alignment: isMine
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.sizeOf(context).width * 0.75,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isMine
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (msg.senderName != null)
+                            Text(
+                              msg.senderName!,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          if (msg.imageUrl != null)
+                            FutureBuilder<String?>(
+                              future: ref
+                                  .read(messagesRepositoryProvider)
+                                  .signedImageUrl(msg.imageUrl),
+                              builder: (context, snap) {
+                                final url = snap.data;
+                                if (url == null) {
+                                  return const SizedBox(
+                                    height: 120,
+                                    width: 120,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
                                     ),
                                   );
-                                },
-                              ),
-                            if (msg.body.isNotEmpty) Text(msg.body),
-                            if (msg.createdAt != null)
-                              Text(
-                                _timestamp(context, msg.createdAt!),
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                          ],
-                        ),
+                                }
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: CachedNetworkImage(
+                                    imageUrl: url,
+                                    height: 160,
+                                    memCacheWidth: 480,
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              },
+                            ),
+                          if (msg.body.isNotEmpty) Text(msg.body),
+                          if (msg.createdAt != null)
+                            Text(
+                              _timestamp(context, msg.createdAt!),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                        ],
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: _sending ? null : _attachImage,
-                    icon: const Icon(Icons.image_outlined),
-                    tooltip: l10n.attachImage,
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: l10n.typeMessage,
-                      ),
-                      onSubmitted: (_) => _sendText(),
                     ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: _sending ? null : _attachImage,
+                  icon: const Icon(Icons.image_outlined),
+                  tooltip: l10n.attachImage,
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(hintText: l10n.typeMessage),
+                    onSubmitted: (_) => _sendText(),
                   ),
-                  IconButton(
-                    onPressed: _sending ? null : _sendText,
-                    icon: const Icon(Icons.send),
-                    tooltip: l10n.send,
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  onPressed: _sending ? null : _sendText,
+                  icon: const Icon(Icons.send),
+                  tooltip: l10n.send,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
     );
 
     if (widget.embedded) return chatBody;

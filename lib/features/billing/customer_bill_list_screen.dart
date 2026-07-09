@@ -35,36 +35,36 @@ class CustomerBillListScreen extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(billListProvider),
           child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          itemCount: bills.length,
-          separatorBuilder: (_, _) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final bill = bills[index];
-            final dateStr = bill.createdAt != null
-                ? BsDate.both(
-                    bill.createdAt!,
-                    locale: Localizations.localeOf(context),
-                  )
-                : '—';
-            return ListTile(
-              title: Text(bill.billNo),
-              subtitle: Text(dateStr),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(formatNpr(Paisa(bill.grandTotal), showPaisa: false)),
-                  BillStatusChip(bill.status),
-                ],
-              ),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BillDetailScreen(billId: bill.id),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: bills.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final bill = bills[index];
+              final dateStr = bill.createdAt != null
+                  ? BsDate.both(
+                      bill.createdAt!,
+                      locale: Localizations.localeOf(context),
+                    )
+                  : '—';
+              return ListTile(
+                title: Text(bill.billNo),
+                subtitle: Text(dateStr),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(formatNpr(Paisa(bill.grandTotal), showPaisa: false)),
+                    BillStatusChip(bill.status),
+                  ],
                 ),
-              ),
-            );
-          },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BillDetailScreen(billId: bill.id),
+                  ),
+                ),
+              );
+            },
           ),
         );
       },

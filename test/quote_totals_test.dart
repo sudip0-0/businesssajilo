@@ -3,10 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('quote line total matches bill totals helper', () {
-    expect(
-      lineTotalPaisa(qty: 5, ratePaisa: 5000, discountPaisa: 1000),
-      24000,
-    );
+    expect(lineTotalPaisa(qty: 5, ratePaisa: 5000, discountPaisa: 1000), 24000);
   });
 
   test('quote grand total sums line totals', () {

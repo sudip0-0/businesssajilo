@@ -43,8 +43,7 @@ class WebProductDetailPage extends ConsumerWidget {
         if (canEdit) ...[
           const SizedBox(width: 8),
           FilledButton.icon(
-            onPressed: () =>
-                context.push('$inventoryListPath/$productId/edit'),
+            onPressed: () => context.push('$inventoryListPath/$productId/edit'),
             icon: Icon(PhosphorIconsRegular.pencilSimple),
             label: Text(l10n.editProduct),
           ),
@@ -61,9 +60,9 @@ class WebProductDetailPage extends ConsumerWidget {
 }
 
 String webInventoryListPath(Role? role) => switch (role) {
-      Role.owner => '/owner/inventory',
-      Role.sales => '/sales/inventory',
-      Role.warehouse => '/warehouse/stock',
-      Role.customer => '/customer/catalog',
-      null => '/login',
-    };
+  Role.owner => '/owner/inventory',
+  Role.sales => '/sales/inventory',
+  Role.warehouse => '/warehouse/stock',
+  Role.customer => '/customer/catalog',
+  null => '/login',
+};

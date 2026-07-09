@@ -32,98 +32,105 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
     final reportAsync = ref.watch(duesAgingProvider);
 
     final body = reportAsync.when(
-        loading: () => const ListSkeleton(),
-        error: (e, _) => ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () => ref.invalidate(duesAgingProvider),
-        ),
-        data: (report) {
-          final sorted = _sortedCustomers(report.customers);
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (widget.embedded)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    tooltip: l10n.exportCsv,
-                    onPressed: () => exportDuesAgingCsv(ref, context, report),
-                    icon: const Icon(Icons.download_outlined),
-                  ),
+      loading: () => const ListSkeleton(),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(duesAgingProvider),
+      ),
+      data: (report) {
+        final sorted = _sortedCustomers(report.customers);
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (widget.embedded)
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: l10n.exportCsv,
+                  onPressed: () => exportDuesAgingCsv(ref, context, report),
+                  icon: const Icon(Icons.download_outlined),
                 ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _BucketCard(
-                      label: l10n.aging0to30,
-                      amount: report.bucket0to30,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _BucketCard(
-                      label: l10n.aging31to60,
-                      amount: report.bucket31to60,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _BucketCard(
-                      label: l10n.aging60plus,
-                      amount: report.bucket60plus,
-                    ),
-                  ),
-                ],
               ),
-              const SizedBox(height: 16),
-              if (report.customers.isEmpty)
-                EmptyState(icon: Icons.hourglass_bottom, message: l10n.noDues)
-              else if (isWideLayout(context))
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    sortColumnIndex: _sortColumnIndex,
-                    sortAscending: _sortAscending,
-                    columns: [
-                      DataColumn(
-                        label: Text(l10n.customers),
-                        onSort: (_, asc) => _onSort(0, asc),
-                      ),
-                      DataColumn(
-                        label: Text(l10n.dues),
-                        numeric: true,
-                        onSort: (_, asc) => _onSort(1, asc),
-                      ),
-                      DataColumn(
-                        label: Text(l10n.ageDays),
-                        numeric: true,
-                        onSort: (_, asc) => _onSort(2, asc),
-                      ),
-                    ],
-                    rows: sorted
-                        .map(
-                          (c) => DataRow(cells: [
-                            DataCell(Text(c.shopName)),
-                            DataCell(Text(
-                              formatNpr(Paisa(c.balanceDue), showPaisa: false),
-                            )),
-                            DataCell(Text('${c.ageDays}')),
-                          ]),
-                        )
-                        .toList(),
-                  ),
-                )
-              else
-                ...sorted.map(
-                  (c) => ListTile(
-                    title: Text(c.shopName),
-                    subtitle: Text('${c.ageDays} ${l10n.ageDays}'),
-                    trailing: MoneyText(Paisa(c.balanceDue), showPaisa: false),
+            Row(
+              children: [
+                Expanded(
+                  child: _BucketCard(
+                    label: l10n.aging0to30,
+                    amount: report.bucket0to30,
                   ),
                 ),
-            ],
-          );
-        },
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _BucketCard(
+                    label: l10n.aging31to60,
+                    amount: report.bucket31to60,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _BucketCard(
+                    label: l10n.aging60plus,
+                    amount: report.bucket60plus,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (report.customers.isEmpty)
+              EmptyState(icon: Icons.hourglass_bottom, message: l10n.noDues)
+            else if (isWideLayout(context))
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  sortColumnIndex: _sortColumnIndex,
+                  sortAscending: _sortAscending,
+                  columns: [
+                    DataColumn(
+                      label: Text(l10n.customers),
+                      onSort: (_, asc) => _onSort(0, asc),
+                    ),
+                    DataColumn(
+                      label: Text(l10n.dues),
+                      numeric: true,
+                      onSort: (_, asc) => _onSort(1, asc),
+                    ),
+                    DataColumn(
+                      label: Text(l10n.ageDays),
+                      numeric: true,
+                      onSort: (_, asc) => _onSort(2, asc),
+                    ),
+                  ],
+                  rows: sorted
+                      .map(
+                        (c) => DataRow(
+                          cells: [
+                            DataCell(Text(c.shopName)),
+                            DataCell(
+                              Text(
+                                formatNpr(
+                                  Paisa(c.balanceDue),
+                                  showPaisa: false,
+                                ),
+                              ),
+                            ),
+                            DataCell(Text('${c.ageDays}')),
+                          ],
+                        ),
+                      )
+                      .toList(),
+                ),
+              )
+            else
+              ...sorted.map(
+                (c) => ListTile(
+                  title: Text(c.shopName),
+                  subtitle: Text('${c.ageDays} ${l10n.ageDays}'),
+                  trailing: MoneyText(Paisa(c.balanceDue), showPaisa: false),
+                ),
+              ),
+          ],
+        );
+      },
     );
 
     if (widget.embedded) return body;
@@ -134,11 +141,8 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
           IconButton(
             tooltip: l10n.exportCsv,
             onPressed: reportAsync.hasValue
-                ? () => exportDuesAgingCsv(
-                      ref,
-                      context,
-                      reportAsync.requireValue,
-                    )
+                ? () =>
+                      exportDuesAgingCsv(ref, context, reportAsync.requireValue)
                 : null,
             icon: const Icon(Icons.download_outlined),
           ),

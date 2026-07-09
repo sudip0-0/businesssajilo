@@ -12,8 +12,8 @@ class InvoiceExportService {
   const InvoiceExportService({
     InvoicePdfBuilder? pdfBuilder,
     InvoiceImageBuilder? imageBuilder,
-  })  : _pdfBuilder = pdfBuilder ?? const InvoicePdfBuilder(),
-        _imageBuilder = imageBuilder ?? const InvoiceImageBuilder();
+  }) : _pdfBuilder = pdfBuilder ?? const InvoicePdfBuilder(),
+       _imageBuilder = imageBuilder ?? const InvoiceImageBuilder();
 
   final InvoicePdfBuilder _pdfBuilder;
   final InvoiceImageBuilder _imageBuilder;
@@ -31,16 +31,13 @@ class InvoiceExportService {
 
   Future<void> sharePdf(InvoiceDocument doc, {String? subject}) async {
     final bytes = await _pdfBuilder.build(doc);
-    await Share.shareXFiles(
-      [
-        XFile.fromData(
-          bytes,
-          name: '${_safeName(doc.documentNo)}.pdf',
-          mimeType: 'application/pdf',
-        ),
-      ],
-      subject: subject ?? doc.documentNo,
-    );
+    await Share.shareXFiles([
+      XFile.fromData(
+        bytes,
+        name: '${_safeName(doc.documentNo)}.pdf',
+        mimeType: 'application/pdf',
+      ),
+    ], subject: subject ?? doc.documentNo);
   }
 
   Future<void> sharePng(

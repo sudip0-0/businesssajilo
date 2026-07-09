@@ -3,11 +3,7 @@ import 'package:flutter/services.dart';
 
 /// Wraps web pages with Escape-to-close and focus traversal defaults.
 class WebKeyboardScope extends StatelessWidget {
-  const WebKeyboardScope({
-    super.key,
-    required this.child,
-    this.onEscape,
-  });
+  const WebKeyboardScope({super.key, required this.child, this.onEscape});
 
   final Widget child;
   final VoidCallback? onEscape;

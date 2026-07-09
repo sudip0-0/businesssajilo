@@ -20,23 +20,23 @@ class StockBadge extends StatelessWidget {
     // darker amber for text contrast on the tinted background.
     final (tint, textColor, icon, label) = switch (level) {
       StockLevel.inStock => (
-          scheme.successColor,
-          scheme.successColor,
-          Icons.check_circle_outline,
-          l10n.inStock,
-        ),
+        scheme.successColor,
+        scheme.successColor,
+        Icons.check_circle_outline,
+        l10n.inStock,
+      ),
       StockLevel.lowStock => (
-          BsColors.accent,
-          dark ? BsColors.accentDark : BsColors.amberTextOnTint,
-          Icons.warning_amber_outlined,
-          l10n.lowStock,
-        ),
+        BsColors.accent,
+        dark ? BsColors.accentDark : BsColors.amberTextOnTint,
+        Icons.warning_amber_outlined,
+        l10n.lowStock,
+      ),
       StockLevel.outOfStock => (
-          scheme.dangerColor,
-          scheme.dangerColor,
-          Icons.cancel_outlined,
-          l10n.outOfStock,
-        ),
+        scheme.dangerColor,
+        scheme.dangerColor,
+        Icons.cancel_outlined,
+        l10n.outOfStock,
+      ),
     };
 
     return Semantics(

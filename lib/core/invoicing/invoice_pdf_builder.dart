@@ -70,7 +70,10 @@ class InvoicePdfBuilder {
         pw.SizedBox(height: 8),
         pw.Table.fromTextArray(
           headers: ['Item', 'Qty', 'Rate', 'Amt'],
-          headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+          headerStyle: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: 9,
+          ),
           cellStyle: const pw.TextStyle(fontSize: 8),
           columnWidths: {
             0: const pw.FlexColumnWidth(3),
@@ -91,8 +94,7 @@ class InvoicePdfBuilder {
         ),
         pw.Divider(),
         _totalRow('Subtotal', doc.itemsTotal),
-        if (doc.discount > 0)
-          _totalRow('Discount', -doc.discount),
+        if (doc.discount > 0) _totalRow('Discount', -doc.discount),
         pw.SizedBox(height: 4),
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -124,9 +126,7 @@ class InvoicePdfBuilder {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(label),
-          pw.Text(
-            '$prefix${formatNpr(Paisa(value), showPaisa: false)}',
-          ),
+          pw.Text('$prefix${formatNpr(Paisa(value), showPaisa: false)}'),
         ],
       ),
     );

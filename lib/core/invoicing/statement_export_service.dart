@@ -9,7 +9,7 @@ import 'statement_pdf_builder.dart';
 /// Share customer ledger statements as PDF or PNG.
 class StatementExportService {
   const StatementExportService({StatementPdfBuilder? pdfBuilder})
-      : _pdfBuilder = pdfBuilder ?? const StatementPdfBuilder();
+    : _pdfBuilder = pdfBuilder ?? const StatementPdfBuilder();
 
   final StatementPdfBuilder _pdfBuilder;
 
@@ -24,10 +24,9 @@ class StatementExportService {
       await Printing.sharePdf(bytes: bytes, filename: '$name.pdf');
       return;
     }
-    await Share.shareXFiles(
-      [XFile.fromData(bytes, name: '$name.pdf', mimeType: 'application/pdf')],
-      subject: subject ?? name,
-    );
+    await Share.shareXFiles([
+      XFile.fromData(bytes, name: '$name.pdf', mimeType: 'application/pdf'),
+    ], subject: subject ?? name);
   }
 
   /// Shares the first page as PNG (long statements should use [sharePdf]).

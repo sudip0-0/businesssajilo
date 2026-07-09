@@ -9,6 +9,5 @@ abstract final class IntegrationKeys {
   static const billFormAddProduct = Key('bill_form_add_product');
   static const sidebarCreateBill = Key('sidebar_create_bill');
 
-  static Key sidebarNav(String path) =>
-      Key('nav${path.replaceAll('/', '_')}');
+  static Key sidebarNav(String path) => Key('nav${path.replaceAll('/', '_')}');
 }

@@ -65,10 +65,12 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   List<Product> get _filtered {
     final items = _pager?.items ?? [];
     return items.where((p) {
-      final matchesQuery = _query.isEmpty ||
+      final matchesQuery =
+          _query.isEmpty ||
           p.name.toLowerCase().contains(_query.toLowerCase()) ||
           (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-      final matchesCategory = _categoryId == null || p.categoryId == _categoryId;
+      final matchesCategory =
+          _categoryId == null || p.categoryId == _categoryId;
       return matchesQuery && matchesCategory;
     }).toList();
   }
@@ -120,7 +122,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     );
   }
 
-  Widget _buildListBody(AppLocalizations l10n, PaginatedListState<Product>? pager) {
+  Widget _buildListBody(
+    AppLocalizations l10n,
+    PaginatedListState<Product>? pager,
+  ) {
     if (pager == null || pager.initialLoading) {
       return const ListSkeleton();
     }
@@ -138,9 +143,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             : (widget.canEdit ? l10n.emptyAddFirstProduct : null),
         onAction: searching
             ? () => setState(() {
-                  _query = '';
-                  _categoryId = null;
-                })
+                _query = '';
+                _categoryId = null;
+              })
             : (widget.canEdit ? () => _openForm(context, null) : null),
       );
     }
@@ -150,38 +155,38 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         ref.invalidate(lowStockCountProvider);
       },
       child: ListView.separated(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: filtered.length + (pager.hasMore ? 1 : 0),
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        if (index >= filtered.length) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: pager.loading
-                  ? const CircularProgressIndicator()
-                  : TextButton(
-                      onPressed: pager.loadMore,
-                      child: Text(l10n.loadMore),
-                    ),
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          if (index >= filtered.length) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: pager.loading
+                    ? const CircularProgressIndicator()
+                    : TextButton(
+                        onPressed: pager.loadMore,
+                        child: Text(l10n.loadMore),
+                      ),
+              ),
+            );
+          }
+          final product = filtered[index];
+          return ListTile(
+            leading: ProductImage(storagePath: product.imageUrl),
+            title: Text(product.name),
+            subtitle: Text(
+              [
+                if (product.categoryName != null) product.categoryName,
+                if (product.sku != null) product.sku,
+              ].whereType<String>().join(' · '),
             ),
+            trailing: StockBadge(product: product),
+            onTap: () => _openDetail(context, product),
           );
-        }
-        final product = filtered[index];
-        return ListTile(
-          leading: ProductImage(storagePath: product.imageUrl),
-          title: Text(product.name),
-          subtitle: Text(
-            [
-              if (product.categoryName != null) product.categoryName,
-              if (product.sku != null) product.sku,
-            ].whereType<String>().join(' · '),
-          ),
-          trailing: StockBadge(product: product),
-          onTap: () => _openDetail(context, product),
-        );
-      },
+        },
       ),
     );
   }
@@ -189,9 +194,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   Future<void> _openForm(BuildContext context, Product? product) async {
     final saved = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => ProductFormScreen(product: product),
-      ),
+      MaterialPageRoute(builder: (_) => ProductFormScreen(product: product)),
     );
     if (saved == true) await _pager?.refresh();
   }

@@ -20,7 +20,9 @@ void main() {
       ProviderScope(
         overrides: [
           salesDailyProvider(ReportRange.week).overrideWith((ref) async => []),
-          duesAgingProvider.overrideWith((ref) async => const DuesAgingReport()),
+          duesAgingProvider.overrideWith(
+            (ref) async => const DuesAgingReport(),
+          ),
           stockValuationProvider(false).overrideWith((ref) async => []),
           todaysSalesProvider.overrideWith((ref) async => 0),
           totalDuesProvider.overrideWith((ref) async => 0),

@@ -51,9 +51,8 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
 
   void _initPager() {
     _pager = PaginatedListState<Bill>(
-      loadPage: (offset, limit) => ref
-          .read(billsRepositoryProvider)
-          .list(offset: offset, limit: limit),
+      loadPage: (offset, limit) =>
+          ref.read(billsRepositoryProvider).list(offset: offset, limit: limit),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -144,7 +143,10 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     );
   }
 
-  Widget _buildListBody(AppLocalizations l10n, PaginatedListState<Bill>? pager) {
+  Widget _buildListBody(
+    AppLocalizations l10n,
+    PaginatedListState<Bill>? pager,
+  ) {
     if (_query.isNotEmpty) {
       if (_searching && _searchResults == null) {
         return const WebListSkeleton();
@@ -265,15 +267,15 @@ class _BillRow extends StatelessWidget {
                   Text(
                     bill.billNo,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     customerLabel,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                 ],
               ),
@@ -283,9 +285,9 @@ class _BillRow extends StatelessWidget {
               children: [
                 Text(
                   formatNpr(Paisa(bill.grandTotal), showPaisa: false),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 BillStatusChip(bill.status),

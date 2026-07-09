@@ -44,9 +44,9 @@ class ReportsHubScreen extends ConsumerWidget {
         children: [
           Text(
             l10n.reportOverview,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: BsColors.outline,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
           ),
           const SizedBox(height: 16),
           GridView.count(
@@ -97,7 +97,8 @@ class ReportsHubScreen extends ConsumerWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const StockValuationScreen(lowStockOnly: true),
+                    builder: (_) =>
+                        const StockValuationScreen(lowStockOnly: true),
                   ),
                 ),
               ),
@@ -158,7 +159,8 @@ class ReportsHubScreen extends ConsumerWidget {
             icon: Icons.hourglass_bottom_outlined,
             title: l10n.duesAging,
             subtitle: dues.when(
-              data: (d) => '${d.customers.length} ${l10n.customers.toLowerCase()}',
+              data: (d) =>
+                  '${d.customers.length} ${l10n.customers.toLowerCase()}',
               loading: () => '…',
               error: (_, _) => '—',
             ),

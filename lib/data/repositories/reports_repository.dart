@@ -54,11 +54,14 @@ class ReportsRepository {
     int limit = 10,
   }) async {
     final client = _requireClient();
-    final rows = await client.rpc('report_top_products_range', params: {
-      'p_from': _dateOnly(from),
-      'p_to': _dateOnly(to),
-      'p_limit': limit,
-    });
+    final rows = await client.rpc(
+      'report_top_products_range',
+      params: {
+        'p_from': _dateOnly(from),
+        'p_to': _dateOnly(to),
+        'p_limit': limit,
+      },
+    );
     return (rows as List).map((row) {
       final map = Map<String, dynamic>.from(row as Map);
       return TopProductRow(
@@ -76,11 +79,14 @@ class ReportsRepository {
     int limit = 10,
   }) async {
     final client = _requireClient();
-    final rows = await client.rpc('report_top_customers_range', params: {
-      'p_from': _dateOnly(from),
-      'p_to': _dateOnly(to),
-      'p_limit': limit,
-    });
+    final rows = await client.rpc(
+      'report_top_customers_range',
+      params: {
+        'p_from': _dateOnly(from),
+        'p_to': _dateOnly(to),
+        'p_limit': limit,
+      },
+    );
     return (rows as List).map((row) {
       final map = Map<String, dynamic>.from(row as Map);
       return TopCustomerRow(
@@ -122,7 +128,9 @@ class ReportsRepository {
     );
   }
 
-  Future<List<StockValuationRow>> stockValuation({bool lowStockOnly = false}) async {
+  Future<List<StockValuationRow>> stockValuation({
+    bool lowStockOnly = false,
+  }) async {
     final client = _requireClient();
     var query = client.from('report_stock_valuation').select();
     if (lowStockOnly) {

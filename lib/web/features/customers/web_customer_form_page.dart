@@ -28,8 +28,7 @@ const _nepalCities = [
 ];
 
 String _autoPassword() {
-  const chars =
-      'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   final rand = Random.secure();
   return List.generate(12, (_) => chars[rand.nextInt(chars.length)]).join();
 }
@@ -91,13 +90,16 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
       final contact = _contactNameController.text.trim();
       final displayName = _enablePortal
           ? (_displayNameController.text.trim().isEmpty
-              ? (contact.isEmpty ? shop : contact)
-              : _displayNameController.text.trim())
+                ? (contact.isEmpty ? shop : contact)
+                : _displayNameController.text.trim())
           : (contact.isEmpty ? shop : contact);
-      final password =
-          _enablePortal ? _passwordController.text : _autoPassword();
+      final password = _enablePortal
+          ? _passwordController.text
+          : _autoPassword();
 
-      await ref.read(customersRepositoryProvider).createWithCredentials(
+      await ref
+          .read(customersRepositoryProvider)
+          .createWithCredentials(
             email: _emailController.text.trim().isEmpty
                 ? null
                 : _emailController.text.trim(),
@@ -109,8 +111,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                 ? null
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
-            openingBalance:
-                parseNpr(_creditLimitController.text)?.value ?? 0,
+            openingBalance: parseNpr(_creditLimitController.text)?.value ?? 0,
           );
       ref.invalidate(customerListProvider);
       ref.invalidate(totalDuesProvider);
@@ -205,13 +206,15 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                       children: [
                         TextFormField(
                           controller: _contactNameController,
-                          decoration:
-                              InputDecoration(labelText: l10n.ownerName),
+                          decoration: InputDecoration(
+                            labelText: l10n.ownerName,
+                          ),
                         ),
                         TextFormField(
                           controller: _emailController,
-                          decoration:
-                              InputDecoration(labelText: l10n.emailAddress),
+                          decoration: InputDecoration(
+                            labelText: l10n.emailAddress,
+                          ),
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) {
                             if (v == null || v.trim().isEmpty) return null;
@@ -242,8 +245,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                         ),
                         TextFormField(
                           controller: _districtController,
-                          decoration:
-                              InputDecoration(labelText: l10n.district),
+                          decoration: InputDecoration(labelText: l10n.district),
                         ),
                       ],
                     ),
@@ -252,8 +254,9 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                       children: [
                         TextFormField(
                           controller: _panController,
-                          decoration:
-                              InputDecoration(labelText: l10n.panVatNumber),
+                          decoration: InputDecoration(
+                            labelText: l10n.panVatNumber,
+                          ),
                           keyboardType: TextInputType.number,
                         ),
                         TextFormField(
@@ -280,8 +283,9 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                       children: [
                         TextFormField(
                           controller: _displayNameController,
-                          decoration:
-                              InputDecoration(labelText: l10n.displayName),
+                          decoration: InputDecoration(
+                            labelText: l10n.displayName,
+                          ),
                         ),
                         TextFormField(
                           controller: _passwordController,

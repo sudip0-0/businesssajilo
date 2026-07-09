@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:drift/drift.dart';
 
 import '../../domain/models/product.dart';
@@ -12,8 +10,8 @@ class CachedProductsRepository implements ProductsRepository {
   CachedProductsRepository({
     required AppDatabase db,
     required SupabaseProductsRepository remote,
-  })  : _db = db,
-        _remote = remote;
+  }) : _db = db,
+       _remote = remote;
 
   final AppDatabase _db;
   final SupabaseProductsRepository _remote;
@@ -47,10 +45,26 @@ class CachedProductsRepository implements ProductsRepository {
   }
 
   @override
+  Future<List<Product>> listLowStock({int limit = 2}) async {
+    final rows =
+        await (_db.select(_db.localProducts)
+              ..where((p) => p.isActive.equals(true))
+              ..where((p) => p.lowStockThreshold.isBiggerThanValue(0)))
+            .get();
+    final low =
+        rows
+            .where((p) => p.stockCached <= p.lowStockThreshold)
+            .map(mapLocalProduct)
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
+    return low.take(limit).toList();
+  }
+
+  @override
   Future<Product> get(String id) async {
-    final row = await (_db.select(_db.localProducts)
-          ..where((p) => p.id.equals(id)))
-        .getSingle();
+    final row = await (_db.select(
+      _db.localProducts,
+    )..where((p) => p.id.equals(id))).getSingle();
     return mapLocalProduct(row);
   }
 

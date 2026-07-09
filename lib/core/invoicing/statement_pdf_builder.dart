@@ -35,8 +35,7 @@ class StatementPdfBuilder {
   pw.Widget _header(StatementDocument doc) {
     final labels = doc.labels;
     final period = [
-      if (doc.fromDate != null)
-        BsDate.both(doc.fromDate!, locale: doc.locale),
+      if (doc.fromDate != null) BsDate.both(doc.fromDate!, locale: doc.locale),
       BsDate.both(doc.toDate, locale: doc.locale),
     ].join(' — ');
 

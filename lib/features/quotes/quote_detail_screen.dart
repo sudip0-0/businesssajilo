@@ -56,7 +56,9 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
 
     setState(() => _loading = true);
     try {
-      final updated = await ref.read(quotesRepositoryProvider).accept(
+      final updated = await ref
+          .read(quotesRepositoryProvider)
+          .accept(
             widget.quoteId,
             comment: _commentController.text.trim().isEmpty
                 ? null
@@ -78,24 +80,23 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   Future<void> _reject() async {
     final l10n = AppLocalizations.of(context);
     if (_commentController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.rejectComment)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.rejectComment)));
       return;
     }
     setState(() => _loading = true);
     try {
-      final updated = await ref.read(quotesRepositoryProvider).reject(
-            widget.quoteId,
-            comment: _commentController.text.trim(),
-          );
+      final updated = await ref
+          .read(quotesRepositoryProvider)
+          .reject(widget.quoteId, comment: _commentController.text.trim());
       _invalidateOrder(updated.orderId);
       if (mounted) Navigator.pop(context, true);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.actionFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

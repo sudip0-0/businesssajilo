@@ -82,11 +82,11 @@ class SupabaseStockRepository implements StockRepository {
   }
 
   String _typeToDb(StockMovementType type) => switch (type) {
-        StockMovementType.stockIn => 'stock_in',
-        StockMovementType.adjust => 'adjust',
-        StockMovementType.dispatch => 'dispatch',
-        StockMovementType.return_ => 'return',
-      };
+    StockMovementType.stockIn => 'stock_in',
+    StockMovementType.adjust => 'adjust',
+    StockMovementType.dispatch => 'dispatch',
+    StockMovementType.return_ => 'return',
+  };
 
   StockMovement _mapMovement(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);

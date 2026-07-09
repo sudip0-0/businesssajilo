@@ -47,7 +47,9 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
       _error = null;
     });
     try {
-      await ref.read(membersRepositoryProvider).createMember(
+      await ref
+          .read(membersRepositoryProvider)
+          .createMember(
             email: _emailController.text.trim().isEmpty
                 ? null
                 : _emailController.text.trim(),
@@ -60,11 +62,13 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
             shopName: _role == Role.customer
                 ? _shopNameController.text.trim()
                 : null,
-            contactName: _role == Role.customer &&
+            contactName:
+                _role == Role.customer &&
                     _contactNameController.text.trim().isNotEmpty
                 ? _contactNameController.text.trim()
                 : null,
-            address: _role == Role.customer &&
+            address:
+                _role == Role.customer &&
                     _addressController.text.trim().isNotEmpty
                 ? _addressController.text.trim()
                 : null,
@@ -159,9 +163,8 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
                 TextFormField(
                   controller: _shopNameController,
                   decoration: InputDecoration(labelText: l10n.shopName),
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? l10n.fieldRequired
-                      : null,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

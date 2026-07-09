@@ -38,12 +38,11 @@ class OrdersRepository {
     final client = _requireClient();
     var query = client
         .from('orders')
-        .select('*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))');
+        .select(
+          '*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))',
+        );
     if (statuses != null && statuses.isNotEmpty) {
-      query = query.inFilter(
-        'status',
-        statuses.map((s) => s.name).toList(),
-      );
+      query = query.inFilter('status', statuses.map((s) => s.name).toList());
     }
     final rows = await query.order('created_at', ascending: false);
     return (rows as List).map(_mapOrderRow).toList();
@@ -70,14 +69,11 @@ class OrdersRepository {
 
   Future<int> pendingCount() async {
     final client = _requireClient();
-    return client.from('orders').count(CountOption.exact).inFilter(
-      'status',
-      [
-        OrderStatus.placed.name,
-        OrderStatus.quoted.name,
-        OrderStatus.accepted.name,
-      ],
-    );
+    return client.from('orders').count(CountOption.exact).inFilter('status', [
+      OrderStatus.placed.name,
+      OrderStatus.quoted.name,
+      OrderStatus.accepted.name,
+    ]);
   }
 
   Future<int> openQuotesCount() async {
@@ -116,7 +112,9 @@ class OrdersRepository {
     });
 
     if (lines.isNotEmpty) {
-      await client.from('order_items').insert(
+      await client
+          .from('order_items')
+          .insert(
             lines
                 .map(
                   (line) => {
@@ -136,10 +134,7 @@ class OrdersRepository {
   Future<Order> updateStatus(String id, OrderStatus status) async {
     final client = _requireClient();
     try {
-      await client
-          .from('orders')
-          .update({'status': status.name})
-          .eq('id', id);
+      await client.from('orders').update({'status': status.name}).eq('id', id);
     } on PostgrestException catch (e) {
       throw OrderStatusException(e.message);
     }

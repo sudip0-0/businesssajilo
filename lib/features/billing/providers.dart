@@ -7,8 +7,10 @@ final billListProvider = FutureProvider.autoDispose<List<Bill>>((ref) {
   return ref.watch(billsRepositoryProvider).list();
 });
 
-final billDetailProvider =
-    FutureProvider.autoDispose.family<Bill, String>((ref, id) {
+final billDetailProvider = FutureProvider.autoDispose.family<Bill, String>((
+  ref,
+  id,
+) {
   return ref.watch(billsRepositoryProvider).get(id);
 });
 

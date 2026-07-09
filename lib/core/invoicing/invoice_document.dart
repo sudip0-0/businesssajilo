@@ -77,9 +77,9 @@ class InvoiceDocument {
   final String? footerNote;
 
   String get titleLabel => switch (kind) {
-        InvoiceDocumentKind.bill => 'INVOICE',
-        InvoiceDocumentKind.creditNote => 'CREDIT NOTE',
-      };
+    InvoiceDocumentKind.bill => 'INVOICE',
+    InvoiceDocumentKind.creditNote => 'CREDIT NOTE',
+  };
 
   String get businessDisplayName {
     if (locale.languageCode == 'ne' &&

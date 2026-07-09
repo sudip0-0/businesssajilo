@@ -51,7 +51,10 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
     final amount = parseNpr(_amountController.text);
     if (amount == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.amountRequired), backgroundColor: BsColors.danger),
+        SnackBar(
+          content: Text(l10n.amountRequired),
+          backgroundColor: BsColors.danger,
+        ),
       );
       return;
     }
@@ -67,7 +70,10 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
     final customerId = _selectedCustomerId;
     if (customerId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.selectCustomer), backgroundColor: BsColors.danger),
+        SnackBar(
+          content: Text(l10n.selectCustomer),
+          backgroundColor: BsColors.danger,
+        ),
       );
       return;
     }
@@ -76,7 +82,9 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
 
     setState(() => _loading = true);
     try {
-      await ref.read(paymentsRepositoryProvider).record(
+      await ref
+          .read(paymentsRepositoryProvider)
+          .record(
             customerId: customerId,
             amount: amount.value,
             method: _method,
@@ -129,14 +137,17 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
               ),
               if (widget.customerName != null) ...[
                 const SizedBox(height: 8),
-                Text(widget.customerName!, style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  widget.customerName!,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ],
               const SizedBox(height: 16),
               if (widget.showCustomerPicker)
                 customersAsync!.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (e, _) => Text(l10n.loadingFailed),
-                  data: (customers) =>               DropdownButtonFormField<String>(
+                  data: (customers) => DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: l10n.selectCustomer),
                     initialValue: _selectedCustomerId,
                     items: customers
@@ -170,10 +181,9 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.overpaymentWarning,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: BsColors.accent),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: BsColors.accent),
                 ),
               ],
               const SizedBox(height: 12),

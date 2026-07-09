@@ -69,10 +69,7 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
           label: Text(l10n.saveBill),
         ),
       ],
-      body: WebBillFormContent(
-        key: _formKey,
-        onSaved: _onSaved,
-      ),
+      body: WebBillFormContent(key: _formKey, onSaved: _onSaved),
     );
   }
 }

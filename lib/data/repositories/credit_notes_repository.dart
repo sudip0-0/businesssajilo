@@ -24,7 +24,10 @@ class CreditNotesRepository {
 
   Future<Map<String, int>> returnedQtyByBillItem(String billId) async {
     final client = _requireClient();
-    final rows = await client.rpc('bill_returned_qty', params: {'p_bill_id': billId});
+    final rows = await client.rpc(
+      'bill_returned_qty',
+      params: {'p_bill_id': billId},
+    );
     final map = <String, int>{};
     for (final row in rows as List) {
       final item = BillItemReturnSummary.fromJson(
@@ -61,7 +64,10 @@ class CreditNotesRepository {
           .toList(),
     };
 
-    final result = await client.rpc('create_credit_note', params: {'p': payload});
+    final result = await client.rpc(
+      'create_credit_note',
+      params: {'p': payload},
+    );
     final map = Map<String, dynamic>.from(result as Map);
     final noteJson = Map<String, dynamic>.from(map['credit_note'] as Map);
     final note = CreditNote.fromJson(noteJson);
@@ -71,7 +77,10 @@ class CreditNotesRepository {
         .select()
         .eq('credit_note_id', note.id);
     final parsedItems = (items as List)
-        .map((row) => CreditNoteItem.fromJson(Map<String, dynamic>.from(row as Map)))
+        .map(
+          (row) =>
+              CreditNoteItem.fromJson(Map<String, dynamic>.from(row as Map)),
+        )
         .toList();
     return note.copyWithItems(parsedItems);
   }

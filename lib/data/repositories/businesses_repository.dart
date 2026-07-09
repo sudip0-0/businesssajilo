@@ -9,7 +9,9 @@ final businessesRepositoryProvider = Provider<BusinessesRepository>((ref) {
   return BusinessesRepository(ref.watch(supabaseClientProvider));
 });
 
-final currentBusinessProvider = FutureProvider.autoDispose<Business?>((ref) async {
+final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
+  ref,
+) async {
   final businessId = ref.watch(authProvider).value?.member?.businessId;
   if (businessId == null) return null;
   return ref.watch(businessesRepositoryProvider).getById(businessId);
@@ -22,7 +24,11 @@ class BusinessesRepository {
 
   Future<Business?> getById(String id) async {
     if (_client == null) return null;
-    final row = await _client.from('businesses').select().eq('id', id).maybeSingle();
+    final row = await _client
+        .from('businesses')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
     if (row == null) return null;
     return Business.fromJson(Map<String, dynamic>.from(row as Map));
   }

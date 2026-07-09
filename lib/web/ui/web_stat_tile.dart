@@ -112,9 +112,18 @@ class _TrendBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (direction) {
-      WebTrendDirection.up => (BsColors.secondary, PhosphorIconsRegular.trendUp),
-      WebTrendDirection.down => (BsColors.danger, PhosphorIconsRegular.trendDown),
-      WebTrendDirection.neutral => (BsColors.outline, PhosphorIconsRegular.minus),
+      WebTrendDirection.up => (
+        BsColors.secondary,
+        PhosphorIconsRegular.trendUp,
+      ),
+      WebTrendDirection.down => (
+        BsColors.danger,
+        PhosphorIconsRegular.trendDown,
+      ),
+      WebTrendDirection.neutral => (
+        BsColors.outline,
+        PhosphorIconsRegular.minus,
+      ),
     };
 
     return Container(

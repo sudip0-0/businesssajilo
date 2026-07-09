@@ -31,22 +31,22 @@ class CategoryListScreen extends ConsumerWidget {
             );
           }
           return ListView.separated(
-          itemCount: categories.length,
-          separatorBuilder: (_, _) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final cat = categories[index];
-            return ListTile(
-              title: Text(cat.name),
-              subtitle: cat.nameNp != null ? Text(cat.nameNp!) : null,
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: l10n.delete,
-                onPressed: () => _deleteCategory(context, ref, cat),
-              ),
-              onTap: () => _editCategory(context, ref, cat),
-            );
-          },
-        );
+            itemCount: categories.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              return ListTile(
+                title: Text(cat.name),
+                subtitle: cat.nameNp != null ? Text(cat.nameNp!) : null,
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: l10n.delete,
+                  onPressed: () => _deleteCategory(context, ref, cat),
+                ),
+                onTap: () => _editCategory(context, ref, cat),
+              );
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -98,9 +98,18 @@ class CategoryListScreen extends ConsumerWidget {
     ref.invalidate(categoryListProvider);
   }
 
-  Future<void> _editCategory(BuildContext context, WidgetRef ref, Category cat) async {
+  Future<void> _editCategory(
+    BuildContext context,
+    WidgetRef ref,
+    Category cat,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    final name = await _prompt(context, l10n.editCategory, l10n.productName, initial: cat.name);
+    final name = await _prompt(
+      context,
+      l10n.editCategory,
+      l10n.productName,
+      initial: cat.name,
+    );
     if (name == null || name.isEmpty) return;
     await ref.read(categoriesRepositoryProvider).update(id: cat.id, name: name);
     ref.invalidate(categoryListProvider);
@@ -124,7 +133,10 @@ class CategoryListScreen extends ConsumerWidget {
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
             child: Text(l10n.save),

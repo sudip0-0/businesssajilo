@@ -23,10 +23,7 @@ class DashboardStat {
 }
 
 class RoleDashboard extends ConsumerWidget {
-  const RoleDashboard({
-    super.key,
-    required this.stats,
-  });
+  const RoleDashboard({super.key, required this.stats});
 
   final List<DashboardStat> stats;
 
@@ -43,16 +40,16 @@ class RoleDashboard extends ConsumerWidget {
         Text(
           l10n.namasteGreeting(name),
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: BsColors.textCharcoal,
-              ),
+            fontWeight: FontWeight.w700,
+            color: BsColors.textCharcoal,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           l10n.dashboardTodaySummary,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: BsColors.outline,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
         ),
         const SizedBox(height: 16),
         GridView.count(

@@ -97,7 +97,8 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
       actions: widget.canEdit
           ? [
               FilledButton.icon(
-                onPressed: () => context.go('${_webRolePrefix(context)}/customers/new'),
+                onPressed: () =>
+                    context.go('${_webRolePrefix(context)}/customers/new'),
                 icon: Icon(PhosphorIconsRegular.userPlus),
                 label: Text(l10n.addCustomer),
               ),
@@ -158,8 +159,8 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
         onAction: searching
             ? () => setState(() => _query = '')
             : (widget.canEdit
-                ? () => context.go('${_webRolePrefix(context)}/customers/new')
-                : null),
+                  ? () => context.go('${_webRolePrefix(context)}/customers/new')
+                  : null),
       );
     }
 
@@ -239,7 +240,9 @@ class _CustomerRow extends StatelessWidget {
                 children: [
                   Text(
                     customer.shopName,
-                    style: theme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (customer.contactName != null || customer.phone != null)
                     Text(

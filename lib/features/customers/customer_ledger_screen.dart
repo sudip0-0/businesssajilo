@@ -73,8 +73,9 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
             message: l10n.noCustomers,
           );
         }
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _initPager(customer.id));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _initPager(customer.id),
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,12 +87,15 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.myDues,
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      l10n.myDues,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       formatNpr(Paisa(customer.balanceDue), showPaisa: false),
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             color: customer.balanceDue > 0
                                 ? BsColors.danger
                                 : BsColors.success,
@@ -122,33 +126,28 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(l10n.ledger,
-                          style: Theme.of(context).textTheme.titleMedium),
+                      child: Text(
+                        l10n.ledger,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ),
                     IconButton(
                       tooltip: l10n.shareStatement,
-                      onPressed: () => showStatementShareSheet(
-                        context,
-                        customer: customer,
-                      ),
+                      onPressed: () =>
+                          showStatementShareSheet(context, customer: customer),
                       icon: const Icon(Icons.ios_share_outlined),
                     ),
                     IconButton(
                       tooltip: l10n.exportCsv,
-                      onPressed: () => exportCustomerLedgerCsv(
-                            ref,
-                            context,
-                            customer.id,
-                          ),
+                      onPressed: () =>
+                          exportCustomerLedgerCsv(ref, context, customer.id),
                       icon: const Icon(Icons.download_outlined),
                     ),
                   ],
                 ),
               ),
               const Divider(height: 1),
-              Expanded(
-                child: _buildLedgerList(l10n),
-              ),
+              Expanded(child: _buildLedgerList(l10n)),
             ],
           ],
         );

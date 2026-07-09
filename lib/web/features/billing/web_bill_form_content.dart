@@ -26,9 +26,9 @@ import '../../../core/testing/integration_keys.dart';
 
 class _DraftLine {
   _DraftLine({required this.product})
-      : qty = 1,
-        rate = product.referencePrice,
-        discount = 0;
+    : qty = 1,
+      rate = product.referencePrice,
+      discount = 0;
 
   final Product product;
   int qty;
@@ -70,13 +70,12 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   int get _itemsTotal => itemsTotalPaisa(_lines.map((l) => l.lineTotal));
 
-  int get _billDiscount =>
-      parseNpr(_billDiscountController.text)?.value ?? 0;
+  int get _billDiscount => parseNpr(_billDiscountController.text)?.value ?? 0;
 
   int get _grandTotal => grandTotalPaisa(
-        itemsTotal: _itemsTotal,
-        billDiscountPaisa: _billDiscount,
-      );
+    itemsTotal: _itemsTotal,
+    billDiscountPaisa: _billDiscount,
+  );
 
   void _focusProductSearch() {
     _productSearchFocus.requestFocus();
@@ -101,7 +100,10 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   Future<void> saveAndPrint() => _save(exportAfterSave: true);
 
-  Future<Bill?> _save({BillStatus? forceStatus, bool exportAfterSave = false}) async {
+  Future<Bill?> _save({
+    BillStatus? forceStatus,
+    bool exportAfterSave = false,
+  }) async {
     final l10n = AppLocalizations.of(context);
     if (_lines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -170,7 +172,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     setState(() => _loading = true);
     Bill? savedBill;
     try {
-      savedBill = await ref.read(billsRepositoryProvider).create(
+      savedBill = await ref
+          .read(billsRepositoryProvider)
+          .create(
             createdByMemberId: memberId,
             customerId: paymentResult.customerId ?? _customerId,
             status: paymentResult.status,
@@ -203,9 +207,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       ref.invalidate(todaysBillsProvider);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.billSaved)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
         if (exportAfterSave && savedBill != null) {
           await exportBillAfterSave(ref, context, savedBill);
         }
@@ -298,9 +302,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Text(
                                 l10n.noBillLines,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(color: BsColors.outline),
                               ),
                             )
@@ -393,9 +395,9 @@ class _BillItemsTableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: BsColors.outline,
-          fontWeight: FontWeight.w600,
-        );
+      color: BsColors.outline,
+      fontWeight: FontWeight.w600,
+    );
 
     return Row(
       children: [
@@ -439,10 +441,7 @@ class _BillItemRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 36,
-            child: Text('${index + 1}'),
-          ),
+          SizedBox(width: 36, child: Text('${index + 1}')),
           Expanded(
             flex: 3,
             child: Text(
@@ -457,7 +456,10 @@ class _BillItemRow extends StatelessWidget {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
               ),
               onChanged: (v) {
                 line.qty = int.tryParse(v) ?? line.qty;
@@ -466,10 +468,7 @@ class _BillItemRow extends StatelessWidget {
               },
             ),
           ),
-          SizedBox(
-            width: 56,
-            child: Text(line.product.unit),
-          ),
+          SizedBox(width: 56, child: Text(line.product.unit)),
           SizedBox(
             width: 96,
             child: TextFormField(
@@ -481,7 +480,10 @@ class _BillItemRow extends StatelessWidget {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 8,
+                ),
               ),
               onChanged: (v) {
                 line.rate = parseNpr(v)?.value ?? line.rate;
@@ -493,9 +495,9 @@ class _BillItemRow extends StatelessWidget {
             width: 96,
             child: Text(
               formatNpr(Paisa(line.lineTotal), showPaisa: false),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           IconButton(
@@ -538,9 +540,9 @@ class _AddProductRow extends StatelessWidget {
               width: 36,
               child: Text(
                 '…',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: BsColors.outline,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
               ),
             ),
             Expanded(
@@ -639,10 +641,7 @@ class WebFormHeaderRow extends StatelessWidget {
           Expanded(
             child: InputDecorator(
               decoration: InputDecoration(labelText: l10n.billNumber),
-              child: Text(
-                'AUTO',
-                style: TextStyle(color: BsColors.outline),
-              ),
+              child: Text('AUTO', style: TextStyle(color: BsColors.outline)),
             ),
           ),
         ];
@@ -667,7 +666,10 @@ class WebFormHeaderRow extends StatelessWidget {
                 Expanded(
                   child: InputDecorator(
                     decoration: InputDecoration(labelText: l10n.billNumber),
-                    child: Text('AUTO', style: TextStyle(color: BsColors.outline)),
+                    child: Text(
+                      'AUTO',
+                      style: TextStyle(color: BsColors.outline),
+                    ),
                   ),
                 ),
               ],
@@ -741,16 +743,16 @@ class _BillSummaryPanel extends StatelessWidget {
             children: [
               Text(
                 l10n.grandTotal,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
                 formatNpr(Paisa(grandTotal), showPaisa: false),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: BsColors.primary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: BsColors.primary,
+                ),
               ),
             ],
           ),
@@ -762,10 +764,7 @@ class _BillSummaryPanel extends StatelessWidget {
   Widget _summaryRow(String label, int amount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label),
-        Text(formatNpr(Paisa(amount), showPaisa: false)),
-      ],
+      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: false))],
     );
   }
 }

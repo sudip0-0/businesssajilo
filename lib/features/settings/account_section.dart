@@ -90,7 +90,8 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
     super.initState();
     _matches = widget.confirmWord == null;
     _controller.addListener(() {
-      final matches = widget.confirmWord == null ||
+      final matches =
+          widget.confirmWord == null ||
           _controller.text.trim() == widget.confirmWord;
       if (matches != _matches) setState(() => _matches = matches);
     });
@@ -157,17 +158,16 @@ class AccountSettingsTiles extends ConsumerWidget {
           onTap: () => showChangePasswordSheet(context),
         ),
         ListTile(
-          leading: const Icon(Icons.delete_forever_outlined,
-              color: BsColors.danger),
+          leading: const Icon(
+            Icons.delete_forever_outlined,
+            color: BsColors.danger,
+          ),
           title: Text(
             isOwner ? l10n.deleteBusiness : l10n.deleteAccount,
             style: const TextStyle(color: BsColors.danger),
           ),
-          onTap: () => confirmAndDeleteAccount(
-            context,
-            ref,
-            deleteBusiness: isOwner,
-          ),
+          onTap: () =>
+              confirmAndDeleteAccount(context, ref, deleteBusiness: isOwner),
         ),
       ],
     );

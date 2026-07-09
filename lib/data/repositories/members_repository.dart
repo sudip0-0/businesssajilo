@@ -76,10 +76,7 @@ class MembersRepository {
     final client = _requireClient();
     final response = await client.functions.invoke(
       'reset-member-password',
-      body: {
-        'memberId': memberId,
-        'newPassword': newPassword,
-      },
+      body: {'memberId': memberId, 'newPassword': newPassword},
     );
     if (response.status != 200) {
       final data = response.data;

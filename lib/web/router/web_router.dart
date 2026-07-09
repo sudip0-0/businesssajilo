@@ -103,9 +103,8 @@ final webRouterProvider = Provider<GoRouter>((ref) {
 
 ShellRoute _ownerRoutes() {
   return ShellRoute(
-    builder: (context, state, child) => OwnerOnboardingOverlay(
-      child: OwnerWebShell(child: child),
-    ),
+    builder: (context, state, child) =>
+        OwnerOnboardingOverlay(child: OwnerWebShell(child: child)),
     routes: [
       GoRoute(
         path: '/owner/dashboard',
@@ -121,9 +120,8 @@ ShellRoute _ownerRoutes() {
         routes: [
           GoRoute(
             path: 'new',
-            builder: (_, _) => const WebProductFormPage(
-              inventoryListPath: '/owner/inventory',
-            ),
+            builder: (_, _) =>
+                const WebProductFormPage(inventoryListPath: '/owner/inventory'),
           ),
           GoRoute(
             path: ':productId',
@@ -152,10 +150,7 @@ ShellRoute _ownerRoutes() {
           canRecordPayments: true,
         ),
         routes: [
-          GoRoute(
-            path: 'new',
-            builder: (_, _) => const WebCustomerFormPage(),
-          ),
+          GoRoute(path: 'new', builder: (_, _) => const WebCustomerFormPage()),
           GoRoute(
             path: ':customerId',
             builder: (_, state) => WebCustomerListPage(
@@ -168,19 +163,14 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/billing',
-        builder: (_, state) => WebBillListPage(
-          selectedBillId: state.uri.queryParameters['id'],
-        ),
+        builder: (_, state) =>
+            WebBillListPage(selectedBillId: state.uri.queryParameters['id']),
         routes: [
-          GoRoute(
-            path: 'new',
-            builder: (_, _) => const WebBillFormPage(),
-          ),
+          GoRoute(path: 'new', builder: (_, _) => const WebBillFormPage()),
           GoRoute(
             path: ':billId',
-            builder: (_, state) => WebBillListPage(
-              selectedBillId: state.pathParameters['billId'],
-            ),
+            builder: (_, state) =>
+                WebBillListPage(selectedBillId: state.pathParameters['billId']),
             routes: [
               GoRoute(
                 path: 'return',
@@ -194,17 +184,14 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/orders',
-        builder: (_, state) => WebOrderListPage(
-          selectedOrderId: state.uri.queryParameters['id'],
-        ),
+        builder: (_, state) =>
+            WebOrderListPage(selectedOrderId: state.uri.queryParameters['id']),
         routes: [
           GoRoute(
             path: ':orderId',
             builder: (_, state) {
-              final tab = int.tryParse(
-                    state.uri.queryParameters['tab'] ?? '0',
-                  ) ??
-                  0;
+              final tab =
+                  int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
               return WebOrderDetailPage(
                 orderId: state.pathParameters['orderId']!,
                 initialTab: tab,
@@ -226,10 +213,7 @@ ShellRoute _ownerRoutes() {
             path: 'sales',
             builder: (_, _) => const WebSalesSummaryPage(),
           ),
-          GoRoute(
-            path: 'dues',
-            builder: (_, _) => const WebDuesAgingPage(),
-          ),
+          GoRoute(path: 'dues', builder: (_, _) => const WebDuesAgingPage()),
           GoRoute(
             path: 'stock',
             builder: (_, _) => const WebStockValuationPage(),
@@ -268,17 +252,14 @@ ShellRoute _salesRoutes() {
       ),
       GoRoute(
         path: '/sales/orders',
-        builder: (_, state) => WebOrderListPage(
-          selectedOrderId: state.uri.queryParameters['id'],
-        ),
+        builder: (_, state) =>
+            WebOrderListPage(selectedOrderId: state.uri.queryParameters['id']),
         routes: [
           GoRoute(
             path: ':orderId',
             builder: (_, state) {
-              final tab = int.tryParse(
-                    state.uri.queryParameters['tab'] ?? '0',
-                  ) ??
-                  0;
+              final tab =
+                  int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
               return WebOrderDetailPage(
                 orderId: state.pathParameters['orderId']!,
                 initialTab: tab,
@@ -306,19 +287,14 @@ ShellRoute _salesRoutes() {
       ),
       GoRoute(
         path: '/sales/billing',
-        builder: (_, state) => WebBillListPage(
-          selectedBillId: state.uri.queryParameters['id'],
-        ),
+        builder: (_, state) =>
+            WebBillListPage(selectedBillId: state.uri.queryParameters['id']),
         routes: [
-          GoRoute(
-            path: 'new',
-            builder: (_, _) => const WebBillFormPage(),
-          ),
+          GoRoute(path: 'new', builder: (_, _) => const WebBillFormPage()),
           GoRoute(
             path: ':billId',
-            builder: (_, state) => WebBillListPage(
-              selectedBillId: state.pathParameters['billId'],
-            ),
+            builder: (_, state) =>
+                WebBillListPage(selectedBillId: state.pathParameters['billId']),
             routes: [
               GoRoute(
                 path: 'return',

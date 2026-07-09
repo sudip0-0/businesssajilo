@@ -12,10 +12,7 @@ class DeviceTokensRepository {
 
   final SupabaseClient? _client;
 
-  Future<void> upsert({
-    required String memberId,
-    required String token,
-  }) async {
+  Future<void> upsert({required String memberId, required String token}) async {
     final client = _requireClient();
     await client.from('device_tokens').upsert({
       'member_id': memberId,

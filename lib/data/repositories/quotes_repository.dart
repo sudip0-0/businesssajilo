@@ -84,19 +84,24 @@ class QuotesRepository {
     final client = _requireClient();
     final Map result;
     try {
-      result = await client.rpc('send_quote', params: {
-        'p_order_id': orderId,
-        'p_items': lines
-            .map(
-              (line) => {
-                'product_id': line.productId,
-                'qty': line.qty,
-                'rate': line.rate,
-                'discount': line.discount,
-              },
-            )
-            .toList(),
-      }) as Map;
+      result =
+          await client.rpc(
+                'send_quote',
+                params: {
+                  'p_order_id': orderId,
+                  'p_items': lines
+                      .map(
+                        (line) => {
+                          'product_id': line.productId,
+                          'qty': line.qty,
+                          'rate': line.rate,
+                          'discount': line.discount,
+                        },
+                      )
+                      .toList(),
+                },
+              )
+              as Map;
     } on PostgrestException catch (e) {
       throw QuoteSendException(e.message);
     }
@@ -105,10 +110,13 @@ class QuotesRepository {
 
   Future<Quote> accept(String quoteId, {String? comment}) async {
     final client = _requireClient();
-    await client.from('quotes').update({
-      'status': QuoteStatus.accepted.name,
-      'response_comment': ?comment,
-    }).eq('id', quoteId);
+    await client
+        .from('quotes')
+        .update({
+          'status': QuoteStatus.accepted.name,
+          'response_comment': ?comment,
+        })
+        .eq('id', quoteId);
     final row = await client
         .from('quotes')
         .select('*, quote_items(*, products(name))')
@@ -119,10 +127,13 @@ class QuotesRepository {
 
   Future<Quote> reject(String quoteId, {required String comment}) async {
     final client = _requireClient();
-    await client.from('quotes').update({
-      'status': QuoteStatus.rejected.name,
-      'response_comment': comment,
-    }).eq('id', quoteId);
+    await client
+        .from('quotes')
+        .update({
+          'status': QuoteStatus.rejected.name,
+          'response_comment': comment,
+        })
+        .eq('id', quoteId);
     final row = await client
         .from('quotes')
         .select('*, quote_items(*, products(name))')

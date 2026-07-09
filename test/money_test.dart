@@ -17,7 +17,11 @@ void main() {
 
     test('without paisa or symbol', () {
       expect(
-        formatNpr(Paisa.fromRupees(123456), showSymbol: false, showPaisa: false),
+        formatNpr(
+          Paisa.fromRupees(123456),
+          showSymbol: false,
+          showPaisa: false,
+        ),
         '1,23,456',
       );
     });

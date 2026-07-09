@@ -26,7 +26,9 @@ void main() {
       return true;
     }
 
-    testWidgets('dashboard New Bill header button opens bill form', (tester) async {
+    testWidgets('dashboard New Bill header button opens bill form', (
+      tester,
+    ) async {
       if (!Env.isConfigured) {
         markTestSkipped('Set SUPABASE_URL and SUPABASE_ANON_KEY dart-defines');
         return;
@@ -36,7 +38,10 @@ void main() {
         return;
       }
 
-      await pumpUntilFound(tester, find.byKey(IntegrationKeys.dashboardNewBill));
+      await pumpUntilFound(
+        tester,
+        find.byKey(IntegrationKeys.dashboardNewBill),
+      );
       await tester.tap(find.byKey(IntegrationKeys.dashboardNewBill));
       await settle(tester);
 
@@ -46,7 +51,9 @@ void main() {
       expect(find.text(l10n.createNewBill), findsWidgets);
     });
 
-    testWidgets('dashboard Add Product header button opens product form', (tester) async {
+    testWidgets('dashboard Add Product header button opens product form', (
+      tester,
+    ) async {
       if (!Env.isConfigured) {
         markTestSkipped('Set SUPABASE_URL and SUPABASE_ANON_KEY dart-defines');
         return;
@@ -56,7 +63,10 @@ void main() {
         return;
       }
 
-      await pumpUntilFound(tester, find.byKey(IntegrationKeys.dashboardAddProduct));
+      await pumpUntilFound(
+        tester,
+        find.byKey(IntegrationKeys.dashboardAddProduct),
+      );
       await tester.tap(find.byKey(IntegrationKeys.dashboardAddProduct));
       await settle(tester);
 
@@ -74,7 +84,10 @@ void main() {
         return;
       }
 
-      await pumpUntilFound(tester, find.byKey(IntegrationKeys.dashboardNewBill));
+      await pumpUntilFound(
+        tester,
+        find.byKey(IntegrationKeys.dashboardNewBill),
+      );
       await tester.tap(find.byKey(IntegrationKeys.dashboardNewBill));
       await settle(tester);
 
@@ -83,7 +96,10 @@ void main() {
       await settle(tester);
 
       expect(find.byKey(IntegrationKeys.billFormCancel), findsNothing);
-      expect(find.byKey(IntegrationKeys.sidebarNav('/owner/billing')), findsOneWidget);
+      expect(
+        find.byKey(IntegrationKeys.sidebarNav('/owner/billing')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('sidebar Billing nav opens billing list', (tester) async {
@@ -100,7 +116,9 @@ void main() {
         tester,
         find.byKey(IntegrationKeys.sidebarNav('/owner/billing')),
       );
-      await tester.tap(find.byKey(IntegrationKeys.sidebarNav('/owner/billing')));
+      await tester.tap(
+        find.byKey(IntegrationKeys.sidebarNav('/owner/billing')),
+      );
       await settle(tester);
 
       expect(find.byKey(IntegrationKeys.sidebarCreateBill), findsOneWidget);
@@ -116,7 +134,10 @@ void main() {
         return;
       }
 
-      await pumpUntilFound(tester, find.byKey(IntegrationKeys.sidebarCreateBill));
+      await pumpUntilFound(
+        tester,
+        find.byKey(IntegrationKeys.sidebarCreateBill),
+      );
       await tester.tap(find.byKey(IntegrationKeys.sidebarCreateBill));
       await settle(tester);
 
@@ -134,11 +155,17 @@ void main() {
         return;
       }
 
-      await pumpUntilFound(tester, find.byKey(IntegrationKeys.sidebarCreateBill));
+      await pumpUntilFound(
+        tester,
+        find.byKey(IntegrationKeys.sidebarCreateBill),
+      );
       await tester.tap(find.byKey(IntegrationKeys.sidebarCreateBill));
       await settle(tester);
 
-      await pumpUntilFound(tester, find.byKey(IntegrationKeys.billFormAddProduct));
+      await pumpUntilFound(
+        tester,
+        find.byKey(IntegrationKeys.billFormAddProduct),
+      );
       await tester.tap(find.byKey(IntegrationKeys.billFormAddProduct));
       await tester.pump();
 

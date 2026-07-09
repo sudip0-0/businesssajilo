@@ -21,14 +21,11 @@ void main() {
     );
   }
 
-  testWidgets('bill payment sheet shows walk-in and paid options', (tester) async {
+  testWidgets('bill payment sheet shows walk-in and paid options', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      wrap(
-        const BillPaymentSheet(
-          grandTotal: 10000,
-          initialCustomerId: null,
-        ),
-      ),
+      wrap(const BillPaymentSheet(grandTotal: 10000, initialCustomerId: null)),
     );
     await tester.pumpAndSettle();
 
@@ -37,9 +34,7 @@ void main() {
   });
 
   testWidgets('bill payment sheet shows partial amount field', (tester) async {
-    await tester.pumpWidget(
-      wrap(const BillPaymentSheet(grandTotal: 10000)),
-    );
+    await tester.pumpWidget(wrap(const BillPaymentSheet(grandTotal: 10000)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Partial'));

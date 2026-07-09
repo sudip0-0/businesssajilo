@@ -51,10 +51,7 @@ class AuthRepository {
       throw const AccountDeactivatedException();
     }
 
-    return SessionState(
-      user: user,
-      member: Member.fromJson(row),
-    );
+    return SessionState(user: user, member: Member.fromJson(row));
   }
 
   Future<void> signIn({required String email, required String password}) async {

@@ -9,31 +9,34 @@ import 'core/config/env.dart';
 import 'core/notifications/push_service.dart';
 
 Future<void> main() async {
-  await runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+  await runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-    FlutterError.onError = (details) {
-      FlutterError.presentError(details);
-      debugPrint('FlutterError: ${details.exceptionAsString()}');
-    };
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        debugPrint('FlutterError: ${details.exceptionAsString()}');
+      };
 
-    if (!Env.isConfigured) {
-      // Misconfigured build: show a clear message instead of a broken app.
-      runApp(const ConfigErrorApp());
-      return;
-    }
+      if (!Env.isConfigured) {
+        // Misconfigured build: show a clear message instead of a broken app.
+        runApp(const ConfigErrorApp());
+        return;
+      }
 
-    await PushService.init();
+      await PushService.init();
 
-    await Supabase.initialize(
-      url: Env.supabaseUrl,
-      publishableKey: Env.supabaseAnonKey,
-    );
+      await Supabase.initialize(
+        url: Env.supabaseUrl,
+        publishableKey: Env.supabaseAnonKey,
+      );
 
-    runApp(const ProviderScope(child: BusinessSajiloApp()));
-  }, (error, stack) {
-    debugPrint('Uncaught zone error: $error\n$stack');
-  });
+      runApp(const ProviderScope(child: BusinessSajiloApp()));
+    },
+    (error, stack) {
+      debugPrint('Uncaught zone error: $error\n$stack');
+    },
+  );
 }
 
 class ConfigErrorApp extends StatelessWidget {

@@ -42,8 +42,9 @@ class WebSidebar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final tokens = context.webTokens;
     final location = GoRouterState.of(context).uri.path;
-    final width =
-        collapsed ? tokens.sidebarCollapsedWidth : tokens.sidebarWidth;
+    final width = collapsed
+        ? tokens.sidebarCollapsedWidth
+        : tokens.sidebarWidth;
 
     return Container(
       width: inDrawer ? null : width,
@@ -51,9 +52,7 @@ class WebSidebar extends StatelessWidget {
         color: Colors.white,
         border: inDrawer
             ? null
-            : Border(
-                right: const BorderSide(color: BsColors.border),
-              ),
+            : Border(right: const BorderSide(color: BsColors.border)),
       ),
       child: Column(
         children: [
@@ -109,9 +108,7 @@ class WebSidebar extends StatelessWidget {
                           children: [
                             Text(
                               l10n.appTitle,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     color: BsColors.primary,
                                     fontWeight: FontWeight.w700,
@@ -119,12 +116,8 @@ class WebSidebar extends StatelessWidget {
                             ),
                             Text(
                               l10n.smeManagement,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                    color: BsColors.outline,
-                                  ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: BsColors.outline),
                             ),
                           ],
                         ),
@@ -163,10 +156,7 @@ class WebSidebar extends StatelessWidget {
             ),
           ),
           if (footer != null)
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: footer!,
-            ),
+            Padding(padding: const EdgeInsets.all(12), child: footer!),
         ],
       ),
     );
@@ -206,8 +196,8 @@ class _SidebarTileState extends State<_SidebarTile> {
           color: widget.selected
               ? BsColors.secondary.withValues(alpha: 0.12)
               : _hovered
-                  ? BsColors.rowHover
-                  : Colors.transparent,
+              ? BsColors.rowHover
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(BsRadii.lg),
           child: InkWell(
             key: IntegrationKeys.sidebarNav(widget.item.path),
@@ -223,7 +213,9 @@ class _SidebarTileState extends State<_SidebarTile> {
                   Icon(
                     widget.item.icon,
                     size: 20,
-                    color: widget.selected ? BsColors.secondary : scheme.onSurface,
+                    color: widget.selected
+                        ? BsColors.secondary
+                        : scheme.onSurface,
                   ),
                   if (!widget.collapsed) ...[
                     const SizedBox(width: 12),
@@ -231,13 +223,13 @@ class _SidebarTileState extends State<_SidebarTile> {
                       child: Text(
                         widget.item.label,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: widget.selected
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: widget.selected
-                                  ? BsColors.secondary
-                                  : scheme.onSurface,
-                            ),
+                          fontWeight: widget.selected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: widget.selected
+                              ? BsColors.secondary
+                              : scheme.onSurface,
+                        ),
                       ),
                     ),
                     if (widget.item.badge != null)
@@ -252,9 +244,8 @@ class _SidebarTileState extends State<_SidebarTile> {
                         ),
                         child: Text(
                           widget.item.badge!,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: BsColors.amberTextOnTint,
-                              ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: BsColors.amberTextOnTint),
                         ),
                       ),
                   ],

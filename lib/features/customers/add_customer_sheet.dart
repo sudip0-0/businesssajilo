@@ -25,8 +25,7 @@ const _nepalCities = [
 ];
 
 String _autoPassword() {
-  const chars =
-      'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   final rand = Random.secure();
   return List.generate(12, (_) => chars[rand.nextInt(chars.length)]).join();
 }
@@ -93,14 +92,16 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
       final contact = _contactNameController.text.trim();
       final displayName = _enablePortal
           ? (_displayNameController.text.trim().isEmpty
-              ? (contact.isEmpty ? shop : contact)
-              : _displayNameController.text.trim())
+                ? (contact.isEmpty ? shop : contact)
+                : _displayNameController.text.trim())
           : (contact.isEmpty ? shop : contact);
       final password = _enablePortal
           ? _passwordController.text
           : _autoPassword();
 
-      await ref.read(customersRepositoryProvider).createWithCredentials(
+      await ref
+          .read(customersRepositoryProvider)
+          .createWithCredentials(
             email: _emailController.text.trim().isEmpty
                 ? null
                 : _emailController.text.trim(),
@@ -112,8 +113,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 ? null
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
-            openingBalance:
-                parseNpr(_creditLimitController.text)?.value ?? 0,
+            openingBalance: parseNpr(_creditLimitController.text)?.value ?? 0,
           );
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(true);
@@ -231,8 +231,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _passwordController,
-                  decoration:
-                      InputDecoration(labelText: '${l10n.password} *'),
+                  decoration: InputDecoration(labelText: '${l10n.password} *'),
                   obscureText: true,
                   validator: (v) {
                     if (!_enablePortal) return null;
@@ -261,7 +260,11 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                       color: Colors.white,
                     ),
                   )
-                : const Icon(Icons.save_outlined, size: 18, color: Colors.white),
+                : const Icon(
+                    Icons.save_outlined,
+                    size: 18,
+                    color: Colors.white,
+                  ),
           ),
         ],
       ),
@@ -294,9 +297,9 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
               const SizedBox(height: 4),
               Text(
                 l10n.addCustomerSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: BsColors.outline,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
               ),
               const SizedBox(height: 16),
               _formBody(l10n),

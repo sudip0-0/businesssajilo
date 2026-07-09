@@ -53,9 +53,13 @@ void main() {
     expect(bytes.length, greaterThan(100));
   });
 
-  test('InvoiceImageBuilder produces PNG bytes', () async {
-    // Rasterization uses a platform channel; covered in integration tests.
-  }, skip: 'Requires printing platform channel');
+  test(
+    'InvoiceImageBuilder produces PNG bytes',
+    () async {
+      // Rasterization uses a platform channel; covered in integration tests.
+    },
+    skip: 'Requires printing platform channel',
+  );
 
   test('credit note document includes line items', () {
     final doc = InvoiceDocument(

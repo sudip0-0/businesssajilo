@@ -43,9 +43,8 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
 
   void _initPager() {
     _pager = PaginatedListState<Bill>(
-      loadPage: (offset, limit) => ref
-          .read(billsRepositoryProvider)
-          .list(offset: offset, limit: limit),
+      loadPage: (offset, limit) =>
+          ref.read(billsRepositoryProvider).list(offset: offset, limit: limit),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -79,8 +78,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   Future<void> _runSearch() async {
     final query = _query;
     try {
-      final results =
-          await ref.read(billsRepositoryProvider).search(query);
+      final results = await ref.read(billsRepositoryProvider).search(query);
       if (!mounted || _query != query) return;
       setState(() {
         _searchResults = results;
@@ -124,7 +122,10 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     );
   }
 
-  Widget _buildListBody(AppLocalizations l10n, PaginatedListState<Bill>? pager) {
+  Widget _buildListBody(
+    AppLocalizations l10n,
+    PaginatedListState<Bill>? pager,
+  ) {
     if (_query.isNotEmpty) {
       if (_searching && _searchResults == null) {
         return const ListSkeleton();
@@ -172,30 +173,30 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     return RefreshIndicator(
       onRefresh: () => pager.refresh(),
       child: ListView.separated(
-      controller: _scrollController,
-      itemCount: filtered.length + (pager.hasMore ? 1 : 0),
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        if (index >= filtered.length) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: pager.loading
-                  ? const CircularProgressIndicator()
-                  : TextButton(
-                      onPressed: pager.loadMore,
-                      child: Text(l10n.loadMore),
-                    ),
-            ),
+        controller: _scrollController,
+        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          if (index >= filtered.length) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: pager.loading
+                    ? const CircularProgressIndicator()
+                    : TextButton(
+                        onPressed: pager.loadMore,
+                        child: Text(l10n.loadMore),
+                      ),
+              ),
+            );
+          }
+          final bill = filtered[index];
+          return _BillTile(
+            bill: bill,
+            selected: _selectedBillId == bill.id,
+            onTap: () => _selectBill(context, bill),
           );
-        }
-        final bill = filtered[index];
-        return _BillTile(
-          bill: bill,
-          selected: _selectedBillId == bill.id,
-          onTap: () => _selectBill(context, bill),
-        );
-      },
+        },
       ),
     );
   }
@@ -223,9 +224,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   Future<void> _openDetail(BuildContext context, Bill bill) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => BillDetailScreen(billId: bill.id),
-      ),
+      MaterialPageRoute(builder: (_) => BillDetailScreen(billId: bill.id)),
     );
   }
 }
@@ -259,7 +258,11 @@ class _BillTile extends StatelessWidget {
             const SizedBox(width: 4),
             Tooltip(
               message: l10n.provisionalBillNo,
-              child: const Icon(Icons.schedule, size: 14, color: BsColors.accent),
+              child: const Icon(
+                Icons.schedule,
+                size: 14,
+                color: BsColors.accent,
+              ),
             ),
           ],
         ],
@@ -271,9 +274,9 @@ class _BillTile extends StatelessWidget {
         children: [
           Text(
             formatNpr(Paisa(bill.grandTotal), showPaisa: false),
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           BillStatusChip(bill.status),

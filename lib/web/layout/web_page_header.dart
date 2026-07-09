@@ -37,11 +37,7 @@ class WebPageHeader extends StatelessWidget {
             ),
             if (actions.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: actions,
-              ),
+              Wrap(spacing: 8, runSpacing: 8, children: actions),
             ],
           ],
         ),
@@ -62,11 +58,7 @@ class WebPageHeader extends StatelessWidget {
             ),
           ),
           if (actions.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: actions,
-            ),
+            Wrap(spacing: 8, runSpacing: 8, children: actions),
         ],
       ),
     );

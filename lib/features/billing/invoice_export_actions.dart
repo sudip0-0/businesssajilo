@@ -60,11 +60,12 @@ Future<void> exportBillAfterSave(
   }
 }
 
-typedef _ExportAction = Future<void> Function(
-  InvoiceExportService service,
-  InvoiceDocument doc,
-  AppLocalizations l10n,
-);
+typedef _ExportAction =
+    Future<void> Function(
+      InvoiceExportService service,
+      InvoiceDocument doc,
+      AppLocalizations l10n,
+    );
 
 Future<void> _exportBill(
   WidgetRef ref,
@@ -76,9 +77,9 @@ Future<void> _exportBill(
   final business = await ref.read(currentBusinessProvider.future);
   if (business == null) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.actionFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
     }
     return;
   }
@@ -127,9 +128,9 @@ Future<void> _exportCreditNote(
   final business = await ref.read(currentBusinessProvider.future);
   if (business == null) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.actionFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
     }
     return;
   }

@@ -43,36 +43,36 @@ class OrderQueueScreen extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(orderQueueProvider),
           child: ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: orders.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
-            final order = orders[index];
-            final dateStr = order.createdAt != null
-                ? BsDate.both(
-                    order.createdAt!,
-                    locale: Localizations.localeOf(context),
-                  )
-                : '—';
-            return Card(
-              child: ListTile(
-                title: Text(order.customerShopName ?? '—'),
-                subtitle: Text(dateStr),
-                trailing: StatusChip(order.status),
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OrderDetailScreen(orderId: order.id),
-                    ),
-                  );
-                  ref.invalidate(orderQueueProvider);
-                  ref.invalidate(pendingOrdersCountProvider);
-                  ref.invalidate(openQuotesCountProvider);
-                },
-              ),
-            );
-          },
+            padding: const EdgeInsets.all(16),
+            itemCount: orders.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final order = orders[index];
+              final dateStr = order.createdAt != null
+                  ? BsDate.both(
+                      order.createdAt!,
+                      locale: Localizations.localeOf(context),
+                    )
+                  : '—';
+              return Card(
+                child: ListTile(
+                  title: Text(order.customerShopName ?? '—'),
+                  subtitle: Text(dateStr),
+                  trailing: StatusChip(order.status),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrderDetailScreen(orderId: order.id),
+                      ),
+                    );
+                    ref.invalidate(orderQueueProvider);
+                    ref.invalidate(pendingOrdersCountProvider);
+                    ref.invalidate(openQuotesCountProvider);
+                  },
+                ),
+              );
+            },
           ),
         );
       },

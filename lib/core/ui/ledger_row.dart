@@ -50,9 +50,7 @@ class LedgerTableHeader extends StatelessWidget {
             child: Text(dateLabel, style: theme),
           ),
           const SizedBox(width: _dateDescriptionGap),
-          Expanded(
-            child: Text(descriptionLabel, style: theme),
-          ),
+          Expanded(child: Text(descriptionLabel, style: theme)),
           const SizedBox(width: _descriptionAmountGap),
           if (!compact) ...[
             SizedBox(
@@ -133,9 +131,7 @@ class LedgerRow extends StatelessWidget {
                         ? '+${formatNpr(Paisa(netChange), showPaisa: false)}'
                         : '-${formatNpr(Paisa(-netChange), showPaisa: false)}',
                     style: theme.bodySmall?.copyWith(
-                      color: netChange > 0
-                          ? BsColors.danger
-                          : BsColors.success,
+                      color: netChange > 0 ? BsColors.danger : BsColors.success,
                     ),
                   ),
               ],
@@ -150,8 +146,7 @@ class LedgerRow extends StatelessWidget {
                       // "+" prefix so debits aren't distinguished by color alone.
                       '+${formatNpr(effectiveDebit, showPaisa: false)}',
                       textAlign: TextAlign.end,
-                      style:
-                          theme.bodyMedium?.copyWith(color: BsColors.danger),
+                      style: theme.bodyMedium?.copyWith(color: BsColors.danger),
                     )
                   : null,
             ),
@@ -162,8 +157,9 @@ class LedgerRow extends StatelessWidget {
                   ? Text(
                       '-${formatNpr(effectiveCredit, showPaisa: false)}',
                       textAlign: TextAlign.end,
-                      style:
-                          theme.bodyMedium?.copyWith(color: BsColors.success),
+                      style: theme.bodyMedium?.copyWith(
+                        color: BsColors.success,
+                      ),
                     )
                   : null,
             ),

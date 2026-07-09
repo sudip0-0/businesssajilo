@@ -59,151 +59,152 @@ class CustomerDetailScreen extends ConsumerWidget {
     final ledgerAsync = ref.watch(customerLedgerProvider(customerId));
 
     final body = customerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () => ref.invalidate(customerDetailProvider(customerId)),
-        ),
-        data: (customer) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Embedded (web master-detail) has no app bar; surface the
-              // same actions inline.
-              if (embedded)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Wrap(
-                    spacing: 8,
-                    children: [
-                      if (canRecordPayments && customer.balanceDue > 0)
-                        FilledButton.icon(
-                          icon: const Icon(Icons.payments_outlined, size: 18),
-                          label: Text(l10n.recordPayment),
-                          onPressed: () => _openRecordPaymentSheet(
-                            context,
-                            ref,
-                            customerId: customerId,
-                            customerName: customer.shopName,
-                          ),
-                        ),
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.ios_share_outlined, size: 18),
-                        label: Text(l10n.shareStatement),
-                        onPressed: () => showStatementShareSheet(
-                          context,
-                          customer: customer,
-                        ),
-                      ),
-                      if (canRecordPayments && customer.balanceDue <= 0)
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.payments_outlined, size: 18),
-                          label: Text(l10n.recordPayment),
-                          onPressed: () => _openRecordPaymentSheet(
-                            context,
-                            ref,
-                            customerId: customerId,
-                            customerName: customer.shopName,
-                          ),
-                        ),
-                      if (canEdit)
-                        OutlinedButton.icon(
-                          icon: const Icon(Icons.lock_reset_outlined, size: 18),
-                          label: Text(l10n.resetPassword),
-                          onPressed: () => showResetMemberPasswordSheet(
-                            context,
-                            memberId: customer.memberId,
-                            memberName: customer.shopName,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              Card(
-                margin: const EdgeInsets.all(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.currentBalance, style: Theme.of(context).textTheme.bodySmall),
-                      const SizedBox(height: 4),
-                      Text(
-                        formatNpr(Paisa(customer.balanceDue), showPaisa: false),
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: customer.balanceDue > 0
-                                  ? BsColors.danger
-                                  : BsColors.success,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                      if (customer.contactName != null) ...[
-                        const SizedBox(height: 8),
-                        Text(customer.contactName!),
-                      ],
-                      if (customer.phone != null) Text(customer.phone!),
-                      if (customer.address != null) Text(customer.address!),
-                    ],
-                  ),
-                ),
-              ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(customerDetailProvider(customerId)),
+      ),
+      data: (customer) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Embedded (web master-detail) has no app bar; surface the
+            // same actions inline.
+            if (embedded)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  l10n.ledger,
-                  style: Theme.of(context).textTheme.titleMedium,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    if (canRecordPayments && customer.balanceDue > 0)
+                      FilledButton.icon(
+                        icon: const Icon(Icons.payments_outlined, size: 18),
+                        label: Text(l10n.recordPayment),
+                        onPressed: () => _openRecordPaymentSheet(
+                          context,
+                          ref,
+                          customerId: customerId,
+                          customerName: customer.shopName,
+                        ),
+                      ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.ios_share_outlined, size: 18),
+                      label: Text(l10n.shareStatement),
+                      onPressed: () =>
+                          showStatementShareSheet(context, customer: customer),
+                    ),
+                    if (canRecordPayments && customer.balanceDue <= 0)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.payments_outlined, size: 18),
+                        label: Text(l10n.recordPayment),
+                        onPressed: () => _openRecordPaymentSheet(
+                          context,
+                          ref,
+                          customerId: customerId,
+                          customerName: customer.shopName,
+                        ),
+                      ),
+                    if (canEdit)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.lock_reset_outlined, size: 18),
+                        label: Text(l10n.resetPassword),
+                        onPressed: () => showResetMemberPasswordSheet(
+                          context,
+                          memberId: customer.memberId,
+                          memberName: customer.shopName,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              LedgerTableHeader(
-                dateLabel: l10n.ledgerDate,
-                descriptionLabel: l10n.ledgerDescription,
-                debitLabel: l10n.ledgerDebit,
-                creditLabel: l10n.ledgerCredit,
-                balanceLabel: l10n.runningBalance,
+            Card(
+              margin: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.currentBalance,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formatNpr(Paisa(customer.balanceDue), showPaisa: false),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: customer.balanceDue > 0
+                                ? BsColors.danger
+                                : BsColors.success,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    if (customer.contactName != null) ...[
+                      const SizedBox(height: 8),
+                      Text(customer.contactName!),
+                    ],
+                    if (customer.phone != null) Text(customer.phone!),
+                    if (customer.address != null) Text(customer.address!),
+                  ],
+                ),
               ),
-              const Divider(height: 1),
-              Expanded(
-                child: ledgerAsync.when(
-                  loading: () => const ListSkeleton(),
-                  error: (e, _) => ErrorState(
-                    message: l10n.loadingFailed,
-                    onRetry: () =>
-                        ref.invalidate(customerLedgerProvider(customerId)),
-                  ),
-                  data: (entries) {
-                    if (entries.isEmpty) {
-                      return EmptyState(
-                        icon: Icons.receipt_long_outlined,
-                        message: l10n.noLedgerEntries,
-                      );
-                    }
-                    return ListView.builder(
-                      itemCount: entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = entries[index];
-                        final description = switch (entry.entryType) {
-                          'opening_balance' => l10n.entryOpeningBalance,
-                          'bill' =>
-                            '${l10n.entryBill} · ${entry.description}',
-                          'payment' =>
-                            '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}',
-                          _ => entry.description,
-                        };
-                        return LedgerRow(
-                          date: entry.occurredAt,
-                          description: description,
-                          debit: Paisa(entry.debitPaisa),
-                          credit: Paisa(entry.creditPaisa),
-                          runningBalance: Paisa(entry.runningBalance),
-                        );
-                      },
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                l10n.ledger,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            LedgerTableHeader(
+              dateLabel: l10n.ledgerDate,
+              descriptionLabel: l10n.ledgerDescription,
+              debitLabel: l10n.ledgerDebit,
+              creditLabel: l10n.ledgerCredit,
+              balanceLabel: l10n.runningBalance,
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ledgerAsync.when(
+                loading: () => const ListSkeleton(),
+                error: (e, _) => ErrorState(
+                  message: l10n.loadingFailed,
+                  onRetry: () =>
+                      ref.invalidate(customerLedgerProvider(customerId)),
+                ),
+                data: (entries) {
+                  if (entries.isEmpty) {
+                    return EmptyState(
+                      icon: Icons.receipt_long_outlined,
+                      message: l10n.noLedgerEntries,
                     );
-                  },
-                ),
+                  }
+                  return ListView.builder(
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      final description = switch (entry.entryType) {
+                        'opening_balance' => l10n.entryOpeningBalance,
+                        'bill' => '${l10n.entryBill} · ${entry.description}',
+                        'payment' =>
+                          '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}',
+                        _ => entry.description,
+                      };
+                      return LedgerRow(
+                        date: entry.occurredAt,
+                        description: description,
+                        debit: Paisa(entry.debitPaisa),
+                        credit: Paisa(entry.creditPaisa),
+                        runningBalance: Paisa(entry.runningBalance),
+                      );
+                    },
+                  );
+                },
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        );
+      },
     );
 
     if (embedded) return body;

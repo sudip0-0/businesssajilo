@@ -22,9 +22,9 @@ import 'bill_payment_sheet.dart';
 
 class _DraftLine {
   _DraftLine({required this.product})
-      : qty = 1,
-        rate = product.referencePrice,
-        discount = 0;
+    : qty = 1,
+      rate = product.referencePrice,
+      discount = 0;
 
   final Product product;
   int qty;
@@ -34,11 +34,8 @@ class _DraftLine {
   int get lineTotal =>
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
 
-  bool get discountValid => isValidLineDiscount(
-        qty: qty,
-        ratePaisa: rate,
-        discountPaisa: discount,
-      );
+  bool get discountValid =>
+      isValidLineDiscount(qty: qty, ratePaisa: rate, discountPaisa: discount);
 }
 
 class BillFormScreen extends ConsumerStatefulWidget {
@@ -56,6 +53,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   final _billDiscountController = TextEditingController();
   String _query = '';
   bool _loading = false;
+
   /// On narrow screens, show cart review after the first line is added.
   bool _showCart = false;
 
@@ -67,11 +65,12 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
   int get _itemsTotal => itemsTotalPaisa(_lines.map((l) => l.lineTotal));
 
-  int get _billDiscount =>
-      parseNpr(_billDiscountController.text)?.value ?? 0;
+  int get _billDiscount => parseNpr(_billDiscountController.text)?.value ?? 0;
 
-  int get _grandTotal =>
-      grandTotalPaisa(itemsTotal: _itemsTotal, billDiscountPaisa: _billDiscount);
+  int get _grandTotal => grandTotalPaisa(
+    itemsTotal: _itemsTotal,
+    billDiscountPaisa: _billDiscount,
+  );
 
   void _addProduct(Product product) {
     final index = _lines.indexWhere((l) => l.product.id == product.id);
@@ -89,7 +88,10 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     final l10n = AppLocalizations.of(context);
     if (_lines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.noBillLines), backgroundColor: BsColors.danger),
+        SnackBar(
+          content: Text(l10n.noBillLines),
+          backgroundColor: BsColors.danger,
+        ),
       );
       return null;
     }
@@ -135,7 +137,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     setState(() => _loading = true);
     Bill? savedBill;
     try {
-      savedBill = await ref.read(billsRepositoryProvider).create(
+      savedBill = await ref
+          .read(billsRepositoryProvider)
+          .create(
             createdByMemberId: memberId,
             customerId: paymentResult.customerId,
             status: paymentResult.status,
@@ -167,9 +171,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.billSaved)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
         if (exportAfterSave) {
           await exportBillAfterSave(ref, context, savedBill);
         }
@@ -202,178 +206,169 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     final productsAsync = ref.watch(productListProvider);
 
     final body = productsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () => ref.invalidate(productListProvider),
-        ),
-        data: (products) {
-          final filtered = products.where((p) {
-            if (_query.isEmpty) return true;
-            return p.name.toLowerCase().contains(_query.toLowerCase()) ||
-                (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-          }).toList();
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(productListProvider),
+      ),
+      data: (products) {
+        final filtered = products.where((p) {
+          if (_query.isEmpty) return true;
+          return p.name.toLowerCase().contains(_query.toLowerCase()) ||
+              (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
+        }).toList();
 
-          final narrow = MediaQuery.sizeOf(context).width < 720;
-          final showPicker = !narrow || !_showCart || _lines.isEmpty;
-          final showCart = !narrow || _showCart;
+        final narrow = MediaQuery.sizeOf(context).width < 720;
+        final showPicker = !narrow || !_showCart || _lines.isEmpty;
+        final showCart = !narrow || _showCart;
 
-          Widget productPicker() => Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: l10n.filterProducts,
-                        prefixIcon: const Icon(Icons.search),
+        Widget productPicker() => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: l10n.filterProducts,
+                  prefixIcon: const Icon(Icons.search),
+                ),
+                onChanged: (v) => setState(() => _query = v),
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                itemCount: filtered.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final product = filtered[index];
+                  return ListTile(
+                    leading: ProductImage(storagePath: product.imageUrl),
+                    title: Text(product.name),
+                    subtitle: Text(
+                      formatNpr(
+                        Paisa(product.referencePrice),
+                        showPaisa: false,
                       ),
-                      onChanged: (v) => setState(() => _query = v),
                     ),
+                    trailing: StockBadge(product: product),
+                    onTap: () => _addProduct(product),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+
+        Widget cartPane() => Column(
+          children: [
+            if (narrow && _lines.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _showCart = false),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(l10n.addProduct),
                   ),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
+                ),
+              ),
+            Expanded(
+              child: _lines.isEmpty
+                  ? Center(
+                      child: TextButton.icon(
+                        onPressed: () => setState(() => _showCart = false),
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.noBillLines),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _lines.length,
                       itemBuilder: (context, index) {
-                        final product = filtered[index];
-                        return ListTile(
-                          leading:
-                              ProductImage(storagePath: product.imageUrl),
-                          title: Text(product.name),
-                          subtitle: Text(
-                            formatNpr(
-                              Paisa(product.referencePrice),
-                              showPaisa: false,
-                            ),
-                          ),
-                          trailing: StockBadge(product: product),
-                          onTap: () => _addProduct(product),
+                        final line = _lines[index];
+                        return _LineEditor(
+                          line: line,
+                          onChanged: () => setState(() {}),
+                          onRemove: () => setState(() {
+                            _lines.removeAt(index);
+                            if (_lines.isEmpty) _showCart = false;
+                          }),
                         );
                       },
                     ),
-                  ),
-                ],
-              );
+            ),
+            _TotalsBar(
+              itemsTotal: _itemsTotal,
+              billDiscountController: _billDiscountController,
+              grandTotal: _grandTotal,
+              onDiscountChanged: () => setState(() {}),
+            ),
+          ],
+        );
 
-          Widget cartPane() => Column(
-                children: [
-                  if (narrow && _lines.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: () => setState(() => _showCart = false),
-                          icon: const Icon(Icons.add, size: 18),
-                          label: Text(l10n.addProduct),
-                        ),
-                      ),
-                    ),
-                  Expanded(
-                    child: _lines.isEmpty
-                        ? Center(
-                            child: TextButton.icon(
-                              onPressed: () =>
-                                  setState(() => _showCart = false),
-                              icon: const Icon(Icons.add),
-                              label: Text(l10n.noBillLines),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _lines.length,
-                            itemBuilder: (context, index) {
-                              final line = _lines[index];
-                              return _LineEditor(
-                                line: line,
-                                onChanged: () => setState(() {}),
-                                onRemove: () => setState(() {
-                                  _lines.removeAt(index);
-                                  if (_lines.isEmpty) _showCart = false;
-                                }),
-                              );
-                            },
-                          ),
-                  ),
-                  _TotalsBar(
-                    itemsTotal: _itemsTotal,
-                    billDiscountController: _billDiscountController,
-                    grandTotal: _grandTotal,
-                    onDiscountChanged: () => setState(() {}),
-                  ),
-                ],
-              );
-
-          if (narrow) {
-            return Column(
-              children: [
-                Expanded(
-                  child: showPicker ? productPicker() : cartPane(),
-                ),
-                if (widget.embedded)
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: FilledButton(
-                        onPressed: _loading
-                            ? null
-                            : () {
-                                if (showPicker && _lines.isNotEmpty) {
-                                  setState(() => _showCart = true);
-                                  return;
-                                }
-                                _save();
-                              },
-                        child: _loading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                showPicker && _lines.isNotEmpty
-                                    ? l10n.reviewAndSave
-                                    : l10n.saveBill,
-                              ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          }
-
+        if (narrow) {
           return Column(
             children: [
-              Expanded(
-                flex: _lines.isEmpty ? 1 : 2,
-                child: productPicker(),
-              ),
-              const Divider(height: 1),
-              Expanded(
-                flex: _lines.isEmpty ? 0 : 3,
-                child: showCart ? cartPane() : const SizedBox.shrink(),
-              ),
+              Expanded(child: showPicker ? productPicker() : cartPane()),
               if (widget.embedded)
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: FilledButton(
-                      onPressed: _loading ? null : _save,
+                      onPressed: _loading
+                          ? null
+                          : () {
+                              if (showPicker && _lines.isNotEmpty) {
+                                setState(() => _showCart = true);
+                                return;
+                              }
+                              _save();
+                            },
                       child: _loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(l10n.saveBill),
+                          : Text(
+                              showPicker && _lines.isNotEmpty
+                                  ? l10n.reviewAndSave
+                                  : l10n.saveBill,
+                            ),
                     ),
                   ),
                 ),
             ],
           );
-        },
-      );
+        }
+
+        return Column(
+          children: [
+            Expanded(flex: _lines.isEmpty ? 1 : 2, child: productPicker()),
+            const Divider(height: 1),
+            Expanded(
+              flex: _lines.isEmpty ? 0 : 3,
+              child: showCart ? cartPane() : const SizedBox.shrink(),
+            ),
+            if (widget.embedded)
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FilledButton(
+                    onPressed: _loading ? null : _save,
+                    child: _loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l10n.saveBill),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
 
     if (widget.embedded) return body;
     return Scaffold(
@@ -398,8 +393,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                 onPressed: _loading
                     ? null
                     : () {
-                        final narrow =
-                            MediaQuery.sizeOf(context).width < 720;
+                        final narrow = MediaQuery.sizeOf(context).width < 720;
                         if (narrow && !_showCart && _lines.isNotEmpty) {
                           setState(() => _showCart = true);
                           return;
@@ -462,9 +456,7 @@ class _LineEditorState extends State<_LineEditor> {
                 ),
               ),
               IconButton(
-                icon: Icon(
-                  _expanded ? Icons.expand_less : Icons.expand_more,
-                ),
+                icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
                 tooltip: l10n.edit,
                 onPressed: () => setState(() => _expanded = !_expanded),
               ),
@@ -519,8 +511,7 @@ class _LineEditorState extends State<_LineEditor> {
                     ),
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                errorText:
-                    line.discountValid ? null : l10n.discountExceedsLine,
+                errorText: line.discountValid ? null : l10n.discountExceedsLine,
               ),
               onChanged: (v) {
                 line.discount = parseNpr(v)?.value ?? 0;
@@ -587,16 +578,16 @@ class _TotalsBar extends StatelessWidget {
             children: [
               Text(
                 l10n.grandTotal,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
                 formatNpr(Paisa(grandTotal), showPaisa: false),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: BsColors.primary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: BsColors.primary,
+                ),
               ),
             ],
           ),
@@ -608,10 +599,7 @@ class _TotalsBar extends StatelessWidget {
   Widget _summaryRow(BuildContext context, String label, int amount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label),
-        Text(formatNpr(Paisa(amount), showPaisa: false)),
-      ],
+      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: false))],
     );
   }
 }

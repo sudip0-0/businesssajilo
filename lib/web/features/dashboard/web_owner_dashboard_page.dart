@@ -46,11 +46,10 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
     ref.invalidate(salesTrendProvider);
     ref.invalidate(totalDuesProvider);
     ref.invalidate(lowStockCountProvider);
+    ref.invalidate(lowStockAlertsProvider);
     ref.invalidate(orders.pendingOrdersCountProvider);
     ref.invalidate(todaysBillsProvider);
-    ref.invalidate(billListProvider);
-    ref.invalidate(customerListProvider);
-    ref.invalidate(productListProvider);
+    ref.invalidate(recentCustomersProvider);
   }
 
   @override
@@ -66,8 +65,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
     final chartRange = _weeklyChart ? ReportRange.last7Days : ReportRange.month;
     final chartData = ref.watch(salesDailyProvider(chartRange));
     final todaysBills = ref.watch(todaysBillsProvider);
-    final products = ref.watch(productListProvider);
-    final customers = ref.watch(customerListProvider);
+    final lowStockAlerts = ref.watch(lowStockAlertsProvider);
+    final recentCustomers = ref.watch(recentCustomersProvider);
 
     return WebPageScaffold(
       title: l10n.namasteGreeting(name),
@@ -114,8 +113,9 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                       error: (_, _) => null,
                     ),
                     trendLabel: salesTrend.when(
-                      data: (pct) =>
-                          pct == null ? null : '${pct.abs().toStringAsFixed(0)}%',
+                      data: (pct) => pct == null
+                          ? null
+                          : '${pct.abs().toStringAsFixed(0)}%',
                       loading: () => null,
                       error: (_, _) => null,
                     ),
@@ -191,15 +191,13 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                               children: [
                                 Text(
                                   l10n.salesPerformance,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                                 Text(
                                   l10n.salesPerformanceSubtitle,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(color: BsColors.outline),
                                 ),
                               ],
@@ -235,8 +233,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
 
                             if (stackHeader) {
                               return Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   titleBlock,
                                   const SizedBox(height: 12),
@@ -323,8 +320,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                               height: 160,
                               child: _RecentActivityList(
                                 bills: todaysBills,
-                                products: products,
-                                customers: customers,
+                                lowStockAlerts: lowStockAlerts,
+                                recentCustomers: recentCustomers,
                               ),
                             ),
                           ],
@@ -398,9 +395,9 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                 child: Text(
                   '© ${DateTime.now().year} ${l10n.appTitle.toUpperCase()} • ${l10n.madeForNepal.toUpperCase()}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: BsColors.outline,
-                        letterSpacing: 0.5,
-                      ),
+                    color: BsColors.outline,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -415,13 +412,13 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
 class _RecentActivityList extends StatelessWidget {
   const _RecentActivityList({
     required this.bills,
-    required this.products,
-    required this.customers,
+    required this.lowStockAlerts,
+    required this.recentCustomers,
   });
 
   final AsyncValue<List<Bill>> bills;
-  final AsyncValue<List<Product>> products;
-  final AsyncValue<List<Customer>> customers;
+  final AsyncValue<List<Product>> lowStockAlerts;
+  final AsyncValue<List<Customer>> recentCustomers;
 
   @override
   Widget build(BuildContext context) {
@@ -441,11 +438,8 @@ class _RecentActivityList extends StatelessWidget {
       }
     });
 
-    products.whenData((list) {
-      for (final p in list
-          .where((p) =>
-              p.lowStockThreshold > 0 && p.stockCached <= p.lowStockThreshold)
-          .take(2)) {
+    lowStockAlerts.whenData((list) {
+      for (final p in list) {
         items.add(
           _ActivityItem(
             icon: PhosphorIconsRegular.warning,
@@ -457,11 +451,8 @@ class _RecentActivityList extends StatelessWidget {
       }
     });
 
-    customers.whenData((list) {
-      final recent = list.toList()
-        ..sort((a, b) =>
-            (b.createdAt ?? DateTime(1970)).compareTo(a.createdAt ?? DateTime(1970)));
-      for (final c in recent.take(2)) {
+    recentCustomers.whenData((list) {
+      for (final c in list) {
         items.add(
           _ActivityItem(
             icon: PhosphorIconsRegular.user,
@@ -477,9 +468,9 @@ class _RecentActivityList extends StatelessWidget {
       return Center(
         child: Text(
           l10n.noRecentActivity,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: BsColors.outline,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
         ),
       );
     }
@@ -553,9 +544,9 @@ class _TransactionsTable extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.noSalesInPeriod,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: BsColors.outline,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
           ),
         ),
       );
@@ -583,18 +574,20 @@ class _TransactionsTable extends StatelessWidget {
                   context.go('/owner/billing/${bills[i].id}'),
               cells: [
                 DataCell(Text('#${bills[i].billNo.split('-').last}')),
-                DataCell(Text(
-                  bills[i].customerShopName ?? l10n.walkInCustomer,
-                )),
-                DataCell(Text(
-                  bills[i].createdAt != null
-                      ? timeFmt.format(bills[i].createdAt!.toLocal())
-                      : '—',
-                )),
+                DataCell(
+                  Text(bills[i].customerShopName ?? l10n.walkInCustomer),
+                ),
+                DataCell(
+                  Text(
+                    bills[i].createdAt != null
+                        ? timeFmt.format(bills[i].createdAt!.toLocal())
+                        : '—',
+                  ),
+                ),
                 DataCell(Text(_paymentLabel(bills[i].status, l10n))),
-                DataCell(Text(
-                  formatNpr(Paisa(bills[i].grandTotal), showPaisa: false),
-                )),
+                DataCell(
+                  Text(formatNpr(Paisa(bills[i].grandTotal), showPaisa: false)),
+                ),
                 DataCell(BillStatusChip(bills[i].status)),
               ],
             ),

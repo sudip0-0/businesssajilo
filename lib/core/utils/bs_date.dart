@@ -13,8 +13,10 @@ abstract final class BsDate {
   /// e.g. "२०८३ असार २८" (Nepali default) or "2083 Asar 28" for English locale.
   static String bs(DateTime dateUtc, {Locale? locale}) {
     final nepaliDate = dateUtc.toLocal().toNepaliDateTime();
-    return NepaliDateFormat('yyyy MMMM d', _languageFor(locale))
-        .format(nepaliDate);
+    return NepaliDateFormat(
+      'yyyy MMMM d',
+      _languageFor(locale),
+    ).format(nepaliDate);
   }
 
   /// e.g. "12 Jul 2026"

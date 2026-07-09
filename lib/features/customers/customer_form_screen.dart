@@ -42,7 +42,9 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await ref.read(customersRepositoryProvider).update(
+      await ref
+          .read(customersRepositoryProvider)
+          .update(
             id: widget.customerId,
             shopName: _shopNameController.text.trim(),
             contactName: _contactNameController.text.trim().isEmpty

@@ -64,7 +64,8 @@ class _WebAppShellState extends State<WebAppShell> {
               WebSidebar(
                 items: widget.navItems,
                 collapsed: _collapsed,
-                onToggleCollapse: () => setState(() => _collapsed = !_collapsed),
+                onToggleCollapse: () =>
+                    setState(() => _collapsed = !_collapsed),
                 footer: widget.sidebarFooter,
               ),
             Expanded(
@@ -92,10 +93,7 @@ class _WebAppShellState extends State<WebAppShell> {
 }
 
 class _MobileBottomNav extends StatelessWidget {
-  const _MobileBottomNav({
-    required this.items,
-    required this.location,
-  });
+  const _MobileBottomNav({required this.items, required this.location});
 
   final List<WebNavItem> items;
   final String location;
@@ -104,14 +102,13 @@ class _MobileBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return NavigationBar(
       height: 64,
-      selectedIndex: items.indexWhere((i) => location.startsWith(i.path)).clamp(0, items.length - 1),
+      selectedIndex: items
+          .indexWhere((i) => location.startsWith(i.path))
+          .clamp(0, items.length - 1),
       onDestinationSelected: (index) => context.go(items[index].path),
       destinations: [
         for (final item in items)
-          NavigationDestination(
-            icon: Icon(item.icon),
-            label: item.label,
-          ),
+          NavigationDestination(icon: Icon(item.icon), label: item.label),
       ],
     );
   }

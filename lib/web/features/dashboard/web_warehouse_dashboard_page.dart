@@ -48,7 +48,8 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
             children: [
               WebStatTile(
                 label: l10n.fulfillmentQueue,
-                value: queueCount?.toString() ??
+                value:
+                    queueCount?.toString() ??
                     fulfillmentAsync.when(
                       loading: () => '…',
                       error: (_, _) => '—',
@@ -86,8 +87,8 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
                     Text(
                       l10n.fulfillmentQueue,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -111,8 +112,8 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
                     Text(
                       l10n.filterProducts,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),

@@ -25,18 +25,16 @@ class WebContentFrame extends StatelessWidget {
     if (fillHeight) {
       return LayoutBuilder(
         builder: (context, constraints) {
-          final width =
-              constraints.maxWidth.clamp(0, tokens.contentMaxWidth).toDouble();
+          final width = constraints.maxWidth
+              .clamp(0, tokens.contentMaxWidth)
+              .toDouble();
 
           return Align(
             alignment: Alignment.topCenter,
             child: SizedBox(
               width: width,
               height: constraints.maxHeight,
-              child: Padding(
-                padding: resolvedPadding,
-                child: child,
-              ),
+              child: Padding(padding: resolvedPadding, child: child),
             ),
           );
         },
@@ -47,10 +45,7 @@ class WebContentFrame extends StatelessWidget {
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: tokens.contentMaxWidth),
-        child: Padding(
-          padding: resolvedPadding,
-          child: child,
-        ),
+        child: Padding(padding: resolvedPadding, child: child),
       ),
     );
   }

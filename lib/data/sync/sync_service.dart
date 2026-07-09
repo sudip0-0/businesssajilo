@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../local/app_database.dart';
+import 'sync_helpers.dart';
 import 'sync_merge.dart';
 
 const _maxAttempts = 5;
@@ -26,15 +27,15 @@ class SyncService {
     required AppDatabase db,
     required SupabaseClient client,
     Connectivity? connectivity,
-  })  : _db = db,
-        _client = client,
-        _connectivity = connectivity ?? Connectivity();
+  }) : _db = db,
+       _client = client,
+       _connectivity = connectivity ?? Connectivity();
 
   final AppDatabase _db;
   final SupabaseClient _client;
   final Connectivity _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
-  bool _syncing = false;
+  final SyncCoalesce _coalesce = SyncCoalesce();
 
   Future<void> init(String deviceId) async {
     await _db.ensureDeviceMeta(deviceId);
@@ -69,22 +70,31 @@ class SyncService {
   }
 
   Future<void> syncNow() async {
-    if (_syncing) return;
+    if (_coalesce.syncing) {
+      _coalesce.markQueuedIfBusy();
+      return;
+    }
     if (!await isOnline) return;
-    _syncing = true;
+    // Re-check after the async online probe — another sync may have started.
+    if (!_coalesce.tryEnter()) return;
     try {
-      await _pull();
-      await _push();
-      await _pull();
+      do {
+        _coalesce.clearQueued();
+        await _pull();
+        await _push();
+        await _pull();
+      } while (_coalesce.shouldRepeat);
     } finally {
-      _syncing = false;
+      _coalesce.end();
     }
   }
 
   Future<void> _pull() async {
     final now = DateTime.now().toUtc();
-    final hasWatermarks =
-        await _db.select(_db.syncWatermarks).get().then((r) => r.isNotEmpty);
+    final hasWatermarks = await _db
+        .select(_db.syncWatermarks)
+        .get()
+        .then((r) => r.isNotEmpty);
 
     if (!hasWatermarks) {
       await _bootstrap();
@@ -272,12 +282,13 @@ class SyncService {
       } catch (e) {
         final attempts = item.attempts + 1;
         final terminal = attempts >= _maxAttempts;
-        await (_db.update(_db.syncQueue)..where((q) => q.id.equals(item.id)))
-            .write(
+        await (_db.update(
+          _db.syncQueue,
+        )..where((q) => q.id.equals(item.id))).write(
           SyncQueueCompanion(
             status: Value(terminal ? 'failed' : 'pending'),
             attempts: Value(attempts),
-            lastError: const Value('sync_error'),
+            lastError: Value(truncateSyncError(e)),
             nextAttemptAt: Value(
               terminal
                   ? null
@@ -305,9 +316,12 @@ class SyncService {
     await (_db.update(_db.localBills)..where((b) => b.id.equals(billId))).write(
       LocalBillsCompanion(
         syncStatus: const Value('synced'),
-        billNo:
-            serverBillNo != null ? Value(serverBillNo) : const Value.absent(),
-        status: serverStatus != null ? Value(serverStatus) : const Value.absent(),
+        billNo: serverBillNo != null
+            ? Value(serverBillNo)
+            : const Value.absent(),
+        status: serverStatus != null
+            ? Value(serverStatus)
+            : const Value.absent(),
       ),
     );
     final payment = payload['payment'];
@@ -319,27 +333,21 @@ class SyncService {
   Future<void> _pushBillItems(Map<String, dynamic> payload) async {
     final items = payload['items'] as List;
     if (items.isEmpty) return;
-    await _client.from('bill_items').upsert(
-      items,
-      onConflict: 'id',
-      ignoreDuplicates: true,
-    );
+    await _client
+        .from('bill_items')
+        .upsert(items, onConflict: 'id', ignoreDuplicates: true);
   }
 
   Future<void> _pushPayment(Map<String, dynamic> payload) async {
-    await _client.from('payments').upsert(
-      payload,
-      onConflict: 'id',
-      ignoreDuplicates: true,
-    );
+    await _client
+        .from('payments')
+        .upsert(payload, onConflict: 'id', ignoreDuplicates: true);
   }
 
   Future<void> _pushStockMovement(Map<String, dynamic> payload) async {
-    await _client.from('stock_movements').upsert(
-      payload,
-      onConflict: 'id',
-      ignoreDuplicates: true,
-    );
+    await _client
+        .from('stock_movements')
+        .upsert(payload, onConflict: 'id', ignoreDuplicates: true);
   }
 
   Future<void> _markPaymentSynced(String id) async {
@@ -350,34 +358,33 @@ class SyncService {
 
   Future<void> _markMovementSynced(String id) async {
     await (_db.update(_db.localStockMovements)..where((m) => m.id.equals(id)))
-        .write(
-      const LocalStockMovementsCompanion(syncStatus: Value('synced')),
-    );
+        .write(const LocalStockMovementsCompanion(syncStatus: Value('synced')));
   }
 
   Future<void> _upsertCategory(Map<String, dynamic> row) async {
     final updatedAt = DateTime.parse(row['updated_at'] as String);
-    final existing = await (_db.select(_db.localCategories)
-          ..where((c) => c.id.equals(row['id'] as String)))
-        .getSingleOrNull();
-    if (existing != null &&
-        !remoteWins(existing.updatedAt, updatedAt)) {
+    final existing = await (_db.select(
+      _db.localCategories,
+    )..where((c) => c.id.equals(row['id'] as String))).getSingleOrNull();
+    if (existing != null && !remoteWins(existing.updatedAt, updatedAt)) {
       return;
     }
-    await _db.into(_db.localCategories).insertOnConflictUpdate(
-      LocalCategoriesCompanion.insert(
-        id: row['id'] as String,
-        businessId: row['business_id'] as String,
-        name: row['name'] as String,
-        nameNp: Value(row['name_np'] as String?),
-        updatedAt: updatedAt,
-        createdAt: Value(
-          row['created_at'] == null
-              ? null
-              : DateTime.parse(row['created_at'] as String),
-        ),
-      ),
-    );
+    await _db
+        .into(_db.localCategories)
+        .insertOnConflictUpdate(
+          LocalCategoriesCompanion.insert(
+            id: row['id'] as String,
+            businessId: row['business_id'] as String,
+            name: row['name'] as String,
+            nameNp: Value(row['name_np'] as String?),
+            updatedAt: updatedAt,
+            createdAt: Value(
+              row['created_at'] == null
+                  ? null
+                  : DateTime.parse(row['created_at'] as String),
+            ),
+          ),
+        );
   }
 
   Future<void> _upsertProduct(Map<String, dynamic> row) async {
@@ -387,83 +394,92 @@ class SyncService {
       map['category_name'] = category['name'];
     }
     final updatedAt = DateTime.parse(map['updated_at'] as String);
-    final existing = await (_db.select(_db.localProducts)
-          ..where((p) => p.id.equals(map['id'] as String)))
-        .getSingleOrNull();
+    final existing = await (_db.select(
+      _db.localProducts,
+    )..where((p) => p.id.equals(map['id'] as String))).getSingleOrNull();
     if (existing != null && !remoteWins(existing.updatedAt, updatedAt)) {
       return;
     }
-    await _db.into(_db.localProducts).insertOnConflictUpdate(
-      LocalProductsCompanion.insert(
-        id: map['id'] as String,
-        businessId: map['business_id'] as String,
-        categoryId: Value(map['category_id'] as String?),
-        name: map['name'] as String,
-        nameNp: Value(map['name_np'] as String?),
-        sku: Value(map['sku'] as String?),
-        unit: map['unit'] as String? ?? 'piece',
-        costPrice: Value((map['cost_price'] as num?)?.toInt() ?? 0),
-        referencePrice: Value((map['reference_price'] as num?)?.toInt() ?? 0),
-        imageUrl: Value(map['image_url'] as String?),
-        lowStockThreshold:
-            Value((map['low_stock_threshold'] as num?)?.toInt() ?? 0),
-        stockCached: Value((map['stock_cached'] as num?)?.toInt() ?? 0),
-        isActive: Value(map['is_active'] as bool? ?? true),
-        categoryName: Value(map['category_name'] as String?),
-        updatedAt: updatedAt,
-        createdAt: Value(
-          map['created_at'] == null
-              ? null
-              : DateTime.parse(map['created_at'] as String),
-        ),
-      ),
-    );
+    await _db
+        .into(_db.localProducts)
+        .insertOnConflictUpdate(
+          LocalProductsCompanion.insert(
+            id: map['id'] as String,
+            businessId: map['business_id'] as String,
+            categoryId: Value(map['category_id'] as String?),
+            name: map['name'] as String,
+            nameNp: Value(map['name_np'] as String?),
+            sku: Value(map['sku'] as String?),
+            unit: map['unit'] as String? ?? 'piece',
+            costPrice: Value((map['cost_price'] as num?)?.toInt() ?? 0),
+            referencePrice: Value(
+              (map['reference_price'] as num?)?.toInt() ?? 0,
+            ),
+            imageUrl: Value(map['image_url'] as String?),
+            lowStockThreshold: Value(
+              (map['low_stock_threshold'] as num?)?.toInt() ?? 0,
+            ),
+            stockCached: Value((map['stock_cached'] as num?)?.toInt() ?? 0),
+            isActive: Value(map['is_active'] as bool? ?? true),
+            categoryName: Value(map['category_name'] as String?),
+            updatedAt: updatedAt,
+            createdAt: Value(
+              map['created_at'] == null
+                  ? null
+                  : DateTime.parse(map['created_at'] as String),
+            ),
+          ),
+        );
   }
 
   Future<void> _upsertCustomerBalance(Map<String, dynamic> row) async {
     final updatedAt = row['updated_at'] != null
         ? DateTime.parse(row['updated_at'] as String)
         : (row['created_at'] != null
-            ? DateTime.parse(row['created_at'] as String)
-            : DateTime.now().toUtc());
-    await _db.into(_db.localCustomers).insertOnConflictUpdate(
-      LocalCustomersCompanion.insert(
-        id: row['customer_id'] as String,
-        businessId: row['business_id'] as String,
-        memberId: row['member_id'] as String? ?? '',
-        shopName: row['shop_name'] as String,
-        contactName: Value(row['contact_name'] as String?),
-        phone: Value(row['phone'] as String?),
-        address: Value(row['address'] as String?),
-        openingBalance: Value((row['opening_balance'] as num?)?.toInt() ?? 0),
-        balanceDue: Value((row['balance_due'] as num?)?.toInt() ?? 0),
-        updatedAt: updatedAt,
-        createdAt: Value(
-          row['created_at'] == null
-              ? null
-              : DateTime.parse(row['created_at'] as String),
-        ),
-      ),
-    );
+              ? DateTime.parse(row['created_at'] as String)
+              : DateTime.now().toUtc());
+    await _db
+        .into(_db.localCustomers)
+        .insertOnConflictUpdate(
+          LocalCustomersCompanion.insert(
+            id: row['customer_id'] as String,
+            businessId: row['business_id'] as String,
+            memberId: row['member_id'] as String? ?? '',
+            shopName: row['shop_name'] as String,
+            contactName: Value(row['contact_name'] as String?),
+            phone: Value(row['phone'] as String?),
+            address: Value(row['address'] as String?),
+            openingBalance: Value(
+              (row['opening_balance'] as num?)?.toInt() ?? 0,
+            ),
+            balanceDue: Value((row['balance_due'] as num?)?.toInt() ?? 0),
+            updatedAt: updatedAt,
+            createdAt: Value(
+              row['created_at'] == null
+                  ? null
+                  : DateTime.parse(row['created_at'] as String),
+            ),
+          ),
+        );
   }
 
   Future<void> _upsertRemoteBill(Map<String, dynamic> row) async {
     final map = Map<String, dynamic>.from(row);
     final customer = map.remove('customers');
-    final shopName =
-        customer is Map ? customer['shop_name'] as String? : null;
+    final shopName = customer is Map ? customer['shop_name'] as String? : null;
     final itemsRaw = map.remove('bill_items');
     final billId = map['id'] as String;
 
-    final local = await (_db.select(_db.localBills)
-          ..where((b) => b.id.equals(billId)))
-        .getSingleOrNull();
+    final local = await (_db.select(
+      _db.localBills,
+    )..where((b) => b.id.equals(billId))).getSingleOrNull();
     if (local != null && local.syncStatus == 'pending') {
       // Server already has this bill (idempotent replay) — adopt the final
       // bill number and status but keep the local row otherwise.
       final serverBillNo = map['bill_no'] as String;
-      await (_db.update(_db.localBills)..where((b) => b.id.equals(billId)))
-          .write(
+      await (_db.update(
+        _db.localBills,
+      )..where((b) => b.id.equals(billId))).write(
         LocalBillsCompanion(
           syncStatus: const Value('synced'),
           billNo: Value(serverBillNo),
@@ -473,44 +489,48 @@ class SyncService {
       return;
     }
 
-    await _db.into(_db.localBills).insertOnConflictUpdate(
-      LocalBillsCompanion.insert(
-        id: billId,
-        businessId: map['business_id'] as String,
-        customerId: Value(map['customer_id'] as String?),
-        orderId: Value(map['order_id'] as String?),
-        billNo: map['bill_no'] as String,
-        devicePrefix: Value(map['device_prefix'] as String?),
-        itemsTotal: Value((map['items_total'] as num?)?.toInt() ?? 0),
-        discount: Value((map['discount'] as num?)?.toInt() ?? 0),
-        grandTotal: Value((map['grand_total'] as num?)?.toInt() ?? 0),
-        status: map['status'] as String,
-        createdBy: map['created_by'] as String,
-        customerShopName: Value(shopName),
-        syncStatus: const Value('synced'),
-        createdAt: Value(
-          map['created_at'] == null
-              ? DateTime.now().toUtc()
-              : DateTime.parse(map['created_at'] as String),
-        ),
-      ),
-    );
+    await _db
+        .into(_db.localBills)
+        .insertOnConflictUpdate(
+          LocalBillsCompanion.insert(
+            id: billId,
+            businessId: map['business_id'] as String,
+            customerId: Value(map['customer_id'] as String?),
+            orderId: Value(map['order_id'] as String?),
+            billNo: map['bill_no'] as String,
+            devicePrefix: Value(map['device_prefix'] as String?),
+            itemsTotal: Value((map['items_total'] as num?)?.toInt() ?? 0),
+            discount: Value((map['discount'] as num?)?.toInt() ?? 0),
+            grandTotal: Value((map['grand_total'] as num?)?.toInt() ?? 0),
+            status: map['status'] as String,
+            createdBy: map['created_by'] as String,
+            customerShopName: Value(shopName),
+            syncStatus: const Value('synced'),
+            createdAt: Value(
+              map['created_at'] == null
+                  ? DateTime.now().toUtc()
+                  : DateTime.parse(map['created_at'] as String),
+            ),
+          ),
+        );
 
     if (itemsRaw is List) {
       for (final item in itemsRaw) {
         final i = item as Map<String, dynamic>;
-        await _db.into(_db.localBillItems).insertOnConflictUpdate(
-          LocalBillItemsCompanion.insert(
-            id: i['id'] as String,
-            billId: billId,
-            productId: i['product_id'] as String,
-            nameSnapshot: i['name_snapshot'] as String,
-            qty: i['qty'] as int,
-            rate: Value((i['rate'] as num?)?.toInt() ?? 0),
-            discount: Value((i['discount'] as num?)?.toInt() ?? 0),
-            lineTotal: Value((i['line_total'] as num?)?.toInt() ?? 0),
-          ),
-        );
+        await _db
+            .into(_db.localBillItems)
+            .insertOnConflictUpdate(
+              LocalBillItemsCompanion.insert(
+                id: i['id'] as String,
+                billId: billId,
+                productId: i['product_id'] as String,
+                nameSnapshot: i['name_snapshot'] as String,
+                qty: i['qty'] as int,
+                rate: Value((i['rate'] as num?)?.toInt() ?? 0),
+                discount: Value((i['discount'] as num?)?.toInt() ?? 0),
+                lineTotal: Value((i['line_total'] as num?)?.toInt() ?? 0),
+              ),
+            );
       }
     }
   }
@@ -519,29 +539,31 @@ class SyncService {
     Map<String, dynamic> row, {
     required bool synced,
   }) async {
-    final local = await (_db.select(_db.localPayments)
-          ..where((p) => p.id.equals(row['id'] as String)))
-        .getSingleOrNull();
+    final local = await (_db.select(
+      _db.localPayments,
+    )..where((p) => p.id.equals(row['id'] as String))).getSingleOrNull();
     if (local != null && local.syncStatus == 'pending') return;
 
-    await _db.into(_db.localPayments).insertOnConflictUpdate(
-      LocalPaymentsCompanion.insert(
-        id: row['id'] as String,
-        businessId: row['business_id'] as String,
-        customerId: row['customer_id'] as String,
-        billId: Value(row['bill_id'] as String?),
-        amount: (row['amount'] as num).toInt(),
-        method: row['method'] as String,
-        refNote: Value(row['ref_note'] as String?),
-        receivedBy: row['received_by'] as String,
-        syncStatus: Value(synced ? 'synced' : 'pending'),
-        createdAt: Value(
-          row['created_at'] == null
-              ? DateTime.now().toUtc()
-              : DateTime.parse(row['created_at'] as String),
-        ),
-      ),
-    );
+    await _db
+        .into(_db.localPayments)
+        .insertOnConflictUpdate(
+          LocalPaymentsCompanion.insert(
+            id: row['id'] as String,
+            businessId: row['business_id'] as String,
+            customerId: row['customer_id'] as String,
+            billId: Value(row['bill_id'] as String?),
+            amount: (row['amount'] as num).toInt(),
+            method: row['method'] as String,
+            refNote: Value(row['ref_note'] as String?),
+            receivedBy: row['received_by'] as String,
+            syncStatus: Value(synced ? 'synced' : 'pending'),
+            createdAt: Value(
+              row['created_at'] == null
+                  ? DateTime.now().toUtc()
+                  : DateTime.parse(row['created_at'] as String),
+            ),
+          ),
+        );
   }
 
   Future<void> _upsertRemoteMovement(
@@ -553,29 +575,31 @@ class SyncService {
     if (member is Map) {
       map['created_by_name'] = member['display_name'];
     }
-    final local = await (_db.select(_db.localStockMovements)
-          ..where((m) => m.id.equals(map['id'] as String)))
-        .getSingleOrNull();
+    final local = await (_db.select(
+      _db.localStockMovements,
+    )..where((m) => m.id.equals(map['id'] as String))).getSingleOrNull();
     if (local != null && local.syncStatus == 'pending') return;
 
-    await _db.into(_db.localStockMovements).insertOnConflictUpdate(
-      LocalStockMovementsCompanion.insert(
-        id: map['id'] as String,
-        businessId: map['business_id'] as String,
-        productId: map['product_id'] as String,
-        type: map['type'] as String,
-        qtyDelta: (map['qty_delta'] as num).toInt(),
-        reason: Value(map['reason'] as String?),
-        createdBy: map['created_by'] as String,
-        createdByName: Value(map['created_by_name'] as String?),
-        syncStatus: Value(synced ? 'synced' : 'pending'),
-        createdAt: Value(
-          map['created_at'] == null
-              ? DateTime.now().toUtc()
-              : DateTime.parse(map['created_at'] as String),
-        ),
-      ),
-    );
+    await _db
+        .into(_db.localStockMovements)
+        .insertOnConflictUpdate(
+          LocalStockMovementsCompanion.insert(
+            id: map['id'] as String,
+            businessId: map['business_id'] as String,
+            productId: map['product_id'] as String,
+            type: map['type'] as String,
+            qtyDelta: (map['qty_delta'] as num).toInt(),
+            reason: Value(map['reason'] as String?),
+            createdBy: map['created_by'] as String,
+            createdByName: Value(map['created_by_name'] as String?),
+            syncStatus: Value(synced ? 'synced' : 'pending'),
+            createdAt: Value(
+              map['created_at'] == null
+                  ? DateTime.now().toUtc()
+                  : DateTime.parse(map['created_at'] as String),
+            ),
+          ),
+        );
   }
 
   String newId() => _uuid.v4();

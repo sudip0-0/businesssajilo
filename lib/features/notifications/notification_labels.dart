@@ -20,8 +20,9 @@ String notificationTitle(AppLocalizations l10n, NotificationItem item) {
 IconData notificationIcon(String type) {
   return switch (type) {
     'order_placed' || 'order_status' => Icons.shopping_cart_outlined,
-    'quote_received' || 'quote_accepted' || 'quote_rejected' =>
-      Icons.request_quote_outlined,
+    'quote_received' ||
+    'quote_accepted' ||
+    'quote_rejected' => Icons.request_quote_outlined,
     'chat_message' => Icons.chat_bubble_outline,
     'payment_recorded' => Icons.payments_outlined,
     'low_stock' => Icons.inventory_2_outlined,

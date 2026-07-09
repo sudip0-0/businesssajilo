@@ -41,110 +41,113 @@ class OrderDetailScreen extends ConsumerWidget {
     final role = session?.member?.role;
 
     final body = orderAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
-        ),
-        data: (order) {
-          final latestSent = quotesAsync.value
-              ?.where((q) => q.status == QuoteStatus.sent)
-              .firstOrNull;
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
+      ),
+      data: (order) {
+        final latestSent = quotesAsync.value
+            ?.where((q) => q.status == QuoteStatus.sent)
+            .firstOrNull;
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              OrderStatusTimeline(status: order.status),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      order.customerShopName ?? l10n.myOrders,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  StatusChip(order.status),
-                ],
-              ),
-              if (order.createdAt != null)
-                Text(
-                  BsDate.both(
-                    order.createdAt!,
-                    locale: Localizations.localeOf(context),
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            OrderStatusTimeline(status: order.status),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    order.customerShopName ?? l10n.myOrders,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-              if (order.customerNote != null &&
-                  order.customerNote!.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(l10n.customerNote,
-                    style: Theme.of(context).textTheme.titleSmall),
-                Text(order.customerNote!),
+                StatusChip(order.status),
               ],
-              const SizedBox(height: 16),
-              Text(l10n.orderItems,
-                  style: Theme.of(context).textTheme.titleMedium),
-              const Divider(),
-              ...order.items.map(
-                (item) => ListTile(
-                  leading: ProductImage(
-                    storagePath: item.imageUrl,
-                    size: 40,
-                  ),
-                  title: Text(item.productName ?? '—'),
-                  trailing: Text('${item.qty} ${item.unit ?? ''}'),
+            ),
+            if (order.createdAt != null)
+              Text(
+                BsDate.both(
+                  order.createdAt!,
+                  locale: Localizations.localeOf(context),
                 ),
               ),
-              if ((quotesAsync.value ?? const []).isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(l10n.viewQuote,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const Divider(),
-                ...quotesAsync.value!.map((quote) {
-                  final superseded = quote.status == QuoteStatus.superseded;
-                  final greyed = Theme.of(context).disabledColor;
-                  return ListTile(
-                    enabled: !superseded,
-                    title: Text(
-                      l10n.quoteVersion(quote.version),
-                      style: superseded ? TextStyle(color: greyed) : null,
-                    ),
-                    subtitle: Text(
-                      quote.status.name,
-                      style: superseded ? TextStyle(color: greyed) : null,
-                    ),
-                    trailing: Text(
-                      formatNpr(Paisa(quote.total), showPaisa: false),
-                      style: superseded ? TextStyle(color: greyed) : null,
-                    ),
-                    onTap: superseded
-                        ? null
-                        : () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    QuoteDetailScreen(quoteId: quote.id),
-                              ),
-                            );
-                            ref.invalidate(orderDetailProvider(orderId));
-                            ref.invalidate(orderQuotesProvider(orderId));
-                          },
-                  );
-                }),
-              ],
-              const SizedBox(height: 16),
-              _ActionButtons(
-                orderId: orderId,
-                status: order.status,
-                role: role,
-                latestSentQuoteId: latestSent?.id,
-                customerId: order.customerId,
-                items: order.items,
+            if (order.customerNote != null &&
+                order.customerNote!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.customerNote,
+                style: Theme.of(context).textTheme.titleSmall,
               ),
+              Text(order.customerNote!),
             ],
-          );
-        },
+            const SizedBox(height: 16),
+            Text(
+              l10n.orderItems,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Divider(),
+            ...order.items.map(
+              (item) => ListTile(
+                leading: ProductImage(storagePath: item.imageUrl, size: 40),
+                title: Text(item.productName ?? '—'),
+                trailing: Text('${item.qty} ${item.unit ?? ''}'),
+              ),
+            ),
+            if ((quotesAsync.value ?? const []).isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                l10n.viewQuote,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Divider(),
+              ...quotesAsync.value!.map((quote) {
+                final superseded = quote.status == QuoteStatus.superseded;
+                final greyed = Theme.of(context).disabledColor;
+                return ListTile(
+                  enabled: !superseded,
+                  title: Text(
+                    l10n.quoteVersion(quote.version),
+                    style: superseded ? TextStyle(color: greyed) : null,
+                  ),
+                  subtitle: Text(
+                    quote.status.name,
+                    style: superseded ? TextStyle(color: greyed) : null,
+                  ),
+                  trailing: Text(
+                    formatNpr(Paisa(quote.total), showPaisa: false),
+                    style: superseded ? TextStyle(color: greyed) : null,
+                  ),
+                  onTap: superseded
+                      ? null
+                      : () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  QuoteDetailScreen(quoteId: quote.id),
+                            ),
+                          );
+                          ref.invalidate(orderDetailProvider(orderId));
+                          ref.invalidate(orderQuotesProvider(orderId));
+                        },
+                );
+              }),
+            ],
+            const SizedBox(height: 16),
+            _ActionButtons(
+              orderId: orderId,
+              status: order.status,
+              role: role,
+              latestSentQuoteId: latestSent?.id,
+              customerId: order.customerId,
+              items: order.items,
+            ),
+          ],
+        );
+      },
     );
 
     if (embedded) return body;
@@ -206,7 +209,8 @@ class _ActionButtons extends ConsumerWidget {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => QuoteDetailScreen(quoteId: latestSentQuoteId!),
+                  builder: (_) =>
+                      QuoteDetailScreen(quoteId: latestSentQuoteId!),
                 ),
               );
               ref.invalidate(orderDetailProvider(orderId));
@@ -312,9 +316,9 @@ class _ActionButtons extends ConsumerWidget {
     }
 
     if (skipped > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.removedUnavailableItems)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.removedUnavailableItems)));
     }
     if (quantities.isEmpty) return;
 
@@ -322,8 +326,7 @@ class _ActionButtons extends ConsumerWidget {
       context: context,
       title: l10n.placeOrder,
       child: CartSheet(
-        products:
-            quantities.keys.map((id) => catalogById[id]!).toList(),
+        products: quantities.keys.map((id) => catalogById[id]!).toList(),
         quantities: quantities,
       ),
     );
@@ -340,8 +343,8 @@ class _ActionButtons extends ConsumerWidget {
   ) async {
     final l10n = AppLocalizations.of(context);
     // Forward workflow steps apply immediately; only cancel/close confirm.
-    final needsConfirm = next == OrderStatus.cancelled ||
-        next == OrderStatus.closed;
+    final needsConfirm =
+        next == OrderStatus.cancelled || next == OrderStatus.closed;
     if (needsConfirm) {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -366,20 +369,21 @@ class _ActionButtons extends ConsumerWidget {
       await ref.read(ordersRepositoryProvider).updateStatus(orderId, next);
       _invalidate(ref);
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(label)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(label)));
       }
     } on OrderStatusException {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.invalidStatusChange)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.invalidStatusChange)));
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.actionFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
       }
     }
   }

@@ -6,11 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/repositories/products_repository.dart';
 
 class ProductImage extends ConsumerWidget {
-  const ProductImage({
-    super.key,
-    required this.storagePath,
-    this.size = 48,
-  });
+  const ProductImage({super.key, required this.storagePath, this.size = 48});
 
   final String? storagePath;
   final double size;
@@ -49,7 +45,11 @@ class ProductImage extends ConsumerWidget {
         color: BsColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(Icons.inventory_2_outlined, color: BsColors.primary, size: size * 0.5),
+      child: Icon(
+        Icons.inventory_2_outlined,
+        color: BsColors.primary,
+        size: size * 0.5,
+      ),
     );
   }
 }

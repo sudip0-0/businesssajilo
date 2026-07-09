@@ -6,10 +6,7 @@ import '../../../features/reports/stock_valuation_screen.dart';
 import '../web_page_scaffold.dart';
 
 class WebStockValuationPage extends ConsumerWidget {
-  const WebStockValuationPage({
-    super.key,
-    this.lowStockOnly = false,
-  });
+  const WebStockValuationPage({super.key, this.lowStockOnly = false});
 
   final bool lowStockOnly;
 
@@ -23,10 +20,7 @@ class WebStockValuationPage extends ConsumerWidget {
         l10n.reports,
         lowStockOnly ? l10n.lowStock : l10n.stockValuation,
       ],
-      body: StockValuationScreen(
-        lowStockOnly: lowStockOnly,
-        embedded: true,
-      ),
+      body: StockValuationScreen(lowStockOnly: lowStockOnly, embedded: true),
     );
   }
 }

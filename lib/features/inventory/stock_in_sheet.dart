@@ -25,7 +25,9 @@ class _StockInSheetState extends ConsumerState<StockInSheet> {
     if (memberId == null) return;
     setState(() => _loading = true);
     try {
-      await ref.read(stockRepositoryProvider).stockIn(
+      await ref
+          .read(stockRepositoryProvider)
+          .stockIn(
             productId: widget.productId,
             qty: _qty,
             createdByMemberId: memberId,
@@ -52,26 +54,36 @@ class _StockInSheetState extends ConsumerState<StockInSheet> {
 
     return Material(
       child: Padding(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l10n.stockIn, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          Text(l10n.stockInQty),
-          const SizedBox(height: 8),
-          Center(child: QtyStepper(value: _qty, min: 1, onChanged: (v) => setState(() => _qty = v))),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _loading ? null : _submit,
-            child: _loading
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(l10n.save),
-          ),
-        ],
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.stockIn, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Text(l10n.stockInQty),
+            const SizedBox(height: 8),
+            Center(
+              child: QtyStepper(
+                value: _qty,
+                min: 1,
+                onChanged: (v) => setState(() => _qty = v),
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _loading ? null : _submit,
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.save),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

@@ -7,14 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('notification bell renders without badge when unread is zero',
-      (tester) async {
+  testWidgets('notification bell renders without badge when unread is zero', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          notificationListProvider.overrideWith(
-            (ref) => Stream.value([]),
-          ),
+          notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -24,9 +23,7 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
-            body: NotificationBellAction(),
-          ),
+          home: const Scaffold(body: NotificationBellAction()),
         ),
       ),
     );

@@ -67,40 +67,64 @@ abstract final class BsElevation {
 
 abstract final class AppTheme {
   static const _textTheme = TextTheme(
-    headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.4),
-    titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.4),
-    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.5),
-    titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.43),
+    headlineSmall: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      height: 1.4,
+    ),
+    titleLarge: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+      height: 1.4,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.5,
+    ),
+    titleSmall: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      height: 1.43,
+    ),
     bodyLarge: TextStyle(fontSize: 16, height: 1.5),
     bodyMedium: TextStyle(fontSize: 14, height: 1.43),
     bodySmall: TextStyle(fontSize: 12, height: 1.33),
-    labelLarge: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.33),
-    labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, height: 1.27),
+    labelLarge: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      height: 1.33,
+    ),
+    labelSmall: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      height: 1.27,
+    ),
   );
 
   static ColorScheme get lightScheme => const ColorScheme(
-        brightness: Brightness.light,
-        primary: BsColors.primary,
-        onPrimary: BsColors.onPrimary,
-        primaryContainer: BsColors.primaryContainer,
-        onPrimaryContainer: BsColors.onPrimaryContainer,
-        secondary: BsColors.secondary,
-        onSecondary: BsColors.onSecondary,
-        secondaryContainer: BsColors.secondaryContainer,
-        onSecondaryContainer: BsColors.onSecondaryContainer,
-        tertiary: BsColors.accentContainer,
-        onTertiary: BsColors.onPrimary,
-        error: BsColors.danger,
-        onError: BsColors.onPrimary,
-        surface: BsColors.surface,
-        onSurface: BsColors.text,
-        outline: BsColors.outline,
-        outlineVariant: BsColors.outlineVariant,
-        surfaceContainerLowest: Color(0xFFFFFFFF),
-        surfaceContainerLow: Color(0xFFF4F3FA),
-        surfaceContainer: Color(0xFFEEEDF4),
-        surfaceContainerHigh: Color(0xFFE9E7EF),
-      );
+    brightness: Brightness.light,
+    primary: BsColors.primary,
+    onPrimary: BsColors.onPrimary,
+    primaryContainer: BsColors.primaryContainer,
+    onPrimaryContainer: BsColors.onPrimaryContainer,
+    secondary: BsColors.secondary,
+    onSecondary: BsColors.onSecondary,
+    secondaryContainer: BsColors.secondaryContainer,
+    onSecondaryContainer: BsColors.onSecondaryContainer,
+    tertiary: BsColors.accentContainer,
+    onTertiary: BsColors.onPrimary,
+    error: BsColors.danger,
+    onError: BsColors.onPrimary,
+    surface: BsColors.surface,
+    onSurface: BsColors.text,
+    outline: BsColors.outline,
+    outlineVariant: BsColors.outlineVariant,
+    surfaceContainerLowest: Color(0xFFFFFFFF),
+    surfaceContainerLow: Color(0xFFF4F3FA),
+    surfaceContainer: Color(0xFFEEEDF4),
+    surfaceContainerHigh: Color(0xFFE9E7EF),
+  );
 
   static ThemeData light() {
     final scheme = lightScheme;
@@ -165,20 +189,22 @@ abstract final class AppTheme {
         ),
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BsRadii.full)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BsRadii.full),
+        ),
       ),
     );
   }
 
   static CardThemeData _cardTheme(Color color) => CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BsRadii.lg),
-          side: const BorderSide(color: BsColors.border),
-        ),
-        color: color,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      );
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(BsRadii.lg),
+      side: const BorderSide(color: BsColors.border),
+    ),
+    color: color,
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+  );
 
   static InputDecorationTheme _inputTheme(Color fill, ColorScheme scheme) =>
       InputDecorationTheme(
@@ -197,7 +223,10 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(BsRadii.md),
           borderSide: const BorderSide(color: BsColors.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       );
 }
 
@@ -211,6 +240,7 @@ extension BsStatusColors on ColorScheme {
       brightness == Brightness.dark ? BsColors.infoDark : BsColors.info;
   Color get accentColor =>
       brightness == Brightness.dark ? BsColors.accentDark : BsColors.accent;
-  Color get warningColor =>
-      brightness == Brightness.dark ? BsColors.accentDark : BsColors.amberTextOnTint;
+  Color get warningColor => brightness == Brightness.dark
+      ? BsColors.accentDark
+      : BsColors.amberTextOnTint;
 }

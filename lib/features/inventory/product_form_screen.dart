@@ -53,7 +53,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       text: p != null ? formatNpr(Paisa(p.costPrice), showPaisa: false) : '',
     );
     _refController = TextEditingController(
-      text: p != null ? formatNpr(Paisa(p.referencePrice), showPaisa: false) : '',
+      text: p != null
+          ? formatNpr(Paisa(p.referencePrice), showPaisa: false)
+          : '',
     );
     _thresholdController = TextEditingController(
       text: p?.lowStockThreshold.toString() ?? '0',
@@ -75,7 +77,10 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1024);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+    );
     if (file == null) return;
     final bytes = await file.readAsBytes();
     setState(() {
@@ -113,7 +118,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           nameNp: _nameNpController.text.trim().isEmpty
               ? null
               : _nameNpController.text.trim(),
-          sku: _skuController.text.trim().isEmpty ? null : _skuController.text.trim(),
+          sku: _skuController.text.trim().isEmpty
+              ? null
+              : _skuController.text.trim(),
           categoryId: _categoryId,
           unit: _unitController.text.trim(),
           costPrice: cost,
@@ -127,7 +134,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           nameNp: _nameNpController.text.trim().isEmpty
               ? null
               : _nameNpController.text.trim(),
-          sku: _skuController.text.trim().isEmpty ? null : _skuController.text.trim(),
+          sku: _skuController.text.trim().isEmpty
+              ? null
+              : _skuController.text.trim(),
           categoryId: _categoryId,
           unit: _unitController.text.trim(),
           costPrice: cost,
@@ -186,15 +195,13 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     }
 
     final formBody = categoriesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(message: l10n.loadingFailed),
-        data: (categories) => _buildForm(context, l10n, categories),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => ErrorState(message: l10n.loadingFailed),
+      data: (categories) => _buildForm(context, l10n, categories),
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEdit ? l10n.editProduct : l10n.addProduct),
-      ),
+      appBar: AppBar(title: Text(_isEdit ? l10n.editProduct : l10n.addProduct)),
       body: formBody,
     );
   }

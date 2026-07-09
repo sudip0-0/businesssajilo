@@ -26,16 +26,12 @@ bool isValidLineDiscount({
   required int qty,
   required int ratePaisa,
   required int discountPaisa,
-}) =>
-    discountPaisa >= 0 && discountPaisa <= qty * ratePaisa;
+}) => discountPaisa >= 0 && discountPaisa <= qty * ratePaisa;
 
 int itemsTotalPaisa(Iterable<int> lineTotals) =>
     lineTotals.fold(0, (sum, v) => sum + v);
 
-int grandTotalPaisa({
-  required int itemsTotal,
-  int billDiscountPaisa = 0,
-}) =>
+int grandTotalPaisa({required int itemsTotal, int billDiscountPaisa = 0}) =>
     itemsTotal - billDiscountPaisa;
 
 /// Prorates a bill line's discount onto a partial return quantity.

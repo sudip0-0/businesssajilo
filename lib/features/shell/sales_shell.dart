@@ -130,38 +130,38 @@ class _SalesShellState extends ConsumerState<SalesShell> {
       body: pages[_index],
       floatingActionButton: switch (_index) {
         3 => FloatingActionButton.extended(
-            onPressed: () async {
-              final saved = await showAdaptiveSheet<bool>(
-                context: context,
-                title: l10n.recordPayment,
-                child: const RecordPaymentSheet(showCustomerPicker: true),
-              );
-              if (saved == true) {
-                ref.invalidate(customerListProvider);
-                ref.invalidate(totalDuesProvider);
-              }
-            },
-            icon: const Icon(Icons.payments_outlined),
-            label: Text(l10n.recordPayment),
-          ),
+          onPressed: () async {
+            final saved = await showAdaptiveSheet<bool>(
+              context: context,
+              title: l10n.recordPayment,
+              child: const RecordPaymentSheet(showCustomerPicker: true),
+            );
+            if (saved == true) {
+              ref.invalidate(customerListProvider);
+              ref.invalidate(totalDuesProvider);
+            }
+          },
+          icon: const Icon(Icons.payments_outlined),
+          label: Text(l10n.recordPayment),
+        ),
         4 => FloatingActionButton.extended(
-            backgroundColor: BsColors.secondary,
-            foregroundColor: BsColors.onSecondary,
-            onPressed: () async {
-              final saved = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (_) => const BillFormScreen()),
-              );
-              if (saved == true) {
-                ref.invalidate(billListProvider);
-                ref.invalidate(todaysSalesProvider);
-                ref.invalidate(todaysBillCountProvider);
-                ref.invalidate(totalDuesProvider);
-              }
-            },
-            icon: const Icon(Icons.add),
-            label: Text(l10n.newBill),
-          ),
+          backgroundColor: BsColors.secondary,
+          foregroundColor: BsColors.onSecondary,
+          onPressed: () async {
+            final saved = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(builder: (_) => const BillFormScreen()),
+            );
+            if (saved == true) {
+              ref.invalidate(billListProvider);
+              ref.invalidate(todaysSalesProvider);
+              ref.invalidate(todaysBillCountProvider);
+              ref.invalidate(totalDuesProvider);
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: Text(l10n.newBill),
+        ),
         _ => null,
       },
     );

@@ -20,11 +20,11 @@ class SyncingBillsRepository implements BillsRepository {
     required PaymentsRepository payments,
     required String businessId,
     SupabaseClient? client,
-  })  : _db = db,
-        _sync = sync,
-        _payments = payments,
-        _businessId = businessId,
-        _client = client;
+  }) : _db = db,
+       _sync = sync,
+       _payments = payments,
+       _businessId = businessId,
+       _client = client;
 
   final AppDatabase _db;
   final SyncService _sync;
@@ -37,12 +37,14 @@ class SyncingBillsRepository implements BillsRepository {
   Future<List<Bill>> list({int offset = 0, int? limit}) async {
     final bills = await _db.select(_db.localBills).get();
     bills.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final sliced = limit == null ? bills : bills.skip(offset).take(limit).toList();
+    final sliced = limit == null
+        ? bills
+        : bills.skip(offset).take(limit).toList();
     final result = <Bill>[];
     for (final bill in sliced) {
-      final items = await (_db.select(_db.localBillItems)
-            ..where((i) => i.billId.equals(bill.id)))
-          .get();
+      final items = await (_db.select(
+        _db.localBillItems,
+      )..where((i) => i.billId.equals(bill.id))).get();
       result.add(mapLocalBill(bill, items));
     }
     return result;
@@ -50,12 +52,12 @@ class SyncingBillsRepository implements BillsRepository {
 
   @override
   Future<Bill> get(String id) async {
-    final bill = await (_db.select(_db.localBills)
-          ..where((b) => b.id.equals(id)))
-        .getSingle();
-    final items = await (_db.select(_db.localBillItems)
-          ..where((i) => i.billId.equals(id)))
-        .get();
+    final bill = await (_db.select(
+      _db.localBills,
+    )..where((b) => b.id.equals(id))).getSingle();
+    final items = await (_db.select(
+      _db.localBillItems,
+    )..where((i) => i.billId.equals(id))).get();
     return mapLocalBill(bill, items);
   }
 
@@ -80,8 +82,7 @@ class SyncingBillsRepository implements BillsRepository {
 
   @override
   Future<int> yesterdaysSales() async {
-    final yesterdayStart =
-        nptDayStartUtc().subtract(const Duration(days: 1));
+    final yesterdayStart = nptDayStartUtc().subtract(const Duration(days: 1));
     final net = await _netSalesFromReport(yesterdayStart);
     if (net != null) return net;
     final todayStart = nptDayStartUtc();
@@ -120,7 +121,9 @@ class SyncingBillsRepository implements BillsRepository {
     final start = nptDayStartUtc();
     final all = await list();
     return all
-        .where((b) => b.createdAt != null && !b.createdAt!.toUtc().isBefore(start))
+        .where(
+          (b) => b.createdAt != null && !b.createdAt!.toUtc().isBefore(start),
+        )
         .take(limit)
         .toList();
   }
@@ -153,97 +156,104 @@ class SyncingBillsRepository implements BillsRepository {
     final provisionalNo = await _db.nextProvisionalBillNo();
     String? shopName;
     if (customerId != null) {
-      final customer = await (_db.select(_db.localCustomers)
-            ..where((c) => c.id.equals(customerId)))
-          .getSingleOrNull();
+      final customer = await (_db.select(
+        _db.localCustomers,
+      )..where((c) => c.id.equals(customerId))).getSingleOrNull();
       shopName = customer?.shopName;
     }
 
-    await _db.into(_db.localBills).insert(
-      LocalBillsCompanion.insert(
-        id: billId,
-        businessId: _businessId,
-        customerId: Value(customerId),
-        billNo: provisionalNo,
-        provisionalBillNo: Value(provisionalNo),
-        devicePrefix: Value(meta.devicePrefix),
-        itemsTotal: Value(itemsTotal),
-        discount: Value(discount),
-        grandTotal: Value(grandTotal),
-        status: status.name,
-        createdBy: createdByMemberId,
-        customerShopName: Value(shopName),
-        syncStatus: const Value('pending'),
-      ),
-    );
+    await _db.transaction(() async {
+      await _db
+          .into(_db.localBills)
+          .insert(
+            LocalBillsCompanion.insert(
+              id: billId,
+              businessId: _businessId,
+              customerId: Value(customerId),
+              billNo: provisionalNo,
+              provisionalBillNo: Value(provisionalNo),
+              devicePrefix: Value(meta.devicePrefix),
+              itemsTotal: Value(itemsTotal),
+              discount: Value(discount),
+              grandTotal: Value(grandTotal),
+              status: status.name,
+              createdBy: createdByMemberId,
+              customerShopName: Value(shopName),
+              syncStatus: const Value('pending'),
+            ),
+          );
 
-    final itemRows = <Map<String, dynamic>>[];
-    for (final line in lines) {
-      final itemId = _uuid.v4();
-      await _db.into(_db.localBillItems).insert(
-        LocalBillItemsCompanion.insert(
-          id: itemId,
-          billId: billId,
-          productId: line.productId,
-          nameSnapshot: line.nameSnapshot,
-          qty: line.qty,
-          rate: Value(line.rate),
-          discount: Value(line.discount),
-          lineTotal: Value(line.lineTotal),
-        ),
-      );
-      itemRows.add({
-        'product_id': line.productId,
-        'name_snapshot': line.nameSnapshot,
-        'qty': line.qty,
-        'rate': line.rate,
-        'discount': line.discount,
-      });
-    }
-
-    // Embed payment in the bill payload so create_bill inserts bill + payment
-    // atomically (avoids paid-without-payment if payment sync fails separately).
-    Map<String, dynamic>? paymentPayload;
-    if (customerId != null &&
-        (status == BillStatus.paid || status == BillStatus.partial)) {
-      final amount =
-          status == BillStatus.paid ? grandTotal : (paymentAmount ?? 0);
-      if (amount > 0) {
-        final paymentId = _uuid.v4();
-        paymentPayload = {
-          'id': paymentId,
-          'amount': amount,
-          'method': paymentMethod.name,
-          'ref_note': paymentRefNote,
-        };
-        // Local row for offline balance/UI; remote insert is via create_bill.
-        await _payments.record(
-          id: paymentId,
-          customerId: customerId,
-          amount: amount,
-          method: paymentMethod,
-          refNote: paymentRefNote,
-          billId: billId,
-          receivedByMemberId: createdByMemberId,
-          enqueueRemote: false,
-        );
+      final itemRows = <Map<String, dynamic>>[];
+      for (final line in lines) {
+        final itemId = _uuid.v4();
+        await _db
+            .into(_db.localBillItems)
+            .insert(
+              LocalBillItemsCompanion.insert(
+                id: itemId,
+                billId: billId,
+                productId: line.productId,
+                nameSnapshot: line.nameSnapshot,
+                qty: line.qty,
+                rate: Value(line.rate),
+                discount: Value(line.discount),
+                lineTotal: Value(line.lineTotal),
+              ),
+            );
+        itemRows.add({
+          'product_id': line.productId,
+          'name_snapshot': line.nameSnapshot,
+          'qty': line.qty,
+          'rate': line.rate,
+          'discount': line.discount,
+        });
       }
-    }
 
-    await _db.enqueue(
-      entityType: 'bill',
-      entityId: billId,
-      payload: {
-        'id': billId,
-        'customer_id': customerId,
-        'order_id': null,
-        'discount': discount,
-        'status': status.name,
-        'device_prefix': meta.devicePrefix,
-        'items': itemRows,
-        'payment': ?paymentPayload,
-      },
-    );
+      // Embed payment in the bill payload so create_bill inserts bill + payment
+      // atomically (avoids paid-without-payment if payment sync fails separately).
+      Map<String, dynamic>? paymentPayload;
+      if (customerId != null &&
+          (status == BillStatus.paid || status == BillStatus.partial)) {
+        final amount = status == BillStatus.paid
+            ? grandTotal
+            : (paymentAmount ?? 0);
+        if (amount > 0) {
+          final paymentId = _uuid.v4();
+          paymentPayload = {
+            'id': paymentId,
+            'amount': amount,
+            'method': paymentMethod.name,
+            'ref_note': paymentRefNote,
+          };
+          // Local row for offline balance/UI; remote insert is via create_bill.
+          await _payments.record(
+            id: paymentId,
+            customerId: customerId,
+            amount: amount,
+            method: paymentMethod,
+            refNote: paymentRefNote,
+            billId: billId,
+            receivedByMemberId: createdByMemberId,
+            enqueueRemote: false,
+          );
+        }
+      }
+
+      await _db.enqueue(
+        entityType: 'bill',
+        entityId: billId,
+        payload: {
+          'id': billId,
+          'customer_id': customerId,
+          'order_id': null,
+          'discount': discount,
+          'status': status.name,
+          'device_prefix': meta.devicePrefix,
+          'items': itemRows,
+          'payment': ?paymentPayload,
+        },
+      );
+    });
 
     unawaited(_sync.syncNow());
     return get(billId);

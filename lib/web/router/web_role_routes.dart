@@ -2,20 +2,20 @@ import '../../domain/enums.dart';
 
 /// Role-scoped URL prefix for web navigation.
 String webRoleBasePath(Role role) => switch (role) {
-      Role.owner => '/owner',
-      Role.sales => '/sales',
-      Role.warehouse => '/warehouse',
-      Role.customer => '/customer',
-    };
+  Role.owner => '/owner',
+  Role.sales => '/sales',
+  Role.warehouse => '/warehouse',
+  Role.customer => '/customer',
+};
 
 /// Web role home paths use nested routes for bookmarkable URLs.
 String webRoleHomePath(Role? role) => switch (role) {
-      Role.owner => '/owner/dashboard',
-      Role.sales => '/sales/dashboard',
-      Role.warehouse => '/warehouse/stock',
-      Role.customer => '/customer/dashboard',
-      null => '/login',
-    };
+  Role.owner => '/owner/dashboard',
+  Role.sales => '/sales/dashboard',
+  Role.warehouse => '/warehouse/stock',
+  Role.customer => '/customer/dashboard',
+  null => '/login',
+};
 
 bool webPathAllowedForRole(String path, Role role) {
   if (path.startsWith('/owner')) return role == Role.owner;

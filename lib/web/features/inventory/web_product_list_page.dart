@@ -98,7 +98,8 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   List<Product> get _filtered {
     final items = _pager?.items ?? [];
     return items.where((p) {
-      final matchesQuery = _query.isEmpty ||
+      final matchesQuery =
+          _query.isEmpty ||
           p.name.toLowerCase().contains(_query.toLowerCase()) ||
           (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
       final matchesCategory =
@@ -194,15 +195,14 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             : (widget.canEdit ? l10n.emptyAddFirstProduct : null),
         onAction: searching
             ? () => setState(() {
-                  _query = '';
-                  _categoryId = null;
-                  _searchController.clear();
-                })
+                _query = '';
+                _categoryId = null;
+                _searchController.clear();
+              })
             : (widget.canEdit
-                ? () => context.push(
-                      '${_webRolePrefix(context)}/inventory/new',
-                    )
-                : null),
+                  ? () =>
+                        context.push('${_webRolePrefix(context)}/inventory/new')
+                  : null),
       );
     }
 
@@ -227,10 +227,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             DataCell(
               Row(
                 children: [
-                  ProductImage(
-                    storagePath: product.imageUrl,
-                    size: 32,
-                  ),
+                  ProductImage(storagePath: product.imageUrl, size: 32),
                   const SizedBox(width: 10),
                   Expanded(child: Text(product.name)),
                 ],

@@ -6,11 +6,7 @@ import '../../domain/models/sales_period_point.dart';
 
 /// Area line chart for sales trends — shared by mobile and web.
 class BsSalesLineChart extends StatelessWidget {
-  const BsSalesLineChart({
-    super.key,
-    required this.points,
-    this.height = 180,
-  });
+  const BsSalesLineChart({super.key, required this.points, this.height = 180});
 
   final List<SalesPeriodPoint> points;
   final double height;
@@ -50,9 +46,9 @@ class BsSalesLineChart extends StatelessWidget {
         child: Center(
           child: Text(
             '—',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: BsColors.outline,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
           ),
         ),
       );
@@ -83,9 +79,9 @@ class BsSalesLineChart extends StatelessWidget {
                           (effectiveMax * i / _gridLines).round(),
                         ),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: BsColors.outline,
-                              fontSize: 10,
-                            ),
+                          color: BsColors.outline,
+                          fontSize: 10,
+                        ),
                       ),
                   ],
                 ),
@@ -122,9 +118,9 @@ class BsSalesLineChart extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.clip,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: BsColors.outline,
-                            fontSize: 10,
-                          ),
+                        color: BsColors.outline,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
               ],

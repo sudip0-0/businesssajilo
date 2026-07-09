@@ -10,24 +10,28 @@ void main() {
     final wipedA = await db.prepareForBusiness('biz-a');
     expect(wipedA, isFalse);
 
-    await db.into(db.localProducts).insert(
-      LocalProductsCompanion.insert(
-        id: 'prod-1',
-        businessId: 'biz-a',
-        name: 'Widget',
-        unit: 'piece',
-        updatedAt: DateTime.now().toUtc(),
-      ),
-    );
-    await db.into(db.localBills).insert(
-      LocalBillsCompanion.insert(
-        id: 'bill-1',
-        businessId: 'biz-a',
-        billNo: 'D1-1',
-        status: 'paid',
-        createdBy: 'member-a',
-      ),
-    );
+    await db
+        .into(db.localProducts)
+        .insert(
+          LocalProductsCompanion.insert(
+            id: 'prod-1',
+            businessId: 'biz-a',
+            name: 'Widget',
+            unit: 'piece',
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        );
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'bill-1',
+            businessId: 'biz-a',
+            billNo: 'D1-1',
+            status: 'paid',
+            createdBy: 'member-a',
+          ),
+        );
     await db.enqueue(
       entityType: 'bill',
       entityId: 'bill-1',

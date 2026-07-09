@@ -47,61 +47,61 @@ class FulfillmentListScreen extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(fulfillmentQueueProvider),
           child: ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: active.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
-            final order = active[index];
-            return Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            order.customerShopName ?? '—',
-                            style: Theme.of(context).textTheme.titleMedium,
+            padding: const EdgeInsets.all(16),
+            itemCount: active.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final order = active[index];
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              order.customerShopName ?? '—',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                          StatusChip(order.status),
+                        ],
+                      ),
+                      if (order.createdAt != null)
+                        Text(
+                          BsDate.both(
+                            order.createdAt!,
+                            locale: Localizations.localeOf(context),
                           ),
                         ),
-                        StatusChip(order.status),
-                      ],
-                    ),
-                    if (order.createdAt != null)
-                      Text(
-                        BsDate.both(
-                          order.createdAt!,
-                          locale: Localizations.localeOf(context),
+                      const SizedBox(height: 8),
+                      if (order.status == OrderStatus.confirmed)
+                        FilledButton(
+                          onPressed: () async {
+                            await ref
+                                .read(ordersRepositoryProvider)
+                                .updateStatus(order.id, OrderStatus.packed);
+                            ref.invalidate(fulfillmentQueueProvider);
+                          },
+                          child: Text(l10n.markPacked),
                         ),
-                      ),
-                    const SizedBox(height: 8),
-                    if (order.status == OrderStatus.confirmed)
-                      FilledButton(
-                        onPressed: () async {
-                          await ref
-                              .read(ordersRepositoryProvider)
-                              .updateStatus(order.id, OrderStatus.packed);
-                          ref.invalidate(fulfillmentQueueProvider);
-                        },
-                        child: Text(l10n.markPacked),
-                      ),
-                    if (order.status == OrderStatus.packed)
-                      FilledButton(
-                        onPressed: () async {
-                          await ref
-                              .read(ordersRepositoryProvider)
-                              .updateStatus(order.id, OrderStatus.dispatched);
-                          ref.invalidate(fulfillmentQueueProvider);
-                        },
-                        child: Text(l10n.markDispatched),
-                      ),
-                  ],
+                      if (order.status == OrderStatus.packed)
+                        FilledButton(
+                          onPressed: () async {
+                            await ref
+                                .read(ordersRepositoryProvider)
+                                .updateStatus(order.id, OrderStatus.dispatched);
+                            ref.invalidate(fulfillmentQueueProvider);
+                          },
+                          child: Text(l10n.markDispatched),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
           ),
         );
       },

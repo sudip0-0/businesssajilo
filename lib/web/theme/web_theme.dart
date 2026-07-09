@@ -66,7 +66,10 @@ abstract final class WebTheme {
           borderRadius: BorderRadius.circular(BsRadii.md),
           borderSide: const BorderSide(color: BsColors.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -98,9 +101,9 @@ abstract final class WebTheme {
       ),
       dataTableTheme: DataTableThemeData(
         headingTextStyle: WebTypography.textTheme(scheme).labelLarge?.copyWith(
-              letterSpacing: 0.8,
-              color: scheme.onSurface.withValues(alpha: 0.7),
-            ),
+          letterSpacing: 0.8,
+          color: scheme.onSurface.withValues(alpha: 0.7),
+        ),
         dataTextStyle: GoogleFonts.inter(
           fontSize: 13,
           fontFeatures: const [FontFeature.tabularFigures()],
@@ -157,8 +160,13 @@ abstract final class WebTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surfaceContainerHigh,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(BsRadii.md)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(BsRadii.md),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
     );
   }

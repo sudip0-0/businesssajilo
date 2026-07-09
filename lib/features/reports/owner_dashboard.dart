@@ -11,7 +11,6 @@ import '../../core/ui/bs_stat_tile.dart';
 import '../../core/utils/money.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
-import '../../domain/models/customer.dart';
 import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
 import '../billing/providers.dart';
@@ -43,6 +42,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
     ref.invalidate(salesTrendProvider);
     ref.invalidate(totalDuesProvider);
     ref.invalidate(lowStockCountProvider);
+    ref.invalidate(lowStockAlertsProvider);
     ref.invalidate(orders.pendingOrdersCountProvider);
     ref.invalidate(todaysBillsProvider);
   }
@@ -61,8 +61,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
     final chartRange = _weeklyChart ? ReportRange.last7Days : ReportRange.month;
     final chartData = ref.watch(salesDailyProvider(chartRange));
     final todaysBills = ref.watch(todaysBillsProvider);
-    final products = ref.watch(productListProvider);
-    final customers = ref.watch(customerListProvider);
+    final lowStockAlerts = ref.watch(lowStockAlertsProvider);
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -73,16 +72,16 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
           Text(
             l10n.namasteGreeting(name),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: BsColors.textCharcoal,
-                ),
+              fontWeight: FontWeight.w700,
+              color: BsColors.textCharcoal,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.dashboardTodaySummary,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: BsColors.outline,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
           ),
           const SizedBox(height: 16),
           GridView.count(
@@ -106,8 +105,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   data: (pct) => pct == null
                       ? null
                       : pct >= 0
-                          ? BsTrendDirection.up
-                          : BsTrendDirection.down,
+                      ? BsTrendDirection.up
+                      : BsTrendDirection.down,
                   loading: () => null,
                   error: (_, _) => null,
                 ),
@@ -158,7 +157,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const StockValuationScreen(lowStockOnly: true),
+                    builder: (_) =>
+                        const StockValuationScreen(lowStockOnly: true),
                   ),
                 ),
               ),
@@ -205,9 +205,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                             ),
                             Text(
                               l10n.salesPerformanceSubtitle,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: BsColors.outline,
-                                  ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: BsColors.outline),
                             ),
                           ],
                         ),
@@ -216,7 +215,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                         showSelectedIcon: false,
                         segments: [
                           ButtonSegment(value: true, label: Text(l10n.weekly)),
-                          ButtonSegment(value: false, label: Text(l10n.monthly)),
+                          ButtonSegment(
+                            value: false,
+                            label: Text(l10n.monthly),
+                          ),
                         ],
                         selected: {_weeklyChart},
                         onSelectionChanged: (s) =>
@@ -249,8 +251,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   const SizedBox(height: 12),
                   _RecentActivityList(
                     bills: todaysBills,
-                    products: products,
-                    customers: customers,
+                    lowStockAlerts: lowStockAlerts,
                   ),
                 ],
               ),
@@ -271,7 +272,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   const SizedBox(height: 12),
                   todaysBills.when(
                     data: (bills) => _TransactionsList(bills: bills),
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (_, _) => Text(l10n.loadingFailed),
                   ),
                 ],
@@ -295,13 +297,11 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
 class _RecentActivityList extends StatelessWidget {
   const _RecentActivityList({
     required this.bills,
-    required this.products,
-    required this.customers,
+    required this.lowStockAlerts,
   });
 
   final AsyncValue<List<Bill>> bills;
-  final AsyncValue<List<Product>> products;
-  final AsyncValue<List<Customer>> customers;
+  final AsyncValue<List<Product>> lowStockAlerts;
 
   @override
   Widget build(BuildContext context) {
@@ -310,33 +310,34 @@ class _RecentActivityList extends StatelessWidget {
 
     bills.whenData((list) {
       for (final bill in list.take(3)) {
-        items.add(_ActivityRow(
-          icon: Icons.shopping_cart_outlined,
-          color: BsColors.primary,
-          text: l10n.newBillCreated(bill.billNo),
-        ));
+        items.add(
+          _ActivityRow(
+            icon: Icons.shopping_cart_outlined,
+            color: BsColors.primary,
+            text: l10n.newBillCreated(bill.billNo),
+          ),
+        );
       }
     });
 
-    products.whenData((list) {
-      for (final p in list
-          .where((p) =>
-              p.lowStockThreshold > 0 && p.stockCached <= p.lowStockThreshold)
-          .take(2)) {
-        items.add(_ActivityRow(
-          icon: Icons.warning_amber_outlined,
-          color: BsColors.danger,
-          text: l10n.lowStockAlert(p.name),
-        ));
+    lowStockAlerts.whenData((list) {
+      for (final p in list) {
+        items.add(
+          _ActivityRow(
+            icon: Icons.warning_amber_outlined,
+            color: BsColors.danger,
+            text: l10n.lowStockAlert(p.name),
+          ),
+        );
       }
     });
 
     if (items.isEmpty) {
       return Text(
         l10n.noSalesInPeriod,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: BsColors.outline,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
       );
     }
 
@@ -400,9 +401,9 @@ class _TransactionsList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text(
           l10n.noSalesInPeriod,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: BsColors.outline,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
         ),
       );
     }

@@ -42,7 +42,8 @@ class WebBentoGrid extends StatelessWidget {
           final end = (i + cols).clamp(0, children.length);
           final countInRow = end - i;
           final isLastRow = end == children.length;
-          final lastSpansRow = lastItemSpansFullWidth &&
+          final lastSpansRow =
+              lastItemSpansFullWidth &&
               isLastRow &&
               countInRow == 1 &&
               children.length > 1;

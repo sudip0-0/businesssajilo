@@ -12,8 +12,8 @@ class CachedCustomersRepository implements CustomersRepository {
   CachedCustomersRepository({
     required AppDatabase db,
     required SupabaseClient? client,
-  })  : _db = db,
-        _client = client;
+  }) : _db = db,
+       _client = client;
 
   final AppDatabase _db;
   final SupabaseClient? _client;
@@ -28,10 +28,18 @@ class CachedCustomersRepository implements CustomersRepository {
   }
 
   @override
+  Future<List<Customer>> listRecent({int limit = 2}) async {
+    final rows = await _db.select(_db.localCustomers).get();
+    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+    rows.sort((a, b) => (b.createdAt ?? epoch).compareTo(a.createdAt ?? epoch));
+    return rows.take(limit).map(mapLocalCustomer).toList();
+  }
+
+  @override
   Future<Customer> get(String id) async {
-    final row = await (_db.select(_db.localCustomers)
-          ..where((c) => c.id.equals(id)))
-        .getSingle();
+    final row = await (_db.select(
+      _db.localCustomers,
+    )..where((c) => c.id.equals(id))).getSingle();
     return mapLocalCustomer(row);
   }
 
@@ -64,7 +72,9 @@ class CachedCustomersRepository implements CustomersRepository {
     }
     final rows = await query;
     final entries = (rows as List)
-        .map((row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)))
+        .map(
+          (row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)),
+        )
         .toList();
     if (limit != null) return entries;
     return withRunningBalance(entries);
@@ -81,13 +91,16 @@ class CachedCustomersRepository implements CustomersRepository {
   }) async {
     final client = _client;
     if (client == null) throw Exception('Supabase not configured');
-    await client.from('customers').update({
-      'shop_name': shopName,
-      'contact_name': ?contactName,
-      'phone': ?phone,
-      'address': ?address,
-      'opening_balance': openingBalance,
-    }).eq('id', id);
+    await client
+        .from('customers')
+        .update({
+          'shop_name': shopName,
+          'contact_name': ?contactName,
+          'phone': ?phone,
+          'address': ?address,
+          'opening_balance': openingBalance,
+        })
+        .eq('id', id);
     return get(id);
   }
 

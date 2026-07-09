@@ -28,10 +28,8 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
     final l10n = AppLocalizations.of(context);
     final fulfillmentAsync = ref.watch(fulfillmentQueueProvider);
     final pendingCount = fulfillmentAsync.when(
-      data: (orders) => orders
-          .where((o) => o.status.name != 'dispatched')
-          .length
-          .toString(),
+      data: (orders) =>
+          orders.where((o) => o.status.name != 'dispatched').length.toString(),
       loading: () => '…',
       error: (_, _) => '—',
     );

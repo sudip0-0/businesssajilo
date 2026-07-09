@@ -143,8 +143,9 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor:
-                            BsColors.primary.withValues(alpha: 0.12),
+                        backgroundColor: BsColors.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         child: Text(
                           member.displayName.isNotEmpty
                               ? member.displayName[0].toUpperCase()

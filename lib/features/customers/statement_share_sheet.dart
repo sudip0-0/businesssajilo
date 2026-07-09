@@ -55,8 +55,9 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
 
       // Full ledger (ascending, running balances) so the range's opening
       // balance is exact and closing matches the in-app ledger.
-      final entries =
-          await ref.read(customersRepositoryProvider).ledger(widget.customer.id);
+      final entries = await ref
+          .read(customersRepositoryProvider)
+          .ledger(widget.customer.id);
 
       final now = DateTime.now().toUtc();
       final from = switch (_range) {
@@ -128,8 +129,10 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
-          Text(l10n.statementPeriod,
-              style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l10n.statementPeriod,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
           SegmentedButton<_StatementRange>(
             segments: [

@@ -20,10 +20,7 @@ class PendingSyncScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.pendingSyncItems)),
       body: bundle == null
-          ? EmptyState(
-              icon: Icons.cloud_done,
-              message: l10n.synced,
-            )
+          ? EmptyState(icon: Icons.cloud_done, message: l10n.synced)
           : queueAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, _) => EmptyState(
@@ -41,8 +38,9 @@ class PendingSyncScreen extends ConsumerWidget {
                     onAction: () => bundle.sync.syncNow(),
                   );
                 }
-                final failedCount =
-                    items.where((i) => i.status == 'failed').length;
+                final failedCount = items
+                    .where((i) => i.status == 'failed')
+                    .length;
                 return Column(
                   children: [
                     Padding(
@@ -65,8 +63,10 @@ class PendingSyncScreen extends ConsumerWidget {
                                 await bundle.sync.retryFailed();
                                 ref.invalidate(syncStatusProvider);
                               },
-                              icon: const Icon(Icons.restart_alt,
-                                  color: BsColors.danger),
+                              icon: const Icon(
+                                Icons.restart_alt,
+                                color: BsColors.danger,
+                              ),
                               label: Text(
                                 '${l10n.retrySync} — '
                                 '${l10n.failedSyncItems(failedCount)}',
@@ -124,10 +124,7 @@ class _QueueTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
       trailing: failed
-          ? TextButton(
-              onPressed: onRetry,
-              child: Text(l10n.retrySync),
-            )
+          ? TextButton(onPressed: onRetry, child: Text(l10n.retrySync))
           : null,
     );
   }

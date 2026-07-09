@@ -49,7 +49,10 @@ Future<T?> showWebSidePanel<T>({
                     color: Colors.white,
                     elevation: 16,
                     child: SizedBox(
-                      width: width.clamp(320, MediaQuery.sizeOf(ctx).width * 0.9),
+                      width: width.clamp(
+                        320,
+                        MediaQuery.sizeOf(ctx).width * 0.9,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -60,10 +63,10 @@ Future<T?> showWebSidePanel<T>({
                                 Expanded(
                                   child: Text(
                                     title,
-                                    style: Theme.of(ctx)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(color: BsColors.textCharcoal),
+                                    style: Theme.of(ctx).textTheme.titleLarge
+                                        ?.copyWith(
+                                          color: BsColors.textCharcoal,
+                                        ),
                                   ),
                                 ),
                                 IconButton(

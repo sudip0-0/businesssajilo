@@ -10,9 +10,6 @@ class WebCatalogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return WebPageScaffold(
-      title: l10n.catalog,
-      body: const CatalogScreen(),
-    );
+    return WebPageScaffold(title: l10n.catalog, body: const CatalogScreen());
   }
 }

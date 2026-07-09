@@ -25,6 +25,9 @@ abstract class ProductsRepository {
     int? limit,
   });
   Future<int> lowStockCount();
+
+  /// Active products at or below their low-stock threshold, capped for dashboards.
+  Future<List<Product>> listLowStock({int limit = 2});
   Future<Product> get(String id);
   Future<Product> create({
     required String name,

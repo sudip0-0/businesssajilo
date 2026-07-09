@@ -46,14 +46,16 @@ class BsFormCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 2),
                         Text(
                           subtitle!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: BsColors.outline,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: BsColors.outline),
                         ),
                       ],
                     ],
@@ -82,10 +84,10 @@ class BsFormSectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: BsColors.outline,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w600,
-            ),
+          color: BsColors.outline,
+          letterSpacing: 1.2,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -122,9 +124,9 @@ class BsInfoTipCard extends StatelessWidget {
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: BsColors.textCharcoal,
-                    height: 1.4,
-                  ),
+                color: BsColors.textCharcoal,
+                height: 1.4,
+              ),
             ),
           ),
         ],

@@ -4,11 +4,7 @@ import '../l10n/app_localizations.dart';
 
 /// Error state with plain-language message and optional retry (Design.md).
 class ErrorState extends StatelessWidget {
-  const ErrorState({
-    super.key,
-    this.message,
-    this.onRetry,
-  });
+  const ErrorState({super.key, this.message, this.onRetry});
 
   final String? message;
   final VoidCallback? onRetry;

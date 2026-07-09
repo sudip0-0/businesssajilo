@@ -12,7 +12,11 @@ extension type const Paisa(int value) {
 }
 
 /// Formats paisa as NPR with Nepali-style digit grouping (रू 1,23,456.50).
-String formatNpr(Paisa amount, {bool showSymbol = true, bool showPaisa = true}) {
+String formatNpr(
+  Paisa amount, {
+  bool showSymbol = true,
+  bool showPaisa = true,
+}) {
   final isNegative = amount.isNegative;
   final abs = amount.value.abs();
   final rupees = abs ~/ 100;

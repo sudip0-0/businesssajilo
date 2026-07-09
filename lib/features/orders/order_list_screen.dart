@@ -49,40 +49,38 @@ class OrderListScreen extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(provider),
           child: ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: orders.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
-            final order = orders[index];
-            final dateStr = order.createdAt != null
-                ? BsDate.both(
-                    order.createdAt!,
-                    locale: Localizations.localeOf(context),
-                  )
-                : '—';
-            return Card(
-              child: ListTile(
-                title: Text(
-                  ownOnly
-                      ? dateStr
-                      : (order.customerShopName ?? l10n.customers),
+            padding: const EdgeInsets.all(16),
+            itemCount: orders.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final order = orders[index];
+              final dateStr = order.createdAt != null
+                  ? BsDate.both(
+                      order.createdAt!,
+                      locale: Localizations.localeOf(context),
+                    )
+                  : '—';
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    ownOnly
+                        ? dateStr
+                        : (order.customerShopName ?? l10n.customers),
+                  ),
+                  subtitle: Text('${order.items.length} · ${l10n.orderItems}'),
+                  trailing: StatusChip(order.status),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrderDetailScreen(orderId: order.id),
+                      ),
+                    );
+                    ref.invalidate(provider);
+                  },
                 ),
-                subtitle: Text(
-                  '${order.items.length} · ${l10n.orderItems}',
-                ),
-                trailing: StatusChip(order.status),
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OrderDetailScreen(orderId: order.id),
-                    ),
-                  );
-                  ref.invalidate(provider);
-                },
-              ),
-            );
-          },
+              );
+            },
           ),
         );
       },

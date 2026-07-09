@@ -45,7 +45,9 @@ class _ResetMemberPasswordSheetState
       _error = null;
     });
     try {
-      await ref.read(membersRepositoryProvider).resetMemberPassword(
+      await ref
+          .read(membersRepositoryProvider)
+          .resetMemberPassword(
             memberId: widget.memberId,
             newPassword: _passwordController.text,
           );
@@ -136,10 +138,7 @@ Future<void> showResetMemberPasswordSheet(
   final done = await showAdaptiveSheet<bool>(
     context: context,
     title: l10n.resetPassword,
-    child: ResetMemberPasswordSheet(
-      memberId: memberId,
-      memberName: memberName,
-    ),
+    child: ResetMemberPasswordSheet(memberId: memberId, memberName: memberName),
   );
   if (done == true) {
     messenger.showSnackBar(SnackBar(content: Text(l10n.passwordResetDone)));

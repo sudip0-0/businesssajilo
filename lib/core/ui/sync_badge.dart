@@ -18,10 +18,10 @@ class SyncBadge extends StatelessWidget {
     final (color, icon, label) = switch (state) {
       SyncState.synced => (BsColors.success, Icons.cloud_done, l10n.synced),
       SyncState.pending => (
-          BsColors.accent,
-          Icons.cloud_upload,
-          l10n.pendingSync(pendingCount),
-        ),
+        BsColors.accent,
+        Icons.cloud_upload,
+        l10n.pendingSync(pendingCount),
+      ),
       SyncState.offline => (Colors.grey, Icons.cloud_off, l10n.offline),
     };
     return Semantics(

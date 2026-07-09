@@ -80,8 +80,7 @@ class SupabaseBillsRepository implements BillsRepository {
   @override
   Future<int> yesterdaysSales() async {
     final client = _requireClient();
-    final yesterdayStart =
-        nptDayStartUtc().subtract(const Duration(days: 1));
+    final yesterdayStart = nptDayStartUtc().subtract(const Duration(days: 1));
     final day = nptDateString(yesterdayStart);
     final rows = await client
         .from('report_sales_daily')
@@ -210,8 +209,7 @@ class SupabaseBillsRepository implements BillsRepository {
     };
 
     final result = await client.rpc('create_bill', params: {'p': payload});
-    final billJson =
-        Map<String, dynamic>.from((result as Map)['bill'] as Map);
+    final billJson = Map<String, dynamic>.from((result as Map)['bill'] as Map);
     final bill = Bill.fromJson(billJson);
     // Re-fetch with joined customer + items for display.
     return get(bill.id);

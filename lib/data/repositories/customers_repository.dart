@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/ledger_balance.dart';
 import '../../domain/enums.dart';
@@ -21,8 +21,12 @@ final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
 
 abstract class CustomersRepository {
   Future<List<Customer>> list({int offset = 0, int? limit});
+
+  /// Most recently created customers, capped for dashboards.
+  Future<List<Customer>> listRecent({int limit = 2});
   Future<Customer> get(String id);
   Future<Customer?> getOwnProfile();
+
   /// Returns ledger entries sorted ascending by occurred_at. When [limit] is
   /// given, returns a page starting at [offset]; entries are raw (no running
   /// balance) so callers can accumulate pages and apply [withRunningBalance].
@@ -67,6 +71,17 @@ class SupabaseCustomersRepository implements CustomersRepository {
       query = query.range(offset, offset + limit - 1);
     }
     final rows = await query;
+    return (rows as List).map(_mapBalanceRow).toList();
+  }
+
+  @override
+  Future<List<Customer>> listRecent({int limit = 2}) async {
+    final client = _requireClient();
+    final rows = await client
+        .from('customer_balances')
+        .select()
+        .order('created_at', ascending: false)
+        .range(0, limit - 1);
     return (rows as List).map(_mapBalanceRow).toList();
   }
 
@@ -122,7 +137,9 @@ class SupabaseCustomersRepository implements CustomersRepository {
     }
     final rows = await query;
     final entries = (rows as List)
-        .map((row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)))
+        .map(
+          (row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)),
+        )
         .toList();
     if (limit != null) return entries;
     return withRunningBalance(entries);
@@ -138,13 +155,16 @@ class SupabaseCustomersRepository implements CustomersRepository {
     required int openingBalance,
   }) async {
     final client = _requireClient();
-    await client.from('customers').update({
-      'shop_name': shopName,
-      'contact_name': ?contactName,
-      'phone': ?phone,
-      'address': ?address,
-      'opening_balance': openingBalance,
-    }).eq('id', id);
+    await client
+        .from('customers')
+        .update({
+          'shop_name': shopName,
+          'contact_name': ?contactName,
+          'phone': ?phone,
+          'address': ?address,
+          'opening_balance': openingBalance,
+        })
+        .eq('id', id);
     return get(id);
   }
 

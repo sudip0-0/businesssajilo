@@ -10,10 +10,10 @@ class BillStatusChip extends StatelessWidget {
   final BillStatus status;
 
   String _label(AppLocalizations l10n) => switch (status) {
-        BillStatus.paid => l10n.paid,
-        BillStatus.partial => l10n.partial,
-        BillStatus.due => l10n.due,
-      };
+    BillStatus.paid => l10n.paid,
+    BillStatus.partial => l10n.partial,
+    BillStatus.due => l10n.due,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -21,20 +21,20 @@ class BillStatusChip extends StatelessWidget {
     final dark = scheme.brightness == Brightness.dark;
     final (tint, textColor, icon) = switch (status) {
       BillStatus.paid => (
-          scheme.successColor,
-          scheme.successColor,
-          Icons.check_circle_outline,
-        ),
+        scheme.successColor,
+        scheme.successColor,
+        Icons.check_circle_outline,
+      ),
       BillStatus.partial => (
-          BsColors.accent,
-          dark ? BsColors.accentDark : BsColors.amberTextOnTint,
-          Icons.timelapse,
-        ),
+        BsColors.accent,
+        dark ? BsColors.accentDark : BsColors.amberTextOnTint,
+        Icons.timelapse,
+      ),
       BillStatus.due => (
-          scheme.dangerColor,
-          scheme.dangerColor,
-          Icons.error_outline,
-        ),
+        scheme.dangerColor,
+        scheme.dangerColor,
+        Icons.error_outline,
+      ),
     };
     final l10n = AppLocalizations.of(context);
     final label = _label(l10n);

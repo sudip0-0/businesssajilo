@@ -79,8 +79,8 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                     Text(
                       l10n.filterProducts,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -104,8 +104,8 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                     Text(
                       l10n.orderItems,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -129,8 +129,8 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                     Text(
                       l10n.ledger,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),

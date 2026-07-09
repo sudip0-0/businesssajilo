@@ -22,15 +22,15 @@ class OrderStatusTimeline extends StatelessWidget {
   ];
 
   static String _label(AppLocalizations l10n, OrderStatus s) => switch (s) {
-        OrderStatus.placed => l10n.statusPlaced,
-        OrderStatus.quoted => l10n.statusQuoted,
-        OrderStatus.accepted => l10n.statusAccepted,
-        OrderStatus.confirmed => l10n.statusConfirmed,
-        OrderStatus.packed => l10n.statusPacked,
-        OrderStatus.dispatched => l10n.statusDispatched,
-        OrderStatus.billed => l10n.statusBilled,
-        _ => '',
-      };
+    OrderStatus.placed => l10n.statusPlaced,
+    OrderStatus.quoted => l10n.statusQuoted,
+    OrderStatus.accepted => l10n.statusAccepted,
+    OrderStatus.confirmed => l10n.statusConfirmed,
+    OrderStatus.packed => l10n.statusPacked,
+    OrderStatus.dispatched => l10n.statusDispatched,
+    OrderStatus.billed => l10n.statusBilled,
+    _ => '',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +66,8 @@ class OrderStatusTimeline extends StatelessWidget {
               state: i < currentIndex
                   ? _StepState.done
                   : i == currentIndex
-                      ? _StepState.current
-                      : _StepState.future,
+                  ? _StepState.current
+                  : _StepState.future,
             ),
           ],
         ],
@@ -89,26 +89,27 @@ class _TimelineStep extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final (fill, border, content) = switch (state) {
       _StepState.done => (
-          scheme.primary,
-          scheme.primary,
-          Icon(Icons.check, size: 14, color: scheme.onPrimary),
-        ),
+        scheme.primary,
+        scheme.primary,
+        Icon(Icons.check, size: 14, color: scheme.onPrimary),
+      ),
       _StepState.current => (
-          scheme.primaryContainer,
-          scheme.primary,
-          Icon(Icons.circle, size: 10, color: scheme.primary),
-        ),
+        scheme.primaryContainer,
+        scheme.primary,
+        Icon(Icons.circle, size: 10, color: scheme.primary),
+      ),
       _StepState.future => (
-          Colors.transparent,
-          scheme.outlineVariant,
-          const SizedBox.shrink(),
-        ),
+        Colors.transparent,
+        scheme.outlineVariant,
+        const SizedBox.shrink(),
+      ),
     };
     final textStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: state == _StepState.future ? scheme.outline : scheme.onSurface,
-          fontWeight:
-              state == _StepState.current ? FontWeight.w700 : FontWeight.w400,
-        );
+      color: state == _StepState.future ? scheme.outline : scheme.onSurface,
+      fontWeight: state == _StepState.current
+          ? FontWeight.w700
+          : FontWeight.w400,
+    );
 
     return Semantics(
       label: label,

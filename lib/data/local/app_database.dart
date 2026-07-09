@@ -188,13 +188,13 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            await m.createTable(syncMeta);
-            await m.addColumn(syncQueue, syncQueue.nextAttemptAt);
-          }
-        },
-      );
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(syncMeta);
+        await m.addColumn(syncQueue, syncQueue.nextAttemptAt);
+      }
+    },
+  );
 
   Future<void> enqueue({
     required String entityType,
@@ -236,16 +236,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> pendingCount() async {
-    final rows = await (select(syncQueue)
-          ..where((q) => q.status.equals('pending') | q.status.equals('failed')))
-        .get();
+    final rows =
+        await (select(syncQueue)..where(
+              (q) => q.status.equals('pending') | q.status.equals('failed'),
+            ))
+            .get();
     return rows.length;
   }
 
   Future<int> failedCount() async {
-    final rows = await (select(syncQueue)
-          ..where((q) => q.status.equals('failed')))
-        .get();
+    final rows = await (select(
+      syncQueue,
+    )..where((q) => q.status.equals('failed'))).get();
     return rows.length;
   }
 
@@ -262,22 +264,25 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<DateTime?> watermark(String remoteTable) async {
-    final row = await (select(syncWatermarks)
-          ..where((w) => w.remoteTable.equals(remoteTable)))
-        .getSingleOrNull();
+    final row = await (select(
+      syncWatermarks,
+    )..where((w) => w.remoteTable.equals(remoteTable))).getSingleOrNull();
     return row?.lastSyncedAt;
   }
 
   Future<void> setWatermark(String remoteTable, DateTime at) async {
     await into(syncWatermarks).insertOnConflictUpdate(
-      SyncWatermarksCompanion.insert(remoteTable: remoteTable, lastSyncedAt: at),
+      SyncWatermarksCompanion.insert(
+        remoteTable: remoteTable,
+        lastSyncedAt: at,
+      ),
     );
   }
 
   Future<String?> metaValue(String key) async {
-    final row = await (select(syncMeta)
-          ..where((m) => m.metaKey.equals(key)))
-        .getSingleOrNull();
+    final row = await (select(
+      syncMeta,
+    )..where((m) => m.metaKey.equals(key))).getSingleOrNull();
     return row?.metaValue;
   }
 
@@ -339,4 +344,3 @@ class AppDatabase extends _$AppDatabase {
     return '${meta.devicePrefix}-$nextSeq';
   }
 }
-

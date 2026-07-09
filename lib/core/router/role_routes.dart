@@ -1,12 +1,12 @@
 import '../../domain/enums.dart';
 
 String roleHomePath(Role? role) => switch (role) {
-      Role.owner => '/owner',
-      Role.sales => '/sales',
-      Role.warehouse => '/warehouse',
-      Role.customer => '/customer',
-      null => '/login',
-    };
+  Role.owner => '/owner',
+  Role.sales => '/sales',
+  Role.warehouse => '/warehouse',
+  Role.customer => '/customer',
+  null => '/login',
+};
 
 bool pathAllowedForRole(String path, Role role) {
   if (path.startsWith('/owner')) return role == Role.owner;

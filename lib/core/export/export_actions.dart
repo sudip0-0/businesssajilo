@@ -26,7 +26,9 @@ Future<void> exportSalesReportCsv(
   final topCustomers = await ref.read(topCustomersProvider(range).future);
   final filename =
       'businesssajilo-sales-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-  await ref.read(exportShareServiceProvider).shareCsv(
+  await ref
+      .read(exportShareServiceProvider)
+      .shareCsv(
         filename: filename,
         subject: l10n.salesSummary,
         rows: salesReportCsvRows(
@@ -45,7 +47,9 @@ Future<void> exportDuesAgingCsv(
   final l10n = AppLocalizations.of(context);
   final filename =
       'businesssajilo-dues-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-  await ref.read(exportShareServiceProvider).shareCsv(
+  await ref
+      .read(exportShareServiceProvider)
+      .shareCsv(
         filename: filename,
         subject: l10n.duesAging,
         rows: duesAgingCsvRows(report),
@@ -60,7 +64,9 @@ Future<void> exportStockValuationCsv(
   final l10n = AppLocalizations.of(context);
   final filename =
       'businesssajilo-stock-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-  await ref.read(exportShareServiceProvider).shareCsv(
+  await ref
+      .read(exportShareServiceProvider)
+      .shareCsv(
         filename: filename,
         subject: l10n.stockValuation,
         rows: stockValuationCsvRows(rows),
@@ -72,8 +78,9 @@ Future<void> exportCustomerLedgerCsv(
   BuildContext context,
   String customerId,
 ) async {
-  final entries =
-      await ref.read(customersRepositoryProvider).ledger(customerId);
+  final entries = await ref
+      .read(customersRepositoryProvider)
+      .ledger(customerId);
   await exportLedgerCsv(ref, context, entries);
 }
 
@@ -85,22 +92,23 @@ Future<void> exportLedgerCsv(
   final l10n = AppLocalizations.of(context);
   final filename =
       'businesssajilo-ledger-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-  await ref.read(exportShareServiceProvider).shareCsv(
+  await ref
+      .read(exportShareServiceProvider)
+      .shareCsv(
         filename: filename,
         subject: l10n.ledger,
         rows: ledgerCsvRows(withRunningBalance(entries)),
       );
 }
 
-Future<void> exportTodaysBillsCsv(
-  WidgetRef ref,
-  BuildContext context,
-) async {
+Future<void> exportTodaysBillsCsv(WidgetRef ref, BuildContext context) async {
   final l10n = AppLocalizations.of(context);
   final bills = await ref.read(todaysBillsProvider.future);
   final filename =
       'businesssajilo-bills-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-  await ref.read(exportShareServiceProvider).shareCsv(
+  await ref
+      .read(exportShareServiceProvider)
+      .shareCsv(
         filename: filename,
         subject: l10n.todaysTransactions,
         rows: todaysBillsCsvRows(bills),

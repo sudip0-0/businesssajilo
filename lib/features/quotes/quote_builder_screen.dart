@@ -18,11 +18,11 @@ class _DraftLine {
     required this.name,
     required this.qty,
     required this.rate,
-  })  : discount = 0,
-        rateController = TextEditingController(
-          text: formatNpr(Paisa(rate), showPaisa: false),
-        ),
-        discountController = TextEditingController();
+  }) : discount = 0,
+       rateController = TextEditingController(
+         text: formatNpr(Paisa(rate), showPaisa: false),
+       ),
+       discountController = TextEditingController();
 
   final String productId;
   final String name;
@@ -35,11 +35,8 @@ class _DraftLine {
   int get lineTotal =>
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
 
-  bool get discountValid => isValidLineDiscount(
-        qty: qty,
-        ratePaisa: rate,
-        discountPaisa: discount,
-      );
+  bool get discountValid =>
+      isValidLineDiscount(qty: qty, ratePaisa: rate, discountPaisa: discount);
 
   void dispose() {
     rateController.dispose();
@@ -77,15 +74,17 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     if (member == null || _lines.isEmpty) return;
 
     if (_lines.any((l) => !l.discountValid)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.discountExceedsLine)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.discountExceedsLine)));
       return;
     }
 
     setState(() => _loading = true);
     try {
-      await ref.read(quotesRepositoryProvider).sendQuote(
+      await ref
+          .read(quotesRepositoryProvider)
+          .sendQuote(
             orderId: widget.orderId,
             createdByMemberId: member.id,
             total: _total,
@@ -102,22 +101,22 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                 .toList(),
           );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.quoteSent)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.quoteSent)));
         Navigator.pop(context, true);
       }
     } on QuoteSendException catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.actionFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.actionFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -177,9 +176,10 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(line.name,
-                                style:
-                                    Theme.of(context).textTheme.titleSmall),
+                            Text(
+                              line.name,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
                             if (line.rate == 0)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
@@ -206,12 +206,10 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                             ),
                             TextField(
                               controller: line.rateController,
-                              decoration:
-                                  InputDecoration(labelText: l10n.rate),
+                              decoration: InputDecoration(labelText: l10n.rate),
                               keyboardType: TextInputType.number,
                               onChanged: (v) => setState(() {
-                                line.rate =
-                                    parseNpr(v)?.value ?? line.rate;
+                                line.rate = parseNpr(v)?.value ?? line.rate;
                               }),
                             ),
                             TextField(
@@ -256,8 +254,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(l10n.sendQuote),
                     ),

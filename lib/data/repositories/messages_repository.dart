@@ -41,8 +41,7 @@ class MessagesRepository {
         .order('created_at', ascending: false)
         .limit(_streamLimit)
         .map(
-          (rows) =>
-              rows.map(_mapRow).toList().reversed.toList(growable: false),
+          (rows) => rows.map(_mapRow).toList().reversed.toList(growable: false),
         );
   }
 

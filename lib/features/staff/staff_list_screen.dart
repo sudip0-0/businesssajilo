@@ -29,10 +29,7 @@ class StaffListScreen extends ConsumerWidget {
       data: (members) {
         final active = members.where((m) => m.isActive).toList();
         if (active.isEmpty) {
-          return EmptyState(
-            icon: Icons.people_outline,
-            message: l10n.noStaff,
-          );
+          return EmptyState(icon: Icons.people_outline, message: l10n.noStaff);
         }
         return ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 8),

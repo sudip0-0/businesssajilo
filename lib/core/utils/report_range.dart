@@ -34,33 +34,32 @@ ReportDateRange dateRangeFor(ReportRange range, {DateTime? now}) {
       nptWallClock.subtract(nptOffset);
   final todayStartNpt = DateTime.utc(npt.year, npt.month, npt.day);
   final todayStart = toUtcInstant(todayStartNpt);
-  final tomorrowStart = toUtcInstant(todayStartNpt.add(const Duration(days: 1)));
+  final tomorrowStart = toUtcInstant(
+    todayStartNpt.add(const Duration(days: 1)),
+  );
   return switch (range) {
-    ReportRange.today => ReportDateRange(
-        from: todayStart,
-        to: tomorrowStart,
-      ),
+    ReportRange.today => ReportDateRange(from: todayStart, to: tomorrowStart),
     ReportRange.week => ReportDateRange(
-        from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
-        to: tomorrowStart,
-      ),
+      from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
+      to: tomorrowStart,
+    ),
     ReportRange.month => ReportDateRange(
-        from: toUtcInstant(DateTime.utc(npt.year, npt.month, 1)),
-        to: tomorrowStart,
-      ),
+      from: toUtcInstant(DateTime.utc(npt.year, npt.month, 1)),
+      to: tomorrowStart,
+    ),
     ReportRange.last7Days => ReportDateRange(
-        from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
-        to: tomorrowStart,
-      ),
+      from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
+      to: tomorrowStart,
+    ),
   };
 }
 
 String agingBucketLabel(String bucket) => switch (bucket) {
-      '0_30' => '0_30',
-      '31_60' => '31_60',
-      '60_plus' => '60_plus',
-      _ => bucket,
-    };
+  '0_30' => '0_30',
+  '31_60' => '31_60',
+  '60_plus' => '60_plus',
+  _ => bucket,
+};
 
 String bucketFromAgeDays(int ageDays) {
   if (ageDays <= 30) return '0_30';
@@ -74,9 +73,7 @@ List<SalesPeriodPoint> fillSalesDailyGaps({
   required DateTime from,
   required DateTime to,
 }) {
-  final byDate = {
-    for (final p in points) nptDateString(p.saleDate): p,
-  };
+  final byDate = {for (final p in points) nptDateString(p.saleDate): p};
   final filled = <SalesPeriodPoint>[];
   var day = from;
   while (day.isBefore(to)) {

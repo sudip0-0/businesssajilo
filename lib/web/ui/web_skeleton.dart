@@ -18,13 +18,13 @@ class WebSkeleton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-    )
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(borderRadius),
+          ),
+        )
         .animate(onPlay: (c) => c.repeat())
         .shimmer(
           duration: 1200.ms,
@@ -46,21 +46,24 @@ class WebListSkeleton extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (_, i) => Row(
         children: [
-          WebSkeleton(width: 40, height: 40, borderRadius: 10)
-              .animate()
-              .fadeIn(delay: (i * 60).ms),
+          WebSkeleton(
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+          ).animate().fadeIn(delay: (i * 60).ms),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                WebSkeleton(height: 14)
-                    .animate()
-                    .fadeIn(delay: (i * 60 + 20).ms),
+                WebSkeleton(
+                  height: 14,
+                ).animate().fadeIn(delay: (i * 60 + 20).ms),
                 const SizedBox(height: 8),
-                WebSkeleton(width: 120, height: 12)
-                    .animate()
-                    .fadeIn(delay: (i * 60 + 40).ms),
+                WebSkeleton(
+                  width: 120,
+                  height: 12,
+                ).animate().fadeIn(delay: (i * 60 + 40).ms),
               ],
             ),
           ),

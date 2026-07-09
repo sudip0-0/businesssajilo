@@ -5,8 +5,8 @@ import '../../domain/models/notification_item.dart';
 
 final notificationListProvider =
     StreamProvider.autoDispose<List<NotificationItem>>((ref) {
-  return ref.watch(notificationsRepositoryProvider).watch();
-});
+      return ref.watch(notificationsRepositoryProvider).watch();
+    });
 
 final unreadNotificationCountProvider = Provider.autoDispose<int>((ref) {
   final notifications = ref.watch(notificationListProvider).value ?? [];

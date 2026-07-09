@@ -48,7 +48,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).registerBusiness(
+      await ref
+          .read(authProvider.notifier)
+          .registerBusiness(
             email: _emailController.text,
             password: _passwordController.text,
             displayName: _displayNameController.text,
@@ -57,11 +59,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ? null
                 : _businessNameNpController.text,
             phone: _phoneController.text.isEmpty ? null : _phoneController.text,
-            address:
-                _addressController.text.isEmpty ? null : _addressController.text,
+            address: _addressController.text.isEmpty
+                ? null
+                : _addressController.text,
           );
     } catch (e) {
-      setState(() => _error = localizeAuthError(e, AppLocalizations.of(context)));
+      setState(
+        () => _error = localizeAuthError(e, AppLocalizations.of(context)),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -86,7 +91,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l10n.language, style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      l10n.language,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 8),
                     LocaleToggle(fullWidth: true),
                     const SizedBox(height: 12),
@@ -100,8 +108,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _businessNameNpController,
-                      decoration:
-                          InputDecoration(labelText: l10n.businessNameNp),
+                      decoration: InputDecoration(
+                        labelText: l10n.businessNameNp,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(

@@ -50,8 +50,14 @@ class WebOrderDetailPage extends ConsumerWidget {
           children: [
             TabBar(
               tabs: [
-                Tab(text: l10n.orderDetail, icon: Icon(PhosphorIconsRegular.package)),
-                Tab(text: l10n.openChat, icon: Icon(PhosphorIconsRegular.chatCircle)),
+                Tab(
+                  text: l10n.orderDetail,
+                  icon: Icon(PhosphorIconsRegular.package),
+                ),
+                Tab(
+                  text: l10n.openChat,
+                  icon: Icon(PhosphorIconsRegular.chatCircle),
+                ),
               ],
             ),
             Expanded(
@@ -71,9 +77,9 @@ class WebOrderDetailPage extends ConsumerWidget {
 
 /// Resolves the orders list path from the signed-in member role.
 String webOrdersListPath(Role? role) => switch (role) {
-      Role.owner => '/owner/orders',
-      Role.sales => '/sales/orders',
-      Role.warehouse => '/warehouse/orders',
-      Role.customer => '/customer/orders',
-      null => '/login',
-    };
+  Role.owner => '/owner/orders',
+  Role.sales => '/sales/orders',
+  Role.warehouse => '/warehouse/orders',
+  Role.customer => '/customer/orders',
+  null => '/login',
+};

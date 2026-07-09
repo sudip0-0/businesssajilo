@@ -25,18 +25,18 @@ class StatusChip extends StatelessWidget {
   };
 
   String _label(AppLocalizations l10n) => switch (status) {
-        OrderStatus.draft => '-',
-        OrderStatus.placed => l10n.statusPlaced,
-        OrderStatus.quoted => l10n.statusQuoted,
-        OrderStatus.accepted => l10n.statusAccepted,
-        OrderStatus.rejected => l10n.statusRejected,
-        OrderStatus.confirmed => l10n.statusConfirmed,
-        OrderStatus.packed => l10n.statusPacked,
-        OrderStatus.dispatched => l10n.statusDispatched,
-        OrderStatus.billed => l10n.statusBilled,
-        OrderStatus.closed => l10n.statusClosed,
-        OrderStatus.cancelled => l10n.statusCancelled,
-      };
+    OrderStatus.draft => '-',
+    OrderStatus.placed => l10n.statusPlaced,
+    OrderStatus.quoted => l10n.statusQuoted,
+    OrderStatus.accepted => l10n.statusAccepted,
+    OrderStatus.rejected => l10n.statusRejected,
+    OrderStatus.confirmed => l10n.statusConfirmed,
+    OrderStatus.packed => l10n.statusPacked,
+    OrderStatus.dispatched => l10n.statusDispatched,
+    OrderStatus.billed => l10n.statusBilled,
+    OrderStatus.closed => l10n.statusClosed,
+    OrderStatus.cancelled => l10n.statusCancelled,
+  };
 
   @override
   Widget build(BuildContext context) {

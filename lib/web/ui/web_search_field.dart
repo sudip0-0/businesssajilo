@@ -27,8 +27,9 @@ class WebSearchField extends StatelessWidget {
       autofocus: autofocus,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
-      textInputAction:
-          onSubmitted != null ? TextInputAction.search : TextInputAction.done,
+      textInputAction: onSubmitted != null
+          ? TextInputAction.search
+          : TextInputAction.done,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),

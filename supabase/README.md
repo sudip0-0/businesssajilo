@@ -32,7 +32,30 @@ Run Flutter against local stack:
 |---|---|---|
 | `register-business` | Public | Owner signup: creates auth user + business + owner member (rate-limited via `[auth.rate_limit]` in `config.toml`) |
 | `create-member` | Owner JWT | Creates staff/customer login (+ customer profile if role=customer) |
+| `reset-member-password` | Owner JWT | Temporary password + forced change |
+| `delete-account` | Member JWT | Self-anonymize or owner business purge |
 | `notify` | Service role | Sends FCM push for a `notifications` row (optional when FCM not configured) |
+
+All Edge Functions **require** `ALLOWED_ORIGIN` (no default). Unset → function fails at boot.
+
+Local serve example:
+
+```bash
+# PowerShell
+$env:ALLOWED_ORIGIN="http://localhost:3000"
+supabase functions serve
+
+# bash
+ALLOWED_ORIGIN=http://localhost:3000 supabase functions serve
+```
+
+Production:
+
+```bash
+supabase secrets set ALLOWED_ORIGIN=https://your-app.example.com
+```
+
+For local-only CORS during development you may use `ALLOWED_ORIGIN=*`, but production must use the real app origin(s).
 
 ### Push notifications (optional)
 

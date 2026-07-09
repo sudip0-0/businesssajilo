@@ -46,9 +46,8 @@ class LocaleToggle extends ConsumerWidget {
         ),
       ],
       selected: {locale.languageCode},
-      onSelectionChanged: (selected) => ref
-          .read(localeProvider.notifier)
-          .setLocale(Locale(selected.first)),
+      onSelectionChanged: (selected) =>
+          ref.read(localeProvider.notifier).setLocale(Locale(selected.first)),
     );
 
     Widget child = button;

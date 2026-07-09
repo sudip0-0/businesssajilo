@@ -27,8 +27,8 @@ class MoneyText extends StatelessWidget {
     final color = !colorBySign
         ? null
         : amount.isNegative
-            ? scheme.dangerColor
-            : scheme.successColor;
+        ? scheme.dangerColor
+        : scheme.successColor;
     final formatted = formatNpr(amount, showPaisa: showPaisa);
     return Semantics(
       label: formatted,

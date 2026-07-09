@@ -77,10 +77,7 @@ class BillDetailScreen extends ConsumerWidget {
                       value: 'print',
                       child: Text(l10n.printInvoice),
                     ),
-                    PopupMenuItem(
-                      value: 'pdf',
-                      child: Text(l10n.downloadPdf),
-                    ),
+                    PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
                   ],
                 ),
               ],
@@ -92,17 +89,14 @@ class BillDetailScreen extends ConsumerWidget {
                   child: Text(
                     bill.billNo,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 if (bill.pendingSync)
                   Tooltip(
                     message: l10n.provisionalBillNo,
-                    child: const Icon(
-                      Icons.schedule,
-                      color: BsColors.accent,
-                    ),
+                    child: const Icon(Icons.schedule, color: BsColors.accent),
                   ),
               ],
             ),
@@ -112,7 +106,10 @@ class BillDetailScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             BillStatusChip(bill.status),
             const SizedBox(height: 16),
-            Text(l10n.billLines, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.billLines,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const Divider(),
             ...bill.items.map(
               (item) => ListTile(
@@ -133,8 +130,7 @@ class BillDetailScreen extends ConsumerWidget {
             if (bill.discount > 0)
               _SummaryRow(
                 label: l10n.billDiscount,
-                value:
-                    '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
+                value: '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
               ),
             _SummaryRow(
               label: l10n.grandTotal,
@@ -155,10 +151,7 @@ class BillDetailScreen extends ConsumerWidget {
 }
 
 class _ReturnItemsButton extends ConsumerWidget {
-  const _ReturnItemsButton({
-    required this.bill,
-    this.embedded = false,
-  });
+  const _ReturnItemsButton({required this.bill, this.embedded = false});
 
   final Bill bill;
   final bool embedded;
@@ -218,9 +211,9 @@ class _SummaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = bold
-        ? Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            )
+        ? Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
         : Theme.of(context).textTheme.bodyLarge;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

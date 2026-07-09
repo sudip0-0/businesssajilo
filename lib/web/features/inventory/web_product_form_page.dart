@@ -31,7 +31,8 @@ class _WebProductFormPageState extends ConsumerState<WebProductFormPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final resolvedProduct = widget.product ??
+    final resolvedProduct =
+        widget.product ??
         (widget.productId != null
             ? ref.watch(productDetailProvider(widget.productId!)).value
             : null);
@@ -54,9 +55,7 @@ class _WebProductFormPageState extends ConsumerState<WebProductFormPage> {
         OutlinedButton.icon(
           onPressed: () {
             if (isEdit) {
-              context.go(
-                '${widget.inventoryListPath}/${resolvedProduct.id}',
-              );
+              context.go('${widget.inventoryListPath}/${resolvedProduct.id}');
             } else {
               context.go(widget.inventoryListPath);
             }

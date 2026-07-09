@@ -53,8 +53,9 @@ class PushService {
     await _tokens.upsert(memberId: memberId, token: token);
 
     // Re-upsert whenever FCM rotates the token.
-    _tokenRefreshSub ??=
-        FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    _tokenRefreshSub ??= FirebaseMessaging.instance.onTokenRefresh.listen((
+      newToken,
+    ) async {
       final member = _currentMemberId;
       if (member == null || newToken.isEmpty) return;
       _currentToken = newToken;
@@ -77,8 +78,7 @@ class PushService {
     );
 
     // Background -> foreground via notification tap.
-    _openedAppSub ??=
-        FirebaseMessaging.onMessageOpenedApp.listen(_dispatchTap);
+    _openedAppSub ??= FirebaseMessaging.onMessageOpenedApp.listen(_dispatchTap);
 
     // Foreground messages: show in-app banner via the registered callback.
     _foregroundSub ??= FirebaseMessaging.onMessage.listen((message) {

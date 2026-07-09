@@ -23,7 +23,8 @@ class WebMasterDetail extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final tokens = context.webTokens;
     final compact = context.isWebCompact;
-    final paneWidth = listWidth ??
+    final paneWidth =
+        listWidth ??
         (context.isWebWide ? tokens.wideListPaneWidth : tokens.listPaneWidth);
 
     if (compact) {
@@ -36,13 +37,14 @@ class WebMasterDetail extends StatelessWidget {
         SizedBox(width: paneWidth, child: list),
         const VerticalDivider(width: 1),
         Expanded(
-          child: detail ??
+          child:
+              detail ??
               Center(
                 child: Text(
                   l10n.selectItem,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ),
         ),

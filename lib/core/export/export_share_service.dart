@@ -7,7 +7,7 @@ import 'csv_writer.dart';
 
 class ExportShareService {
   const ExportShareService({CsvWriter? csvWriter})
-      : _csvWriter = csvWriter ?? const CsvWriter();
+    : _csvWriter = csvWriter ?? const CsvWriter();
 
   final CsvWriter _csvWriter;
 
@@ -18,12 +18,12 @@ class ExportShareService {
   }) async {
     final csv = _csvWriter.build(rows);
     final bytes = Uint8List.fromList(_csvWriter.encodeUtf8(csv));
-    await Share.shareXFiles(
-      [XFile.fromData(bytes, name: filename, mimeType: 'text/csv')],
-      subject: subject,
-    );
+    await Share.shareXFiles([
+      XFile.fromData(bytes, name: filename, mimeType: 'text/csv'),
+    ], subject: subject);
   }
 }
 
-final exportShareServiceProvider =
-    Provider<ExportShareService>((ref) => const ExportShareService());
+final exportShareServiceProvider = Provider<ExportShareService>(
+  (ref) => const ExportShareService(),
+);

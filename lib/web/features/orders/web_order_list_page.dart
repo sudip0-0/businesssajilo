@@ -63,8 +63,9 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     final ordersAsync = widget.ownOnly
         ? ref.watch(ownOrderListProvider)
         : ref.watch(orderQueueProvider);
-    final ordersProvider =
-        widget.ownOnly ? ownOrderListProvider : orderQueueProvider;
+    final ordersProvider = widget.ownOnly
+        ? ownOrderListProvider
+        : orderQueueProvider;
     final selectedId = widget.selectedOrderId;
 
     return WebPageScaffold(
@@ -98,8 +99,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                           ? l10n.noSearchResults
                           : l10n.noOrders,
                       icon: PhosphorIconsRegular.shoppingCart,
-                      actionLabel:
-                          _query.isNotEmpty ? l10n.clearSearch : null,
+                      actionLabel: _query.isNotEmpty ? l10n.clearSearch : null,
                       onAction: _query.isNotEmpty
                           ? () => setState(() => _query = '')
                           : null,
@@ -141,8 +141,9 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                                   Text(order.customerShopName ?? '—'),
                                   Text(
                                     dateStr,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ],
                               ),

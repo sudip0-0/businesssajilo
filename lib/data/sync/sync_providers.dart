@@ -31,8 +31,9 @@ SyncBundle? _activeBundle;
 /// Bumped whenever the active bundle changes, so [syncBundleProvider] can be
 /// refreshed from the auth notifier without `ref.invalidate` (which riverpod
 /// flags as a circular dependency).
-final syncBundleVersionProvider =
-    NotifierProvider<SyncBundleVersion, int>(SyncBundleVersion.new);
+final syncBundleVersionProvider = NotifierProvider<SyncBundleVersion, int>(
+  SyncBundleVersion.new,
+);
 
 class SyncBundleVersion extends Notifier<int> {
   @override
@@ -81,18 +82,20 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
     final state = !online
         ? SyncState.offline
         : pending > 0
-            ? SyncState.pending
-            : SyncState.synced;
+        ? SyncState.pending
+        : SyncState.synced;
     if (controller.isClosed) return;
     controller.add(
       SyncStatus(state: state, pendingCount: pending, failedCount: failed),
     );
   }
 
-  final queueSub =
-      bundle.db.watchUnsyncedQueue().listen((_) => unawaited(emit()));
-  final connectivitySub =
-      Connectivity().onConnectivityChanged.listen((_) => unawaited(emit()));
+  final queueSub = bundle.db.watchUnsyncedQueue().listen(
+    (_) => unawaited(emit()),
+  );
+  final connectivitySub = Connectivity().onConnectivityChanged.listen(
+    (_) => unawaited(emit()),
+  );
   unawaited(emit());
 
   ref.onDispose(() {

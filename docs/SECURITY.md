@@ -41,7 +41,7 @@ Configured in `supabase/config.toml` under `[auth.rate_limit]` (email sign-up, s
 - [ ] Rotate Supabase anon/service keys; use `--dart-define` in CI only via secrets
 - [ ] Enable leaked password protection and email confirmation in prod Auth settings
 - [ ] Enable captcha (Turnstile) on prod Auth — see commented `[auth.captcha]` in `config.toml`; local stays captcha-free for tests
-- [ ] Set `ALLOWED_ORIGIN` env on all Edge Functions in prod (restricts CORS to app origins)
+- [ ] Set `ALLOWED_ORIGIN` env on all Edge Functions in prod (required at boot; unset fails closed — see `supabase/README.md`)
 - [ ] Configure prod SMTP so password-reset emails deliver (site_url + redirect URLs)
 - [ ] Review storage bucket policies after any migration
 - [ ] Run full `supabase test db` before each release

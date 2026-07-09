@@ -53,8 +53,8 @@ class WebFormCard extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: BsColors.outline,
-                            ),
+                          color: BsColors.outline,
+                        ),
                       ),
                     ],
                   ],
@@ -64,10 +64,7 @@ class WebFormCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           ...children,
-          if (footer != null) ...[
-            const SizedBox(height: 24),
-            footer!,
-          ],
+          if (footer != null) ...[const SizedBox(height: 24), footer!],
         ],
       ),
     );
@@ -86,10 +83,10 @@ class WebFormSectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: BsColors.outline,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w600,
-            ),
+          color: BsColors.outline,
+          letterSpacing: 1.2,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -157,9 +154,9 @@ class WebInfoTipCard extends StatelessWidget {
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: BsColors.textCharcoal,
-                    height: 1.4,
-                  ),
+                color: BsColors.textCharcoal,
+                height: 1.4,
+              ),
             ),
           ),
         ],

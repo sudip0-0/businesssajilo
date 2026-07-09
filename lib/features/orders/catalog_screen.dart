@@ -13,7 +13,9 @@ import '../../web/ui/web_sheet_bridge.dart';
 import 'cart_sheet.dart';
 import 'providers.dart';
 
-final catalogListProvider = FutureProvider.autoDispose<List<CatalogProduct>>((ref) {
+final catalogListProvider = FutureProvider.autoDispose<List<CatalogProduct>>((
+  ref,
+) {
   return ref.watch(catalogRepositoryProvider).list();
 });
 
@@ -41,49 +43,49 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
 
     return Column(
       children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: l10n.filterProducts,
-                prefixIcon: const Icon(Icons.search),
-              ),
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: l10n.filterProducts,
+              prefixIcon: const Icon(Icons.search),
             ),
+            onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
           ),
-          Expanded(
-            child: catalogAsync.when(
-              loading: () => const ListSkeleton(),
-              error: (e, _) => ErrorState(
-                message: l10n.loadingFailed,
-                onRetry: () => ref.invalidate(catalogListProvider),
-              ),
-              data: (products) {
-                final filtered = products.where((p) {
-                  if (_query.isEmpty) return true;
-                  return p.name.toLowerCase().contains(_query) ||
-                      (p.sku?.toLowerCase().contains(_query) ?? false) ||
-                      (p.nameNp?.contains(_query) ?? false);
-                }).toList();
+        ),
+        Expanded(
+          child: catalogAsync.when(
+            loading: () => const ListSkeleton(),
+            error: (e, _) => ErrorState(
+              message: l10n.loadingFailed,
+              onRetry: () => ref.invalidate(catalogListProvider),
+            ),
+            data: (products) {
+              final filtered = products.where((p) {
+                if (_query.isEmpty) return true;
+                return p.name.toLowerCase().contains(_query) ||
+                    (p.sku?.toLowerCase().contains(_query) ?? false) ||
+                    (p.nameNp?.contains(_query) ?? false);
+              }).toList();
 
-                if (filtered.isEmpty) {
-                  return RefreshIndicator(
-                    onRefresh: () async => ref.invalidate(catalogListProvider),
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        EmptyState(
-                          icon: Icons.storefront_outlined,
-                          message: l10n.emptyCatalog,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
+              if (filtered.isEmpty) {
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(catalogListProvider),
-                  child: ListView.separated(
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      EmptyState(
+                        icon: Icons.storefront_outlined,
+                        message: l10n.emptyCatalog,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async => ref.invalidate(catalogListProvider),
+                child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: filtered.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -112,18 +114,20 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                                 }),
                               )
                             : IconButton(
-                                icon: const Icon(Icons.add_shopping_cart_outlined),
+                                icon: const Icon(
+                                  Icons.add_shopping_cart_outlined,
+                                ),
                                 onPressed: () => _addToCart(product),
                                 tooltip: l10n.addToCart,
                               ),
                       ),
                     );
                   },
-                  ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
+        ),
         if (_cartCount > 0)
           Padding(
             padding: const EdgeInsets.all(16),

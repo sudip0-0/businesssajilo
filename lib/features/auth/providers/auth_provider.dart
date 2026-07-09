@@ -9,8 +9,9 @@ import '../../../data/repositories/auth_repository.dart';
 import '../../../data/sync/sync_providers.dart';
 import '../../../domain/models/session_state.dart';
 
-final authProvider =
-    NotifierProvider<AuthController, AsyncValue<SessionState>>(AuthController.new);
+final authProvider = NotifierProvider<AuthController, AsyncValue<SessionState>>(
+  AuthController.new,
+);
 
 class AuthController extends Notifier<AsyncValue<SessionState>> {
   StreamSubscription<dynamic>? _subscription;
@@ -60,7 +61,9 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   Future<void> signIn(String identifier, String password) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(authRepositoryProvider).signIn(
+      await ref
+          .read(authRepositoryProvider)
+          .signIn(
             email: loginEmailForIdentifier(identifier),
             password: password,
           );
@@ -72,7 +75,9 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   }
 
   Future<void> sendPasswordResetEmail(String email) {
-    return ref.read(authRepositoryProvider).sendPasswordResetEmail(email.trim());
+    return ref
+        .read(authRepositoryProvider)
+        .sendPasswordResetEmail(email.trim());
   }
 
   /// Sets a new password for the signed-in member and refreshes the session
@@ -90,9 +95,9 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     } catch (e) {
       debugPrint('Push unregister failed: $e');
     }
-    await ref.read(authRepositoryProvider).deleteAccount(
-          deleteBusiness: deleteBusiness,
-        );
+    await ref
+        .read(authRepositoryProvider)
+        .deleteAccount(deleteBusiness: deleteBusiness);
     await disposeSyncBundle();
     ref.read(syncBundleVersionProvider.notifier).bump();
     state = const AsyncValue.data(SessionState.empty);

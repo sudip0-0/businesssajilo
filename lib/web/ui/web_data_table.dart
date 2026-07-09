@@ -194,11 +194,9 @@ class _WebHoverableRowState extends State<WebHoverableRow> {
           color: widget.selected
               ? BsColors.primary.withValues(alpha: 0.06)
               : _hovered
-                  ? BsColors.rowHover
-                  : null,
-          border: const Border(
-            bottom: BorderSide(color: BsColors.border),
-          ),
+              ? BsColors.rowHover
+              : null,
+          border: const Border(bottom: BorderSide(color: BsColors.border)),
         ),
         child: Material(
           color: Colors.transparent,

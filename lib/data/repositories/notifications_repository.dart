@@ -4,8 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/models/notification_item.dart';
 import '../remote/supabase_provider.dart';
 
-final notificationsRepositoryProvider =
-    Provider<NotificationsRepository>((ref) {
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((
+  ref,
+) {
   return NotificationsRepository(ref.watch(supabaseClientProvider));
 });
 
@@ -32,9 +33,7 @@ class NotificationsRepository {
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false)
         .map(
-          (rows) => rows
-              .map((row) => NotificationItem.fromJson(row))
-              .toList(),
+          (rows) => rows.map((row) => NotificationItem.fromJson(row)).toList(),
         );
   }
 

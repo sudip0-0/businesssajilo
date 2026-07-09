@@ -51,10 +51,10 @@ class _ReturnLine {
   int qty = 0;
 
   int get proratedDiscount => proratedLineDiscountPaisa(
-        originalDiscountPaisa: discount,
-        originalQty: originalQty,
-        returnedQty: qty,
-      );
+    originalDiscountPaisa: discount,
+    originalQty: originalQty,
+    returnedQty: qty,
+  );
 
   int get lineTotal => qty > 0
       ? lineTotalPaisa(
@@ -78,18 +78,21 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
   }
 
   List<_ReturnLine> _buildLines(Map<String, int> returned) {
-    return widget.bill.items.map((item) {
-      final already = returned[item.id] ?? 0;
-      final remaining = item.qty - already;
-      return _ReturnLine(
-        billItemId: item.id,
-        name: item.nameSnapshot,
-        maxQty: remaining,
-        originalQty: item.qty,
-        rate: item.rate,
-        discount: item.discount,
-      );
-    }).where((line) => line.maxQty > 0).toList();
+    return widget.bill.items
+        .map((item) {
+          final already = returned[item.id] ?? 0;
+          final remaining = item.qty - already;
+          return _ReturnLine(
+            billItemId: item.id,
+            name: item.nameSnapshot,
+            maxQty: remaining,
+            originalQty: item.qty,
+            rate: item.rate,
+            discount: item.discount,
+          );
+        })
+        .where((line) => line.maxQty > 0)
+        .toList();
   }
 
   Future<void> _submit() async {
@@ -97,24 +100,24 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
     final lines = _lines ?? [];
     final selected = lines.where((line) => line.qty > 0).toList();
     if (selected.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.noReturnableQty)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.noReturnableQty)));
       return;
     }
     if (selected.any((line) => line.qty > line.maxQty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.returnQtyExceeds)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.returnQtyExceeds)));
       return;
     }
 
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity.contains(ConnectivityResult.none)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.returnsOnlineOnly)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.returnsOnlineOnly)));
       }
       return;
     }
@@ -124,7 +127,9 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
 
     setState(() => _loading = true);
     try {
-      final note = await ref.read(creditNotesRepositoryProvider).create(
+      final note = await ref
+          .read(creditNotesRepositoryProvider)
+          .create(
             billId: widget.bill.id,
             createdByMemberId: memberId,
             restock: _restock,

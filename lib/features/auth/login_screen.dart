@@ -42,12 +42,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).signIn(
-            _emailController.text,
-            _passwordController.text,
-          );
+      await ref
+          .read(authProvider.notifier)
+          .signIn(_emailController.text, _passwordController.text);
     } catch (e) {
-      setState(() => _error = localizeAuthError(e, AppLocalizations.of(context)));
+      setState(
+        () => _error = localizeAuthError(e, AppLocalizations.of(context)),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -75,25 +76,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.storefront,
-                        size: 56, color: BsColors.primary),
+                    const Icon(
+                      Icons.storefront,
+                      size: 56,
+                      color: BsColors.primary,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       l10n.appTitle,
                       textAlign: TextAlign.center,
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: BsColors.primary,
-                              ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: BsColors.primary,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       l10n.tagline,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const LocaleToggle(fullWidth: true),

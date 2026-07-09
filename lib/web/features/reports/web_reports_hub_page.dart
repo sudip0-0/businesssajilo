@@ -109,10 +109,8 @@ class WebReportsHubPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       salesWeek.when(
-                        data: (points) => BsSalesLineChart(
-                          points: points,
-                          height: 200,
-                        ),
+                        data: (points) =>
+                            BsSalesLineChart(points: points, height: 200),
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
                         error: (_, _) => Text(l10n.loadingFailed),
@@ -217,9 +215,9 @@ class _ReportNavCard extends StatelessWidget {
                 Text(title, style: Theme.of(context).textTheme.titleSmall),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: BsColors.outline,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
                 ),
               ],
             ),

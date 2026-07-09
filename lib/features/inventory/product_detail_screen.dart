@@ -19,10 +19,10 @@ import '../../web/ui/web_sheet_bridge.dart';
 import 'stock_adjust_sheet.dart';
 import 'stock_in_sheet.dart';
 
-final movementListProvider =
-    FutureProvider.autoDispose.family<List<StockMovement>, String>((ref, productId) {
-  return ref.watch(stockRepositoryProvider).listMovements(productId);
-});
+final movementListProvider = FutureProvider.autoDispose
+    .family<List<StockMovement>, String>((ref, productId) {
+      return ref.watch(stockRepositoryProvider).listMovements(productId);
+    });
 
 class ProductDetailScreen extends ConsumerWidget {
   const ProductDetailScreen({
@@ -75,7 +75,10 @@ class ProductDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(product.name, style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        product.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                       if (product.nameNp != null) Text(product.nameNp!),
                       const SizedBox(height: 8),
                       StockBadge(product: product),
@@ -85,7 +88,8 @@ class ProductDetailScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            if (product.sku != null) ListTile(title: Text(l10n.sku), trailing: Text(product.sku!)),
+            if (product.sku != null)
+              ListTile(title: Text(l10n.sku), trailing: Text(product.sku!)),
             ListTile(title: Text(l10n.unit), trailing: Text(product.unit)),
             ListTile(
               title: Text(l10n.costPrice),
@@ -118,7 +122,10 @@ class ProductDetailScreen extends ConsumerWidget {
               ),
             ],
             const SizedBox(height: 16),
-            Text(l10n.movementHistory, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.movementHistory,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             movementsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -171,7 +178,11 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _stockIn(BuildContext context, WidgetRef ref, String productId) async {
+  Future<void> _stockIn(
+    BuildContext context,
+    WidgetRef ref,
+    String productId,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final saved = await showAdaptiveSheet<bool>(
       context: context,
@@ -186,7 +197,11 @@ class ProductDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _adjust(BuildContext context, WidgetRef ref, String productId) async {
+  Future<void> _adjust(
+    BuildContext context,
+    WidgetRef ref,
+    String productId,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final saved = await showAdaptiveSheet<bool>(
       context: context,
@@ -213,8 +228,14 @@ class ProductDetailScreen extends ConsumerWidget {
         title: Text(l10n.deactivateProduct),
         content: Text(l10n.deactivateProductConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.deactivate)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.deactivate),
+          ),
         ],
       ),
     );
@@ -240,7 +261,9 @@ class _MovementTile extends StatelessWidget {
       StockMovementType.return_ => l10n.movementTypeReturn,
     };
     final sign = movement.qtyDelta > 0 ? '+' : '';
-    final when = movement.createdAt != null ? BsDate.both(movement.createdAt!) : '';
+    final when = movement.createdAt != null
+        ? BsDate.both(movement.createdAt!)
+        : '';
 
     return ListTile(
       leading: Icon(

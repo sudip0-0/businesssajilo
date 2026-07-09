@@ -10,7 +10,8 @@ String syncEntityLabel(AppLocalizations l10n, String entityType) =>
       _ => entityType,
     };
 
-String syncStatusLabel(AppLocalizations l10n, String status) => switch (status) {
+String syncStatusLabel(AppLocalizations l10n, String status) =>
+    switch (status) {
       'pending' => l10n.syncStatusPending,
       'failed' => l10n.syncStatusFailed,
       'synced' => l10n.syncStatusSynced,

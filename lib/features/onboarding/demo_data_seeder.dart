@@ -55,7 +55,8 @@ class DemoDataSeeder {
 
     final customersRepo = _ref.read(customersRepositoryProvider);
     await customersRepo.createWithCredentials(
-      email: 'demo-customer-${DateTime.now().millisecondsSinceEpoch}@demo.local',
+      email:
+          'demo-customer-${DateTime.now().millisecondsSinceEpoch}@demo.local',
       password: 'DemoPass123!',
       displayName: 'Ram Store',
       shopName: 'Ram Store',

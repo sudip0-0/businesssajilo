@@ -15,9 +15,9 @@ class SyncingPaymentsRepository implements PaymentsRepository {
     required AppDatabase db,
     required SyncService sync,
     required String businessId,
-  })  : _db = db,
-        _sync = sync,
-        _businessId = businessId;
+  }) : _db = db,
+       _sync = sync,
+       _businessId = businessId;
 
   final AppDatabase _db;
   final SyncService _sync;
@@ -26,10 +26,11 @@ class SyncingPaymentsRepository implements PaymentsRepository {
 
   @override
   Future<List<Payment>> listByCustomer(String customerId) async {
-    final rows = await (_db.select(_db.localPayments)
-          ..where((p) => p.customerId.equals(customerId))
-          ..orderBy([(p) => OrderingTerm.desc(p.createdAt)]))
-        .get();
+    final rows =
+        await (_db.select(_db.localPayments)
+              ..where((p) => p.customerId.equals(customerId))
+              ..orderBy([(p) => OrderingTerm.desc(p.createdAt)]))
+            .get();
     return rows.map(mapLocalPayment).toList();
   }
 
@@ -46,19 +47,21 @@ class SyncingPaymentsRepository implements PaymentsRepository {
   }) async {
     final paymentId = id ?? _uuid.v4();
     await _db.transaction(() async {
-      await _db.into(_db.localPayments).insert(
-        LocalPaymentsCompanion.insert(
-          id: paymentId,
-          businessId: _businessId,
-          customerId: customerId,
-          billId: Value(billId),
-          amount: amount,
-          method: method.name,
-          refNote: Value(refNote),
-          receivedBy: receivedByMemberId,
-          syncStatus: const Value('pending'),
-        ),
-      );
+      await _db
+          .into(_db.localPayments)
+          .insert(
+            LocalPaymentsCompanion.insert(
+              id: paymentId,
+              businessId: _businessId,
+              customerId: customerId,
+              billId: Value(billId),
+              amount: amount,
+              method: method.name,
+              refNote: Value(refNote),
+              receivedBy: receivedByMemberId,
+              syncStatus: const Value('pending'),
+            ),
+          );
 
       // Keep the cached balance consistent offline; the server-side balance
       // view overwrites it on the next pull.
@@ -89,8 +92,9 @@ class SyncingPaymentsRepository implements PaymentsRepository {
       unawaited(_sync.syncNow());
     }
     return mapLocalPayment(
-      await (_db.select(_db.localPayments)..where((p) => p.id.equals(paymentId)))
-          .getSingle(),
+      await (_db.select(
+        _db.localPayments,
+      )..where((p) => p.id.equals(paymentId))).getSingle(),
     );
   }
 

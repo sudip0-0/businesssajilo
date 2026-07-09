@@ -23,9 +23,7 @@ class NotificationBellAction extends ConsumerWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => const NotificationListScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const NotificationListScreen()),
         );
       },
     );

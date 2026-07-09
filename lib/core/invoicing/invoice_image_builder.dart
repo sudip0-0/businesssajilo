@@ -8,7 +8,7 @@ import 'invoice_pdf_builder.dart';
 /// Renders invoice PDF first page to PNG for WhatsApp sharing.
 class InvoiceImageBuilder {
   const InvoiceImageBuilder({InvoicePdfBuilder? pdfBuilder})
-      : _pdfBuilder = pdfBuilder ?? const InvoicePdfBuilder();
+    : _pdfBuilder = pdfBuilder ?? const InvoicePdfBuilder();
 
   final InvoicePdfBuilder _pdfBuilder;
 

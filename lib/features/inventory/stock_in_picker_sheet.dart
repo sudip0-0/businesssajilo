@@ -23,7 +23,10 @@ class StockInPickerSheet extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(l10n.stockIn, style: Theme.of(context).textTheme.titleLarge),
+            child: Text(
+              l10n.stockIn,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
           ),
           Expanded(
             child: productsAsync.when(

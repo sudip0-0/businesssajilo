@@ -19,10 +19,7 @@ class WebFulfillmentPage extends StatelessWidget {
         hasSelection: selectedOrderId != null,
         list: const FulfillmentListScreen(),
         detail: selectedOrderId != null
-            ? OrderDetailScreen(
-                orderId: selectedOrderId!,
-                embedded: true,
-              )
+            ? OrderDetailScreen(orderId: selectedOrderId!, embedded: true)
             : null,
       ),
     );

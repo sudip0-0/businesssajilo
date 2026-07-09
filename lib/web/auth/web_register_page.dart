@@ -50,7 +50,9 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).registerBusiness(
+      await ref
+          .read(authProvider.notifier)
+          .registerBusiness(
             email: _emailController.text,
             password: _passwordController.text,
             displayName: _displayNameController.text,
@@ -59,11 +61,14 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                 ? null
                 : _businessNameNpController.text,
             phone: _phoneController.text.isEmpty ? null : _phoneController.text,
-            address:
-                _addressController.text.isEmpty ? null : _addressController.text,
+            address: _addressController.text.isEmpty
+                ? null
+                : _addressController.text,
           );
     } catch (e) {
-      setState(() => _error = localizeAuthError(e, AppLocalizations.of(context)));
+      setState(
+        () => _error = localizeAuthError(e, AppLocalizations.of(context)),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -81,50 +86,50 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
       body: compact
           ? _buildFormOnly(context, l10n, locale)
           : Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Container(
-              color: BsColors.primary,
-              padding: const EdgeInsets.all(48),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(BsRadii.lg),
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: Container(
+                    color: BsColors.primary,
+                    padding: const EdgeInsets.all(48),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(BsRadii.lg),
+                          ),
+                          child: Icon(
+                            PhosphorIconsRegular.buildings,
+                            size: 28,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Text(
+                          l10n.registerBusiness,
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.tagline,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                        ),
+                      ],
                     ),
-                    child: Icon(PhosphorIconsRegular.buildings,
-                        size: 28, color: Colors.white),
                   ),
-                  const SizedBox(height: 32),
-                  Text(
-                    l10n.registerBusiness,
-                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                          color: Colors.white,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.tagline,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                  ),
-                ],
-              ),
+                ),
+                Expanded(flex: 5, child: _buildFormOnly(context, l10n, locale)),
+              ],
             ),
-          ),
-          Expanded(
-            flex: 5,
-            child: _buildFormOnly(context, l10n, locale),
-          ),
-        ],
-      ),
     );
   }
 
@@ -152,9 +157,8 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                   children: [
                     Text(
                       l10n.registerBusiness,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: BsColors.textCharcoal,
-                          ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(color: BsColors.textCharcoal),
                     ),
                     const SizedBox(height: 20),
                     SegmentedButton<String>(
@@ -181,8 +185,9 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     TextFormField(
                       controller: _businessNameNpController,
                       style: const TextStyle(color: BsColors.text),
-                      decoration:
-                          InputDecoration(labelText: l10n.businessNameNp),
+                      decoration: InputDecoration(
+                        labelText: l10n.businessNameNp,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -280,9 +285,8 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                       children: [
                         Text(
                           l10n.hasAccount,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: BsColors.outline,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: BsColors.outline),
                         ),
                         TextButton(
                           onPressed: () => context.go('/login'),
