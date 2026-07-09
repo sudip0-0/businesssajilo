@@ -54,7 +54,7 @@ supabase test db               # RLS policy tests
 
 ## Status
 
-Phases 0–10 complete: full v1 (auth/roles, inventory, ledger, billing, orders/quotes/chat, notifications, offline sync, reports, release polish) plus credit notes, invoice PDF/image export, and report CSV export. Current work: Phase 11 — Launch Hardening (password reset, phone login, account deletion, reorder, statement share, registration captcha) — see [tasks.md](tasks.md).
+Phases 0–11 complete for app features (auth/roles, inventory, ledger, billing, orders/quotes/chat, notifications, offline sync, reports, credit notes, invoice/statement export, launch hardening flows). Store listing copy is drafted; production Auth/captcha/SMTP and web FCM remain ops checklist items — see [tasks.md](tasks.md) and [docs/SECURITY.md](docs/SECURITY.md).
 
 ## License
 

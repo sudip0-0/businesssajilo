@@ -3,7 +3,7 @@
 ## Row Level Security (RLS)
 
 - All tenant tables use `FORCE ROW LEVEL SECURITY` with `current_business_id()` and `current_role_name()` helpers.
-- pgTAP suite in `supabase/tests/` covers phases 1–8 plus storage and cross-tenant isolation.
+- pgTAP suite in `supabase/tests/` (15 files): phases 1–8, phase 10 hardening, phase 11 credit notes, phase 12 launch hardening, phase 13 business logic, phase 15 dues-aging RPC, plus `rls_cross_tenant_test.sql` and `rls_storage_test.sql`.
 - Run locally: `supabase test db`
 
 ## Storage
@@ -28,6 +28,8 @@ Configured in `supabase/config.toml` under `[auth.rate_limit]` (email sign-up, s
   whole tenant including storage folders and auth users.
 - `notify` — service role / webhook triggered.
 
+All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `supabase/README.md`).
+
 ## Passwords & account recovery
 
 - Minimum password length 8 (`config.toml` + client validators).
@@ -35,6 +37,11 @@ Configured in `supabase/config.toml` under `[auth.rate_limit]` (email sign-up, s
 - Owner-initiated member resets force a password change on next login
   (router blocks the app until `must_change_password` clears via the
   `clear_must_change_password` RPC).
+
+## Push (web)
+
+- Mobile FCM works when Firebase dart-defines are configured.
+- Web uses stub `web/firebase-messaging-sw.js` until a real Firebase web config is deployed; do not treat web push as production-ready until that stub is replaced.
 
 ## Production checklist
 
@@ -45,3 +52,4 @@ Configured in `supabase/config.toml` under `[auth.rate_limit]` (email sign-up, s
 - [ ] Configure prod SMTP so password-reset emails deliver (site_url + redirect URLs)
 - [ ] Review storage bucket policies after any migration
 - [ ] Run full `supabase test db` before each release
+- [ ] Replace web FCM stub with generated Firebase messaging service worker when enabling web push

@@ -56,7 +56,11 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     _pager = PaginatedListState<Customer>(
       loadPage: (offset, limit) => ref
           .read(customersRepositoryProvider)
-          .list(offset: offset, limit: limit),
+          .list(
+            offset: offset,
+            limit: limit,
+            query: _query.isEmpty ? null : _query,
+          ),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -72,14 +76,11 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     super.dispose();
   }
 
-  List<Customer> get _filtered {
-    final items = _pager?.items ?? [];
-    return items.where((c) {
-      if (_query.isEmpty) return true;
-      return c.shopName.toLowerCase().contains(_query) ||
-          (c.contactName?.toLowerCase().contains(_query) ?? false) ||
-          (c.phone?.contains(_query) ?? false);
-    }).toList();
+  void _onQueryChanged(String value) {
+    final next = value.trim().toLowerCase();
+    if (next == _query) return;
+    setState(() => _query = next);
+    _pager?.refresh();
   }
 
   void _selectCustomer(Customer customer) {
@@ -113,8 +114,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: WebSearchField(
                 hint: l10n.filterCustomers,
-                onChanged: (v) =>
-                    setState(() => _query = v.trim().toLowerCase()),
+                onChanged: _onQueryChanged,
               ),
             ),
             Expanded(child: _buildListBody(l10n, pager)),
@@ -147,8 +147,8 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
         icon: PhosphorIconsRegular.warning,
       );
     }
-    final filtered = _filtered;
-    if (filtered.isEmpty) {
+    final items = pager.items;
+    if (items.isEmpty) {
       final searching = _query.isNotEmpty;
       return WebEmptyState(
         message: searching ? l10n.noSearchResults : l10n.noCustomers,
@@ -157,7 +157,10 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
             ? l10n.clearSearch
             : (widget.canEdit ? l10n.addCustomer : null),
         onAction: searching
-            ? () => setState(() => _query = '')
+            ? () {
+                setState(() => _query = '');
+                pager.refresh();
+              }
             : (widget.canEdit
                   ? () => context.go('${_webRolePrefix(context)}/customers/new')
                   : null),
@@ -171,10 +174,10 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
       },
       child: ListView.separated(
         controller: _scrollController,
-        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+        itemCount: items.length + (pager.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: 0),
         itemBuilder: (context, index) {
-          if (index >= filtered.length) {
+          if (index >= items.length) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
@@ -187,7 +190,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
               ),
             );
           }
-          final customer = filtered[index];
+          final customer = items[index];
           return _CustomerRow(
             customer: customer,
             selected: widget.selectedCustomerId == customer.id,

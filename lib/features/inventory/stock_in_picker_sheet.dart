@@ -14,7 +14,7 @@ class StockInPickerSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final productsAsync = ref.watch(productListProvider);
+    final productsAsync = ref.watch(productListProvider(''));
 
     return DraggableScrollableSheet(
       expand: false,

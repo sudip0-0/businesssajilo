@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/ledger_balance.dart';
 import '../../domain/enums.dart';
@@ -20,7 +20,7 @@ final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
 });
 
 abstract class CustomersRepository {
-  Future<List<Customer>> list({int offset = 0, int? limit});
+  Future<List<Customer>> list({int offset = 0, int? limit, String? query});
 
   /// Most recently created customers, capped for dashboards.
   Future<List<Customer>> listRecent({int limit = 2});
@@ -61,16 +61,26 @@ class SupabaseCustomersRepository implements CustomersRepository {
   final SupabaseClient? _client;
 
   @override
-  Future<List<Customer>> list({int offset = 0, int? limit}) async {
+  Future<List<Customer>> list({
+    int offset = 0,
+    int? limit,
+    String? query,
+  }) async {
     final client = _requireClient();
-    var query = client
-        .from('customer_balances')
-        .select()
-        .order('shop_name', ascending: true);
-    if (limit != null) {
-      query = query.range(offset, offset + limit - 1);
+    var filter = client.from('customer_balances').select();
+    final q = query?.trim();
+    if (q != null && q.isNotEmpty) {
+      // Commas break PostgREST `or` filter syntax.
+      final pattern = '%${q.replaceAll(',', '')}%';
+      filter = filter.or(
+        'shop_name.ilike.$pattern,contact_name.ilike.$pattern,phone.ilike.$pattern',
+      );
     }
-    final rows = await query;
+    var built = filter.order('shop_name', ascending: true);
+    if (limit != null) {
+      built = built.range(offset, offset + limit - 1);
+    }
+    final rows = await built;
     return (rows as List).map(_mapBalanceRow).toList();
   }
 

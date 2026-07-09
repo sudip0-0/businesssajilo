@@ -123,7 +123,8 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    final customersAsync = ref.watch(customerListProvider);
+    final searchQuery = _customerSearchController.text.trim();
+    final customersAsync = ref.watch(customerListProvider(searchQuery));
 
     // Prefill search label once customers load.
     customersAsync.whenData((customers) {
@@ -198,6 +199,8 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   data: (customers) => Autocomplete<Customer>(
                     displayStringForOption: (c) => c.shopName,
                     optionsBuilder: (textEditingValue) {
+                      // Provider already searched; keep a light client filter
+                      // for the Autocomplete keystroke before rebuild.
                       return _filterCustomers(customers, textEditingValue.text);
                     },
                     onSelected: (c) {
@@ -222,18 +225,20 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                               prefixIcon: const Icon(Icons.search),
                             ),
                             onChanged: (v) {
-                              _customerSearchController.text = v;
-                              // Clear selection if user edits away from match.
-                              if (_customerId != null) {
-                                final selected = customers
-                                    .where((c) => c.id == _customerId)
-                                    .firstOrNull;
-                                if (selected == null ||
-                                    selected.shopName.toLowerCase() !=
-                                        v.trim().toLowerCase()) {
-                                  setState(() => _customerId = null);
+                              setState(() {
+                                _customerSearchController.text = v;
+                                // Clear selection if user edits away from match.
+                                if (_customerId != null) {
+                                  final selected = customers
+                                      .where((c) => c.id == _customerId)
+                                      .firstOrNull;
+                                  if (selected == null ||
+                                      selected.shopName.toLowerCase() !=
+                                          v.trim().toLowerCase()) {
+                                    _customerId = null;
+                                  }
                                 }
-                              }
+                              });
                             },
                             onSubmitted: (_) => onFieldSubmitted(),
                           );

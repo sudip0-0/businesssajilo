@@ -66,7 +66,8 @@ Order states: `draft → placed → quoted → accepted | rejected → confirmed
 ### 5.3 Credit / Udharo & Ledger
 
 - Every customer has a running ledger: bills (debit), payments (credit).
-- Partial payments against any bill; payment methods recorded manually: cash, cheque, eSewa/Khalti/bank ref (no gateway integration in v1).
+- **Account-level** payment recording in v1 (optional `bill_id` exists in schema; UI does not allocate to a specific bill). Bill-level / oldest-first allocation is v1.2.
+- Payment methods recorded manually: cash, cheque, eSewa/Khalti/bank ref (no gateway integration in v1).
 - Outstanding dues visible to staff and to the customer in their own app.
 - Dues aging report for the owner.
 
@@ -98,7 +99,7 @@ Order states: `draft → placed → quoted → accepted | rejected → confirmed
 ## 7. Offline Strategy
 
 - **Staff apps (mobile): offline-first** for billing, payment recording, and stock operations. Local SQLite (Drift) with a sync queue; conflict policy = last-write-wins per field with audit log, stock movements are append-only events so they merge safely.
-- **Customer app: online-mostly** — catalog cached for browsing; placing orders, quotes, and chat require connectivity.
+- **Customer app: online-only** — catalog requires connectivity (no Drift cache in v1); placing orders, quotes, and chat also require connectivity.
 - **Web: online-only.**
 
 ## 8. Notifications
@@ -111,7 +112,7 @@ Flutter single codebase → Android, iOS, Web — shipped together. Responsive l
 
 ## 10. Monetization
 
-Free during launch. Architecture keeps a `subscription` concept on the business record (plan, status, limits) so feature-gating/billing can be added without remodeling.
+Free during launch. Schema includes `businesses.subscription_plan` so feature-gating/billing can be added later without remodeling; **no subscription UI or gating is implemented in v1**.
 
 ## 11. Non-Goals (v1)
 
@@ -126,7 +127,7 @@ Free during launch. Architecture keeps a `subscription` concept on the business 
 
 Already shipped from the original v1.1 scope: PDF/image invoices, sales returns (credit notes), report CSV export.
 
-1. **Launch hardening (pre-release)** — password reset, phone-number login, account deletion (store compliance), reorder from past order, shareable customer statement, registration captcha. See tasks.md Phase 11.
+1. **Launch hardening (pre-release)** — password reset, phone-number login, account deletion (store compliance), reorder from past order, shareable customer statement shipped in app; registration captcha / prod Auth hardening remain dashboard ops (see `docs/SECURITY.md`). See tasks.md Phase 11.
 2. **v1.2** — Bill-level payment allocation, quote expiry + stale-order nudges, dues reminders (push), last-quoted-rate memory; thermal print only if pilot users ask.
 3. **v1.3** — Price tiers per customer, supplier purchases + supplier ledger, multi-warehouse, unit conversions, batch/expiry.
 4. **v2** — Payment gateways, SMS reminders (Sparrow SMS), subscriptions/feature gating, sales-person performance & route planning, VAT billing mode.

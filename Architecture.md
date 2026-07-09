@@ -9,15 +9,15 @@
 | Backend | Supabase: Postgres, Auth, Realtime, Storage, Edge Functions |
 | Security | Postgres Row Level Security (RLS), role claims in JWT |
 | Push | Firebase Cloud Messaging (FCM), triggered from Edge Functions / DB webhooks |
-| PDF / printing (v1.1) | Flutter `pdf` package, ESC/POS for thermal |
+| PDF / share | Flutter `pdf` + `printing` + `share_plus` (invoice/statement PDF & image). Thermal/ESC/POS is backlog only. |
 
 ## 2. High-Level Diagram
 
 ```
- Flutter App (Android / iOS / Web)
- ├── Presentation (screens, role-aware routing)
- ├── Application (Riverpod controllers / use-cases)
- ├── Domain (entities, role/permission logic)
+ Flutter App (Android / iOS / Web; Windows runner for desktop-dev only)
+ ├── Presentation (feature screens + role-aware routing; web UI in lib/web/)
+ ├── Feature providers (Riverpod Notifier/AsyncNotifier — no separate application/ layer)
+ ├── Domain (entities, enums, permission helpers)
  └── Data
      ├── Remote: supabase_flutter (PostgREST, Realtime, Storage, Auth)
      └── Local: Drift (SQLite) + SyncQueue  ← mobile staff only
@@ -32,6 +32,8 @@
             │  Edge Functions         │──► FCM push
             └─────────────────────────┘
 ```
+
+There is **no** `lib/application/` use-case layer: feature providers and screens orchestrate repositories directly.
 
 ## 3. Multi-Tenancy & Security
 
@@ -64,7 +66,7 @@ bills(id, business_id, customer_id?, order_id?, bill_no, device_prefix, items_to
 bill_items(id, bill_id, product_id, name_snapshot, qty, rate, discount, line_total)
 payments(id, business_id, customer_id, bill_id?, amount, method[cash|cheque|wallet|bank],
          ref_note, received_by, created_at)
-ledger_entries(view/derived: bills as debit, payments as credit, running balance)
+customer_ledger_entries(view: bills/credit notes as debit, payments as credit, running balance)
 messages(id, order_id, business_id, sender_member_id, body, image_url?, created_at)
 notifications(id, business_id, recipient_member_id, type, payload, read_at, created_at)
 ```
@@ -107,42 +109,42 @@ Supabase Realtime channels (filtered by `business_id` / `order_id`) for: order s
 
 DB webhooks/triggers → Edge Function `notify` → FCM. Tokens stored per member/device in `device_tokens`. Notification fan-out rules derived from role + event type (see product.md §8).
 
+Web FCM uses a stub service worker (`web/firebase-messaging-sw.js`) until Firebase web config is wired for production; mobile push works when Firebase dart-defines are set.
+
 ## 8. Flutter Project Structure
 
 ```
 lib/
- ├── core/            # theme, l10n (EN/NP), BS date utils, formatters, error handling
+ ├── core/            # theme, l10n (EN/NP), BS date utils, formatters, invoicing, export
  ├── data/
  │   ├── local/       # drift db, daos, sync queue
  │   ├── remote/      # supabase data sources
- │   └── repositories/
- ├── domain/          # entities, enums (Role, OrderStatus), permission policy
- ├── features/
- │   ├── auth/  onboarding/  dashboard/
- │   ├── products/  inventory/
- │   ├── orders/  quotes/  chat/
- │   ├── billing/  payments/  ledger/
- │   ├── customers/  staff/
- │   └── reports/  notifications/  settings/
+ │   ├── repositories/
+ │   └── sync/        # sync_service, sync_puller, sync_pusher, cached/syncing wrappers
+ ├── domain/          # entities, enums (Role, OrderStatus), permission helpers
+ ├── features/        # mobile/native feature screens + Riverpod providers
+ ├── web/             # parallel web admin UI (router, shell, feature screens)
  └── app.dart, main.dart
 ```
 
 - Role-aware shell: after login, `go_router` redirects to role-specific home (owner dashboard, sales home, warehouse home, customer catalog).
 - Same codebase, conditional features by role + platform (e.g. sync layer only on mobile staff builds via repository injection).
-- Shared adaptive sheets live in `lib/core/ui/adaptive_sheet.dart`. Feature modules under `lib/features/` must not import `lib/web/` (web UI stays in `lib/web/`).
+- Shared adaptive sheets live in `lib/core/ui/adaptive_sheet.dart` (uses `core/ui/web_side_panel.dart`). Feature modules under `lib/features/` must not import `lib/web/` (web UI stays in `lib/web/`).
+- Windows desktop runner exists for local/integration testing only — not a shipped product platform.
 
 ## 9. Environments & CI/CD
 
 - Supabase projects: `dev` and `prod`. Migrations in repo (`supabase/migrations`), applied via Supabase CLI.
 - Flutter flavors: `dev`, `prod` (API URLs/keys via `--dart-define`).
-- CI (GitHub Actions): analyze + test on PR; build Android AAB, iOS IPA (Codemagic or macOS runner), and deploy web to Firebase Hosting/Vercel on tag.
+- CI (GitHub Actions `ci.yml`): `dart format`, `build_runner`, `flutter analyze`, `flutter test`, `supabase test db`; CanvasKit web build artifact on `main`.
+- Release (`release.yml` on `v*` tags): Android AAB + web build with prod dart-defines; optional Vercel deploy when secrets are set. iOS IPA is not in CI yet (manual / future Codemagic or macOS runner).
 
 ## 10. Key Risks & Mitigations
 
 | Risk | Mitigation |
 |---|---|
 | Offline bill number collisions | Device-prefixed provisional numbers, server assigns final sequence |
-| RLS policy mistakes leaking tenant data | Policy unit tests (pgTAP) + integration tests per role |
+| RLS policy mistakes leaking tenant data | Policy unit tests (pgTAP in `supabase/tests/`) + integration tests per role |
 | Flutter web perf for big tables | Paginated queries, CanvasKit renderer, virtualized lists |
 | Sync data loss | Append-only design, queue persisted in SQLite, idempotent upserts (client UUID PKs) |
-| Nepali font/date correctness | `nepali_utils` package for BS dates, Noto Sans Devanagari bundled |
+| Nepali font/date correctness | `nepali_utils` for BS dates; Inter + Noto Sans Devanagari bundled under `assets/fonts/` |

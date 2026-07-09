@@ -17,7 +17,7 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Login (email + password), session persistence, role in JWT app_metadata via trigger
 - ✅ Role-aware routing: 4 role home shells with bottom nav (warehouse has no billing)
 - ✅ Staff management screen (owner: list, add, deactivate members)
-- ✅ RLS test suite (`supabase test db` — 8 tests in `supabase/tests/rls_phase1_test.sql`)
+- ✅ RLS test suite (`supabase test db` — full suite in `supabase/tests/`: phases 1–8, 10–13, cross-tenant, storage)
 
 ## Phase 2 — Products & Inventory
 - ✅ DB: `categories`, `products`, `stock_movements`, `notifications` + stock_cached trigger + RLS + storage bucket
@@ -75,7 +75,8 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Empty states, error states, skeleton loaders everywhere
 - ✅ Performance pass (web CanvasKit, list virtualization, image caching)
 - ✅ Security review: RLS audit, rate limits, storage rules
-- ✅ Play Store + App Store listings, web deploy to prod
+- ✅ Play Store + App Store listing **copy drafted** (`docs/release/`); store submission / screenshots still manual
+- ✅ Release pipeline for web + Android AAB (`release.yml`); prod deploy requires secrets + manual verification
 - ✅ Onboarding tour + seed/demo data for new businesses
 
 ## Phase 10 — Post-v1 Increments (shipped)

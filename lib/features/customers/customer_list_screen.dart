@@ -47,7 +47,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     _pager = PaginatedListState<Customer>(
       loadPage: (offset, limit) => ref
           .read(customersRepositoryProvider)
-          .list(offset: offset, limit: limit),
+          .list(
+            offset: offset,
+            limit: limit,
+            query: _query.isEmpty ? null : _query,
+          ),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -63,14 +67,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     super.dispose();
   }
 
-  List<Customer> get _filtered {
-    final items = _pager?.items ?? [];
-    return items.where((c) {
-      if (_query.isEmpty) return true;
-      return c.shopName.toLowerCase().contains(_query) ||
-          (c.contactName?.toLowerCase().contains(_query) ?? false) ||
-          (c.phone?.contains(_query) ?? false);
-    }).toList();
+  void _onQueryChanged(String value) {
+    final next = value.trim().toLowerCase();
+    if (next == _query) return;
+    setState(() => _query = next);
+    _pager?.refresh();
   }
 
   @override
@@ -87,7 +88,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               hintText: l10n.filterCustomers,
               prefixIcon: const Icon(Icons.search),
             ),
-            onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+            onChanged: _onQueryChanged,
           ),
         ),
         Expanded(child: _buildListBody(l10n, pager)),
@@ -117,8 +118,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     if (pager.error != null && pager.items.isEmpty) {
       return ErrorState(onRetry: () => pager.refresh());
     }
-    final filtered = _filtered;
-    if (filtered.isEmpty) {
+    final items = pager.items;
+    if (items.isEmpty) {
       final searching = _query.trim().isNotEmpty;
       return EmptyState(
         icon: Icons.storefront_outlined,
@@ -127,7 +128,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
             ? l10n.clearSearch
             : (widget.canEdit ? l10n.addCustomer : null),
         onAction: searching
-            ? () => setState(() => _query = '')
+            ? () {
+                setState(() => _query = '');
+                pager.refresh();
+              }
             : (widget.canEdit ? () => _openAddCustomer(context) : null),
       );
     }
@@ -138,10 +142,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       },
       child: ListView.separated(
         controller: _scrollController,
-        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+        itemCount: items.length + (pager.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
-          if (index >= filtered.length) {
+          if (index >= items.length) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
@@ -154,7 +158,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               ),
             );
           }
-          final customer = filtered[index];
+          final customer = items[index];
           return _CustomerTile(
             customer: customer,
             selected: _selectedCustomerId == customer.id,

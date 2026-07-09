@@ -15,13 +15,21 @@ class SupabaseProductsRepository implements ProductsRepository {
     bool activeOnly = true,
     int offset = 0,
     int? limit,
+    String? query,
   }) async {
     final client = _requireClient();
-    var query = client.from('products').select('*, categories(name)');
+    var built = client.from('products').select('*, categories(name)');
     if (activeOnly) {
-      query = query.eq('is_active', true);
+      built = built.eq('is_active', true);
     }
-    var ordered = query.order('name', ascending: true);
+    final q = query?.trim();
+    if (q != null && q.isNotEmpty) {
+      final pattern = '%${q.replaceAll(',', '')}%';
+      built = built.or(
+        'name.ilike.$pattern,sku.ilike.$pattern,name_np.ilike.$pattern',
+      );
+    }
+    var ordered = built.order('name', ascending: true);
     if (limit != null) {
       ordered = ordered.range(offset, offset + limit - 1);
     }

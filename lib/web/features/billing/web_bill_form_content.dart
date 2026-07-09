@@ -144,25 +144,20 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final productsAsync = ref.watch(productListProvider);
-    final customersAsync = ref.watch(customerListProvider);
+    final productsAsync = ref.watch(productListProvider(_productQuery));
+    final customersAsync = ref.watch(customerListProvider(''));
     final today = DateFormat.yMMMd().format(DateTime.now());
 
     return productsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorState(
         message: l10n.loadingFailed,
-        onRetry: () => ref.invalidate(productListProvider),
+        onRetry: () => ref.invalidate(productListProvider(_productQuery)),
       ),
       data: (products) {
-        final suggestions = products
-            .where((p) {
-              if (_productQuery.isEmpty) return false;
-              return p.name.toLowerCase().contains(_productQuery) ||
-                  (p.sku?.toLowerCase().contains(_productQuery) ?? false);
-            })
-            .take(8)
-            .toList();
+        final suggestions = _productQuery.isEmpty
+            ? const <Product>[]
+            : products.take(8).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

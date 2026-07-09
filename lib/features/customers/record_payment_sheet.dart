@@ -98,7 +98,7 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
     final customersAsync = widget.showCustomerPicker
-        ? ref.watch(customerListProvider)
+        ? ref.watch(customerListProvider(''))
         : null;
     final selectedCustomerAsync = _selectedCustomerId == null
         ? null

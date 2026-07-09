@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/pagination.dart';
 import '../../data/repositories/categories_repository.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/models/category.dart';
@@ -9,9 +10,17 @@ final categoryListProvider = FutureProvider.autoDispose<List<Category>>((ref) {
   return ref.watch(categoriesRepositoryProvider).list();
 });
 
-final productListProvider = FutureProvider.autoDispose<List<Product>>((ref) {
-  return ref.watch(productsRepositoryProvider).list();
-});
+/// Capped product list for pickers (bill form, stock-in). Pass [query] for
+/// server/local search; empty query returns the first page alphabetically.
+final productListProvider = FutureProvider.autoDispose
+    .family<List<Product>, String>((ref, query) {
+      return ref
+          .watch(productsRepositoryProvider)
+          .list(
+            limit: kPickerPageSize,
+            query: query.trim().isEmpty ? null : query,
+          );
+    });
 
 final lowStockCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(productsRepositoryProvider).lowStockCount();

@@ -20,13 +20,41 @@ class CachedCustomersRepository implements CustomersRepository {
   final SupabaseClient? _client;
 
   @override
-  Future<List<Customer>> list({int offset = 0, int? limit}) async {
-    final query = _db.select(_db.localCustomers)
+  Future<List<Customer>> list({
+    int offset = 0,
+    int? limit,
+    String? query,
+  }) async {
+    final q = query?.trim();
+    if (q != null && q.isNotEmpty) {
+      final pattern = '%${q.toLowerCase()}%';
+      final rows = await _db
+          .customSelect(
+            'SELECT * FROM local_customers '
+            'WHERE lower(shop_name) LIKE ? '
+            'OR lower(ifnull(contact_name, \'\')) LIKE ? '
+            'OR ifnull(phone, \'\') LIKE ? '
+            'ORDER BY shop_name ASC '
+            'LIMIT ? OFFSET ?',
+            variables: [
+              Variable.withString(pattern),
+              Variable.withString(pattern),
+              Variable.withString(pattern),
+              Variable.withInt(limit ?? 50),
+              Variable.withInt(offset),
+            ],
+            readsFrom: {_db.localCustomers},
+          )
+          .map((row) => _db.localCustomers.map(row.data))
+          .get();
+      return rows.map(mapLocalCustomer).toList();
+    }
+    final select = _db.select(_db.localCustomers)
       ..orderBy([(c) => OrderingTerm.asc(c.shopName)]);
     if (limit != null) {
-      query.limit(limit, offset: offset);
+      select.limit(limit, offset: offset);
     }
-    final rows = await query.get();
+    final rows = await select.get();
     return rows.map(mapLocalCustomer).toList();
   }
 

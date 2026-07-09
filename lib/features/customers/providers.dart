@@ -1,13 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/pagination.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../data/repositories/payments_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 
-final customerListProvider = FutureProvider.autoDispose<List<Customer>>((ref) {
-  return ref.watch(customersRepositoryProvider).list();
-});
+/// Capped customer list for pickers / autocomplete. Pass [query] for search.
+final customerListProvider = FutureProvider.autoDispose
+    .family<List<Customer>, String>((ref, query) {
+      return ref
+          .watch(customersRepositoryProvider)
+          .list(
+            limit: kPickerPageSize,
+            query: query.trim().isEmpty ? null : query,
+          );
+    });
 
 final recentCustomersProvider = FutureProvider.autoDispose<List<Customer>>((
   ref,

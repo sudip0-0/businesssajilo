@@ -21,16 +21,42 @@ class CachedProductsRepository implements ProductsRepository {
     bool activeOnly = true,
     int offset = 0,
     int? limit,
+    String? query,
   }) async {
-    final query = _db.select(_db.localProducts)
+    final q = query?.trim();
+    if (q != null && q.isNotEmpty) {
+      final pattern = '%${q.toLowerCase()}%';
+      final rows = await _db
+          .customSelect(
+            'SELECT * FROM local_products '
+            'WHERE (? = 0 OR is_active = 1) '
+            'AND (lower(name) LIKE ? OR lower(ifnull(sku, \'\')) LIKE ? '
+            'OR lower(ifnull(name_np, \'\')) LIKE ?) '
+            'ORDER BY name ASC '
+            'LIMIT ? OFFSET ?',
+            variables: [
+              Variable.withInt(activeOnly ? 1 : 0),
+              Variable.withString(pattern),
+              Variable.withString(pattern),
+              Variable.withString(pattern),
+              Variable.withInt(limit ?? 50),
+              Variable.withInt(offset),
+            ],
+            readsFrom: {_db.localProducts},
+          )
+          .map((row) => _db.localProducts.map(row.data))
+          .get();
+      return rows.map(mapLocalProduct).toList();
+    }
+    final select = _db.select(_db.localProducts)
       ..orderBy([(p) => OrderingTerm.asc(p.name)]);
     if (activeOnly) {
-      query.where((p) => p.isActive.equals(true));
+      select.where((p) => p.isActive.equals(true));
     }
     if (limit != null) {
-      query.limit(limit, offset: offset);
+      select.limit(limit, offset: offset);
     }
-    final rows = await query.get();
+    final rows = await select.get();
     return rows.map(mapLocalProduct).toList();
   }
 

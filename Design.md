@@ -122,13 +122,13 @@ This design system uses a logic-driven color palette to facilitate quick decisio
 - **Primary (Navy Blue):** Used for primary actions, branding, and navigation. It establishes authority and stability.
 - **Secondary (Vibrant Green):** Reserved for "Success" states, "Paid" statuses, and positive growth indicators like "Add New" or "Income."
 - **Accent (Amber):** Used exclusively for "Warning" states, "Pending" payments, and items requiring attention.
-- **Neutrals:** A range of cool greys ensures a "clean" feel. The background is a crisp `#F9FAFB` to reduce eye strain during long working hours.
+- **Neutrals:** A range of cool greys ensures a "clean" feel. Scaffold background is `#F9FAFB` (`BsColors.background`); elevated surfaces use `#FAF8FF` (`BsColors.surface`).
 
 Text utilizes Deep Charcoal (`#111827`) for maximum contrast against white backgrounds, ensuring high legibility for financial data.
 
 ## Typography
 
-The design system uses **Inter** for its exceptional legibility and support for both Latin and Devanagari scripts. 
+The design system uses **Inter** (bundled under `assets/fonts/`) for Latin UI and **Noto Sans Devanagari** (bundled) as the Devanagari fallback.
 
 - **Bi-lingual Balance:** Ensure the line-height is generous enough (minimum 1.4x) to prevent Devanagari vowel signs (matras) from clipping or overlapping between lines.
 - **Numerical Clarity:** Use tabular lining for figures in tables and invoices to ensure that currency values align vertically for easy scanning.
@@ -166,6 +166,6 @@ Larger container elements like dashboard sections and main cards may use `rounde
 - **Status Badges:** Use a "soft-fill" approach: a light background version of the state color (e.g., Light Green background for "Paid") with dark text in the same hue.
 - **Input Fields:** 1px neutral borders that turn Primary Blue on focus. Labels are always visible above the field in `label-md` style.
 - **Tables:** Row hover states use a light grey tint (`#F3F4F6`). Currency columns (NPR) are right-aligned. The "Status" column is always visible.
-- **Currency Formatting:** All NPR values should use the format `Rs. XX,XXX.XX`. 
+- **Currency Formatting:** All NPR values use Nepali grouping via `formatNpr` (e.g. `रू 1,23,456.50`). 
 - **Bi-lingual Toggles:** Positioned in the top-right utility bar. Toggling language should not shift the layout; ensure components can handle the slightly longer character counts often found in Nepali translations.
 - **Cards:** Metric cards feature a large `display-md` value, a `label-sm` title, and a small trend indicator (up/down arrow) in green or red.

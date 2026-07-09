@@ -100,30 +100,21 @@ class SupabaseReportsRepository implements ReportsRepository {
   @override
   Future<DuesAgingReport> duesAging() async {
     final client = _requireClient();
-    final rows = await client
-        .from('customer_dues_aging')
-        .select()
-        .order('balance_due', ascending: false);
-    var b0 = 0;
-    var b31 = 0;
-    var b60 = 0;
+    final raw = await client.rpc('report_dues_aging');
+    final map = raw is Map
+        ? Map<String, dynamic>.from(raw)
+        : Map<String, dynamic>.from((raw as List).first as Map);
+    final customersRaw = map['customers'];
     final customers = <AgingCustomerRow>[];
-    for (final row in rows as List) {
-      final customer = mapAgingCustomerRow(row);
-      customers.add(customer);
-      switch (customer.bucket) {
-        case '0_30':
-          b0 += customer.balanceDue;
-        case '31_60':
-          b31 += customer.balanceDue;
-        case '60_plus':
-          b60 += customer.balanceDue;
+    if (customersRaw is List) {
+      for (final row in customersRaw) {
+        customers.add(mapAgingCustomerRow(row));
       }
     }
     return DuesAgingReport(
-      bucket0to30: b0,
-      bucket31to60: b31,
-      bucket60plus: b60,
+      bucket0to30: (map['bucket_0_30'] as num?)?.toInt() ?? 0,
+      bucket31to60: (map['bucket_31_60'] as num?)?.toInt() ?? 0,
+      bucket60plus: (map['bucket_60_plus'] as num?)?.toInt() ?? 0,
       customers: customers,
     );
   }

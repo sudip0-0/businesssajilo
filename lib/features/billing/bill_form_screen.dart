@@ -121,21 +121,15 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final productsAsync = ref.watch(productListProvider);
+    final productsAsync = ref.watch(productListProvider(_query));
 
     final body = productsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorState(
         message: l10n.loadingFailed,
-        onRetry: () => ref.invalidate(productListProvider),
+        onRetry: () => ref.invalidate(productListProvider(_query)),
       ),
       data: (products) {
-        final filtered = products.where((p) {
-          if (_query.isEmpty) return true;
-          return p.name.toLowerCase().contains(_query.toLowerCase()) ||
-              (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-        }).toList();
-
         final narrow = MediaQuery.sizeOf(context).width < 720;
         final showPicker = !narrow || !_showCart || _draft.lines.isEmpty;
         final showCart = !narrow || _showCart;
@@ -149,15 +143,15 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                   hintText: l10n.filterProducts,
                   prefixIcon: const Icon(Icons.search),
                 ),
-                onChanged: (v) => setState(() => _query = v),
+                onChanged: (v) => setState(() => _query = v.trim()),
               ),
             ),
             Expanded(
               child: ListView.separated(
-                itemCount: filtered.length,
+                itemCount: products.length,
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final product = filtered[index];
+                  final product = products[index];
                   return ListTile(
                     leading: ProductImage(storagePath: product.imageUrl),
                     title: Text(product.name),

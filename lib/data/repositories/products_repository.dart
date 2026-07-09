@@ -23,6 +23,7 @@ abstract class ProductsRepository {
     bool activeOnly = true,
     int offset = 0,
     int? limit,
+    String? query,
   });
   Future<int> lowStockCount();
 
