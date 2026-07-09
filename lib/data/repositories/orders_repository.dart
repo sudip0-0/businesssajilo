@@ -29,41 +29,83 @@ class OrderLineInput {
   final int qty;
 }
 
+/// Maps a PostgREST order row (staff or own list / detail) into [Order].
+/// Supports both full nested product payloads and light `order_items(id)` lists.
+Order mapOrderRow(dynamic row) {
+  final map = Map<String, dynamic>.from(row as Map);
+  final customer = map.remove('customers');
+  if (customer is Map) {
+    map['customer_shop_name'] = customer['shop_name'];
+  }
+  final itemsRaw = map.remove('order_items');
+  final order = Order.fromJson(map);
+  if (itemsRaw is List) {
+    final items = itemsRaw.map((raw) {
+      final itemMap = Map<String, dynamic>.from(raw as Map);
+      final product = itemMap.remove('products');
+      if (product is Map) {
+        itemMap['product_name'] = product['name'];
+        itemMap['product_name_np'] = product['name_np'];
+        itemMap['unit'] = product['unit'];
+        itemMap['image_url'] = product['image_url'];
+      }
+      // Light list select only returns item ids — fill required fields.
+      itemMap.putIfAbsent('order_id', () => order.id);
+      itemMap.putIfAbsent('product_id', () => '');
+      itemMap.putIfAbsent('qty', () => 0);
+      return OrderItem.fromJson(itemMap);
+    }).toList();
+    return order.copyWith(items: items);
+  }
+  return order;
+}
+
 class OrdersRepository {
   OrdersRepository(this._client);
 
   final SupabaseClient? _client;
 
-  Future<List<Order>> listForStaff({List<OrderStatus>? statuses}) async {
+  static const _listSelectStaff = '*, customers(shop_name), order_items(id)';
+  static const _listSelectOwn = '*, order_items(id)';
+  static const _detailSelect =
+      '*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))';
+
+  Future<List<Order>> listForStaff({
+    List<OrderStatus>? statuses,
+    int offset = 0,
+    int? limit,
+  }) async {
     final client = _requireClient();
-    var query = client
-        .from('orders')
-        .select(
-          '*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))',
-        );
+    var query = client.from('orders').select(_listSelectStaff);
     if (statuses != null && statuses.isNotEmpty) {
       query = query.inFilter('status', statuses.map((s) => s.name).toList());
     }
-    final rows = await query.order('created_at', ascending: false);
-    return (rows as List).map(_mapOrderRow).toList();
+    var ordered = query.order('created_at', ascending: false);
+    if (limit != null) {
+      ordered = ordered.range(offset, offset + limit - 1);
+    }
+    final rows = await ordered;
+    return (rows as List).map(mapOrderRow).toList();
   }
 
-  Future<List<Order>> listOwn() async {
+  Future<List<Order>> listOwn({int offset = 0, int? limit}) async {
     final client = _requireClient();
-    final rows = await client
+    var query = client
         .from('orders')
-        .select('*, order_items(*, products(name, name_np, unit, image_url))')
+        .select(_listSelectOwn)
         .order('created_at', ascending: false);
-    return (rows as List).map(_mapOrderRow).toList();
+    if (limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+    final rows = await query;
+    return (rows as List).map(mapOrderRow).toList();
   }
 
-  Future<List<Order>> fulfillmentQueue() async {
+  Future<List<Order>> fulfillmentQueue({int offset = 0, int? limit}) async {
     return listForStaff(
-      statuses: [
-        OrderStatus.confirmed,
-        OrderStatus.packed,
-        OrderStatus.dispatched,
-      ],
+      statuses: [OrderStatus.confirmed, OrderStatus.packed],
+      offset: offset,
+      limit: limit,
     );
   }
 
@@ -84,16 +126,27 @@ class OrdersRepository {
         .eq('status', OrderStatus.quoted.name);
   }
 
+  Future<int> ownOrderCount() async {
+    final client = _requireClient();
+    return client.from('orders').count(CountOption.exact);
+  }
+
+  Future<int> fulfillmentActiveCount() async {
+    final client = _requireClient();
+    return client.from('orders').count(CountOption.exact).inFilter('status', [
+      OrderStatus.confirmed.name,
+      OrderStatus.packed.name,
+    ]);
+  }
+
   Future<Order> get(String id) async {
     final client = _requireClient();
     final row = await client
         .from('orders')
-        .select(
-          '*, customers(shop_name), order_items(*, products(name, name_np, unit, image_url))',
-        )
+        .select(_detailSelect)
         .eq('id', id)
         .single();
-    return _mapOrderRow(row);
+    return mapOrderRow(row);
   }
 
   Future<Order> placeOrder({
@@ -139,31 +192,6 @@ class OrdersRepository {
       throw OrderStatusException(e.message);
     }
     return get(id);
-  }
-
-  Order _mapOrderRow(dynamic row) {
-    final map = Map<String, dynamic>.from(row as Map);
-    final customer = map.remove('customers');
-    if (customer is Map) {
-      map['customer_shop_name'] = customer['shop_name'];
-    }
-    final itemsRaw = map.remove('order_items');
-    final order = Order.fromJson(map);
-    if (itemsRaw is List) {
-      final items = itemsRaw.map((raw) {
-        final itemMap = Map<String, dynamic>.from(raw as Map);
-        final product = itemMap.remove('products');
-        if (product is Map) {
-          itemMap['product_name'] = product['name'];
-          itemMap['product_name_np'] = product['name_np'];
-          itemMap['unit'] = product['unit'];
-          itemMap['image_url'] = product['image_url'];
-        }
-        return OrderItem.fromJson(itemMap);
-      }).toList();
-      return order.copyWith(items: items);
-    }
-    return order;
   }
 
   SupabaseClient _requireClient() {

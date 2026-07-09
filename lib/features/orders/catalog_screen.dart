@@ -149,6 +149,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   setState(() => _cart.clear());
                   ref.invalidate(catalogListProvider);
                   ref.invalidate(ownOrderListProvider);
+                  ref.invalidate(ownOrderCountProvider);
                 }
               },
               icon: const Icon(Icons.shopping_cart),

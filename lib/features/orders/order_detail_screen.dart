@@ -332,6 +332,7 @@ class _ActionButtons extends ConsumerWidget {
     );
     if (placed == true) {
       ref.invalidate(ownOrderListProvider);
+      ref.invalidate(ownOrderCountProvider);
     }
   }
 
@@ -393,7 +394,9 @@ class _ActionButtons extends ConsumerWidget {
     ref.invalidate(orderQueueProvider);
     ref.invalidate(staffOrderListProvider);
     ref.invalidate(ownOrderListProvider);
+    ref.invalidate(ownOrderCountProvider);
     ref.invalidate(fulfillmentQueueProvider);
+    ref.invalidate(fulfillmentActiveCountProvider);
     ref.invalidate(pendingOrdersCountProvider);
   }
 }

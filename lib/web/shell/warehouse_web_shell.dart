@@ -15,7 +15,7 @@ class WarehouseWebShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final fulfillment = ref.watch(fulfillmentQueueProvider);
+    final fulfillmentCount = ref.watch(fulfillmentActiveCountProvider);
 
     final items = [
       WebNavItem(
@@ -27,8 +27,8 @@ class WarehouseWebShell extends ConsumerWidget {
         label: l10n.fulfillment,
         path: '/warehouse/fulfillment',
         icon: PhosphorIconsRegular.truck,
-        badge: fulfillment.when(
-          data: (q) => q.isNotEmpty ? '${q.length}' : null,
+        badge: fulfillmentCount.when(
+          data: (c) => c > 0 ? '$c' : null,
           loading: () => null,
           error: (_, _) => null,
         ),

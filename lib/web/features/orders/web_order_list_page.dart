@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/ui/status_chip.dart';
 import '../../../core/utils/bs_date.dart';
+import '../../../data/repositories/orders_repository.dart';
+import '../../../domain/enums.dart';
 import '../../../domain/models/order.dart';
 import '../../../features/orders/order_detail_screen.dart';
 import '../../../features/orders/providers.dart';
@@ -38,10 +41,47 @@ class WebOrderListPage extends ConsumerStatefulWidget {
 
 class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
   String _query = '';
+  PaginatedListState<Order>? _pager;
+  final _scrollController = ScrollController();
 
   String get _ordersBasePath {
     final prefix = _webRolePrefix(context);
-    return widget.ownOnly ? '$prefix/orders' : '$prefix/orders';
+    return '$prefix/orders';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+  }
+
+  void _initPager() {
+    final repo = ref.read(ordersRepositoryProvider);
+    _pager = PaginatedListState<Order>(
+      loadPage: (offset, limit) => widget.ownOnly
+          ? repo.listOwn(offset: offset, limit: limit)
+          : repo.listForStaff(
+              statuses: [
+                OrderStatus.placed,
+                OrderStatus.quoted,
+                OrderStatus.accepted,
+              ],
+              offset: offset,
+              limit: limit,
+            ),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    )..attachScrollController(_scrollController);
+    _pager!.refresh().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _selectOrder(Order order) {
@@ -57,16 +97,99 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     }).toList();
   }
 
+  Future<void> _refresh() async {
+    await _pager?.refresh();
+    if (!widget.ownOnly) {
+      ref.invalidate(pendingOrdersCountProvider);
+      ref.invalidate(openQuotesCountProvider);
+    } else {
+      ref.invalidate(ownOrderCountProvider);
+    }
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final ordersAsync = widget.ownOnly
-        ? ref.watch(ownOrderListProvider)
-        : ref.watch(orderQueueProvider);
-    final ordersProvider = widget.ownOnly
-        ? ownOrderListProvider
-        : orderQueueProvider;
     final selectedId = widget.selectedOrderId;
+    final pager = _pager;
+
+    Widget listBody;
+    if (pager == null || pager.initialLoading) {
+      listBody = const WebListSkeleton();
+    } else if (pager.error != null && pager.items.isEmpty) {
+      listBody = WebEmptyState(
+        message: l10n.loadingFailed,
+        actionLabel: l10n.tryAgain,
+        onAction: _refresh,
+        icon: PhosphorIconsRegular.warning,
+      );
+    } else {
+      final filtered = _filterOrders(pager.items);
+      if (filtered.isEmpty) {
+        listBody = WebEmptyState(
+          message: _query.isNotEmpty ? l10n.noSearchResults : l10n.noOrders,
+          icon: PhosphorIconsRegular.shoppingCart,
+          actionLabel: _query.isNotEmpty ? l10n.clearSearch : null,
+          onAction: _query.isNotEmpty
+              ? () => setState(() => _query = '')
+              : null,
+        );
+      } else {
+        listBody = RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              WebDataTable<Order>(
+                columns: [
+                  DataColumn(label: Text(l10n.customers)),
+                  DataColumn(label: Text(l10n.orderItems)),
+                  DataColumn(label: Text(l10n.orderQueue)),
+                ],
+                items: filtered,
+                selectedId: selectedId,
+                idFor: (o) => o.id,
+                onRowTap: _selectOrder,
+                rowBuilder: (order, _) {
+                  final dateStr = order.createdAt != null
+                      ? BsDate.both(
+                          order.createdAt!,
+                          locale: Localizations.localeOf(context),
+                        )
+                      : '—';
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(order.customerShopName ?? '—'),
+                            Text(
+                              dateStr,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      DataCell(Text('${order.items.length}')),
+                      DataCell(StatusChip(order.status)),
+                    ],
+                  );
+                },
+              ),
+              if (pager.hasMore || pager.loading)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          ),
+        );
+      }
+    }
 
     return WebPageScaffold(
       title: l10n.orders,
@@ -82,82 +205,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                 onChanged: (v) => setState(() => _query = v.trim()),
               ),
             ),
-            Expanded(
-              child: ordersAsync.when(
-                loading: () => const WebListSkeleton(),
-                error: (_, _) => WebEmptyState(
-                  message: l10n.loadingFailed,
-                  actionLabel: l10n.tryAgain,
-                  onAction: () => ref.invalidate(ordersProvider),
-                  icon: PhosphorIconsRegular.warning,
-                ),
-                data: (orders) {
-                  final filtered = _filterOrders(orders);
-                  if (filtered.isEmpty) {
-                    return WebEmptyState(
-                      message: _query.isNotEmpty
-                          ? l10n.noSearchResults
-                          : l10n.noOrders,
-                      icon: PhosphorIconsRegular.shoppingCart,
-                      actionLabel: _query.isNotEmpty ? l10n.clearSearch : null,
-                      onAction: _query.isNotEmpty
-                          ? () => setState(() => _query = '')
-                          : null,
-                    );
-                  }
-
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      ref.invalidate(ordersProvider);
-                      if (!widget.ownOnly) {
-                        ref.invalidate(pendingOrdersCountProvider);
-                        ref.invalidate(openQuotesCountProvider);
-                      }
-                    },
-                    child: WebDataTable<Order>(
-                      columns: [
-                        DataColumn(label: Text(l10n.customers)),
-                        DataColumn(label: Text(l10n.orderItems)),
-                        DataColumn(label: Text(l10n.orderQueue)),
-                      ],
-                      items: filtered,
-                      selectedId: selectedId,
-                      idFor: (o) => o.id,
-                      onRowTap: _selectOrder,
-                      rowBuilder: (order, _) {
-                        final dateStr = order.createdAt != null
-                            ? BsDate.both(
-                                order.createdAt!,
-                                locale: Localizations.localeOf(context),
-                              )
-                            : '—';
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(order.customerShopName ?? '—'),
-                                  Text(
-                                    dateStr,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            DataCell(Text('${order.items.length}')),
-                            DataCell(StatusChip(order.status)),
-                          ],
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
+            Expanded(child: listBody),
           ],
         ),
         detail: selectedId == null

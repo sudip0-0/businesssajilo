@@ -6,37 +6,19 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/stock_badge.dart';
-import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../domain/models/bill.dart';
-import '../../data/repositories/bills_repository.dart';
 import 'invoice_export_actions.dart';
 import '../../domain/models/product.dart';
-import '../auth/providers/auth_provider.dart';
-import '../customers/providers.dart';
 import '../../core/ui/bs_success_button.dart';
 import '../inventory/product_image.dart';
 import '../inventory/providers.dart';
 import '../../web/ui/web_sheet_bridge.dart';
+import 'bill_draft_line.dart';
+import 'bill_form_draft.dart';
+import 'bill_form_save.dart';
+import 'bill_form_validation.dart';
 import 'bill_payment_sheet.dart';
-
-class _DraftLine {
-  _DraftLine({required this.product})
-    : qty = 1,
-      rate = product.referencePrice,
-      discount = 0;
-
-  final Product product;
-  int qty;
-  int rate;
-  int discount;
-
-  int get lineTotal =>
-      lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
-
-  bool get discountValid =>
-      isValidLineDiscount(qty: qty, ratePaisa: rate, discountPaisa: discount);
-}
 
 class BillFormScreen extends ConsumerStatefulWidget {
   const BillFormScreen({super.key, this.embedded = false, this.onSaved});
@@ -49,7 +31,7 @@ class BillFormScreen extends ConsumerStatefulWidget {
 }
 
 class _BillFormScreenState extends ConsumerState<BillFormScreen> {
-  final _lines = <_DraftLine>[];
+  final _draft = BillFormDraft();
   final _billDiscountController = TextEditingController();
   String _query = '';
   bool _loading = false;
@@ -63,60 +45,25 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     super.dispose();
   }
 
-  int get _itemsTotal => itemsTotalPaisa(_lines.map((l) => l.lineTotal));
-
-  int get _billDiscount => parseNpr(_billDiscountController.text)?.value ?? 0;
-
-  int get _grandTotal => grandTotalPaisa(
-    itemsTotal: _itemsTotal,
-    billDiscountPaisa: _billDiscount,
-  );
+  void _syncDiscountText() {
+    _draft.billDiscountText = _billDiscountController.text;
+  }
 
   void _addProduct(Product product) {
-    final index = _lines.indexWhere((l) => l.product.id == product.id);
     setState(() {
-      if (index >= 0) {
-        _lines[index].qty += 1;
-      } else {
-        _lines.add(_DraftLine(product: product));
-      }
+      _draft.addProduct(product);
       _showCart = true;
     });
   }
 
   Future<Bill?> _save({bool exportAfterSave = false}) async {
     final l10n = AppLocalizations.of(context);
-    if (_lines.isEmpty) {
+    _syncDiscountText();
+    final validationError = validateBillForm(_draft);
+    if (validationError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.noBillLines),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-    if (_lines.any((l) => !l.discountValid)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.discountExceedsLine),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-    if (_billDiscount < 0 || _billDiscount > _itemsTotal) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.discountExceedsItems),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-    if (_grandTotal < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.amountMustBePositive),
+          content: Text(billFormValidationMessage(l10n, validationError)),
           backgroundColor: BsColors.danger,
         ),
       );
@@ -126,49 +73,19 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     final paymentResult = await showAdaptiveSheet<BillPaymentResult>(
       context: context,
       title: l10n.saveBill,
-      child: BillPaymentSheet(grandTotal: _grandTotal),
+      child: BillPaymentSheet(grandTotal: _draft.grandTotal),
     );
     // Print/share is offered after save via exportBillAfterSave when requested.
     if (paymentResult == null) return null;
 
-    final memberId = ref.read(authProvider).value?.member?.id;
-    if (memberId == null) return null;
-
     setState(() => _loading = true);
     Bill? savedBill;
     try {
-      savedBill = await ref
-          .read(billsRepositoryProvider)
-          .create(
-            createdByMemberId: memberId,
-            customerId: paymentResult.customerId,
-            status: paymentResult.status,
-            itemsTotal: _itemsTotal,
-            discount: _billDiscount,
-            grandTotal: _grandTotal,
-            lines: _lines
-                .map(
-                  (line) => BillLineInput(
-                    productId: line.product.id,
-                    nameSnapshot: line.product.name,
-                    qty: line.qty,
-                    rate: line.rate,
-                    discount: line.discount,
-                    lineTotal: line.lineTotal,
-                  ),
-                )
-                .toList(),
-            paymentMethod: paymentResult.paymentMethod,
-            paymentRefNote: paymentResult.paymentRefNote,
-            paymentAmount: paymentResult.paymentAmount,
-          );
-
-      if (paymentResult.customerId != null) {
-        ref.invalidate(customerListProvider);
-        ref.invalidate(totalDuesProvider);
-        ref.invalidate(customerDetailProvider(paymentResult.customerId!));
-        ref.invalidate(customerLedgerProvider(paymentResult.customerId!));
-      }
+      savedBill = await saveBillForm(
+        ref,
+        draft: _draft,
+        payment: paymentResult,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -219,7 +136,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         }).toList();
 
         final narrow = MediaQuery.sizeOf(context).width < 720;
-        final showPicker = !narrow || !_showCart || _lines.isEmpty;
+        final showPicker = !narrow || !_showCart || _draft.lines.isEmpty;
         final showCart = !narrow || _showCart;
 
         Widget productPicker() => Column(
@@ -260,7 +177,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
         Widget cartPane() => Column(
           children: [
-            if (narrow && _lines.isNotEmpty)
+            if (narrow && _draft.lines.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
                 child: Align(
@@ -273,7 +190,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                 ),
               ),
             Expanded(
-              child: _lines.isEmpty
+              child: _draft.lines.isEmpty
                   ? Center(
                       child: TextButton.icon(
                         onPressed: () => setState(() => _showCart = false),
@@ -282,25 +199,28 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _lines.length,
+                      itemCount: _draft.lines.length,
                       itemBuilder: (context, index) {
-                        final line = _lines[index];
+                        final line = _draft.lines[index];
                         return _LineEditor(
                           line: line,
                           onChanged: () => setState(() {}),
                           onRemove: () => setState(() {
-                            _lines.removeAt(index);
-                            if (_lines.isEmpty) _showCart = false;
+                            _draft.removeLineAt(index);
+                            if (_draft.lines.isEmpty) _showCart = false;
                           }),
                         );
                       },
                     ),
             ),
             _TotalsBar(
-              itemsTotal: _itemsTotal,
+              itemsTotal: _draft.itemsTotal,
               billDiscountController: _billDiscountController,
-              grandTotal: _grandTotal,
-              onDiscountChanged: () => setState(() {}),
+              grandTotal: _draft.grandTotal,
+              onDiscountChanged: () {
+                _syncDiscountText();
+                setState(() {});
+              },
             ),
           ],
         );
@@ -317,7 +237,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                       onPressed: _loading
                           ? null
                           : () {
-                              if (showPicker && _lines.isNotEmpty) {
+                              if (showPicker && _draft.lines.isNotEmpty) {
                                 setState(() => _showCart = true);
                                 return;
                               }
@@ -330,7 +250,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
-                              showPicker && _lines.isNotEmpty
+                              showPicker && _draft.lines.isNotEmpty
                                   ? l10n.reviewAndSave
                                   : l10n.saveBill,
                             ),
@@ -343,10 +263,13 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
         return Column(
           children: [
-            Expanded(flex: _lines.isEmpty ? 1 : 2, child: productPicker()),
+            Expanded(
+              flex: _draft.lines.isEmpty ? 1 : 2,
+              child: productPicker(),
+            ),
             const Divider(height: 1),
             Expanded(
-              flex: _lines.isEmpty ? 0 : 3,
+              flex: _draft.lines.isEmpty ? 0 : 3,
               child: showCart ? cartPane() : const SizedBox.shrink(),
             ),
             if (widget.embedded)
@@ -394,7 +317,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                     ? null
                     : () {
                         final narrow = MediaQuery.sizeOf(context).width < 720;
-                        if (narrow && !_showCart && _lines.isNotEmpty) {
+                        if (narrow && !_showCart && _draft.lines.isNotEmpty) {
                           setState(() => _showCart = true);
                           return;
                         }
@@ -402,7 +325,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                       },
                 label: l10n.saveBill,
               ),
-              if (_lines.isNotEmpty) ...[
+              if (_draft.lines.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _loading
@@ -427,7 +350,7 @@ class _LineEditor extends StatefulWidget {
     required this.onRemove,
   });
 
-  final _DraftLine line;
+  final BillDraftLine line;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
 
@@ -473,7 +396,7 @@ class _LineEditorState extends State<_LineEditor> {
                 value: line.qty,
                 min: 1,
                 onChanged: (v) {
-                  line.qty = v;
+                  line.setQty(v);
                   widget.onChanged();
                 },
               ),

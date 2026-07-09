@@ -27,7 +27,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final ownOrdersAsync = ref.watch(ownOrderListProvider);
+    final ownOrdersCountAsync = ref.watch(ownOrderCountProvider);
     final ownCustomerAsync = ref.watch(ownCustomerProvider);
 
     final pages = [
@@ -41,8 +41,8 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
           DashboardStat(
             icon: Icons.shopping_bag_outlined,
             label: l10n.myOrders,
-            value: ownOrdersAsync.when(
-              data: (o) => '${o.length}',
+            value: ownOrdersCountAsync.when(
+              data: (c) => '$c',
               loading: () => '…',
               error: (_, _) => '—',
             ),

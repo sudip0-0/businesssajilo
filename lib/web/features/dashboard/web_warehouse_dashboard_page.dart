@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../domain/enums.dart';
 import '../../../features/inventory/providers.dart';
 import '../../../features/orders/providers.dart';
 import '../../layout/web_bento_grid.dart';
@@ -17,15 +16,8 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final fulfillmentAsync = ref.watch(fulfillmentQueueProvider);
+    final fulfillmentCountAsync = ref.watch(fulfillmentActiveCountProvider);
     final lowStock = ref.watch(lowStockCountProvider);
-
-    final queueCount = fulfillmentAsync.when(
-      data: (orders) =>
-          orders.where((o) => o.status != OrderStatus.dispatched).length,
-      loading: () => null,
-      error: (_, _) => null,
-    );
 
     return WebPageScaffold(
       title: l10n.dashboard,
@@ -38,7 +30,7 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
       ],
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(fulfillmentQueueProvider);
+          ref.invalidate(fulfillmentActiveCountProvider);
           ref.invalidate(lowStockCountProvider);
         },
         child: SingleChildScrollView(
@@ -48,13 +40,11 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
             children: [
               WebStatTile(
                 label: l10n.fulfillmentQueue,
-                value:
-                    queueCount?.toString() ??
-                    fulfillmentAsync.when(
-                      loading: () => '…',
-                      error: (_, _) => '—',
-                      data: (_) => '0',
-                    ),
+                value: fulfillmentCountAsync.when(
+                  data: (c) => '$c',
+                  loading: () => '…',
+                  error: (_, _) => '—',
+                ),
                 icon: PhosphorIconsRegular.truck,
                 onTap: () => context.go('/warehouse/fulfillment'),
               ),

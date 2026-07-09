@@ -17,7 +17,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final ownOrders = ref.watch(ownOrderListProvider);
+    final ownOrdersCount = ref.watch(ownOrderCountProvider);
     final ownCustomer = ref.watch(ownCustomerProvider);
 
     return WebPageScaffold(
@@ -31,7 +31,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
       ],
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(ownOrderListProvider);
+          ref.invalidate(ownOrderCountProvider);
           ref.invalidate(ownCustomerProvider);
         },
         child: SingleChildScrollView(
@@ -40,8 +40,8 @@ class WebCustomerDashboardPage extends ConsumerWidget {
             children: [
               WebStatTile(
                 label: l10n.myOrders,
-                value: ownOrders.when(
-                  data: (orders) => '${orders.length}',
+                value: ownOrdersCount.when(
+                  data: (c) => '$c',
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),

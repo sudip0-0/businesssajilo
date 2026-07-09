@@ -26,10 +26,9 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final fulfillmentAsync = ref.watch(fulfillmentQueueProvider);
-    final pendingCount = fulfillmentAsync.when(
-      data: (orders) =>
-          orders.where((o) => o.status.name != 'dispatched').length.toString(),
+    final fulfillmentCountAsync = ref.watch(fulfillmentActiveCountProvider);
+    final pendingCount = fulfillmentCountAsync.when(
+      data: (c) => '$c',
       loading: () => '…',
       error: (_, _) => '—',
     );

@@ -27,6 +27,14 @@ final openQuotesCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(ordersRepositoryProvider).openQuotesCount();
 });
 
+final ownOrderCountProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(ordersRepositoryProvider).ownOrderCount();
+});
+
+final fulfillmentActiveCountProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(ordersRepositoryProvider).fulfillmentActiveCount();
+});
+
 final fulfillmentQueueProvider = FutureProvider.autoDispose<List<Order>>((ref) {
   return ref.watch(ordersRepositoryProvider).fulfillmentQueue();
 });

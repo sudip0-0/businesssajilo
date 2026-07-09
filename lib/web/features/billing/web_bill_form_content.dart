@@ -6,38 +6,23 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/error_state.dart';
-import '../../../core/utils/bill_totals.dart';
 import '../../../core/utils/money.dart';
-import '../../../data/repositories/bills_repository.dart';
 import '../../../domain/models/bill.dart';
 import '../../../features/billing/invoice_export_actions.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
-import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/billing/bill_draft_line.dart';
+import '../../../features/billing/bill_form_draft.dart';
+import '../../../features/billing/bill_form_save.dart';
+import '../../../features/billing/bill_form_validation.dart';
 import '../../../features/billing/bill_payment_sheet.dart';
-import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_sheet_bridge.dart';
 import '../../../core/testing/integration_keys.dart';
-
-class _DraftLine {
-  _DraftLine({required this.product})
-    : qty = 1,
-      rate = product.referencePrice,
-      discount = 0;
-
-  final Product product;
-  int qty;
-  int rate;
-  int discount;
-
-  int get lineTotal =>
-      lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
-}
 
 /// Web-native bill form layout with row-wise line items.
 class WebBillFormContent extends ConsumerStatefulWidget {
@@ -50,12 +35,11 @@ class WebBillFormContent extends ConsumerStatefulWidget {
 }
 
 class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
-  final _lines = <_DraftLine>[];
+  final _draft = BillFormDraft(billDiscountText: '0');
   final _billDiscountController = TextEditingController(text: '0');
   final _remarksController = TextEditingController();
   final _productQueryController = TextEditingController();
   final _productSearchFocus = FocusNode();
-  String? _customerId;
   String _productQuery = '';
   bool _loading = false;
 
@@ -68,27 +52,17 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     super.dispose();
   }
 
-  int get _itemsTotal => itemsTotalPaisa(_lines.map((l) => l.lineTotal));
-
-  int get _billDiscount => parseNpr(_billDiscountController.text)?.value ?? 0;
-
-  int get _grandTotal => grandTotalPaisa(
-    itemsTotal: _itemsTotal,
-    billDiscountPaisa: _billDiscount,
-  );
+  void _syncDraftFields() {
+    _draft.billDiscountText = _billDiscountController.text;
+  }
 
   void _focusProductSearch() {
     _productSearchFocus.requestFocus();
   }
 
   void _addProduct(Product product) {
-    final index = _lines.indexWhere((l) => l.product.id == product.id);
     setState(() {
-      if (index >= 0) {
-        _lines[index].qty += 1;
-      } else {
-        _lines.add(_DraftLine(product: product));
-      }
+      _draft.addProduct(product);
       _productQuery = '';
       _productQueryController.clear();
     });
@@ -105,43 +79,12 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     bool exportAfterSave = false,
   }) async {
     final l10n = AppLocalizations.of(context);
-    if (_lines.isEmpty) {
+    _syncDraftFields();
+    final validationError = validateBillForm(_draft);
+    if (validationError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.noBillLines),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-    if (_lines.any(
-      (l) => !isValidLineDiscount(
-        qty: l.qty,
-        ratePaisa: l.rate,
-        discountPaisa: l.discount,
-      ),
-    )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.discountExceedsLine),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-    if (_billDiscount < 0 || _billDiscount > _itemsTotal) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.discountExceedsItems),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-    if (_grandTotal < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.amountMustBePositive),
+          content: Text(billFormValidationMessage(l10n, validationError)),
           backgroundColor: BsColors.danger,
         ),
       );
@@ -152,65 +95,35 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     if (forceStatus == BillStatus.due) {
       paymentResult = BillPaymentResult(
         status: BillStatus.due,
-        customerId: _customerId,
+        customerId: _draft.customerId,
       );
     } else {
       paymentResult = await showAdaptiveSheet<BillPaymentResult>(
         context: context,
         title: l10n.saveBill,
         child: BillPaymentSheet(
-          grandTotal: _grandTotal,
-          initialCustomerId: _customerId,
+          grandTotal: _draft.grandTotal,
+          initialCustomerId: _draft.customerId,
         ),
       );
     }
     if (paymentResult == null) return null;
 
-    final memberId = ref.read(authProvider).value?.member?.id;
-    if (memberId == null) return null;
-
     setState(() => _loading = true);
     Bill? savedBill;
     try {
-      savedBill = await ref
-          .read(billsRepositoryProvider)
-          .create(
-            createdByMemberId: memberId,
-            customerId: paymentResult.customerId ?? _customerId,
-            status: paymentResult.status,
-            itemsTotal: _itemsTotal,
-            discount: _billDiscount,
-            grandTotal: _grandTotal,
-            lines: _lines
-                .map(
-                  (line) => BillLineInput(
-                    productId: line.product.id,
-                    nameSnapshot: line.product.name,
-                    qty: line.qty,
-                    rate: line.rate,
-                    discount: line.discount,
-                    lineTotal: line.lineTotal,
-                  ),
-                )
-                .toList(),
-            paymentMethod: paymentResult.paymentMethod,
-            paymentRefNote: paymentResult.paymentRefNote,
-            paymentAmount: paymentResult.paymentAmount,
-          );
-
-      if (paymentResult.customerId != null) {
-        ref.invalidate(customerListProvider);
-        ref.invalidate(totalDuesProvider);
-      }
-      ref.invalidate(billListProvider);
-      ref.invalidate(todaysSalesProvider);
-      ref.invalidate(todaysBillsProvider);
+      savedBill = await saveBillForm(
+        ref,
+        draft: _draft,
+        payment: paymentResult,
+        fallbackCustomerId: _draft.customerId,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
-        if (exportAfterSave && savedBill != null) {
+        if (exportAfterSave) {
           await exportBillAfterSave(ref, context, savedBill);
         }
         widget.onSaved?.call();
@@ -263,8 +176,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                 l10n: l10n,
                 today: today,
                 customersAsync: customersAsync,
-                customerId: _customerId,
-                onCustomerChanged: (id) => setState(() => _customerId = id),
+                customerId: _draft.customerId,
+                onCustomerChanged: (id) =>
+                    setState(() => _draft.customerId = id),
               ),
             ),
             const SizedBox(height: 16),
@@ -297,7 +211,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                           const SizedBox(height: 12),
                           _BillItemsTableHeader(l10n: l10n),
                           const SizedBox(height: 8),
-                          if (_lines.isEmpty)
+                          if (_draft.lines.isEmpty)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Text(
@@ -307,14 +221,14 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                               ),
                             )
                           else
-                            for (var i = 0; i < _lines.length; i++)
+                            for (var i = 0; i < _draft.lines.length; i++)
                               _BillItemRow(
                                 index: i,
-                                line: _lines[i],
+                                line: _draft.lines[i],
                                 l10n: l10n,
                                 onChanged: () => setState(() {}),
                                 onRemove: () =>
-                                    setState(() => _lines.removeAt(i)),
+                                    setState(() => _draft.removeLineAt(i)),
                               ),
                           const SizedBox(height: 8),
                           _AddProductRow(
@@ -336,10 +250,13 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                         final wide = constraints.maxWidth >= 768;
                         final summary = _BillSummaryPanel(
                           l10n: l10n,
-                          itemsTotal: _itemsTotal,
+                          itemsTotal: _draft.itemsTotal,
                           billDiscountController: _billDiscountController,
-                          grandTotal: _grandTotal,
-                          onDiscountChanged: () => setState(() {}),
+                          grandTotal: _draft.grandTotal,
+                          onDiscountChanged: () {
+                            _syncDraftFields();
+                            setState(() {});
+                          },
                         );
                         final remarks = TextField(
                           controller: _remarksController,
@@ -423,7 +340,7 @@ class _BillItemRow extends StatelessWidget {
   });
 
   final int index;
-  final _DraftLine line;
+  final BillDraftLine line;
   final AppLocalizations l10n;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
@@ -462,8 +379,7 @@ class _BillItemRow extends StatelessWidget {
                 ),
               ),
               onChanged: (v) {
-                line.qty = int.tryParse(v) ?? line.qty;
-                if (line.qty < 1) line.qty = 1;
+                line.setQty(int.tryParse(v) ?? line.qty);
                 onChanged();
               },
             ),
