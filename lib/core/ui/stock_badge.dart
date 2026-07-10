@@ -6,9 +6,16 @@ import '../theme/app_theme.dart';
 import '../utils/stock_status.dart';
 
 class StockBadge extends StatelessWidget {
-  const StockBadge({super.key, required this.product});
+  const StockBadge({
+    super.key,
+    required this.product,
+    this.compact = false,
+  });
 
   final Product product;
+
+  /// Icon + quantity only; full status lives in the tooltip / semantics.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -39,28 +46,39 @@ class StockBadge extends StatelessWidget {
       ),
     };
 
+    final fullLabel = '${product.stockCached} · $label';
+    final display = compact ? '${product.stockCached}' : fullLabel;
+
     return Semantics(
-      label: '${product.stockCached} · $label',
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: tint.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: textColor),
-            const SizedBox(width: 4),
-            Text(
-              '${product.stockCached} · $label',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+      label: fullLabel,
+      child: Tooltip(
+        message: fullLabel,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 6 : 8,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: tint.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: textColor),
+              const SizedBox(width: 4),
+              Text(
+                display,
+                maxLines: 1,
+                softWrap: false,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

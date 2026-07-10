@@ -371,6 +371,7 @@
   "dashboardTodaySummary": "Here's what's happening in your business today.",
   "salesPerformance": "Sales Performance",
   "salesPerformanceSubtitle": "7-day revenue trend analysis",
+  "salesPerformanceSubtitleMonthly": "30-day revenue trend analysis",
   "quickStockCheck": "Quick Stock Check",
   "recentActivity": "Recent Activity",
   "todaysTransactions": "Today's Transactions",

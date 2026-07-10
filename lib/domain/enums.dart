@@ -23,7 +23,7 @@ enum BillStatus { paid, partial, due }
 
 enum PaymentMethod { cash, cheque, wallet, bank }
 
-enum ReportRange { today, week, month, last7Days }
+enum ReportRange { today, week, month, last7Days, last30Days }
 
 enum AgingBucket { bucket0to30, bucket31to60, bucket60plus }
 

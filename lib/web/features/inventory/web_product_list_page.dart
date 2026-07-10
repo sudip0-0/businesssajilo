@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/ui/stock_badge.dart';
 import '../../../data/repositories/products_repository.dart';
@@ -13,7 +14,6 @@ import '../../../features/inventory/product_detail_screen.dart';
 import '../../../features/inventory/product_image.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_master_detail.dart';
-import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_skeleton.dart';
@@ -211,32 +211,110 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
         await pager.refresh();
         ref.invalidate(lowStockCountProvider);
       },
-      child: WebDataTable<Product>(
-        columns: [
-          DataColumn(label: Text(l10n.productName)),
-          DataColumn(label: Text(l10n.sku)),
-          DataColumn(label: Text(l10n.categories)),
-          DataColumn(label: Text(l10n.stock)),
-        ],
-        items: filtered,
-        selectedId: widget.selectedProductId,
-        idFor: (p) => p.id,
-        onRowTap: _openProduct,
-        rowBuilder: (product, _) => DataRow(
-          cells: [
-            DataCell(
-              Row(
-                children: [
-                  ProductImage(storagePath: product.imageUrl, size: 32),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(product.name)),
-                ],
-              ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(BsRadii.lg),
+            border: Border.all(color: BsColors.border),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(BsRadii.lg),
+            child: ListView.separated(
+              controller: _scrollController,
+              itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+              separatorBuilder: (_, _) =>
+                  const Divider(height: 1, color: BsColors.border),
+              itemBuilder: (context, index) {
+                if (index >= filtered.length) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: pager.loading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : TextButton(
+                              onPressed: pager.loadMore,
+                              child: Text(l10n.loadMore),
+                            ),
+                    ),
+                  );
+                }
+
+                final product = filtered[index];
+                final selected = product.id == widget.selectedProductId;
+                final meta = [
+                  if (product.sku != null && product.sku!.isNotEmpty)
+                    product.sku!,
+                  if (product.categoryName != null) product.categoryName!,
+                ].join(' · ');
+
+                return Material(
+                  color: selected
+                      ? BsColors.primary.withValues(alpha: 0.06)
+                      : Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _openProduct(product),
+                    hoverColor: BsColors.rowHover,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          ProductImage(
+                            storagePath: product.imageUrl,
+                            size: 40,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: selected
+                                            ? BsColors.primary
+                                            : null,
+                                      ),
+                                ),
+                                if (meta.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    meta,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(color: BsColors.outline),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          StockBadge(product: product, compact: true),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            DataCell(Text(product.sku ?? '—')),
-            DataCell(Text(product.categoryName ?? '—')),
-            DataCell(StockBadge(product: product)),
-          ],
+          ),
         ),
       ),
     );

@@ -51,6 +51,10 @@ ReportDateRange dateRangeFor(ReportRange range, {DateTime? now}) {
       from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 6))),
       to: tomorrowStart,
     ),
+    ReportRange.last30Days => ReportDateRange(
+      from: toUtcInstant(todayStartNpt.subtract(const Duration(days: 29))),
+      to: tomorrowStart,
+    ),
   };
 }
 

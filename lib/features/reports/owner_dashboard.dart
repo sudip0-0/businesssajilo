@@ -9,6 +9,7 @@ import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/bs_sales_line_chart.dart';
 import '../../core/ui/bs_stat_tile.dart';
 import '../../core/utils/money.dart';
+import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
@@ -34,7 +35,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
 
   Future<void> _refresh() async {
     ref.invalidate(last7DaySalesProvider);
-    ref.invalidate(salesDailyProvider(ReportRange.month));
+    ref.invalidate(salesDailyProvider(ReportRange.last30Days));
     ref.invalidate(ownerDashboardStatsProvider);
     ref.invalidate(lowStockAlertsProvider);
     ref.invalidate(todaysBillsProvider);
@@ -47,7 +48,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
     final name = session?.member?.displayName ?? '';
     final wide = isWideLayout(context);
     final stats = ref.watch(ownerDashboardStatsProvider);
-    final chartRange = _weeklyChart ? ReportRange.last7Days : ReportRange.month;
+    final chartRange = _weeklyChart
+        ? ReportRange.last7Days
+        : ReportRange.last30Days;
     final chartData = ref.watch(salesDailyProvider(chartRange));
     final todaysBills = ref.watch(todaysBillsProvider);
     final lowStockAlerts = ref.watch(lowStockAlertsProvider);
@@ -201,7 +204,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             Text(
-                              l10n.salesPerformanceSubtitle,
+                              _weeklyChart
+                                  ? l10n.salesPerformanceSubtitle
+                                  : l10n.salesPerformanceSubtitleMonthly,
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: BsColors.outline),
                             ),
@@ -225,7 +230,21 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   ),
                   const SizedBox(height: 16),
                   chartData.when(
-                    data: (points) => BsSalesLineChart(points: points),
+                    data: (points) {
+                      final window = dateRangeFor(chartRange);
+                      final filled = fillSalesDailyGaps(
+                        points: points,
+                        from: window.from,
+                        to: window.to,
+                      );
+                      return BsSalesLineChart(
+                        key: ValueKey(chartRange),
+                        points: filled,
+                        period: _weeklyChart
+                            ? SalesChartPeriod.weekly
+                            : SalesChartPeriod.monthly,
+                      );
+                    },
                     loading: () => const LinearProgressIndicator(),
                     error: (_, _) => const SizedBox.shrink(),
                   ),

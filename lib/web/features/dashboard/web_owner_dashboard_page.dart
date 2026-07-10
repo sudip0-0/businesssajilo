@@ -39,7 +39,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
 
   Future<void> _refresh() async {
     ref.invalidate(last7DaySalesProvider);
-    ref.invalidate(salesDailyProvider(ReportRange.month));
+    ref.invalidate(salesDailyProvider(ReportRange.last30Days));
     ref.invalidate(ownerDashboardStatsProvider);
     ref.invalidate(lowStockAlertsProvider);
     ref.invalidate(todaysBillsProvider);
@@ -52,7 +52,9 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
     final auth = ref.watch(authProvider).value;
     final name = auth?.member?.displayName ?? '';
     final stats = ref.watch(ownerDashboardStatsProvider);
-    final chartRange = _weeklyChart ? ReportRange.last7Days : ReportRange.month;
+    final chartRange = _weeklyChart
+        ? ReportRange.last7Days
+        : ReportRange.last30Days;
     final chartData = ref.watch(salesDailyProvider(chartRange));
     final todaysBills = ref.watch(todaysBillsProvider);
     final lowStockAlerts = ref.watch(lowStockAlertsProvider);
@@ -200,7 +202,9 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                                   ).textTheme.titleMedium,
                                 ),
                                 Text(
-                                  l10n.salesPerformanceSubtitle,
+                                  _weeklyChart
+                                      ? l10n.salesPerformanceSubtitle
+                                      : l10n.salesPerformanceSubtitleMonthly,
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(color: BsColors.outline),
                                 ),
@@ -267,8 +271,12 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                               to: window.to,
                             );
                             return BsSalesLineChart(
+                              key: ValueKey(chartRange),
                               points: filled,
                               height: 220,
+                              period: _weeklyChart
+                                  ? SalesChartPeriod.weekly
+                                  : SalesChartPeriod.monthly,
                             );
                           },
                           loading: () => const SizedBox(

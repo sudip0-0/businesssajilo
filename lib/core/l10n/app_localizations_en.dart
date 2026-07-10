@@ -992,6 +992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesPerformanceSubtitle => '7-day revenue trend analysis';
 
   @override
+  String get salesPerformanceSubtitleMonthly => '30-day revenue trend analysis';
+
+  @override
   String get quickStockCheck => 'Quick Stock Check';
 
   @override

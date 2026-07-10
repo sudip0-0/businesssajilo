@@ -69,8 +69,9 @@ class OwnerWebShell extends ConsumerWidget {
 
     return WebAppShell(
       navItems: items,
-      sidebarFooter: _CreateBillButton(
+      sidebarFooter: (collapsed) => _CreateBillButton(
         label: l10n.createNewBill,
+        collapsed: collapsed,
         onPressed: () => context.go('/owner/billing/new'),
       ),
       child: child,
@@ -79,13 +80,38 @@ class OwnerWebShell extends ConsumerWidget {
 }
 
 class _CreateBillButton extends StatelessWidget {
-  const _CreateBillButton({required this.label, required this.onPressed});
+  const _CreateBillButton({
+    required this.label,
+    required this.onPressed,
+    this.collapsed = false,
+  });
 
   final String label;
   final VoidCallback onPressed;
+  final bool collapsed;
 
   @override
   Widget build(BuildContext context) {
+    if (collapsed) {
+      return Center(
+        child: Tooltip(
+          message: label,
+          child: FilledButton(
+            key: IntegrationKeys.sidebarCreateBill,
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(40, 40),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Icon(PhosphorIconsRegular.plus, size: 18),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(

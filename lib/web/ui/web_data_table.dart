@@ -93,18 +93,37 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(BsRadii.lg),
-              child: SingleChildScrollView(
-                child: DataTable(
-                  sortColumnIndex: widget.sortColumnIndex,
-                  sortAscending: widget.sortAscending,
-                  columns: widget.columns,
-                  rows: rows,
-                  headingRowHeight: 44,
-                  dataRowMinHeight: rowHeight,
-                  dataRowMaxHeight: rowHeight + 8,
-                  showCheckboxColumn: false,
-                  dividerThickness: 1,
-                ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Keep a readable column floor so narrow panes scroll
+                  // horizontally instead of clipping cell content.
+                  const minTableWidth = 640.0;
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth < minTableWidth
+                            ? minTableWidth
+                            : constraints.maxWidth,
+                      ),
+                      child: SingleChildScrollView(
+                        child: DataTable(
+                          sortColumnIndex: widget.sortColumnIndex,
+                          sortAscending: widget.sortAscending,
+                          columns: widget.columns,
+                          rows: rows,
+                          headingRowHeight: 44,
+                          dataRowMinHeight: rowHeight,
+                          dataRowMaxHeight: rowHeight + 8,
+                          columnSpacing: 24,
+                          horizontalMargin: 20,
+                          showCheckboxColumn: false,
+                          dividerThickness: 1,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

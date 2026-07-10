@@ -49,4 +49,10 @@ void main() {
     expect(last7.from, week.from);
     expect(last7.to, week.to);
   });
+
+  test('last30Days covers 30 NPT days ending today', () {
+    final range = dateRangeFor(ReportRange.last30Days, now: now);
+    expect(range.from, DateTime.utc(2026, 5, 12, 18, 15));
+    expect(range.to, tomorrowStartUtc);
+  });
 }

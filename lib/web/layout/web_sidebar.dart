@@ -156,7 +156,10 @@ class WebSidebar extends StatelessWidget {
             ),
           ),
           if (footer != null)
-            Padding(padding: const EdgeInsets.all(12), child: footer!),
+            Padding(
+              padding: EdgeInsets.all(collapsed && !inDrawer ? 8 : 12),
+              child: footer!,
+            ),
         ],
       ),
     );

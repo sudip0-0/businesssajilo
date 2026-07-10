@@ -2000,6 +2000,12 @@ abstract class AppLocalizations {
   /// **'7-day revenue trend analysis'**
   String get salesPerformanceSubtitle;
 
+  /// No description provided for @salesPerformanceSubtitleMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'30-day revenue trend analysis'**
+  String get salesPerformanceSubtitleMonthly;
+
   /// No description provided for @quickStockCheck.
   ///
   /// In en, this message translates to:

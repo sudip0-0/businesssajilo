@@ -352,6 +352,7 @@
   "dashboardTodaySummary": "आज तपाईंको व्यवसायमा के भइरहेको छ।",
   "salesPerformance": "बिक्री प्रदर्शन",
   "salesPerformanceSubtitle": "७-दिने राजस्व प्रवृत्ति विश्लेषण",
+  "salesPerformanceSubtitleMonthly": "३०-दिने राजस्व प्रवृत्ति विश्लेषण",
   "quickStockCheck": "छिटो स्टक जाँच",
   "recentActivity": "हालैको गतिविधि",
   "todaysTransactions": "आजका कारोबार",

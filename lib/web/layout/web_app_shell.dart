@@ -17,7 +17,7 @@ class WebAppShell extends StatefulWidget {
 
   final List<WebNavItem> navItems;
   final Widget child;
-  final Widget? sidebarFooter;
+  final Widget Function(bool collapsed)? sidebarFooter;
 
   @override
   State<WebAppShell> createState() => _WebAppShellState();
@@ -43,7 +43,7 @@ class _WebAppShellState extends State<WebAppShell> {
           items: widget.navItems,
           collapsed: false,
           onToggleCollapse: () {},
-          footer: widget.sidebarFooter,
+          footer: widget.sidebarFooter?.call(false),
           inDrawer: true,
         ),
       ),
@@ -66,7 +66,7 @@ class _WebAppShellState extends State<WebAppShell> {
                 collapsed: _collapsed,
                 onToggleCollapse: () =>
                     setState(() => _collapsed = !_collapsed),
-                footer: widget.sidebarFooter,
+                footer: widget.sidebarFooter?.call(_collapsed),
               ),
             Expanded(
               child: Column(

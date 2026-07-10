@@ -988,6 +988,10 @@ class AppLocalizationsNe extends AppLocalizations {
   String get salesPerformanceSubtitle => '७-दिने राजस्व प्रवृत्ति विश्लेषण';
 
   @override
+  String get salesPerformanceSubtitleMonthly =>
+      '३०-दिने राजस्व प्रवृत्ति विश्लेषण';
+
+  @override
   String get quickStockCheck => 'छिटो स्टक जाँच';
 
   @override
