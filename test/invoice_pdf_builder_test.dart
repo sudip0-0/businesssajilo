@@ -53,6 +53,42 @@ void main() {
     expect(bytes.length, greaterThan(100));
   });
 
+  test('InvoicePdfBuilder renders Nepali Unicode without throwing', () async {
+    final doc = InvoiceDocument.fromBill(
+      business: Business(
+        id: 'biz1',
+        name: 'राम स्टोर',
+        phone: '9800000000',
+        address: 'काठमाडौं',
+      ),
+      bill: Bill(
+        id: 'b1',
+        businessId: 'biz1',
+        billNo: 'BS-0001',
+        itemsTotal: 10000,
+        grandTotal: 10000,
+        status: BillStatus.due,
+        createdBy: 'm1',
+        items: const [
+          BillItem(
+            id: 'i1',
+            billId: 'b1',
+            productId: 'p1',
+            nameSnapshot: 'कोला',
+            qty: 2,
+            rate: 5000,
+            lineTotal: 10000,
+          ),
+        ],
+      ),
+      customerLabel: 'हरि बहादुर',
+      statusLabel: 'बाँकी',
+      locale: const Locale('ne'),
+    );
+    final bytes = await const InvoicePdfBuilder().build(doc);
+    expect(bytes, isNotEmpty);
+  });
+
   test(
     'InvoiceImageBuilder produces PNG bytes',
     () async {

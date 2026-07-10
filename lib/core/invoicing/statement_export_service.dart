@@ -17,6 +17,14 @@ class StatementExportService {
   Future<Uint8List> buildPdfBytes(StatementDocument doc) =>
       _pdfBuilder.build(doc);
 
+  /// Renders the first page as PNG (long statements should use PDF).
+  Future<Uint8List> buildPngBytes(StatementDocument doc) async {
+    final pdfBytes = await _pdfBuilder.build(doc);
+    return rasterPdfFirstPageToPng(pdfBytes);
+  }
+
+  String fileName(StatementDocument doc) => _fileName(doc);
+
   Future<void> sharePdf(StatementDocument doc, {String? subject}) async {
     final bytes = await _pdfBuilder.build(doc);
     final name = _fileName(doc);
@@ -36,12 +44,24 @@ class StatementExportService {
     String? subject,
     String? text,
   }) async {
-    final pdfBytes = await _pdfBuilder.build(doc);
-    final png = await rasterPdfFirstPageToPng(pdfBytes);
-    final name = _fileName(doc);
+    final png = await buildPngBytes(doc);
+    await sharePngBytes(
+      png,
+      fileName: _fileName(doc),
+      subject: subject,
+      text: text,
+    );
+  }
+
+  Future<void> sharePngBytes(
+    Uint8List png, {
+    required String fileName,
+    String? subject,
+    String? text,
+  }) async {
     await Share.shareXFiles(
-      [XFile.fromData(png, name: '$name.png', mimeType: 'image/png')],
-      subject: subject ?? name,
+      [XFile.fromData(png, name: '$fileName.png', mimeType: 'image/png')],
+      subject: subject ?? fileName,
       text: text,
     );
   }

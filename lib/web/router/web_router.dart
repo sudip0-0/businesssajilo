@@ -250,35 +250,35 @@ ShellRoute _ownerRoutes() {
         path: '/owner/staff',
         builder: (_, _) => const WebStaffListPage(),
       ),
+      // Sibling routes (not nested) so each report page replaces the hub
+      // instead of stacking on top of it — nested stacks caused blank bodies.
       GoRoute(
         path: '/owner/reports',
         builder: (_, _) => DeferredPage(
           load: reports_hub.loadLibrary,
           builder: () => reports_hub.WebReportsHubPage(),
         ),
-        routes: [
-          GoRoute(
-            path: 'sales',
-            builder: (_, _) => DeferredPage(
-              load: sales_summary.loadLibrary,
-              builder: () => sales_summary.WebSalesSummaryPage(),
-            ),
-          ),
-          GoRoute(
-            path: 'dues',
-            builder: (_, _) => DeferredPage(
-              load: dues_aging.loadLibrary,
-              builder: () => dues_aging.WebDuesAgingPage(),
-            ),
-          ),
-          GoRoute(
-            path: 'stock',
-            builder: (_, _) => DeferredPage(
-              load: stock_valuation.loadLibrary,
-              builder: () => stock_valuation.WebStockValuationPage(),
-            ),
-          ),
-        ],
+      ),
+      GoRoute(
+        path: '/owner/reports/sales',
+        builder: (_, _) => DeferredPage(
+          load: sales_summary.loadLibrary,
+          builder: () => sales_summary.WebSalesSummaryPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/owner/reports/dues',
+        builder: (_, _) => DeferredPage(
+          load: dues_aging.loadLibrary,
+          builder: () => dues_aging.WebDuesAgingPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/owner/reports/stock',
+        builder: (_, _) => DeferredPage(
+          load: stock_valuation.loadLibrary,
+          builder: () => stock_valuation.WebStockValuationPage(),
+        ),
       ),
       GoRoute(
         path: '/owner/settings',

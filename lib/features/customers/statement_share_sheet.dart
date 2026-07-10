@@ -10,6 +10,7 @@ import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import 'statement_image_preview.dart';
 
 /// Opens the statement share sheet for [customer].
 Future<void> showStatementShareSheet(
@@ -45,6 +46,8 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
   Future<void> _share({required bool asPdf}) async {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
+    final sheetNav = Navigator.of(context);
+    final rootNav = Navigator.of(context, rootNavigator: true);
     setState(() {
       _loading = true;
       _error = null;
@@ -91,10 +94,19 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
       final service = ref.read(statementExportServiceProvider);
       if (asPdf) {
         await service.sharePdf(doc);
-      } else {
-        await service.sharePng(doc);
+        if (mounted) sheetNav.pop();
+        return;
       }
-      if (mounted) Navigator.pop(context);
+
+      final png = await service.buildPngBytes(doc);
+      final fileName = service.fileName(doc);
+      if (!mounted) return;
+      sheetNav.pop();
+      await showStatementImagePreview(
+        rootNav.context,
+        pngBytes: png,
+        fileName: fileName,
+      );
     } catch (_) {
       if (mounted) setState(() => _error = l10n.actionFailed);
     } finally {

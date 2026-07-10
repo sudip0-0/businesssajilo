@@ -6,13 +6,15 @@ import 'package:pdf/widgets.dart' as pw;
 import '../utils/bs_date.dart';
 import '../utils/money.dart';
 import 'invoice_document.dart';
+import 'pdf_fonts.dart';
 
 /// Builds PDF bytes for bills and credit notes.
 class InvoicePdfBuilder {
   const InvoicePdfBuilder();
 
   Future<Uint8List> build(InvoiceDocument doc) async {
-    final pdf = pw.Document();
+    final theme = await PdfFonts.loadTheme();
+    final pdf = pw.Document(theme: theme);
     final pageFormat = doc.kind == InvoiceDocumentKind.bill
         ? PdfPageFormat.roll80
         : PdfPageFormat.roll80;

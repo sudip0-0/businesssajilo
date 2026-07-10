@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../utils/bs_date.dart';
 import '../utils/money.dart';
+import 'pdf_fonts.dart';
 import 'statement_document.dart';
 
 /// Builds A4 PDF bytes for customer ledger statements. Long statements
@@ -13,7 +14,8 @@ class StatementPdfBuilder {
   const StatementPdfBuilder();
 
   Future<Uint8List> build(StatementDocument doc) async {
-    final pdf = pw.Document();
+    final theme = await PdfFonts.loadTheme();
+    final pdf = pw.Document(theme: theme);
 
     pdf.addPage(
       pw.MultiPage(
