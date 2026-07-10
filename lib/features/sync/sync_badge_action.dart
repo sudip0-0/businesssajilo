@@ -16,7 +16,10 @@ class SyncBadgeAction extends ConsumerWidget {
         padding: EdgeInsets.symmetric(horizontal: 8),
         child: SyncBadge(state: SyncState.synced),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, _) => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8),
+        child: SyncBadge(state: SyncState.offline),
+      ),
       data: (status) => TextButton(
         onPressed: () {
           Navigator.push(

@@ -10,16 +10,25 @@ class BsSuccessButton extends StatelessWidget {
     required this.label,
     this.icon,
     this.outlined = false,
+    this.loading = false,
   });
 
   final VoidCallback? onPressed;
   final String label;
   final Widget? icon;
   final bool outlined;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
-    final child = icon != null
+    final effectiveOnPressed = loading ? null : onPressed;
+    final child = loading
+        ? const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : icon != null
         ? Row(
             mainAxisSize: MainAxisSize.min,
             children: [icon!, const SizedBox(width: 8), Text(label)],
@@ -28,7 +37,7 @@ class BsSuccessButton extends StatelessWidget {
 
     if (outlined) {
       return OutlinedButton(
-        onPressed: onPressed,
+        onPressed: effectiveOnPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: BsColors.secondary,
           side: const BorderSide(color: BsColors.secondary),
@@ -38,7 +47,7 @@ class BsSuccessButton extends StatelessWidget {
     }
 
     return FilledButton(
-      onPressed: onPressed,
+      onPressed: effectiveOnPressed,
       style: FilledButton.styleFrom(
         backgroundColor: BsColors.secondary,
         foregroundColor: BsColors.onSecondary,

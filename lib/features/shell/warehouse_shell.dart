@@ -10,6 +10,7 @@ import '../notifications/notification_bell_action.dart';
 import '../sync/sync_badge_action.dart';
 import '../orders/fulfillment_list_screen.dart';
 import '../orders/providers.dart';
+import '../settings/account_section.dart';
 import 'logout_action.dart';
 
 /// Warehouse shell — no billing nav (hard product rule).
@@ -40,6 +41,7 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
       actions: const [
         SyncBadgeAction(),
         NotificationBellAction(),
+        AccountAction(),
         LogoutAction(),
       ],
       body: _index == 0

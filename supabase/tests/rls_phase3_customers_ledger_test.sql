@@ -40,9 +40,15 @@ select is(
   'owner updates customer profile'
 );
 
--- Owner inserts payment.
-insert into payments (id, business_id, customer_id, amount, method, received_by)
-values ('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 2500, 'cash', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+-- Owner records payment via RPC.
+select record_payment(jsonb_build_object(
+  'id', 'f1111111-1111-1111-1111-111111111111',
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'bill_id', null,
+  'amount', 2500,
+  'method', 'cash',
+  'received_by', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+));
 
 select is(
   (select balance_due::bigint from customer_balances where customer_id = 'e1111111-1111-1111-1111-111111111111'),
@@ -59,9 +65,15 @@ select is(
   'sales reads customer balances'
 );
 
--- Sales inserts payment.
-insert into payments (id, business_id, customer_id, amount, method, received_by)
-values ('f2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 1500, 'wallet', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+-- Sales records payment via RPC.
+select record_payment(jsonb_build_object(
+  'id', 'f2222222-2222-2222-2222-222222222222',
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'bill_id', null,
+  'amount', 1500,
+  'method', 'wallet',
+  'received_by', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+));
 
 select is(
   (select balance_due::bigint from customer_balances where customer_id = 'e1111111-1111-1111-1111-111111111111'),

@@ -226,6 +226,14 @@ class SyncingBillsRepository implements BillsRepository {
         });
       }
 
+      // Customer bills debit the local balance; payments (below) credit it.
+      if (customerId != null) {
+        await _db.customStatement(
+          'UPDATE local_customers SET balance_due = balance_due + ? WHERE id = ?',
+          [grandTotal, customerId],
+        );
+      }
+
       // Embed payment in the bill payload so create_bill inserts bill + payment
       // atomically (avoids paid-without-payment if payment sync fails separately).
       Map<String, dynamic>? paymentPayload;

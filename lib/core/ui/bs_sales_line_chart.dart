@@ -27,9 +27,7 @@ class BsSalesLineChart extends StatelessWidget {
   String _nptLabel(int index) {
     final npt = points[index].saleDate.toUtc().add(nptOffset);
     if (period == SalesChartPeriod.weekly) {
-      return DateFormat.E().format(
-        DateTime(npt.year, npt.month, npt.day),
-      );
+      return DateFormat.E().format(DateTime(npt.year, npt.month, npt.day));
     }
     // Format from NPT calendar fields so locale/timezone can't shift the day.
     return '${npt.month}/${npt.day}';
@@ -81,10 +79,9 @@ class BsSalesLineChart extends StatelessWidget {
     final effectiveMax = maxSales == 0 ? 1 : maxSales;
     final dense = points.length > 10;
     final labelIndices = _labelIndices();
-    final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: BsColors.outline,
-      fontSize: 10,
-    );
+    final labelStyle = Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(color: BsColors.outline, fontSize: 10);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

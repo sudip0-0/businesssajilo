@@ -72,7 +72,7 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 
 ## Phase 9 — Polish & Release
 - ✅ Nepali translation pass on all strings; BS date verification
-- ✅ Empty states, error states, skeleton loaders everywhere
+- ⚠️ Empty states, error states, skeleton loaders on most list screens (dashboards still use compact `…`/`—`; further polish backlog)
 - ✅ Performance pass (web CanvasKit, list virtualization, image caching)
 - ✅ Security review: RLS audit, rate limits, storage rules
 - ✅ Play Store + App Store listing **copy drafted** (`docs/release/`); store submission / screenshots still manual
@@ -86,15 +86,17 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Report CSV export: sales summary, dues aging, stock valuation (`lib/core/export/`)
 
 ## Phase 11 — Launch Hardening (pre-release blockers + quick wins)
-- ✅ T-101 Password reset: forgot-password email flow (login screens) + `reset-member-password` Edge Function (owner resets any member from staff list / customer detail; sessions revoked; forced change on next login via `/change-password` router guard); pgTAP tests in `rls_phase12_launch_hardening_test.sql`
+- ⚠️ T-101 Password reset: email self-service forgot-password + owner `reset-member-password` Edge Function. Phone-login users cannot self-reset by email — UI shows owner-reset hint (intentional; synthetic emails have no inbox).
 - ✅ T-102 Phone-number login: login accepts email or phone (`core/utils/login_identifier.dart` ↔ synthetic email in `create-member`); email now optional on member/customer creation; phone normalized to `+977…` and globally unique (`members_phone_unique_idx`)
-- ✅ T-103 Account deletion (store compliance): `delete-account` Edge Function — customer/staff self-delete (anonymize, financial snapshots retained) + owner business purge (`purge_business` incl. storage cleanup, type-DELETE-to-confirm); account menu in customer shell, settings tiles for owner; privacy policy updated
+- ✅ T-103 Account deletion (store compliance): `delete-account` Edge Function; account menu on owner settings, customer/sales/warehouse shells (mobile), and web top-bar for non-owners
 - ✅ T-104 Reorder from past order: one-tap cart prefill from order detail, inactive products skipped with notice
 - ✅ T-105 Shareable customer statement: 30/90-day/all-time ledger statement (BS+AD dates, opening/closing balance) as PDF/image via share sheet; totals invariant covered by `statement_document_test.dart`
 - ✅ T-108 Registration hardening: min password length 8 (config + all validators); prod captcha/CORS/leaked-password steps documented in `docs/SECURITY.md` checklist (dashboard-side, do before launch)
 
 ## Backlog (post-launch, see product.md roadmap)
+- Customer self-edit of own profile (PRD matrix deferred from v1)
 - Bill-level payment allocation (oldest-first auto-allocation; accurate aging) · quote expiry + stale-order nudges · dues reminders (push) · last-quoted-rate memory per customer
 - Server-side report aggregation (Postgres RPCs) · client image compression before upload
 - Thermal printing · price tiers · supplier purchases · multi-warehouse · unit conversions · batch/expiry
 - Payment gateways (eSewa/Khalti) · SMS reminders · subscriptions/feature gating · VAT mode
+- Production crash reporting (Sentry / Crashlytics) — deferred

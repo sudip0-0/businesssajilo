@@ -39,11 +39,16 @@ $$;
 -- Owner creates a bill for sales report data.
 select test_set_auth('22222222-2222-2222-2222-222222222222');
 
-insert into bills (id, business_id, customer_id, items_total, discount, grand_total, status, created_by)
-values ('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 5000, 0, 5000, 'due', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
-
-insert into bill_items (id, bill_id, product_id, name_snapshot, qty, rate, discount, line_total)
-values ('f2111111-1111-1111-1111-111111111111', 'f1111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 'Cola', 1, 5000, 0, 5000);
+select create_bill(jsonb_build_object(
+  'id', 'f1111111-1111-1111-1111-111111111111',
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'discount', 0,
+  'items', jsonb_build_array(jsonb_build_object(
+    'product_id', 'b1111111-1111-1111-1111-111111111111',
+    'name_snapshot', 'Cola', 'qty', 1, 'rate', 5000, 'discount', 0
+  )),
+  'payment', null
+));
 
 select is(
   (select count(*)::int from report_sales_daily where total_sales = 5000),

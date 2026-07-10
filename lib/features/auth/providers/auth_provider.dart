@@ -6,12 +6,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/notifications/push_service_provider.dart';
 import '../../../core/utils/login_identifier.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/businesses_repository.dart';
 import '../../../data/sync/sync_providers.dart';
+import '../../../domain/models/business.dart';
 import '../../../domain/models/session_state.dart';
 
 final authProvider = NotifierProvider<AuthController, AsyncValue<SessionState>>(
   AuthController.new,
 );
+
+/// Session-scoped business profile — lives with auth, not in the data layer.
+final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
+  ref,
+) async {
+  final businessId = ref.watch(authProvider).value?.member?.businessId;
+  if (businessId == null) return null;
+  return ref.watch(businessesRepositoryProvider).getById(businessId);
+});
 
 class AuthController extends Notifier<AsyncValue<SessionState>> {
   StreamSubscription<dynamic>? _subscription;

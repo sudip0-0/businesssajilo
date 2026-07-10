@@ -21,6 +21,9 @@ abstract final class BsColors {
   static const danger = Color(0xFFBA1A1A);
   static const info = Color(0xFF264191);
 
+  /// Fulfillment (packed / dispatched) status.
+  static const fulfillment = Color(0xFF5B4B8A);
+
   static const surface = Color(0xFFFAF8FF);
   static const background = Color(0xFFF9FAFB);
   static const text = Color(0xFF1A1B21);

@@ -6,11 +6,7 @@ import '../theme/app_theme.dart';
 import '../utils/stock_status.dart';
 
 class StockBadge extends StatelessWidget {
-  const StockBadge({
-    super.key,
-    required this.product,
-    this.compact = false,
-  });
+  const StockBadge({super.key, required this.product, this.compact = false});
 
   final Product product;
 

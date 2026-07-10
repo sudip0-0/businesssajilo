@@ -90,7 +90,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 value: stats.when(
                   data: (d) => formatNpr(Paisa(d.todaySales), showPaisa: false),
                   loading: () => '…',
-                  error: (_, _) => '—',
+                  error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.payments_outlined,
                 trend: stats.when(

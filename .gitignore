@@ -51,6 +51,8 @@ app.*.map.json
 # Node / Playwright (web e2e scripts)
 node_modules/
 package-lock.json
+e2e-results.json
+e2e-*.png
 /test-results/
 /playwright-report/
 /blob-report/

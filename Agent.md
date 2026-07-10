@@ -33,8 +33,8 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 
 - Pick tasks from `tasks.md`, respect phase order; mark items ✅ when completed.
 - Run `flutter analyze` and `flutter test` before considering a task done; zero analyzer warnings.
+- For DB/RLS/permission changes: run `supabase test db` and add or update a per-role test proving both the allow and the deny path.
 - Test on at least Android + Web for any UI change (layouts must be responsive).
-- For RLS/permission changes: add or update a per-role test proving both the allow and the deny path.
 - Keep diffs focused; don't refactor unrelated code in feature PRs.
 - Don't add dependencies without need; prefer the ones already listed in Architecture.md §1.
 

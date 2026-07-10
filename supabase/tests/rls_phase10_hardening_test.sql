@@ -104,19 +104,23 @@ select throws_ok(
   'item discount out of range'
 );
 
--- 7. Tampered direct bill_items line math rejected.
+-- 7. Direct bill_items insert denied (RPC-only writes).
 select throws_ok(
   $$insert into bill_items (bill_id, product_id, name_snapshot, qty, rate, discount, line_total)
     values ('f1111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 'Cola', 1, 5000, 0, 99999)$$,
-  '23514',
+  '42501',
   null,
-  'bill item line math constraint enforced'
+  'authenticated cannot direct-insert bill items'
 );
 
 -- 8. Payment equal to grand total flips bill to paid.
-insert into payments (business_id, customer_id, bill_id, amount, method, received_by)
-values ('11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111',
-        'f1111111-1111-1111-1111-111111111111', 10000, 'cash', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+select record_payment(jsonb_build_object(
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'bill_id', 'f1111111-1111-1111-1111-111111111111',
+  'amount', 10000,
+  'method', 'cash',
+  'received_by', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+));
 
 select is(
   (select status::text from bills where id = 'f1111111-1111-1111-1111-111111111111'),
@@ -124,13 +128,17 @@ select is(
   'full payment flips bill status to paid'
 );
 
--- 9. Cross-tenant bill_id rejected on payments.
+-- 9. Cross-tenant customer rejected on record_payment.
 select test_set_auth('66666666-6666-6666-6666-666666666666');
 select throws_ok(
-  $$insert into payments (business_id, customer_id, bill_id, amount, method, received_by)
-    values ('99999999-9999-9999-9999-999999999999', 'e1111111-1111-1111-1111-111111111111',
-            'f1111111-1111-1111-1111-111111111111', 100, 'cash', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee')$$,
-  'customer does not belong to this business'
+  $$select record_payment(jsonb_build_object(
+      'customer_id', 'e1111111-1111-1111-1111-111111111111',
+      'bill_id', 'f1111111-1111-1111-1111-111111111111',
+      'amount', 100,
+      'method', 'cash',
+      'received_by', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
+    ))$$,
+  'customer not found'
 );
 
 -- 10. apply_product_sync forbidden for customers.
@@ -157,7 +165,7 @@ select throws_ok(
 -- 13. Opening balance locked once ledger has activity.
 select throws_ok(
   $$update customers set opening_balance = 777 where id = 'e1111111-1111-1111-1111-111111111111'$$,
-  'opening balance cannot be changed once the customer has bills or payments'
+  'opening balance cannot be changed once the customer has bills, payments, or credit notes'
 );
 
 -- 14/15. send_quote: order flow, supersede prior sent quotes.

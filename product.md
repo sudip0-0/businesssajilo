@@ -28,7 +28,7 @@ BusinessSajilo is a multi-tenant SaaS platform for small-to-medium dealers and d
 |---|:-:|:-:|:-:|:-:|
 | Manage business settings, staff users | ✅ | ❌ | ❌ | ❌ |
 | Create customer credentials | ✅ | ❌ | ❌ | ❌ |
-| Add/edit customers (profile data) | ✅ | ❌ | ❌ | own profile |
+| Add/edit customers (profile data) | ✅ | ❌ | ❌ | ❌ (owner-managed in v1; self-edit deferred) |
 | Create/edit products & categories | ✅ | ❌ | ❌ | ❌ |
 | Stock-in, adjustments, stock counts | ✅ | ❌ | ✅ | ❌ |
 | View stock levels | ✅ | ✅ | ✅ | ❌ |

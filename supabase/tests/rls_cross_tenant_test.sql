@@ -50,11 +50,19 @@ select is(
   'owner B cannot read Biz A customers'
 );
 
--- Owner A creates a bill.
+-- Owner A creates a bill via create_bill.
 select test_set_auth('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 
-insert into bills (id, business_id, customer_id, items_total, discount, grand_total, status, created_by)
-values ('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 5000, 0, 5000, 'due', 'a1111111-1111-1111-1111-111111111111');
+select create_bill(jsonb_build_object(
+  'id', 'f1111111-1111-1111-1111-111111111111',
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'discount', 0,
+  'items', jsonb_build_array(jsonb_build_object(
+    'product_id', 'd1111111-1111-1111-1111-111111111111',
+    'name_snapshot', 'Cola', 'qty', 1, 'rate', 5000, 'discount', 0
+  )),
+  'payment', null
+));
 
 select is(
   (select count(*)::int from bills),

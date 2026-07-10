@@ -1232,6 +1232,10 @@ class AppLocalizationsNe extends AppLocalizations {
   String get forgotPassword => 'पासवर्ड बिर्सनुभयो?';
 
   @override
+  String get forgotPasswordPhoneHint =>
+      'फोन लगइनबाट इमेलमार्फत पासवर्ड रिसेट हुँदैन। आफ्नो व्यवसाय मालिकलाई पासवर्ड रिसेट गर्न भन्नुहोस्।';
+
+  @override
   String get resetPasswordEmailHint =>
       'आफ्नो खाताको इमेल लेख्नुहोस्, हामी पासवर्ड रिसेट लिंक पठाउँछौं।';
 

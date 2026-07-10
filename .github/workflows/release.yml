@@ -23,7 +23,11 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=FLAVOR=prod
       - name: Build Android App Bundle
-        run: flutter build appbundle --release
+        run: |
+          flutter build appbundle --release \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=FLAVOR=prod
       - uses: actions/upload-artifact@v4
         with:
           name: release-builds
@@ -31,7 +35,7 @@ jobs:
             build/web
             build/app/outputs/bundle/release/app-release.aab
       - name: Deploy to Vercel
-        if: ${{ secrets.VERCEL_TOKEN }}
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
         run: npx vercel deploy build/web --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

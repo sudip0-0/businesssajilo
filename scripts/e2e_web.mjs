@@ -3,8 +3,11 @@ import { writeFileSync, statSync } from 'fs';
 
 const BASE = process.env.BASE_URL || 'http://localhost:52200';
 const SUPABASE_URL = process.env.SUPABASE_URL || 'http://127.0.0.1:54321';
-const SUPABASE_ANON_KEY =
-  process.env.SUPABASE_ANON_KEY || 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+if (!SUPABASE_ANON_KEY) {
+  console.error('SUPABASE_ANON_KEY is required (set from `supabase status` / .env.local)');
+  process.exit(1);
+}
 const EMAIL = process.env.E2E_EMAIL || 'e2e-owner@test.com';
 const PASSWORD = process.env.E2E_PASSWORD || 'password123';
 

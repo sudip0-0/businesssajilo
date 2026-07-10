@@ -15,10 +15,8 @@ Future<void> showStatementImagePreview(
   return showDialog<void>(
     context: context,
     barrierDismissible: true,
-    builder: (_) => StatementImagePreview(
-      pngBytes: pngBytes,
-      fileName: fileName,
-    ),
+    builder: (_) =>
+        StatementImagePreview(pngBytes: pngBytes, fileName: fileName),
   );
 }
 

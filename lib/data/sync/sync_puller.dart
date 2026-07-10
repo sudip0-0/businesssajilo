@@ -181,25 +181,8 @@ class SyncPuller {
       await _db.setWatermark('products', ts);
     }
 
-    final custWatermark = await _db.watermark('customers');
-    if (custWatermark != null) {
-      final ts = DateTime.now().toUtc();
-      final iso = custWatermark.toIso8601String();
-      await _pullPaged(
-        buildPage: (from, to) async {
-          final rows = await _client
-              .from('customer_balances')
-              .select()
-              .gt('updated_at', iso)
-              .order('customer_id')
-              .range(from, to);
-          return _asMaps(rows);
-        },
-        onPage: _upsertCustomerBalancesBatch,
-      );
-      await _db.setWatermark('customers', ts);
-    }
-
+    // Bills/payments first, then customers — balances.updated_at includes
+    // financial activity timestamps, so customer delta must run after.
     final billWatermark = await _db.watermark('bills');
     if (billWatermark != null) {
       final ts = DateTime.now().toUtc();
@@ -236,6 +219,25 @@ class SyncPuller {
         onPage: (rows) => _upsertRemotePaymentsBatch(rows, synced: true),
       );
       await _db.setWatermark('payments', ts);
+    }
+
+    final custWatermark = await _db.watermark('customers');
+    if (custWatermark != null) {
+      final ts = DateTime.now().toUtc();
+      final iso = custWatermark.toIso8601String();
+      await _pullPaged(
+        buildPage: (from, to) async {
+          final rows = await _client
+              .from('customer_balances')
+              .select()
+              .gt('updated_at', iso)
+              .order('customer_id')
+              .range(from, to);
+          return _asMaps(rows);
+        },
+        onPage: _upsertCustomerBalancesBatch,
+      );
+      await _db.setWatermark('customers', ts);
     }
 
     final movWatermark = await _db.watermark('stock_movements');

@@ -15,12 +15,15 @@ class NotificationsRepository {
 
   final SupabaseClient? _client;
 
+  static const _listCap = 100;
+
   Future<List<NotificationItem>> list() async {
     final client = _requireClient();
     final rows = await client
         .from('notifications')
         .select()
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(_listCap);
     return (rows as List)
         .map((row) => NotificationItem.fromJson(row as Map<String, dynamic>))
         .toList();
@@ -33,13 +36,20 @@ class NotificationsRepository {
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false)
         .map(
-          (rows) => rows.map((row) => NotificationItem.fromJson(row)).toList(),
+          (rows) => rows
+              .take(_listCap)
+              .map((row) => NotificationItem.fromJson(row))
+              .toList(),
         );
   }
 
   Future<int> unreadCount() async {
-    final items = await list();
-    return items.where((n) => n.isUnread).length;
+    final client = _requireClient();
+    final rows = await client
+        .from('notifications')
+        .select('id')
+        .isFilter('read_at', null);
+    return (rows as List).length;
   }
 
   Future<void> markRead(String id) async {

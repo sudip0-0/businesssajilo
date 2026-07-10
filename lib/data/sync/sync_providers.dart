@@ -5,11 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/ui/sync_badge.dart';
 import '../../domain/models/session_state.dart';
-import '../../features/auth/providers/auth_provider.dart';
 import '../local/app_database.dart';
 import 'sync_config.dart';
+import 'sync_models.dart';
 import 'sync_service.dart';
 
 class SyncBundle {
@@ -43,7 +42,8 @@ class SyncBundleVersion extends Notifier<int> {
 }
 
 final syncBundleProvider = Provider<SyncBundle?>((ref) {
-  ref.watch(authProvider);
+  // Only watch the version bump — auth calls bump() after bootstrap/dispose
+  // so we avoid a data→features circular dependency on authProvider.
   ref.watch(syncBundleVersionProvider);
   return _activeBundle;
 });

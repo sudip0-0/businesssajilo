@@ -1,6 +1,6 @@
 -- RLS tests for Phase 4 billing.
 begin;
-select plan(9);
+select plan(10);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -36,41 +36,56 @@ begin
 end;
 $$;
 
--- Owner creates bill with auto numbering.
+-- Owner creates bill via create_bill (RPC-only writes).
 select test_set_auth('22222222-2222-2222-2222-222222222222');
 
-insert into bills (id, business_id, customer_id, items_total, discount, grand_total, status, created_by)
-values ('f1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 10000, 0, 10000, 'due', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
-
 select is(
-  (select bill_no from bills where id = 'f1111111-1111-1111-1111-111111111111'),
+  (create_bill(jsonb_build_object(
+    'id', 'f1111111-1111-1111-1111-111111111111',
+    'customer_id', 'e1111111-1111-1111-1111-111111111111',
+    'discount', 0,
+    'items', jsonb_build_array(jsonb_build_object(
+      'product_id', 'b1111111-1111-1111-1111-111111111111',
+      'name_snapshot', 'Cola', 'qty', 2, 'rate', 5000, 'discount', 0
+    )),
+    'payment', null
+  ))->'bill'->>'bill_no'),
   'BS-0001',
   'owner bill gets BS-0001'
 );
 
-insert into bill_items (id, bill_id, product_id, name_snapshot, qty, rate, discount, line_total)
-values ('f2222222-2222-2222-2222-222222222222', 'f1111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 'Cola', 2, 5000, 0, 10000);
-
 select is(
-  (select count(*)::int from bill_items),
+  (select count(*)::int from bill_items where bill_id = 'f1111111-1111-1111-1111-111111111111'),
   1,
-  'owner inserts bill items'
+  'owner create_bill inserts bill items'
 );
 
--- Sales creates second bill.
+-- Sales creates second bill and records payment via RPCs.
 select test_set_auth('33333333-3333-3333-3333-333333333333');
 
-insert into bills (id, business_id, customer_id, items_total, discount, grand_total, status, created_by)
-values ('f3333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 5000, 0, 5000, 'paid', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
-
 select is(
-  (select bill_no from bills where id = 'f3333333-3333-3333-3333-333333333333'),
+  (create_bill(jsonb_build_object(
+    'id', 'f3333333-3333-3333-3333-333333333333',
+    'customer_id', 'e1111111-1111-1111-1111-111111111111',
+    'discount', 0,
+    'items', jsonb_build_array(jsonb_build_object(
+      'product_id', 'b1111111-1111-1111-1111-111111111111',
+      'name_snapshot', 'Cola', 'qty', 1, 'rate', 5000, 'discount', 0
+    )),
+    'payment', null
+  ))->'bill'->>'bill_no'),
   'BS-0002',
   'sales bill gets BS-0002'
 );
 
-insert into payments (id, business_id, customer_id, bill_id, amount, method, received_by)
-values ('91111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'f3333333-3333-3333-3333-333333333333', 5000, 'cash', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+select record_payment(jsonb_build_object(
+  'id', '91111111-1111-1111-1111-111111111111',
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'bill_id', 'f3333333-3333-3333-3333-333333333333',
+  'amount', 5000,
+  'method', 'cash',
+  'received_by', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+));
 
 select is(
   (select balance_due::bigint from customer_balances where customer_id = 'e1111111-1111-1111-1111-111111111111'),
@@ -78,7 +93,7 @@ select is(
   'balance due reflects bill minus payment'
 );
 
--- Warehouse cannot read bills.
+-- Warehouse cannot read or insert bills.
 select test_set_auth('44444444-4444-4444-4444-444444444444');
 
 select is(
@@ -93,6 +108,17 @@ select throws_ok(
   '42501',
   null,
   'warehouse cannot insert bills'
+);
+
+-- Owner also cannot direct-insert bills (RPC-only).
+select test_set_auth('22222222-2222-2222-2222-222222222222');
+
+select throws_ok(
+  $$insert into bills (business_id, customer_id, items_total, discount, grand_total, status, created_by)
+    values ('11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 1000, 0, 1000, 'due', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')$$,
+  '42501',
+  null,
+  'owner cannot direct-insert bills'
 );
 
 -- Customer reads own bills.

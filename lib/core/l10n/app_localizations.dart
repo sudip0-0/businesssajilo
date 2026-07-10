@@ -2462,6 +2462,12 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
+  /// No description provided for @forgotPasswordPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone logins cannot reset by email. Ask your business owner to reset your password.'**
+  String get forgotPasswordPhoneHint;
+
   /// No description provided for @resetPasswordEmailHint.
   ///
   /// In en, this message translates to:

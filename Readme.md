@@ -50,6 +50,19 @@ supabase db reset
 
 flutter analyze && flutter test
 supabase test db               # RLS policy tests
+
+# Optional web E2E (requires running web app + local Supabase):
+# npm install
+# npm run e2e:web
+# npm run integration:web   # Windows + Developer Mode; see scripts/
+```
+
+**Note:** `.env.local` is read by helper scripts (`scripts/run_dev.ps1`), not by Flutter itself. The app only sees `--dart-define` values. On macOS/Linux, copy defines from `.env.example` into:
+
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=http://127.0.0.1:54321 \
+  --dart-define=SUPABASE_ANON_KEY=<publishable-key>
 ```
 
 ## Status

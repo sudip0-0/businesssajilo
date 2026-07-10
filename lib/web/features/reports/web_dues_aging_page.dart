@@ -139,10 +139,7 @@ class _DuesBody extends StatelessWidget {
           Expanded(
             child: WebDataTable<AgingCustomerRow>(
               columns: [
-                DataColumn(
-                  label: Text(l10n.customers),
-                  onSort: onSort,
-                ),
+                DataColumn(label: Text(l10n.customers), onSort: onSort),
                 DataColumn(
                   label: Text(l10n.dues),
                   numeric: true,

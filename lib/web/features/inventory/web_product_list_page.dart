@@ -267,10 +267,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                       ),
                       child: Row(
                         children: [
-                          ProductImage(
-                            storagePath: product.imageUrl,
-                            size: 40,
-                          ),
+                          ProductImage(storagePath: product.imageUrl, size: 40),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -280,9 +277,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                                   product.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: selected
@@ -296,9 +291,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                                     meta,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
+                                    style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(color: BsColors.outline),
                                   ),
                                 ],

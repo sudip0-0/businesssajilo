@@ -40,8 +40,8 @@ class SyncPusher {
           case 'bill':
             await _pushBill(item.entityId, payload);
           case 'bill_items':
-            // Legacy queue entries; bills now carry items via the RPC.
-            await _pushBillItems(payload);
+            // Legacy queue entries — reject; bills carry items via create_bill.
+            throw StateError('legacy bill_items queue entry rejected');
           case 'payment':
             await _pushPayment(payload);
             await _markPaymentSynced(item.entityId);
@@ -105,18 +105,8 @@ class SyncPusher {
     }
   }
 
-  Future<void> _pushBillItems(Map<String, dynamic> payload) async {
-    final items = payload['items'] as List;
-    if (items.isEmpty) return;
-    await _client
-        .from('bill_items')
-        .upsert(items, onConflict: 'id', ignoreDuplicates: true);
-  }
-
   Future<void> _pushPayment(Map<String, dynamic> payload) async {
-    await _client
-        .from('payments')
-        .upsert(payload, onConflict: 'id', ignoreDuplicates: true);
+    await _client.rpc<dynamic>('record_payment', params: {'p': payload});
   }
 
   Future<void> _pushStockMovement(Map<String, dynamic> payload) async {

@@ -472,6 +472,7 @@
   "emailOrPhone": "Email or phone number",
   "invalidEmailOrPhone": "Enter a valid email or phone number",
   "forgotPassword": "Forgot password?",
+  "forgotPasswordPhoneHint": "Phone logins cannot reset by email. Ask your business owner to reset your password.",
   "resetPasswordEmailHint": "Enter your account email and we'll send a password reset link.",
   "sendResetLink": "Send reset link",
   "resetEmailSent": "Password reset email sent. Check your inbox.",

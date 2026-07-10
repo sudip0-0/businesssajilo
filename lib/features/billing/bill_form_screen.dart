@@ -308,16 +308,15 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BsSuccessButton(
-                onPressed: _loading
-                    ? null
-                    : () {
-                        final narrow = MediaQuery.sizeOf(context).width < 720;
-                        if (narrow && !_showCart && _draft.lines.isNotEmpty) {
-                          setState(() => _showCart = true);
-                          return;
-                        }
-                        _save();
-                      },
+                loading: _loading,
+                onPressed: () {
+                  final narrow = MediaQuery.sizeOf(context).width < 720;
+                  if (narrow && !_showCart && _draft.lines.isNotEmpty) {
+                    setState(() => _showCart = true);
+                    return;
+                  }
+                  _save();
+                },
                 label: l10n.saveBill,
               ),
               if (_draft.lines.isNotEmpty) ...[

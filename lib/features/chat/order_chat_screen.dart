@@ -73,10 +73,24 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     if (member == null || businessId == null) return;
 
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1280,
+      imageQuality: 85,
+    );
     if (file == null) return;
 
     final bytes = await file.readAsBytes();
+    // Soft client cap — storage bucket enforces 5 MB.
+    if (bytes.lengthInBytes > 5 * 1024 * 1024) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).actionFailed)),
+        );
+      }
+      return;
+    }
+    final safeName = file.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     setState(() => _sending = true);
     try {
       await ref
@@ -86,7 +100,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
             senderMemberId: member.id,
             businessId: businessId,
             bytes: bytes,
-            fileName: file.name,
+            fileName: safeName.isEmpty ? 'chat.jpg' : safeName,
           );
     } catch (_) {
       _showSendFailed();

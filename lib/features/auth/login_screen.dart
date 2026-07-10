@@ -146,13 +146,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: TextButton(
                         onPressed: () {
                           final identifier = _emailController.text.trim();
+                          final isPhone =
+                              identifier.isNotEmpty &&
+                              !identifier.contains('@');
+                          if (isPhone) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.forgotPasswordPhoneHint),
+                              ),
+                            );
+                            return;
+                          }
                           showAdaptiveSheet<void>(
                             context: context,
                             title: l10n.resetPassword,
                             child: ForgotPasswordSheet(
-                              initialEmail: identifier.contains('@')
-                                  ? identifier
-                                  : null,
+                              initialEmail: identifier.isEmpty
+                                  ? null
+                                  : identifier,
                             ),
                           );
                         },

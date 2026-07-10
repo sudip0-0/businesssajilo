@@ -21,6 +21,9 @@ insert into members (id, business_id, auth_user_id, role, display_name, is_activ
 insert into customers (id, business_id, member_id, shop_name, opening_balance) values
   ('e1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Ram Store', 0);
 
+insert into products (id, business_id, name, unit, reference_price) values
+  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000);
+
 create or replace function test_set_auth(uid uuid) returns void
 language plpgsql as $$
 begin
@@ -32,14 +35,16 @@ $$;
 
 select test_set_auth('22222222-2222-2222-2222-222222222222');
 
-insert into bills (id, business_id, customer_id, items_total, discount, grand_total, status, created_by)
-values (
-  'f1111111-1111-1111-1111-111111111111',
-  '11111111-1111-1111-1111-111111111111',
-  'e1111111-1111-1111-1111-111111111111',
-  5000, 0, 5000, 'due',
-  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-);
+select create_bill(jsonb_build_object(
+  'id', 'f1111111-1111-1111-1111-111111111111',
+  'customer_id', 'e1111111-1111-1111-1111-111111111111',
+  'discount', 0,
+  'items', jsonb_build_array(jsonb_build_object(
+    'product_id', 'b1111111-1111-1111-1111-111111111111',
+    'name_snapshot', 'Cola', 'qty', 1, 'rate', 5000, 'discount', 0
+  )),
+  'payment', null
+));
 
 -- Owner can call RPC and see bucket totals.
 select is(

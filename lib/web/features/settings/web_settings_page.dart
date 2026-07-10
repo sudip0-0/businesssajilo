@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -9,7 +8,6 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../features/onboarding/demo_data_actions.dart';
 import '../../../features/onboarding/onboarding_prefs.dart';
 import '../../../features/settings/account_section.dart';
-import '../../../features/sync/pending_sync_screen.dart';
 import '../../theme/web_tokens.dart';
 import '../web_page_scaffold.dart';
 
@@ -109,12 +107,6 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
       icon: PhosphorIconsRegular.database,
       children: [
         ListTile(
-          leading: Icon(PhosphorIconsRegular.cloudArrowUp),
-          title: Text(l10n.pendingSyncItems),
-          trailing: Icon(PhosphorIconsRegular.caretRight),
-          onTap: () => context.push('/owner/settings/sync'),
-        ),
-        ListTile(
           leading: Icon(PhosphorIconsRegular.flask),
           title: Text(l10n.loadDemoData),
           subtitle: _seeding ? const LinearProgressIndicator() : null,
@@ -197,22 +189,6 @@ class _SettingsColumn extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Full-page pending sync view linked from settings.
-class WebPendingSyncPage extends StatelessWidget {
-  const WebPendingSyncPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return WebPageScaffold(
-      title: l10n.pendingSyncItems,
-      breadcrumbs: [l10n.settings, l10n.pendingSyncItems],
-      body: const PendingSyncScreen(),
     );
   }
 }

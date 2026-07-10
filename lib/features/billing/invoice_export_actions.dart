@@ -5,9 +5,9 @@ import '../../core/invoicing/invoice_document.dart';
 import '../../core/invoicing/invoice_document_factory.dart';
 import '../../core/invoicing/invoice_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../../data/repositories/businesses_repository.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/credit_note.dart';
+import '../auth/providers/auth_provider.dart';
 
 /// Loads business profile and shares/prints a bill document.
 Future<void> exportBillAsPng(

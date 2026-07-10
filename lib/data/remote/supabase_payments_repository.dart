@@ -35,20 +35,24 @@ class SupabasePaymentsRepository implements PaymentsRepository {
     bool enqueueRemote = true,
   }) async {
     final client = _requireClient();
-    final row = await client
-        .from('payments')
-        .insert({
-          'id': id ?? const Uuid().v4(),
+    final paymentId = id ?? const Uuid().v4();
+    final result = await client.rpc<dynamic>(
+      'record_payment',
+      params: {
+        'p': {
+          'id': paymentId,
           'customer_id': customerId,
           'bill_id': ?billId,
           'amount': amount,
           'method': method.name,
           'ref_note': ?refNote,
           'received_by': receivedByMemberId,
-        })
-        .select()
-        .single();
-    return Payment.fromJson(row);
+        },
+      },
+    );
+    final map = Map<String, dynamic>.from(result as Map);
+    final payment = Map<String, dynamic>.from(map['payment'] as Map);
+    return Payment.fromJson(payment);
   }
 
   @override

@@ -34,9 +34,21 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 
 - Minimum password length 8 (`config.toml` + client validators).
 - Owner self-service reset via email (`resetPasswordForEmail`).
+- Phone-login accounts use synthetic emails (`*@phone.businesssajilo.app`) with no inbox — the login UI blocks forgot-password for phone identifiers and directs users to ask the owner.
 - Owner-initiated member resets force a password change on next login
   (router blocks the app until `must_change_password` clears via the
   `clear_must_change_password` RPC).
+
+## Billing / payment write path
+
+- Direct `INSERT` on `bills`, `bill_items`, and `payments` is revoked for `authenticated`.
+- Clients must use `create_bill` / `record_payment` SECURITY DEFINER RPCs (migration 16).
+- Offline sync pushes payments via `record_payment`; legacy `bill_items` queue entries are rejected.
+
+## Observability
+
+- Production crash reporting (Sentry / Crashlytics) is **deferred** — see backlog in `tasks.md`.
+- Local diagnosis uses `debugPrint` for sync/auth/push failures.
 
 ## Push (web)
 

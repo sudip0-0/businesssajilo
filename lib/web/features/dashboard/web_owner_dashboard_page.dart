@@ -128,8 +128,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                     ),
                     icon: PhosphorIconsRegular.wallet,
                     subtitle: stats.when(
-                      data: (d) =>
-                          d.totalDues > 0 ? l10n.needsAttention : null,
+                      data: (d) => d.totalDues > 0 ? l10n.needsAttention : null,
                       loading: () => null,
                       error: (_, _) => null,
                     ),
@@ -162,9 +161,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                     ),
                     icon: PhosphorIconsRegular.shoppingCart,
                     trendLabel: stats.when(
-                      data: (d) => d.pendingOrders > 0
-                          ? '${d.pendingOrders} NEW'
-                          : null,
+                      data: (d) =>
+                          d.pendingOrders > 0 ? '${d.pendingOrders} NEW' : null,
                       loading: () => null,
                       error: (_, _) => null,
                     ),

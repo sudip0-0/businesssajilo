@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../data/sync/sync_models.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 
-enum SyncState { synced, pending, offline }
+export '../../data/sync/sync_models.dart' show SyncState;
 
 /// Persistent sync indicator — offline honesty (Design.md §5 of principles).
 class SyncBadge extends StatelessWidget {
@@ -22,7 +23,7 @@ class SyncBadge extends StatelessWidget {
         Icons.cloud_upload,
         l10n.pendingSync(pendingCount),
       ),
-      SyncState.offline => (Colors.grey, Icons.cloud_off, l10n.offline),
+      SyncState.offline => (BsColors.outline, Icons.cloud_off, l10n.offline),
     };
     return Semantics(
       label: '${l10n.syncStatus}: $label',

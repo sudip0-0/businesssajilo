@@ -5,11 +5,11 @@ import '../../core/invoicing/statement_document.dart';
 import '../../core/invoicing/statement_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
-import '../../data/repositories/businesses_repository.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import '../auth/providers/auth_provider.dart';
 import 'statement_image_preview.dart';
 
 /// Opens the statement share sheet for [customer].

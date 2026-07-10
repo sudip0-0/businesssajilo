@@ -32,9 +32,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          duesAgingProvider.overrideWith((ref) async => report),
-        ],
+        overrides: [duesAgingProvider.overrideWith((ref) async => report)],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -49,7 +47,9 @@ void main() {
     expect(find.text('Ram Store'), findsOneWidget);
   });
 
-  testWidgets('WebDuesAgingPage shows empty state when no dues', (tester) async {
+  testWidgets('WebDuesAgingPage shows empty state when no dues', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 

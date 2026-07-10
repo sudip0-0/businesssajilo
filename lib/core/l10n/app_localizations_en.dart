@@ -1236,6 +1236,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
+  String get forgotPasswordPhoneHint =>
+      'Phone logins cannot reset by email. Ask your business owner to reset your password.';
+
+  @override
   String get resetPasswordEmailHint =>
       'Enter your account email and we\'ll send a password reset link.';
 

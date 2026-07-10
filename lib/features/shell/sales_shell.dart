@@ -19,6 +19,7 @@ import '../orders/order_queue_screen.dart';
 import '../orders/providers.dart';
 import 'logout_action.dart';
 import 'role_dashboard.dart';
+import '../settings/account_section.dart';
 
 class SalesShell extends ConsumerStatefulWidget {
   const SalesShell({super.key});
@@ -125,6 +126,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
       actions: const [
         SyncBadgeAction(),
         NotificationBellAction(),
+        AccountAction(),
         LogoutAction(),
       ],
       body: pages[_index],

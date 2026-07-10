@@ -21,10 +21,13 @@ class ErrorState extends StatelessWidget {
           children: [
             Icon(Icons.error_outline, size: 56, color: scheme.error),
             const SizedBox(height: 16),
-            Text(
-              message ?? l10n.somethingWentWrong,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                message ?? l10n.somethingWentWrong,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
