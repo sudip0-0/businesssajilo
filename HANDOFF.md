@@ -423,7 +423,7 @@ Most files under `lib/web/features/**` except owner dashboard — they inherit t
 - [x] P1 feature-page color sweep  
 - [x] Authenticated owner smoke on real backend (`npm run e2e:web` — 38/41; canvas soft-fails only)  
 - [x] Compact shell themed + NE locale toggle verified in e2e  
-- [ ] Clean, focused git commit(s)  
+- [x] Clean, focused git commit(s) (`516095e` redesign; `e3b4c5f` seed fix)  
 
 ---
 
