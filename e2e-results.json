@@ -2,7 +2,7 @@
   {
     "step": "login_page",
     "ok": true,
-    "detail": "http://localhost:52200/#/login"
+    "detail": "http://127.0.0.1:52200/#/login"
   },
   {
     "step": "login_screenshot",
@@ -22,7 +22,7 @@
   {
     "step": "after_login",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/dashboard"
+    "detail": "http://127.0.0.1:52200/#/owner/dashboard"
   },
   {
     "step": "dashboard_no_crash",
@@ -37,7 +37,7 @@
   {
     "step": "route_dashboard",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/dashboard"
+    "detail": "http://127.0.0.1:52200/#/owner/dashboard"
   },
   {
     "step": "route_dashboard_screenshot",
@@ -52,7 +52,7 @@
   {
     "step": "route_inventory",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/inventory"
+    "detail": "http://127.0.0.1:52200/#/owner/inventory"
   },
   {
     "step": "route_inventory_screenshot",
@@ -67,7 +67,7 @@
   {
     "step": "route_customers",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/customers"
+    "detail": "http://127.0.0.1:52200/#/owner/customers"
   },
   {
     "step": "route_customers_screenshot",
@@ -82,7 +82,7 @@
   {
     "step": "route_billing",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/billing"
+    "detail": "http://127.0.0.1:52200/#/owner/billing"
   },
   {
     "step": "route_billing_screenshot",
@@ -97,7 +97,7 @@
   {
     "step": "route_orders",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/orders"
+    "detail": "http://127.0.0.1:52200/#/owner/orders"
   },
   {
     "step": "route_orders_screenshot",
@@ -112,7 +112,7 @@
   {
     "step": "route_staff",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/staff"
+    "detail": "http://127.0.0.1:52200/#/owner/staff"
   },
   {
     "step": "route_staff_screenshot",
@@ -127,7 +127,7 @@
   {
     "step": "route_reports",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/reports"
+    "detail": "http://127.0.0.1:52200/#/owner/reports"
   },
   {
     "step": "route_reports_screenshot",
@@ -142,7 +142,7 @@
   {
     "step": "route_settings",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/settings"
+    "detail": "http://127.0.0.1:52200/#/owner/settings"
   },
   {
     "step": "route_settings_screenshot",
@@ -157,7 +157,7 @@
   {
     "step": "bill_form_route",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/billing/new"
+    "detail": "http://127.0.0.1:52200/#/owner/billing/new"
   },
   {
     "step": "bill_form_screenshot",
@@ -167,42 +167,37 @@
   {
     "step": "dashboard_new_bill_nav",
     "ok": false,
-    "detail": "http://localhost:52200/#/owner/dashboard"
+    "detail": "http://127.0.0.1:52200/#/owner/dashboard"
   },
   {
     "step": "dashboard_new_bill_nav_fallback",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/billing/new"
+    "detail": "http://127.0.0.1:52200/#/owner/billing/new"
   },
   {
     "step": "bill_form_cancel",
     "ok": false,
-    "detail": "http://localhost:52200/#/owner/billing/new"
+    "detail": "http://127.0.0.1:52200/#/owner/billing/new"
   },
   {
     "step": "bill_form_cancel_fallback",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/billing"
+    "detail": "http://127.0.0.1:52200/#/owner/billing"
   },
   {
     "step": "dashboard_add_product_nav",
     "ok": false,
-    "detail": "http://localhost:52200/#/owner/dashboard"
+    "detail": "http://127.0.0.1:52200/#/owner/dashboard"
   },
   {
     "step": "dashboard_add_product_nav_fallback",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/inventory/new"
+    "detail": "http://127.0.0.1:52200/#/owner/inventory/new"
   },
   {
     "step": "sidebar_billing",
-    "ok": false,
-    "detail": "http://localhost:52200/#/owner/dashboard"
-  },
-  {
-    "step": "sidebar_billing_fallback",
     "ok": true,
-    "detail": "http://localhost:52200/#/owner/billing"
+    "detail": "http://127.0.0.1:52200/#/owner/billing"
   },
   {
     "step": "locale_toggle",
