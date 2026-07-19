@@ -2,10 +2,13 @@
 -- Password for seeded auth user: password123
 -- Used by test/integration bootstrap and Playwright e2e defaults.
 
+-- Token columns must be '' not NULL — GoTrue scans them as Go strings.
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-  created_at, updated_at
+  created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new,
+  email_change, email_change_token_current, phone_change, phone_change_token
 ) values (
   'e2e00000-0000-4000-8000-000000000001',
   '00000000-0000-0000-0000-000000000000',
@@ -17,7 +20,8 @@ insert into auth.users (
   '{"provider":"email","providers":["email"]}',
   '{}',
   now(),
-  now()
+  now(),
+  '', '', '', '', '', '', ''
 ) on conflict (id) do nothing;
 
 insert into auth.identities (
