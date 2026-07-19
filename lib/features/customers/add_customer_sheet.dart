@@ -72,7 +72,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
 
   String? _buildAddress() {
     final parts = <String>[
-      if (_city != null) _city!,
+      ?_city,
       if (_districtController.text.trim().isNotEmpty)
         _districtController.text.trim(),
       if (_panController.text.trim().isNotEmpty)
