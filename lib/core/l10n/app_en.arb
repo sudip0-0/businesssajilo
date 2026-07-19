@@ -528,5 +528,8 @@
   "clearSearch": "Clear search",
   "noRecentActivity": "No recent activity",
   "emptyFulfillment": "No orders to fulfill",
-  "syncErrorGeneric": "Could not sync. Check your connection and try again."
+  "syncErrorGeneric": "Could not sync. Check your connection and try again.",
+  "sidebarExpand": "Expand sidebar",
+  "sidebarCollapse": "Collapse sidebar",
+  "openMenu": "Open menu"
 }

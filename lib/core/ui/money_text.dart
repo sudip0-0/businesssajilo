@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -30,17 +31,25 @@ class MoneyText extends StatelessWidget {
         ? scheme.dangerColor
         : scheme.successColor;
     final formatted = formatNpr(amount, showPaisa: showPaisa);
+    // On web, money speaks in the mono ledger voice; mobile keeps the
+    // platform default face.
+    final effective = kIsWeb
+        ? base?.copyWith(
+            color: color,
+            fontFamily: 'IBM Plex Mono',
+            fontFamilyFallback: const ['Noto Sans Devanagari'],
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.2,
+          )
+        : base?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          );
     return Semantics(
       label: formatted,
       excludeSemantics: true,
-      child: Text(
-        formatted,
-        style: base?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
+      child: Text(formatted, style: effective),
     );
   }
 }

@@ -14,6 +14,7 @@ import '../../../features/inventory/product_detail_screen.dart';
 import '../../../features/inventory/product_image.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_master_detail.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_empty_state.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_skeleton.dart';
@@ -217,7 +218,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(BsRadii.lg),
-            border: Border.all(color: BsColors.border),
+            border: Border.all(color: WebPalette.hairline),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(BsRadii.lg),
@@ -225,7 +226,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
               controller: _scrollController,
               itemCount: filtered.length + (pager.hasMore ? 1 : 0),
               separatorBuilder: (_, _) =>
-                  const Divider(height: 1, color: BsColors.border),
+                  const Divider(height: 1, color: WebPalette.hairline),
               itemBuilder: (context, index) {
                 if (index >= filtered.length) {
                   return Padding(
@@ -255,11 +256,11 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
 
                 return Material(
                   color: selected
-                      ? BsColors.primary.withValues(alpha: 0.06)
+                      ? WebPalette.navyWash
                       : Colors.transparent,
                   child: InkWell(
                     onTap: () => _openProduct(product),
-                    hoverColor: BsColors.rowHover,
+                    hoverColor: WebPalette.paperDeep,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -281,7 +282,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                                       ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: selected
-                                            ? BsColors.primary
+                                            ? WebPalette.navy
                                             : null,
                                       ),
                                 ),
@@ -292,7 +293,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: BsColors.outline),
+                                        ?.copyWith(color: WebPalette.inkSoft),
                                   ),
                                 ],
                               ],

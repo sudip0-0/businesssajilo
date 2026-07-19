@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../theme/web_palette.dart';
 import '../theme/web_tokens.dart';
+import '../theme/web_typography.dart';
 
 /// Left-aligned page header with optional breadcrumbs and actions.
 class WebPageHeader extends StatelessWidget {
@@ -45,7 +46,7 @@ class WebPageHeader extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 20),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 22),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -85,27 +86,47 @@ class _TitleBlock extends StatelessWidget {
       children: [
         if (breadcrumbs.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              breadcrumbs.join(' / '),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: BsColors.outline,
-                letterSpacing: 0.5,
-              ),
+            padding: const EdgeInsets.only(bottom: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < breadcrumbs.length; i++) ...[
+                  if (i > 0)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 7),
+                      child: Container(
+                        width: 3,
+                        height: 3,
+                        decoration: const BoxDecoration(
+                          color: WebPalette.brass,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  Text(
+                    breadcrumbs[i].toUpperCase(),
+                    style: WebTypography.eyebrow(
+                      color: i == breadcrumbs.length - 1
+                          ? WebPalette.inkSoft
+                          : WebPalette.inkFaint,
+                    ).copyWith(fontSize: 10.5),
+                  ),
+                ],
+              ],
             ),
           ),
         Text(
           title,
           style: theme.textTheme.headlineSmall?.copyWith(
-            color: BsColors.textCharcoal,
+            color: WebPalette.ink,
           ),
         ),
         if (subtitle != null) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: 5),
           Text(
             subtitle!,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: BsColors.outline,
+              color: WebPalette.inkSoft,
             ),
           ),
         ],

@@ -6,7 +6,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/export/export_actions.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/report_range.dart';
@@ -22,6 +21,8 @@ import '../../../features/reports/providers.dart';
 import '../web_page_scaffold.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../../core/ui/bs_sales_line_chart.dart';
+import '../../theme/web_palette.dart';
+import '../../theme/web_typography.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_stat_tile.dart';
 import '../../../core/testing/integration_keys.dart';
@@ -204,7 +205,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                                       ? l10n.salesPerformanceSubtitle
                                       : l10n.salesPerformanceSubtitleMonthly,
                                   style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: BsColors.outline),
+                                      ?.copyWith(color: WebPalette.inkSoft),
                                 ),
                               ],
                             );
@@ -400,14 +401,36 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               Center(
-                child: Text(
-                  '© ${DateTime.now().year} ${l10n.appTitle.toUpperCase()} • ${l10n.madeForNepal.toUpperCase()}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: BsColors.outline,
-                    letterSpacing: 0.5,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: const BoxDecoration(
+                        color: WebPalette.brass,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '© ${DateTime.now().year} ${l10n.appTitle.toUpperCase()} • ${l10n.madeForNepal.toUpperCase()}',
+                      style: WebTypography.eyebrow(
+                        color: WebPalette.inkFaint,
+                      ).copyWith(fontSize: 10, letterSpacing: 1.3),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: const BoxDecoration(
+                        color: WebPalette.brass,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -439,8 +462,8 @@ class _RecentActivityList extends StatelessWidget {
       for (final bill in list.take(3)) {
         items.add(
           _ActivityItem(
-            icon: PhosphorIconsRegular.shoppingCart,
-            color: BsColors.primary,
+            icon: PhosphorIconsRegular.receipt,
+            color: WebPalette.navy,
             text: l10n.newBillCreated(bill.billNo),
             onTap: () => context.go('/owner/billing/${bill.id}'),
           ),
@@ -453,7 +476,7 @@ class _RecentActivityList extends StatelessWidget {
         items.add(
           _ActivityItem(
             icon: PhosphorIconsRegular.warning,
-            color: BsColors.danger,
+            color: WebPalette.danger,
             text: l10n.lowStockAlert(p.name),
             onTap: () => context.go('/owner/inventory/${p.id}'),
           ),
@@ -466,7 +489,7 @@ class _RecentActivityList extends StatelessWidget {
         items.add(
           _ActivityItem(
             icon: PhosphorIconsRegular.user,
-            color: BsColors.secondary,
+            color: WebPalette.success,
             text: l10n.newCustomerAdded(c.shopName),
             onTap: () => context.go('/owner/customers/${c.id}'),
           ),
@@ -480,7 +503,7 @@ class _RecentActivityList extends StatelessWidget {
           l10n.noRecentActivity,
           style: Theme.of(
             context,
-          ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
+          ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
         ),
       );
     }
@@ -510,7 +533,7 @@ class _ActivityItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(BsRadii.md),
+      borderRadius: BorderRadius.circular(6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -519,7 +542,7 @@ class _ActivityItem extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(BsRadii.md),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(icon, size: 14, color: color),
           ),
@@ -556,7 +579,7 @@ class _TransactionsTable extends StatelessWidget {
             l10n.noSalesInPeriod,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
+            ).textTheme.bodyMedium?.copyWith(color: WebPalette.inkSoft),
           ),
         ),
       );
@@ -583,7 +606,15 @@ class _TransactionsTable extends StatelessWidget {
               onSelectChanged: (_) =>
                   context.go('/owner/billing/${bills[i].id}'),
               cells: [
-                DataCell(Text('#${bills[i].billNo.split('-').last}')),
+                DataCell(
+                  Text(
+                    '#${bills[i].billNo.split('-').last}',
+                    style: WebTypography.mono(
+                      fontSize: 12,
+                      color: WebPalette.inkSoft,
+                    ),
+                  ),
+                ),
                 DataCell(
                   Text(bills[i].customerShopName ?? l10n.walkInCustomer),
                 ),
@@ -596,7 +627,14 @@ class _TransactionsTable extends StatelessWidget {
                 ),
                 DataCell(Text(_paymentLabel(bills[i].status, l10n))),
                 DataCell(
-                  Text(formatNpr(Paisa(bills[i].grandTotal), showPaisa: false)),
+                  Text(
+                    formatNpr(Paisa(bills[i].grandTotal), showPaisa: false),
+                    style: WebTypography.mono(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: WebPalette.ink,
+                    ),
+                  ),
                 ),
                 DataCell(BillStatusChip(bills[i].status)),
               ],

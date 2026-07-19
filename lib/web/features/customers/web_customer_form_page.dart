@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../features/auth/login_screen.dart' show emailRegex;
 import '../../../features/customers/providers.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_form_card.dart';
 import '../web_page_scaffold.dart';
 
@@ -73,7 +73,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
 
   String? _buildAddress() {
     final parts = <String>[
-      if (_city != null) _city!,
+      ?_city,
       if (_districtController.text.trim().isNotEmpty)
         _districtController.text.trim(),
       if (_panController.text.trim().isNotEmpty)
@@ -121,7 +121,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).actionFailed),
-            backgroundColor: BsColors.danger,
+            backgroundColor: WebPalette.danger,
           ),
         );
       }
@@ -230,7 +230,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                     WebFormRow(
                       children: [
                         DropdownButtonFormField<String>(
-                          value: _city,
+                          initialValue: _city,
                           decoration: InputDecoration(
                             labelText: l10n.city,
                             hintText: l10n.selectCity,

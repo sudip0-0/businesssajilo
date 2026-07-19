@@ -4,12 +4,13 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/testing/integration_keys.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/adaptive_sheet.dart';
 import '../../../core/ui/error_state.dart';
 import '../../../core/utils/money.dart';
-import '../../../domain/models/bill.dart';
-import '../../../features/billing/invoice_export_actions.dart';
 import '../../../domain/enums.dart';
+import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
 import '../../../features/billing/bill_draft_line.dart';
@@ -18,12 +19,12 @@ import '../../../features/billing/bill_form_save.dart';
 import '../../../features/billing/bill_form_validation.dart';
 import '../../../features/billing/bill_payment_sheet.dart';
 import '../../../features/billing/invalidate_billing.dart';
+import '../../../features/billing/invoice_export_actions.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_search_field.dart';
-import '../../../core/ui/adaptive_sheet.dart';
-import '../../../core/testing/integration_keys.dart';
 
 /// Web-native bill form layout with row-wise line items.
 class WebBillFormContent extends ConsumerStatefulWidget {
@@ -86,7 +87,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(billFormValidationMessage(l10n, validationError)),
-          backgroundColor: BsColors.danger,
+          backgroundColor: WebPalette.danger,
         ),
       );
       return null;
@@ -131,7 +132,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.actionFailed),
-            backgroundColor: BsColors.danger,
+            backgroundColor: WebPalette.danger,
           ),
         );
       }
@@ -210,7 +211,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                               child: Text(
                                 l10n.noBillLines,
                                 style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: BsColors.outline),
+                                    ?.copyWith(color: WebPalette.inkSoft),
                               ),
                             )
                           else
@@ -305,7 +306,7 @@ class _BillItemsTableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: BsColors.outline,
+      color: WebPalette.inkSoft,
       fontWeight: FontWeight.w600,
     );
 
@@ -345,7 +346,7 @@ class _BillItemRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: BsColors.border.withValues(alpha: 0.6)),
+          bottom: BorderSide(color: WebPalette.hairline.withValues(alpha: 0.6)),
         ),
       ),
       child: Row(
@@ -411,7 +412,7 @@ class _BillItemRow extends StatelessWidget {
           ),
           IconButton(
             tooltip: l10n.remove,
-            icon: Icon(PhosphorIconsRegular.trash, color: BsColors.danger),
+            icon: Icon(PhosphorIconsRegular.trash, color: WebPalette.danger),
             onPressed: onRemove,
           ),
         ],
@@ -451,7 +452,7 @@ class _AddProductRow extends StatelessWidget {
                 '…',
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
+                ).textTheme.bodyMedium?.copyWith(color: WebPalette.inkSoft),
               ),
             ),
             Expanded(
@@ -520,7 +521,7 @@ class WebFormHeaderRow extends StatelessWidget {
           loading: () => const LinearProgressIndicator(),
           error: (_, _) => Text(l10n.loadingFailed),
           data: (customers) => DropdownButtonFormField<String?>(
-            value: customerId,
+            initialValue: customerId,
             decoration: InputDecoration(
               labelText: l10n.customerName,
               prefixIcon: Icon(PhosphorIconsRegular.userPlus),
@@ -550,7 +551,7 @@ class WebFormHeaderRow extends StatelessWidget {
           Expanded(
             child: InputDecorator(
               decoration: InputDecoration(labelText: l10n.billNumber),
-              child: Text('AUTO', style: TextStyle(color: BsColors.outline)),
+              child: Text('AUTO', style: TextStyle(color: WebPalette.inkSoft)),
             ),
           ),
         ];
@@ -577,7 +578,7 @@ class WebFormHeaderRow extends StatelessWidget {
                     decoration: InputDecoration(labelText: l10n.billNumber),
                     child: Text(
                       'AUTO',
-                      style: TextStyle(color: BsColors.outline),
+                      style: TextStyle(color: WebPalette.inkSoft),
                     ),
                   ),
                 ),
@@ -613,9 +614,9 @@ class _BillSummaryPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: BsColors.primary.withValues(alpha: 0.04),
+        color: WebPalette.navy.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(BsRadii.lg),
-        border: Border.all(color: BsColors.primary.withValues(alpha: 0.12)),
+        border: Border.all(color: WebPalette.navy.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -660,7 +661,7 @@ class _BillSummaryPanel extends StatelessWidget {
                 formatNpr(Paisa(grandTotal), showPaisa: false),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: BsColors.primary,
+                  color: WebPalette.navy,
                 ),
               ),
             ],

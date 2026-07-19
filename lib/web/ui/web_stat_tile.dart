@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../layout/web_bento_grid.dart';
+import '../theme/web_palette.dart';
 import '../theme/web_typography.dart';
 
 enum WebTrendDirection { up, down, neutral }
 
-class WebStatTile extends StatelessWidget {
+class WebStatTile extends StatefulWidget {
   const WebStatTile({
     super.key,
     required this.label,
@@ -28,76 +28,107 @@ class WebStatTile extends StatelessWidget {
   final String? trendLabel;
 
   @override
+  State<WebStatTile> createState() => _WebStatTileState();
+}
+
+class _WebStatTileState extends State<WebStatTile> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
 
-    return WebBentoTile(
-      onTap: onTap,
-      elevated: true,
-      minHeight: 148,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: BsColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(BsRadii.md),
-                ),
-                child: Icon(icon, size: 18, color: BsColors.primary),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: WebBentoTile(
+        onTap: widget.onTap,
+        elevated: true,
+        minHeight: 148,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Brass ledger rule — draws in on hover.
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: _hovered ? 44 : 0,
+              height: 2,
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: WebPalette.brass,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const Spacer(),
-              if (trend != null)
-                Flexible(
-                  child: _TrendBadge(direction: trend!, label: trendLabel),
-                ),
-              if (onTap != null)
-                Icon(
-                  PhosphorIconsRegular.arrowRight,
-                  size: 16,
-                  color: scheme.outline,
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            label.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: scheme.outline,
-              letterSpacing: 0.8,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: WebTypography.metricValue(context),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(
-            height: 18,
-            child: subtitle != null
-                ? Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.outline,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: WebPalette.navyWash,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: WebPalette.navy.withValues(alpha: 0.1),
                     ),
-                  )
-                : null,
-          ),
-        ],
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    size: 18,
+                    color: WebPalette.navy,
+                  ),
+                ),
+                const Spacer(),
+                if (widget.trend != null)
+                  Flexible(
+                    child: _TrendBadge(
+                      direction: widget.trend!,
+                      label: widget.trendLabel,
+                    ),
+                  ),
+                if (widget.onTap != null)
+                  Icon(
+                    PhosphorIconsRegular.arrowUpRight,
+                    size: 15,
+                    color: _hovered
+                        ? WebPalette.navy
+                        : WebPalette.inkFaint,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.label.toUpperCase(),
+              style: WebTypography.eyebrow(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 5),
+            Text(
+              widget.value,
+              style: WebTypography.metricValue(context),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(
+              height: 18,
+              child: widget.subtitle != null
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        widget.subtitle!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: WebPalette.inkSoft,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )
+                  : null,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -111,42 +142,47 @@ class _TrendBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (color, icon) = switch (direction) {
+    final (color, wash, icon) = switch (direction) {
       WebTrendDirection.up => (
-        BsColors.secondary,
+        WebPalette.success,
+        WebPalette.successWash,
         PhosphorIconsRegular.trendUp,
       ),
       WebTrendDirection.down => (
-        BsColors.danger,
+        WebPalette.danger,
+        WebPalette.dangerWash,
         PhosphorIconsRegular.trendDown,
       ),
       WebTrendDirection.neutral => (
-        BsColors.outline,
+        WebPalette.warning,
+        WebPalette.warningWash,
         PhosphorIconsRegular.minus,
       ),
     };
 
     return Container(
       margin: const EdgeInsets.only(right: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(BsRadii.full),
+        color: wash,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: color),
           if (label != null) ...[
-            const SizedBox(width: 3),
+            const SizedBox(width: 4),
             Flexible(
               child: Text(
-                label!,
+                label!.toUpperCase(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                   color: color,
                 ),
               ),

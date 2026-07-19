@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/config/pagination.dart';
-import '../../core/theme/app_theme.dart';
+import '../theme/web_palette.dart';
+import '../theme/web_typography.dart';
 
 typedef WebDataRowBuilder<T> = DataRow Function(T item, int index);
 
@@ -67,10 +69,10 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
           selected: selected,
           color: WidgetStateProperty.resolveWith((states) {
             if (selected) {
-              return BsColors.primary.withValues(alpha: 0.06);
+              return WebPalette.navyWash;
             }
             if (states.contains(WidgetState.hovered)) {
-              return BsColors.rowHover;
+              return WebPalette.paperDeep.withValues(alpha: 0.55);
             }
             return null;
           }),
@@ -87,12 +89,13 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
         Expanded(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(BsRadii.lg),
-              border: Border.all(color: BsColors.border),
+              color: WebPalette.card,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: WebPalette.hairline),
+              boxShadow: WebPalette.cardShadow,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(BsRadii.lg),
+              borderRadius: BorderRadius.circular(10),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   // Keep a readable column floor so narrow panes scroll
@@ -157,26 +160,71 @@ class _TablePagination extends StatelessWidget {
     final to = ((page + 1) * kListPageSize).clamp(0, totalItems);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Row(
         children: [
           Text(
-            '$from-$to of $totalItems',
-            style: Theme.of(context).textTheme.bodySmall,
+            '$from–$to of $totalItems',
+            style: WebTypography.mono(
+              fontSize: 11.5,
+              color: WebPalette.inkSoft,
+            ),
           ),
           const Spacer(),
-          IconButton(
+          _PageButton(
+            icon: PhosphorIconsRegular.caretLeft,
             onPressed: page > 0 ? () => onPageChanged(page - 1) : null,
-            icon: const Icon(Icons.chevron_left),
           ),
-          Text('${page + 1} / $totalPages'),
-          IconButton(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              '${page + 1} / $totalPages',
+              style: WebTypography.mono(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: WebPalette.ink,
+              ),
+            ),
+          ),
+          _PageButton(
+            icon: PhosphorIconsRegular.caretRight,
             onPressed: page < totalPages - 1
                 ? () => onPageChanged(page + 1)
                 : null,
-            icon: const Icon(Icons.chevron_right),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PageButton extends StatelessWidget {
+  const _PageButton({required this.icon, this.onPressed});
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: enabled ? WebPalette.hairlineStrong : WebPalette.hairline,
+          ),
+          color: enabled ? WebPalette.cardBright : Colors.transparent,
+        ),
+        child: Icon(
+          icon,
+          size: 15,
+          color: enabled ? WebPalette.ink : WebPalette.inkFaint,
+        ),
       ),
     );
   }
@@ -208,14 +256,16 @@ class _WebHoverableRowState extends State<WebHoverableRow> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedContainer(
-        duration: 200.ms,
+        duration: 160.ms,
         decoration: BoxDecoration(
           color: widget.selected
-              ? BsColors.primary.withValues(alpha: 0.06)
+              ? WebPalette.navyWash
               : _hovered
-              ? BsColors.rowHover
+              ? WebPalette.paperDeep.withValues(alpha: 0.55)
               : null,
-          border: const Border(bottom: BorderSide(color: BsColors.border)),
+          border: const Border(
+            bottom: BorderSide(color: WebPalette.hairline),
+          ),
         ),
         child: Material(
           color: Colors.transparent,

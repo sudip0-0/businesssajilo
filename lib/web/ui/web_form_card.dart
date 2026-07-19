@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../layout/web_bento_grid.dart';
+import '../theme/web_palette.dart';
+import '../theme/web_typography.dart';
 
 /// Sectioned form card matching reference customer/bill layouts.
 class WebFormCard extends StatelessWidget {
@@ -36,10 +37,13 @@ class WebFormCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: BsColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(BsRadii.lg),
+                    color: WebPalette.navyWash,
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(
+                      color: WebPalette.navy.withValues(alpha: 0.1),
+                    ),
                   ),
-                  child: Icon(icon, size: 20, color: BsColors.primary),
+                  child: Icon(icon, size: 20, color: WebPalette.navy),
                 ),
                 const SizedBox(width: 12),
               ],
@@ -47,13 +51,19 @@ class WebFormCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 19,
+                        color: WebPalette.ink,
+                      ),
+                    ),
                     if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: BsColors.outline,
+                          color: WebPalette.inkSoft,
                         ),
                       ),
                     ],
@@ -80,13 +90,14 @@ class WebFormSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, top: 8),
-      child: Text(
-        label.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: BsColors.outline,
-          letterSpacing: 1.2,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        children: [
+          Text(label.toUpperCase(), style: WebTypography.eyebrow()),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Divider(height: 1, color: WebPalette.hairline),
+          ),
+        ],
       ),
     );
   }
@@ -142,7 +153,7 @@ class WebInfoTipCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(BsRadii.lg),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -154,8 +165,8 @@ class WebInfoTipCard extends StatelessWidget {
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: BsColors.textCharcoal,
-                height: 1.4,
+                color: WebPalette.ink,
+                height: 1.45,
               ),
             ),
           ),

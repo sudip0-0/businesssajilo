@@ -10,6 +10,7 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/notifications/providers.dart';
 import '../../features/settings/account_section.dart';
 import '../../features/shell/logout_action.dart';
+import '../theme/web_palette.dart';
 import '../theme/web_tokens.dart';
 import '../../core/ui/locale_toggle.dart';
 
@@ -22,7 +23,6 @@ class WebTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     final unread = ref.watch(unreadNotificationCountProvider);
     final tokens = context.webTokens;
     final auth = ref.watch(authProvider).value;
@@ -35,34 +35,42 @@ class WebTopBar extends ConsumerWidget {
     return Container(
       height: tokens.topBarHeight,
       padding: EdgeInsets.symmetric(horizontal: tokens.pagePadding),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      decoration: const BoxDecoration(
+        color: WebPalette.card,
+        border: Border(bottom: BorderSide(color: WebPalette.hairline)),
       ),
       child: Row(
         children: [
           if (showMenuButton)
             IconButton(
-              tooltip: 'Menu',
+              tooltip: l10n.openMenu,
               onPressed: onMenuPressed,
-              icon: Icon(PhosphorIconsRegular.list, color: scheme.primary),
+              icon: const Icon(
+                PhosphorIconsRegular.list,
+                color: WebPalette.navy,
+              ),
             ),
           const Spacer(),
           const LocaleToggle(compact: true),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           IconButton(
             tooltip: l10n.notifications,
             onPressed: () => context.push('/notifications'),
             icon: Badge(
               isLabelVisible: unread > 0,
-              backgroundColor: scheme.secondary,
+              backgroundColor: WebPalette.brass,
               label: Text(
                 unread > 9 ? '9+' : '$unread',
-                style: TextStyle(fontSize: 10, color: scheme.onSecondary),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              child: Icon(
+              child: const Icon(
                 PhosphorIconsRegular.bell,
-                color: scheme.onSurfaceVariant,
+                color: WebPalette.inkSoft,
+                size: 21,
               ),
             ),
           ),
@@ -70,41 +78,52 @@ class WebTopBar extends ConsumerWidget {
             IconButton(
               tooltip: l10n.settings,
               onPressed: () => context.go('/owner/settings'),
-              icon: Icon(
+              icon: const Icon(
                 PhosphorIconsRegular.gear,
-                color: scheme.onSurfaceVariant,
+                color: WebPalette.inkSoft,
+                size: 21,
               ),
             )
           else
             const AccountAction(),
           if (!compact && name.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: scheme.primary.withValues(alpha: 0.12),
+            const SizedBox(width: 10),
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: WebPalette.navyWash,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: WebPalette.navy.withValues(alpha: 0.14),
+                ),
+              ),
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: TextStyle(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+                style: const TextStyle(
+                  color: WebPalette.navy,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 9),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name.split(' ').first,
-                  style: Theme.of(context).textTheme.labelLarge,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(color: WebPalette.ink),
                 ),
                 Text(
                   role != null ? roleLabel(l10n, role) : '',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    letterSpacing: 0.5,
+                    color: WebPalette.inkFaint,
+                    letterSpacing: 0.6,
                   ),
                 ),
               ],

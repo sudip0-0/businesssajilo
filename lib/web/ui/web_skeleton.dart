@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../theme/web_palette.dart';
+
 class WebSkeleton extends StatelessWidget {
   const WebSkeleton({
     super.key,
@@ -15,20 +17,18 @@ class WebSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: scheme.surfaceContainer,
+            color: WebPalette.paperDeep,
             borderRadius: BorderRadius.circular(borderRadius),
           ),
         )
         .animate(onPlay: (c) => c.repeat())
         .shimmer(
-          duration: 1200.ms,
-          color: scheme.surfaceContainerHigh.withValues(alpha: 0.6),
+          duration: 1300.ms,
+          color: WebPalette.cardBright.withValues(alpha: 0.75),
         );
   }
 }

@@ -113,59 +113,106 @@ spacing:
 
 The design system is engineered for efficiency, reliability, and local relevance. It targets small to medium enterprise owners who require a stable tool to manage complex business operations. The brand personality is **Professional, Trustworthy, and Efficient**.
 
-The design style follows a **Corporate / Modern** aesthetic, prioritizing clarity and utility over decorative elements. It utilizes a structured grid, subtle elevation to denote information hierarchy, and a clear functional color language that resonates with financial and operational workflows. The UI must feel grounded and institutional yet accessible to users who may be transitioning from paper-based systems to digital management.
+**Mobile** follows a **Corporate / Modern** aesthetic: clarity and utility, structured grid, subtle elevation, cool neutrals. **Web** uses a distinctive **Digital Ledger** (डिजिटल खाता) aesthetic — warm paper, ink-navy rail, brass accents — while keeping the same navy brand anchor (`#00236F`). Both surfaces must feel grounded and institutional for users transitioning from paper ledgers to digital management.
 
-## Colors
+---
 
-This design system uses a logic-driven color palette to facilitate quick decision-making:
+## Mobile (source of truth for `BsColors` / Inter)
 
-- **Primary (Navy Blue):** Used for primary actions, branding, and navigation. It establishes authority and stability.
-- **Secondary (Vibrant Green):** Reserved for "Success" states, "Paid" statuses, and positive growth indicators like "Add New" or "Income."
-- **Accent (Amber):** Used exclusively for "Warning" states, "Pending" payments, and items requiring attention.
-- **Neutrals:** A range of cool greys ensures a "clean" feel. Scaffold background is `#F9FAFB` (`BsColors.background`); elevated surfaces use `#FAF8FF` (`BsColors.surface`).
+### Colors
 
-Text utilizes Deep Charcoal (`#111827`) for maximum contrast against white backgrounds, ensuring high legibility for financial data.
+This palette facilitates quick decision-making on Android/iOS:
 
-## Typography
+- **Primary (Navy Blue):** Primary actions, branding, and navigation.
+- **Secondary (Vibrant Green):** Success states, "Paid", positive growth.
+- **Accent (Amber):** Warning / pending attention only.
+- **Neutrals:** Cool greys. Scaffold `#F9FAFB` (`BsColors.background`); elevated surfaces `#FAF8FF` (`BsColors.surface`).
 
-The design system uses **Inter** (bundled under `assets/fonts/`) for Latin UI and **Noto Sans Devanagari** (bundled) as the Devanagari fallback.
+Text uses Deep Charcoal (`#111827`) for contrast on light backgrounds.
 
-- **Bi-lingual Balance:** Ensure the line-height is generous enough (minimum 1.4x) to prevent Devanagari vowel signs (matras) from clipping or overlapping between lines.
-- **Numerical Clarity:** Use tabular lining for figures in tables and invoices to ensure that currency values align vertically for easy scanning.
-- **Hierarchy:** Headlines use tighter tracking and heavier weights to stand out, while labels use all-caps with subtle tracking (0.05em) for category identification.
+### Typography
 
-## Layout & Spacing
+**Inter** (bundled under `assets/fonts/`) for Latin UI and **Noto Sans Devanagari** as the Devanagari fallback.
 
-The layout utilizes a **Fixed Grid** on desktop (1280px max width) and a **Fluid Grid** on mobile. 
+- **Bi-lingual Balance:** Line-height at least 1.4x so Devanagari matras do not clip.
+- **Numerical Clarity:** Tabular lining for figures in tables and invoices.
+- **Hierarchy:** Headlines use tighter tracking and heavier weights; labels may use all-caps with subtle tracking (0.05em).
 
-- **The 8pt Rhythm:** All padding, margins, and component heights must be multiples of 4px/8px to maintain a rhythmic vertical flow.
-- **Sidebar:** On desktop, the sidebar is a fixed 260px (64px when collapsed). On mobile, it transitions to a bottom navigation bar or a full-screen overlay.
-- **Content Area:** Main content follows a 12-column grid on desktop with 16px gutters. Dashboard metrics should be grouped in 3 or 4 columns, while data tables should span the full width.
-- **Data Density:** Use "Medium" density for general workflows and "Compact" density (8px vertical padding) for data-heavy tables to maximize information visibility without scrolling.
+### Layout & Spacing (mobile)
 
-## Elevation & Depth
+Fluid grid; 8pt rhythm (multiples of 4px/8px). Bottom navigation or full-screen overlay on small screens. Medium density for general workflows; compact density for data-heavy lists.
 
-Visual hierarchy is established through **Tonal Layers** and **Ambient Shadows**.
+### Elevation, shapes, components (mobile)
 
-1.  **Level 0 (Background):** `#F9FAFB` – The base canvas.
-2.  **Level 1 (Cards/Sidebar):** White surface with a `1px` border of `#E5E7EB`.
-3.  **Level 2 (Active States/Metrics):** A soft, diffused shadow (0px 4px 6px -1px rgba(0,0,0,0.1)) to lift key performance indicators (KPIs) above the base layer.
-4.  **Level 3 (Modals/Dropdowns):** Pronounced shadows with higher blur (0px 10px 15px -3px rgba(0,0,0,0.1)) to indicate temporary interaction layers that require focus.
+Tonal layers on cool grey canvas; soft corner radii; **status badges use soft-fill pills** (tinted background + same-hue text). Primary buttons are solid navy; success actions may use green. Tables hover with light grey (`#F3F4F6`).
 
-Avoid heavy dark shadows; depth should feel like light catching the edge of a physical paper document.
+---
 
-## Shapes
+## Web — Digital Ledger
 
-The shape language is **Soft**. Standard UI elements like input fields, buttons, and small cards use a `0.25rem` (4px) corner radius. This maintains a professional "business" feel while appearing more modern than sharp edges.
+Web-only tokens live in `lib/web/theme/web_palette.dart`, `web_tokens.dart`, `web_typography.dart`, and `web_theme.dart`. **Do not** move paper/brass tokens into `BsColors` unless product decides to restyle mobile.
 
-Larger container elements like dashboard sections and main cards may use `rounded-lg` (0.5rem) to create a softer grouping effect. Status badges and tags use a fully rounded "pill" shape to distinguish them from interactive buttons.
+### Surfaces & color
 
-## Components
+| Role | Token | Hex |
+|------|--------|-----|
+| Paper canvas | `WebPalette.paper` | `#F7F4EC` |
+| Recessed / hover | `WebPalette.paperDeep` | `#EFEBDF` |
+| Card | `WebPalette.card` | `#FFFDF8` |
+| Ink text | `WebPalette.ink` | `#17202E` |
+| Hairline | `WebPalette.hairline` | `#E4DECF` |
+| Brand navy | `WebPalette.navy` | `#00236F` |
+| Ink rail | `WebPalette.rail` | `#0E1B2C` |
+| Brass accent | `WebPalette.brass` / `brassBright` | `#AE8126` / `#DBA94A` |
+| Brass text on paper | `WebPalette.brassDeep` | `#8A6614` |
 
-- **Buttons:** Primary buttons are Solid Navy Blue with white text. Success actions ("Add", "Confirm") use Green. Buttons have a height of 40px for standard and 32px for compact views.
-- **Status Badges:** Use a "soft-fill" approach: a light background version of the state color (e.g., Light Green background for "Paid") with dark text in the same hue.
-- **Input Fields:** 1px neutral borders that turn Primary Blue on focus. Labels are always visible above the field in `label-md` style.
-- **Tables:** Row hover states use a light grey tint (`#F3F4F6`). Currency columns (NPR) are right-aligned. The "Status" column is always visible.
-- **Currency Formatting:** All NPR values use Nepali grouping via `formatNpr` (e.g. `रू 1,23,456.50`). 
-- **Bi-lingual Toggles:** Positioned in the top-right utility bar. Toggling language should not shift the layout; ensure components can handle the slightly longer character counts often found in Nepali translations.
-- **Cards:** Metric cards feature a large `display-md` value, a `label-sm` title, and a small trend indicator (up/down arrow) in green or red.
+Brass is used sparingly (brand mark, selection tick, focus moments, rail footer CTA). Status washes (`success`, `danger`, `warning`) are harmonized to the paper surface.
+
+### Typography (web)
+
+| Role | Family | Use |
+|------|--------|-----|
+| Display | **Spectral** (serif) | Titles, brand wordmark, KPI numbers |
+| UI | **Barlow** (sans) | Body, labels, chrome |
+| Data | **IBM Plex Mono** | Money, bill nos, IDs |
+| Devanagari | **Noto Sans Devanagari** | Fallback (unchanged) |
+
+Helpers: `WebTypography.serif`, `mono`, `eyebrow`, `metricValue`.
+
+### Shell & layout (web)
+
+From `WebTokens.light`:
+
+- Sidebar **264px** expanded / **72px** collapsed (ink rail; paper grain overlays **content only**, not the rail)
+- Content max width **1320px**; top bar **60px**; page padding **28px**; gutters **16px**
+- Card radius **10**; input radius **6**
+- Compact breakpoint **768** (drawer + `NavigationBar`); desktop **1024**; wide **1280**
+
+Atmosphere: subtle paper grain (`WebPaperGrain`), ledger-line auth brand panel, रू watermark on login/register.
+
+### Components (web)
+
+- **Stamp-style status chips** (shared `StatusChip` / `BillStatusChip`): border + color dot or icon + uppercase micro-label — not soft-fill pills.
+- **Ledger tables** (`WebDataTable`): warm card chrome, mono pagination, warm hover/selected rows (`paperDeep` / navy wash).
+- **KPI tiles** (`WebStatTile`): Spectral metrics, eyebrow labels, stamp trend badges, brass hover rule.
+- **Form cards** (`WebFormCard`): navy icon medallion, serif title, section hairline rules.
+- **Empty states:** brass medallion + serif message.
+- **Sidebar footer CTAs:** local theme override makes `FilledButton` **brass** on the ink rail.
+- **Buttons:** primary filled navy with hover deepen; standard height 40 / compact 36.
+
+### Money on web
+
+`MoneyText` switches to IBM Plex Mono when `kIsWeb`. Raw `Text(formatNpr(...))` does **not** — use `MoneyText` or `WebTypography.mono(...)`.
+
+### Dark mode (web)
+
+Product web forces light (`WebTheme.light()`). `WebTheme.dark()` compiles but is not the shipped surface.
+
+---
+
+## Shared rules (both platforms)
+
+- **Currency Formatting:** All NPR values use Nepali grouping via `formatNpr` (e.g. `रू 1,23,456.50`).
+- **Bi-lingual Toggles:** Top-right utility bar on web; layouts must tolerate longer Nepali strings.
+- **Primary brand navy** `#00236F` is shared across mobile and web.
+- Offline design preview harness: `tool/design_preview/main.dart` (`flutter run -t tool/design_preview/main.dart -d chrome`).

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/web_tokens.dart';
 import '../ui/web_keyboard_scope.dart';
+import '../ui/web_paper.dart';
 import 'web_sidebar.dart';
 import 'web_top_bar.dart';
 
@@ -75,7 +76,16 @@ class _WebAppShellState extends State<WebAppShell> {
                     showMenuButton: compact,
                     onMenuPressed: _openMobileDrawer,
                   ),
-                  Expanded(child: widget.child),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: widget.child),
+                        // Paper grain breaks the flatness of the canvas
+                        // without ever intercepting input.
+                        const Positioned.fill(child: WebPaperGrain()),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

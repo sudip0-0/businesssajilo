@@ -3,9 +3,9 @@
     "short_name": "Sajilo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#F9FAFB",
-    "theme_color": "#00236F",
-    "description": "Inventory, billing, and udharo tracking for Nepali dealers and retailers.",
+    "background_color": "#0E1B2C",
+    "theme_color": "#0E1B2C",
+    "description": "Inventory, quote-first ordering, billing and udharo tracking for Nepali dealers and retailers.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

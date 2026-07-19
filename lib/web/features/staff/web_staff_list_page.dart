@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/async_body.dart';
 import '../../../core/utils/role_label.dart';
 import '../../../data/repositories/members_repository.dart';
@@ -12,6 +11,7 @@ import '../../../domain/models/member.dart';
 import '../../../features/staff/add_member_sheet.dart';
 import '../../../features/staff/reset_member_password_sheet.dart';
 import '../../../features/staff/staff_list_screen.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
 import '../../ui/web_side_panel.dart';
@@ -143,15 +143,13 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: BsColors.primary.withValues(
-                          alpha: 0.12,
-                        ),
+                        backgroundColor: WebPalette.navyWash,
                         child: Text(
                           member.displayName.isNotEmpty
                               ? member.displayName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
-                            color: BsColors.primary,
+                            color: WebPalette.navy,
                             fontSize: 12,
                           ),
                         ),

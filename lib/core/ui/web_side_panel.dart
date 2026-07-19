@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/app_theme.dart';
-
 /// Right-side panel for web workflows (payment, stock-in, add-member).
 /// Lives in `core/ui` so adaptive sheets do not import `lib/web/`.
 Future<T?> showWebSidePanel<T>({
@@ -68,7 +66,9 @@ Future<T?> showWebSidePanel<T>({
                                     title,
                                     style: Theme.of(ctx).textTheme.titleLarge
                                         ?.copyWith(
-                                          color: BsColors.textCharcoal,
+                                          color: panelTheme
+                                              .colorScheme
+                                              .onSurface,
                                         ),
                                   ),
                                 ),

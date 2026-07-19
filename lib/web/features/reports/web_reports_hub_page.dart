@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/bs_sales_line_chart.dart';
 import '../../../core/utils/money.dart';
 import '../../../domain/enums.dart';
 import '../../../features/billing/providers.dart';
@@ -12,7 +13,7 @@ import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../../features/reports/providers.dart';
 import '../../layout/web_bento_grid.dart';
-import '../../../core/ui/bs_sales_line_chart.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_stat_tile.dart';
 import '../web_page_scaffold.dart';
 
@@ -103,7 +104,7 @@ class WebReportsHubPage extends ConsumerWidget {
                           Icon(
                             PhosphorIconsRegular.arrowRight,
                             size: 16,
-                            color: BsColors.outline,
+                            color: WebPalette.inkSoft,
                           ),
                         ],
                       ),
@@ -130,7 +131,7 @@ class WebReportsHubPage extends ConsumerWidget {
                         loading: () => '…',
                         error: (_, _) => '—',
                       ),
-                      color: BsColors.danger,
+                      color: WebPalette.danger,
                       onTap: () => context.go('/owner/reports/dues'),
                     ),
                     const SizedBox(height: 12),
@@ -148,7 +149,7 @@ class WebReportsHubPage extends ConsumerWidget {
                         loading: () => '…',
                         error: (_, _) => '—',
                       ),
-                      color: BsColors.secondary,
+                      color: WebPalette.success,
                       onTap: () => context.go('/owner/reports/stock'),
                     ),
                   ],
@@ -217,12 +218,12 @@ class _ReportNavCard extends StatelessWidget {
                   subtitle,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
+                  ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
                 ),
               ],
             ),
           ),
-          Icon(PhosphorIconsRegular.caretRight, color: BsColors.outline),
+          Icon(PhosphorIconsRegular.caretRight, color: WebPalette.inkSoft),
         ],
       ),
     );

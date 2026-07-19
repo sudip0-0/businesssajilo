@@ -1375,4 +1375,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get syncErrorGeneric =>
       'Could not sync. Check your connection and try again.';
+
+  @override
+  String get sidebarExpand => 'Expand sidebar';
+
+  @override
+  String get sidebarCollapse => 'Collapse sidebar';
+
+  @override
+  String get openMenu => 'Open menu';
 }

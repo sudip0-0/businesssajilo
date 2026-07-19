@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
@@ -12,6 +11,7 @@ import '../../../domain/models/customer.dart';
 import '../../../features/customers/customer_detail_screen.dart';
 import '../../../features/customers/providers.dart';
 import '../../layout/web_master_detail.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
 import '../../ui/web_search_field.dart';
@@ -228,12 +228,12 @@ class _CustomerRow extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: BsColors.primary.withValues(alpha: 0.12),
+              backgroundColor: WebPalette.navyWash,
               child: Text(
                 customer.shopName.isNotEmpty
                     ? customer.shopName[0].toUpperCase()
                     : '?',
-                style: const TextStyle(color: BsColors.primary),
+                style: const TextStyle(color: WebPalette.navy),
               ),
             ),
             const SizedBox(width: 12),
@@ -266,7 +266,7 @@ class _CustomerRow extends StatelessWidget {
               Text(
                 '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}',
                 style: theme.labelSmall?.copyWith(
-                  color: BsColors.primary,
+                  color: WebPalette.navy,
                   fontWeight: FontWeight.w600,
                 ),
               )
@@ -277,13 +277,13 @@ class _CustomerRow extends StatelessWidget {
                   Icon(
                     due > 0 ? Icons.arrow_upward : Icons.check,
                     size: 14,
-                    color: due > 0 ? BsColors.danger : BsColors.success,
+                    color: due > 0 ? WebPalette.danger : WebPalette.success,
                   ),
                   const SizedBox(width: 2),
                   Text(
                     formatNpr(Paisa(due), showPaisa: false),
                     style: theme.titleSmall?.copyWith(
-                      color: due > 0 ? BsColors.danger : BsColors.success,
+                      color: due > 0 ? WebPalette.danger : WebPalette.success,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

@@ -1372,4 +1372,13 @@ class AppLocalizationsNe extends AppLocalizations {
   @override
   String get syncErrorGeneric =>
       'सिंक गर्न सकिएन। इन्टरनेट जाँच गरी फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get sidebarExpand => 'साइडबार फुकाउनुहोस्';
+
+  @override
+  String get sidebarCollapse => 'साइडबार सानो गर्नुहोस्';
+
+  @override
+  String get openMenu => 'मेनु खोल्नुहोस्';
 }

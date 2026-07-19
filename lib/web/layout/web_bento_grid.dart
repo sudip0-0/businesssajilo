@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../theme/web_palette.dart';
 import '../theme/web_tokens.dart';
 
 /// Dashboard metric grid with responsive 1/2/4 column layout per Design.md.
@@ -56,8 +56,13 @@ class WebBentoGrid extends StatelessWidget {
             } else {
               cell = children[index]
                   .animate()
-                  .fadeIn(duration: 300.ms, delay: (index * 60).ms)
-                  .slideY(begin: 0.03, end: 0, duration: 300.ms);
+                  .fadeIn(duration: 340.ms, delay: (index * 55).ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    duration: 340.ms,
+                    curve: Curves.easeOutCubic,
+                  );
             }
 
             if (lastSpansRow && index == children.length - 1) {
@@ -96,7 +101,7 @@ class WebBentoGrid extends StatelessWidget {
   }
 }
 
-/// Metric / content card with Level 2 elevation on hover.
+/// Metric / content card — warm paper card with an ink-tinted hover lift.
 class WebBentoTile extends StatefulWidget {
   const WebBentoTile({
     super.key,
@@ -123,25 +128,34 @@ class _WebBentoTileState extends State<WebBentoTile> {
   @override
   Widget build(BuildContext context) {
     final tokens = context.webTokens;
+    final interactive = widget.onTap != null;
+    final lifted = _hovered && interactive;
 
     return MouseRegion(
+      cursor: interactive ? SystemMouseCursors.click : MouseCursor.defer,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
+        transform: Matrix4.translationValues(0, lifted ? -2 : 0, 0),
+        transformAlignment: Alignment.center,
         constraints: BoxConstraints(minHeight: widget.minHeight),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: WebPalette.card,
           borderRadius: BorderRadius.circular(tokens.cardRadius),
           border: Border.all(
-            color: _hovered ? BsColors.outlineVariant : BsColors.border,
+            color: lifted
+                ? WebPalette.hairlineStrong
+                : WebPalette.hairline,
           ),
-          boxShadow: widget.elevated || _hovered ? tokens.metricShadow : null,
+          boxShadow: lifted || widget.elevated
+              ? tokens.metricShadow
+              : WebPalette.cardShadow,
         ),
         child: Material(
           color: Colors.transparent,
-          child: widget.onTap == null
+          child: !interactive
               ? Padding(padding: widget.padding, child: widget.child)
               : InkWell(
                   onTap: widget.onTap,

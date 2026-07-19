@@ -4,12 +4,12 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/export/export_actions.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money.dart';
 import '../../../domain/models/aging_customer_row.dart';
 import '../../../domain/models/dues_aging_report.dart';
 import '../../../features/reports/providers.dart';
 import '../../layout/web_bento_grid.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
 import '../../ui/web_stat_tile.dart';
@@ -164,7 +164,7 @@ class _DuesBody extends StatelessWidget {
                       formatNpr(Paisa(c.balanceDue), showPaisa: false),
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: BsColors.danger,
+                        color: WebPalette.danger,
                       ),
                     ),
                   ),

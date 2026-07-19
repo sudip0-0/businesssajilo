@@ -5,11 +5,12 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../theme/web_palette.dart';
 import '../theme/web_theme.dart';
+import 'web_auth_brand_panel.dart';
 
 class WebRegisterPage extends ConsumerStatefulWidget {
   const WebRegisterPage({super.key});
@@ -82,52 +83,23 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
     final compact = MediaQuery.sizeOf(context).width < 768;
 
     return Scaffold(
-      backgroundColor: BsColors.background,
+      backgroundColor: WebPalette.paper,
       body: compact
           ? _buildFormOnly(context, l10n, locale)
           : Row(
               children: [
                 Expanded(
-                  flex: 4,
-                  child: Container(
-                    color: BsColors.primary,
-                    padding: const EdgeInsets.all(48),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(BsRadii.lg),
-                          ),
-                          child: Icon(
-                            PhosphorIconsRegular.buildings,
-                            size: 28,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        Text(
-                          l10n.registerBusiness,
-                          style: Theme.of(context).textTheme.displayMedium
-                              ?.copyWith(color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.tagline,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.85),
-                              ),
-                        ),
-                      ],
-                    ),
+                  flex: 9,
+                  child: WebAuthBrandPanel(
+                    headline: l10n.registerBusiness,
+                    subhead: l10n.tagline,
+                    showFeatures: false,
                   ),
                 ),
-                Expanded(flex: 5, child: _buildFormOnly(context, l10n, locale)),
+                Expanded(
+                  flex: 10,
+                  child: _buildFormOnly(context, l10n, locale),
+                ),
               ],
             ),
     );
@@ -141,7 +113,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return ColoredBox(
-      color: Colors.white,
+      color: WebPalette.paper,
       child: Theme(
         data: WebTheme.light(),
         child: Center(
@@ -157,8 +129,8 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                   children: [
                     Text(
                       l10n.registerBusiness,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(color: BsColors.textCharcoal),
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(color: WebPalette.ink, fontSize: 26),
                     ),
                     const SizedBox(height: 20),
                     SegmentedButton<String>(
@@ -175,7 +147,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _businessNameController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(labelText: l10n.businessName),
                       validator: (v) => v == null || v.trim().isEmpty
                           ? l10n.fieldRequired
@@ -184,7 +156,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _businessNameNpController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(
                         labelText: l10n.businessNameNp,
                       ),
@@ -192,7 +164,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _displayNameController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(labelText: l10n.displayName),
                       validator: (v) => v == null || v.trim().isEmpty
                           ? l10n.fieldRequired
@@ -201,7 +173,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _emailController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(labelText: l10n.email),
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) {
@@ -217,7 +189,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _passwordController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(
                         labelText: l10n.password,
                         suffixIcon: IconButton(
@@ -241,44 +213,66 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _phoneController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(labelText: l10n.phoneNumber),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _addressController,
-                      style: const TextStyle(color: BsColors.text),
+                      style: const TextStyle(color: WebPalette.ink),
                       decoration: InputDecoration(labelText: l10n.address),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: BsColors.danger.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(BsRadii.md),
+                          color: WebPalette.dangerWash,
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: BsColors.danger.withValues(alpha: 0.2),
+                            color: WebPalette.danger.withValues(alpha: 0.25),
                           ),
                         ),
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(color: BsColors.danger),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              PhosphorIconsRegular.warningCircle,
+                              size: 18,
+                              color: WebPalette.danger,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _error!,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: WebPalette.danger),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: _loading ? null : _submit,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 46),
+                      ),
                       child: _loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(l10n.createAccount),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -286,7 +280,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                         Text(
                           l10n.hasAccount,
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: BsColors.outline),
+                              ?.copyWith(color: WebPalette.inkSoft),
                         ),
                         TextButton(
                           onPressed: () => context.go('/login'),

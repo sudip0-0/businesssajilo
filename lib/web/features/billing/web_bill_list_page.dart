@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/utils/money.dart';
@@ -14,6 +13,7 @@ import '../../../data/repositories/bills_repository.dart';
 import '../../../domain/models/bill.dart';
 import '../../../features/billing/bill_detail_screen.dart';
 import '../../layout/web_master_detail.dart';
+import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
 import '../../ui/web_search_field.dart';
@@ -256,7 +256,7 @@ class _BillRow extends StatelessWidget {
               bill.pendingSync
                   ? PhosphorIconsRegular.clock
                   : PhosphorIconsRegular.receipt,
-              color: bill.pendingSync ? BsColors.accent : BsColors.primary,
+              color: bill.pendingSync ? WebPalette.warning : WebPalette.navy,
               size: 20,
             ),
             const SizedBox(width: 12),

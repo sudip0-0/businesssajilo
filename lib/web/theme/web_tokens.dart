@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
+import 'web_palette.dart';
 
-/// Corporate web design tokens per Design.md.
+/// "Digital Ledger" web design tokens — layout metrics and elevation.
 @immutable
 class WebTokens extends ThemeExtension<WebTokens> {
   const WebTokens({
@@ -44,15 +44,15 @@ class WebTokens extends ThemeExtension<WebTokens> {
   final double topBarHeight;
 
   static const light = WebTokens(
-    sidebarWidth: 260,
-    sidebarCollapsedWidth: 64,
-    contentMaxWidth: 1280,
-    pagePadding: 24,
+    sidebarWidth: 264,
+    sidebarCollapsedWidth: 72,
+    contentMaxWidth: 1320,
+    pagePadding: 28,
     gutter: 16,
-    cardRadius: BsRadii.lg,
-    inputRadius: BsRadii.md,
-    metricShadow: BsElevation.level2,
-    modalShadow: BsElevation.level3,
+    cardRadius: 10,
+    inputRadius: 6,
+    metricShadow: WebPalette.metricShadow,
+    modalShadow: WebPalette.modalShadow,
     compactBreakpoint: 768,
     desktopBreakpoint: 1024,
     wideBreakpoint: 1280,
@@ -60,7 +60,7 @@ class WebTokens extends ThemeExtension<WebTokens> {
     wideListPaneWidth: 440,
     buttonHeight: 40,
     buttonHeightCompact: 32,
-    topBarHeight: 56,
+    topBarHeight: 60,
   );
 
   @override

@@ -18,7 +18,13 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="BusinessSajilo — inventory, billing, and udharo tracking for Nepali dealers.">
+  <meta name="description" content="BusinessSajilo — inventory, quote-first ordering, billing and udharo tracking for Nepali dealers and distributors.">
+  <meta name="theme-color" content="#0E1B2C">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="BusinessSajilo">
+  <meta property="og:description" content="Your business, the easy way. Inventory, billing and udharo for Nepali dealers.">
+  <meta property="og:type" content="website">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -29,24 +35,122 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>BusinessSajilo</title>
+  <title>BusinessSajilo — Your business, the easy way</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Preload bundled Inter (Flutter web serves pubspec assets under assets/) -->
-  <link rel="preload" href="assets/assets/fonts/Inter-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/Inter-Medium.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/Inter-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/Inter-Bold.ttf" as="font" type="font/ttf" crossorigin>
+  <!-- Preload the bundled "Digital Ledger" faces (Flutter web serves
+       pubspec assets under assets/) -->
+  <link rel="preload" href="assets/assets/fonts/Spectral-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/Barlow-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/Barlow-Medium.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/Barlow-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/IBMPlexMono-Medium.ttf" as="font" type="font/ttf" crossorigin>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0E1B2C;
+    }
+    #bs-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(160deg, #0A1B33 0%, #00236F 55%, #0A1B33 100%);
+      opacity: 1;
+      transition: opacity 420ms ease;
+      z-index: 9999;
+    }
+    #bs-splash .bs-mark {
+      width: 54px;
+      height: 54px;
+      border-radius: 13px;
+      border: 1px solid rgba(219, 169, 74, 0.5);
+      background: rgba(174, 129, 38, 0.14);
+      color: #DBA94A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      animation: bs-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #bs-splash .bs-word {
+      margin-top: 18px;
+      color: #F2EFE6;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      animation: bs-rise 560ms 90ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #bs-splash .bs-rule {
+      margin-top: 16px;
+      width: 56px;
+      height: 3px;
+      border-radius: 2px;
+      background: #DBA94A;
+      animation: bs-rise 560ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #bs-splash .bs-sub {
+      margin-top: 16px;
+      color: rgba(242, 239, 230, 0.5);
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 2.6px;
+      animation: bs-rise 560ms 270ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #bs-splash .bs-bar {
+      margin-top: 34px;
+      width: 148px;
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      animation: bs-rise 560ms 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    #bs-splash .bs-bar::after {
+      content: '';
+      display: block;
+      width: 42%;
+      height: 100%;
+      border-radius: 2px;
+      background: #DBA94A;
+      animation: bs-scan 1.15s ease-in-out infinite;
+    }
+    @keyframes bs-rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bs-scan {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(380%); }
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <div id="bs-splash" aria-hidden="true">
+    <div class="bs-mark">Bs</div>
+    <div class="bs-word">BusinessSajilo</div>
+    <div class="bs-rule"></div>
+    <div class="bs-sub">INVENTORY &nbsp;•&nbsp; BILLING &nbsp;•&nbsp; UDHARO</div>
+    <div class="bs-bar"></div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('bs-splash');
+      if (splash) {
+        splash.style.opacity = '0';
+        window.setTimeout(function () { splash.remove(); }, 460);
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

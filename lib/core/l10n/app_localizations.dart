@@ -2719,6 +2719,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not sync. Check your connection and try again.'**
   String get syncErrorGeneric;
+
+  /// No description provided for @sidebarExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand sidebar'**
+  String get sidebarExpand;
+
+  /// No description provided for @sidebarCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse sidebar'**
+  String get sidebarCollapse;
+
+  /// No description provided for @openMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Open menu'**
+  String get openMenu;
 }
 
 class _AppLocalizationsDelegate
