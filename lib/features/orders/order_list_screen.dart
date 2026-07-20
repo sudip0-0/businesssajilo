@@ -10,6 +10,7 @@ import '../../core/ui/status_chip.dart';
 import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/models/order.dart';
+import '../customers/providers.dart';
 import 'order_detail_screen.dart';
 
 class OrderListScreen extends ConsumerStatefulWidget {
@@ -62,6 +63,19 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
 
+    if (widget.ownOnly) {
+      final profileAsync = ref.watch(ownCustomerProvider);
+      if (profileAsync.isLoading && pager == null) {
+        return const ListSkeleton();
+      }
+      if (profileAsync.hasValue && profileAsync.value == null) {
+        return EmptyState(
+          icon: Icons.person_off_outlined,
+          message: l10n.accountNotLinked,
+        );
+      }
+    }
+
     if (pager == null || pager.initialLoading) {
       return const ListSkeleton();
     }
@@ -111,9 +125,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
               title: Text(
                 widget.ownOnly
                     ? dateStr
-                    : (order.customerShopName ?? l10n.customers),
+                    : (order.customerShopName ?? '—'),
               ),
-              subtitle: Text('${order.items.length} · ${l10n.orderItems}'),
+              subtitle: widget.ownOnly
+                  ? Text('${order.items.length} ${l10n.orderItems}')
+                  : Text(dateStr),
               trailing: StatusChip(order.status),
               onTap: () async {
                 await Navigator.push(

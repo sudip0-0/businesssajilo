@@ -1388,4 +1388,52 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get openMenu => 'मेनु खोल्नुहोस्';
+
+  @override
+  String get cartEmpty => 'तपाईंको कार्ट खाली छ';
+
+  @override
+  String get accountNotLinked =>
+      'तपाईंको खाता ग्राहक प्रोफाइलसँग जोडिएको छैन। मालिकलाई सम्पर्क गर्नुहोस्।';
+
+  @override
+  String get needsAction => 'कारबाही चाहिने';
+
+  @override
+  String get inProgress => 'प्रक्रियामा';
+
+  @override
+  String get completed => 'सम्पन्न';
+
+  @override
+  String get allOrders => 'सबै';
+
+  @override
+  String get portalActive => 'पोर्टल लगइन: सक्रिय';
+
+  @override
+  String get portalDisabled => 'पोर्टल लगइन: निष्क्रिय';
+
+  @override
+  String get enablePortalLogin => 'पोर्टल लगइन सक्षम गर्नुहोस्';
+
+  @override
+  String get disablePortalLogin => 'पोर्टल लगइन असक्षम गर्नुहोस्';
+
+  @override
+  String get disablePortalConfirm =>
+      'पोर्टल लगइन फेरि सक्षम नगरेसम्म यो ग्राहकले लगइन गर्न सक्दैनन्।';
+
+  @override
+  String get enablePortalConfirm =>
+      'यो ग्राहकको पोर्टल लगइन फेरि सक्षम गर्ने? तपाईं अर्को चरणमा नयाँ पासवर्ड सेट गर्न सक्नुहुन्छ।';
+
+  @override
+  String get reactivate => 'पुनः सक्रिय गर्नुहोस्';
+
+  @override
+  String get showInactive => 'निष्क्रिय देखाउनुहोस्';
+
+  @override
+  String get hideInactive => 'निष्क्रिय लुकाउनुहोस्';
 }

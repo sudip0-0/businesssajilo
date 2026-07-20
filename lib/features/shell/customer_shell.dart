@@ -7,6 +7,7 @@ import '../../core/utils/money.dart';
 import '../customers/customer_ledger_screen.dart';
 import '../customers/providers.dart';
 import '../notifications/notification_bell_action.dart';
+import '../orders/cart_action.dart';
 import '../orders/catalog_screen.dart';
 import '../settings/account_section.dart';
 import '../orders/order_list_screen.dart';
@@ -70,6 +71,7 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
       onDestinationSelected: (i) => setState(() => _index = i),
       titles: [l10n.dashboard, l10n.catalog, l10n.myOrders, l10n.myDues],
       actions: const [
+        CartAction(),
         NotificationBellAction(),
         AccountAction(),
         LogoutAction(),

@@ -45,8 +45,8 @@ void main() {
   });
 
   group('loginEmailForIdentifier', () {
-    test('passes emails through trimmed', () {
-      expect(loginEmailForIdentifier('  owner@test.com '), 'owner@test.com');
+    test('passes emails through trimmed and lowercased', () {
+      expect(loginEmailForIdentifier('  Owner@Test.COM '), 'owner@test.com');
     });
 
     test('maps phone to synthetic email', () {

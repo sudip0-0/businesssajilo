@@ -39,7 +39,8 @@ String phoneLoginEmail(String normalizedPhone) {
 /// so auth fails with the normal invalid-credentials error.
 String loginEmailForIdentifier(String input) {
   final trimmed = input.trim();
-  if (trimmed.contains('@')) return trimmed;
+  // Auth emails are stored lowercased (create-member / GoTrue); match that.
+  if (trimmed.contains('@')) return trimmed.toLowerCase();
   final phone = normalizeNepalPhone(trimmed);
   if (phone != null) return phoneLoginEmail(phone);
   return trimmed;

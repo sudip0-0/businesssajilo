@@ -102,7 +102,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
           .createWithCredentials(
             email: _emailController.text.trim().isEmpty
                 ? null
-                : _emailController.text.trim(),
+                : _emailController.text.trim().toLowerCase(),
             password: password,
             displayName: displayName,
             shopName: shop,
@@ -112,6 +112,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
             openingBalance: parseNpr(_openingBalanceController.text)?.value ?? 0,
+            portalEnabled: _enablePortal,
           );
       ref.invalidate(customerListProvider);
       ref.invalidate(totalDuesProvider);
@@ -212,29 +213,9 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                   ),
                   if (_showMore) ...[
                     WebFormSectionLabel(l10n.contactAndLocation),
-                    WebFormRow(
-                      children: [
-                        TextFormField(
-                          controller: _contactNameController,
-                          decoration: InputDecoration(
-                            labelText: l10n.ownerName,
-                          ),
-                        ),
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: l10n.emailAddress,
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) return null;
-                            if (!emailRegex.hasMatch(v.trim())) {
-                              return l10n.invalidEmail;
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
+                    TextFormField(
+                      controller: _contactNameController,
+                      decoration: InputDecoration(labelText: l10n.ownerName),
                     ),
                     const SizedBox(height: 16),
                     WebFormRow(
@@ -277,13 +258,29 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                   ),
                   if (_enablePortal) ...[
                     WebFormSectionLabel(l10n.portalAccess),
+                    TextFormField(
+                      controller: _displayNameController,
+                      decoration: InputDecoration(labelText: l10n.displayName),
+                    ),
+                    const SizedBox(height: 16),
                     WebFormRow(
                       children: [
                         TextFormField(
-                          controller: _displayNameController,
+                          controller: _emailController,
                           decoration: InputDecoration(
-                            labelText: l10n.displayName,
+                            labelText: '${l10n.emailAddress} *',
                           ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (!_enablePortal) return null;
+                            if (v == null || v.trim().isEmpty) {
+                              return l10n.fieldRequired;
+                            }
+                            if (!emailRegex.hasMatch(v.trim())) {
+                              return l10n.invalidEmail;
+                            }
+                            return null;
+                          },
                         ),
                         TextFormField(
                           controller: _passwordController,

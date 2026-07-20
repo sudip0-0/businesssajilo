@@ -128,6 +128,7 @@ Deno.serve(async (req) => {
       .from("members")
       .select("id")
       .eq("phone", phone)
+      .eq("is_active", true)
       .maybeSingle();
     if (phoneClash) {
       return json({ error: "Phone number already registered" }, 409);
@@ -169,6 +170,10 @@ Deno.serve(async (req) => {
     }
     userId = authData.user.id;
 
+    // Portal-off customers are created inactive so random passwords cannot
+    // be used to sign in until the owner enables portal access.
+    const isActive = body.isActive === false ? false : true;
+
     const { data: member, error: memberError } = await supabaseAdmin
       .from("members")
       .insert({
@@ -177,6 +182,7 @@ Deno.serve(async (req) => {
         role,
         display_name: displayName,
         phone,
+        is_active: isActive,
       })
       .select("id")
       .single();

@@ -2749,6 +2749,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open menu'**
   String get openMenu;
+
+  /// No description provided for @cartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get cartEmpty;
+
+  /// No description provided for @accountNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is not linked to a customer profile. Ask the owner for help.'**
+  String get accountNotLinked;
+
+  /// No description provided for @needsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs action'**
+  String get needsAction;
+
+  /// No description provided for @inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get inProgress;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @allOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allOrders;
+
+  /// No description provided for @portalActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal login: Active'**
+  String get portalActive;
+
+  /// No description provided for @portalDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal login: Disabled'**
+  String get portalDisabled;
+
+  /// No description provided for @enablePortalLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable portal login'**
+  String get enablePortalLogin;
+
+  /// No description provided for @disablePortalLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable portal login'**
+  String get disablePortalLogin;
+
+  /// No description provided for @disablePortalConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This customer will not be able to sign in until portal login is re-enabled.'**
+  String get disablePortalConfirm;
+
+  /// No description provided for @enablePortalConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enable portal login for this customer? You can set a new password next.'**
+  String get enablePortalConfirm;
+
+  /// No description provided for @reactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate'**
+  String get reactivate;
+
+  /// No description provided for @showInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Show inactive'**
+  String get showInactive;
+
+  /// No description provided for @hideInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide inactive'**
+  String get hideInactive;
 }
 
 class _AppLocalizationsDelegate

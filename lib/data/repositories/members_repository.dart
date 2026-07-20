@@ -27,6 +27,9 @@ class MembersRepository {
 
   /// [email] may be omitted when [phone] is given; the Edge Function then
   /// derives a synthetic login email from the phone number.
+  ///
+  /// When [isActive] is false (e.g. customer created without portal login),
+  /// the member row is created inactive so they cannot sign in until enabled.
   Future<({String memberId, String? customerId})> createMember({
     String? email,
     required String password,
@@ -37,6 +40,7 @@ class MembersRepository {
     String? contactName,
     String? address,
     int openingBalance = 0,
+    bool isActive = true,
   }) async {
     final client = _requireClient();
     final response = await client.functions.invoke(
@@ -51,6 +55,7 @@ class MembersRepository {
         'contactName': ?contactName,
         'address': ?address,
         'openingBalance': openingBalance,
+        'isActive': isActive,
       },
     );
 
@@ -91,6 +96,25 @@ class MembersRepository {
         .from('members')
         .update({'is_active': false})
         .eq('id', memberId);
+  }
+
+  Future<void> activateMember(String memberId) async {
+    final client = _requireClient();
+    await client
+        .from('members')
+        .update({'is_active': true})
+        .eq('id', memberId);
+  }
+
+  Future<Member?> getMember(String memberId) async {
+    final client = _requireClient();
+    final row = await client
+        .from('members')
+        .select()
+        .eq('id', memberId)
+        .maybeSingle();
+    if (row == null) return null;
+    return Member.fromJson(Map<String, dynamic>.from(row));
   }
 
   SupabaseClient _requireClient() {

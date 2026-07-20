@@ -88,7 +88,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   Future<void> sendPasswordResetEmail(String email) {
     return ref
         .read(authRepositoryProvider)
-        .sendPasswordResetEmail(email.trim());
+        .sendPasswordResetEmail(email.trim().toLowerCase());
   }
 
   /// Sets a new password for the signed-in member and refreshes the session
@@ -140,7 +140,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     state = await AsyncValue.guard(() async {
       final repo = ref.read(authRepositoryProvider);
       await repo.registerBusiness(
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password: password,
         displayName: displayName.trim(),
         businessName: businessName.trim(),
@@ -148,7 +148,10 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
         phone: phone?.trim(),
         address: address?.trim(),
       );
-      await repo.signIn(email: email.trim(), password: password);
+      await repo.signIn(
+        email: email.trim().toLowerCase(),
+        password: password,
+      );
       return repo.loadSession();
     });
     if (state.hasError) throw state.error!;

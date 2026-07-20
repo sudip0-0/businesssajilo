@@ -69,8 +69,8 @@ void openNotificationTarget(
           MaterialPageRoute(
             builder: (_) => ProductDetailScreen(
               productId: ids.productId!,
-              canEditProduct: false,
-              canManageStock: false,
+              canEditProduct: role?.canManageProducts ?? false,
+              canManageStock: role?.canManageStock ?? false,
             ),
           ),
         );

@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/pagination.dart';
 import '../../data/repositories/customers_repository.dart';
+import '../../data/repositories/members_repository.dart';
 import '../../data/repositories/payments_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
+import '../../domain/models/member.dart';
 
 /// Bumped after customer writes so paginated customer lists can refresh.
 final customersRevisionProvider =
@@ -51,6 +53,12 @@ final customerDetailProvider = FutureProvider.autoDispose
 final customerLedgerProvider = FutureProvider.autoDispose
     .family<List<LedgerEntry>, String>((ref, id) {
       return ref.watch(customersRepositoryProvider).ledger(id);
+    });
+
+final customerMemberProvider = FutureProvider.autoDispose
+    .family<Member?, String>((ref, memberId) async {
+      if (memberId.isEmpty) return null;
+      return ref.watch(membersRepositoryProvider).getMember(memberId);
     });
 
 final ownCustomerProvider = FutureProvider.autoDispose<Customer?>((ref) {

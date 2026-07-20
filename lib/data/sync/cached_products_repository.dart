@@ -154,6 +154,9 @@ class CachedProductsRepository implements ProductsRepository {
   Future<void> deactivate(String id) => _remote.deactivate(id);
 
   @override
+  Future<void> activate(String id) => _remote.activate(id);
+
+  @override
   Future<String> uploadImage({
     required String businessId,
     required String productId,

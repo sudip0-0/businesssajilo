@@ -9,9 +9,7 @@ import '../../core/ui/qty_stepper.dart';
 import '../../data/repositories/catalog_repository.dart';
 import '../../domain/models/catalog_product.dart';
 import '../inventory/product_image.dart';
-import '../../core/ui/adaptive_sheet.dart';
-import 'cart_sheet.dart';
-import 'providers.dart';
+import 'cart_provider.dart';
 
 final catalogListProvider = FutureProvider.autoDispose<List<CatalogProduct>>((
   ref,
@@ -28,18 +26,12 @@ class CatalogScreen extends ConsumerStatefulWidget {
 
 class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   String _query = '';
-  final _cart = <String, int>{};
-
-  int get _cartCount => _cart.values.fold(0, (a, b) => a + b);
-
-  void _addToCart(CatalogProduct product) {
-    setState(() => _cart[product.id] = (_cart[product.id] ?? 0) + 1);
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final catalogAsync = ref.watch(catalogListProvider);
+    final cart = ref.watch(cartProvider);
 
     return Column(
       children: [
@@ -91,7 +83,7 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final product = filtered[index];
-                    final inCart = _cart[product.id] ?? 0;
+                    final inCart = cart[product.id] ?? 0;
                     return Card(
                       child: ListTile(
                         leading: ProductImage(
@@ -105,19 +97,17 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                         trailing: inCart > 0
                             ? QtyStepper(
                                 value: inCart,
-                                onChanged: (v) => setState(() {
-                                  if (v <= 0) {
-                                    _cart.remove(product.id);
-                                  } else {
-                                    _cart[product.id] = v;
-                                  }
-                                }),
+                                onChanged: (v) => ref
+                                    .read(cartProvider.notifier)
+                                    .setQty(product.id, v),
                               )
                             : IconButton(
                                 icon: const Icon(
                                   Icons.add_shopping_cart_outlined,
                                 ),
-                                onPressed: () => _addToCart(product),
+                                onPressed: () => ref
+                                    .read(cartProvider.notifier)
+                                    .addOne(product.id),
                                 tooltip: l10n.addToCart,
                               ),
                       ),
@@ -128,34 +118,6 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
             },
           ),
         ),
-        if (_cartCount > 0)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton.icon(
-              onPressed: () async {
-                final catalog = await ref.read(catalogListProvider.future);
-                if (!context.mounted) return;
-                final placed = await showAdaptiveSheet<bool>(
-                  context: context,
-                  title: l10n.placeOrder,
-                  child: CartSheet(
-                    products: catalog
-                        .where((p) => _cart.containsKey(p.id))
-                        .toList(),
-                    quantities: Map.from(_cart),
-                  ),
-                );
-                if (placed == true) {
-                  setState(() => _cart.clear());
-                  ref.invalidate(catalogListProvider);
-                  ref.invalidate(ownOrderListProvider);
-                  ref.invalidate(ownOrderCountProvider);
-                }
-              },
-              icon: const Icon(Icons.shopping_cart),
-              label: Text('${l10n.cart} ($_cartCount)'),
-            ),
-          ),
       ],
     );
   }

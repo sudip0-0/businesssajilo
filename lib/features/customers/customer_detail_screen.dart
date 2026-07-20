@@ -8,13 +8,14 @@ import '../../core/ui/error_state.dart';
 import '../../core/ui/ledger_row.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/utils/money.dart';
+import '../../core/ui/adaptive_sheet.dart';
+import '../../data/repositories/members_repository.dart';
 import '../staff/reset_member_password_sheet.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
-import 'statement_share_sheet.dart';
-import '../../core/ui/adaptive_sheet.dart';
 import 'record_payment_sheet.dart';
 import 'record_sale_sheet.dart';
+import 'statement_share_sheet.dart';
 
 Future<void> _openRecordPaymentSheet(
   BuildContext context,
@@ -171,6 +172,15 @@ class CustomerDetailScreen extends ConsumerWidget {
                     ],
                     if (customer.phone != null) Text(customer.phone!),
                     if (customer.address != null) Text(customer.address!),
+                    if (canEdit && customer.memberId.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _PortalStatusChip(memberId: customer.memberId),
+                      const SizedBox(height: 8),
+                      _PortalLoginButton(
+                        memberId: customer.memberId,
+                        customerName: customer.shopName,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -331,3 +341,121 @@ class CustomerDetailScreen extends ConsumerWidget {
     );
   }
 }
+
+class _PortalStatusChip extends ConsumerWidget {
+  const _PortalStatusChip({required this.memberId});
+
+  final String memberId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final memberAsync = ref.watch(customerMemberProvider(memberId));
+    return memberAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (member) {
+        if (member == null) return const SizedBox.shrink();
+        return Chip(
+          avatar: Icon(
+            member.isActive ? Icons.login : Icons.lock_outline,
+            size: 16,
+          ),
+          label: Text(
+            member.isActive ? l10n.portalActive : l10n.portalDisabled,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PortalLoginButton extends ConsumerWidget {
+  const _PortalLoginButton({
+    required this.memberId,
+    required this.customerName,
+  });
+
+  final String memberId;
+  final String customerName;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final memberAsync = ref.watch(customerMemberProvider(memberId));
+    return memberAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (member) {
+        if (member == null) return const SizedBox.shrink();
+        if (member.isActive) {
+          return OutlinedButton.icon(
+            icon: const Icon(Icons.person_off_outlined, size: 18),
+            label: Text(l10n.disablePortalLogin),
+            onPressed: () => _disable(context, ref),
+          );
+        }
+        return OutlinedButton.icon(
+          icon: const Icon(Icons.person_add_outlined, size: 18),
+          label: Text(l10n.enablePortalLogin),
+          onPressed: () => _enable(context, ref),
+        );
+      },
+    );
+  }
+
+  Future<void> _disable(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.disablePortalLogin),
+        content: Text(l10n.disablePortalConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.disablePortalLogin),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await ref.read(membersRepositoryProvider).deactivateMember(memberId);
+    ref.invalidate(customerMemberProvider(memberId));
+  }
+
+  Future<void> _enable(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.enablePortalLogin),
+        content: Text(l10n.enablePortalConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.enablePortalLogin),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await ref.read(membersRepositoryProvider).activateMember(memberId);
+    ref.invalidate(customerMemberProvider(memberId));
+    if (!context.mounted) return;
+    await showResetMemberPasswordSheet(
+      context,
+      memberId: memberId,
+      memberName: customerName,
+    );
+  }
+}
+

@@ -161,6 +161,7 @@ class CachedCustomersRepository implements CustomersRepository {
     String? phone,
     String? address,
     int openingBalance = 0,
+    bool portalEnabled = true,
   }) async {
     final membersRepo = MembersRepository(_client);
     final result = await membersRepo.createMember(
@@ -173,6 +174,7 @@ class CachedCustomersRepository implements CustomersRepository {
       contactName: contactName,
       address: address,
       openingBalance: openingBalance,
+      isActive: portalEnabled,
     );
     final customerId = result.customerId;
     if (customerId == null) {

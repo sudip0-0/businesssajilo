@@ -158,6 +158,12 @@ class SupabaseProductsRepository implements ProductsRepository {
   }
 
   @override
+  Future<void> activate(String id) async {
+    final client = _requireClient();
+    await client.from('products').update({'is_active': true}).eq('id', id);
+  }
+
+  @override
   Future<String> uploadImage({
     required String businessId,
     required String productId,

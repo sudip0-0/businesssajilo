@@ -104,7 +104,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
           .createWithCredentials(
             email: _emailController.text.trim().isEmpty
                 ? null
-                : _emailController.text.trim(),
+                : _emailController.text.trim().toLowerCase(),
             password: password,
             displayName: displayName,
             shopName: shop,
@@ -114,6 +114,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
             openingBalance: parseNpr(_openingBalanceController.text)?.value ?? 0,
+            portalEnabled: _enablePortal,
           );
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(true);
@@ -217,11 +218,13 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _emailController,
-                  decoration: InputDecoration(labelText: l10n.email),
+                  decoration: InputDecoration(labelText: '${l10n.email} *'),
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
                     if (!_enablePortal) return null;
-                    if (v == null || v.trim().isEmpty) return null;
+                    if (v == null || v.trim().isEmpty) {
+                      return l10n.fieldRequired;
+                    }
                     if (!emailRegex.hasMatch(v.trim())) {
                       return l10n.invalidEmail;
                     }

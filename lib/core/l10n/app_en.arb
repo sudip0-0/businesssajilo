@@ -533,5 +533,20 @@
   "syncErrorGeneric": "Could not sync. Check your connection and try again.",
   "sidebarExpand": "Expand sidebar",
   "sidebarCollapse": "Collapse sidebar",
-  "openMenu": "Open menu"
+  "openMenu": "Open menu",
+  "cartEmpty": "Your cart is empty",
+  "accountNotLinked": "Your account is not linked to a customer profile. Ask the owner for help.",
+  "needsAction": "Needs action",
+  "inProgress": "In progress",
+  "completed": "Completed",
+  "allOrders": "All",
+  "portalActive": "Portal login: Active",
+  "portalDisabled": "Portal login: Disabled",
+  "enablePortalLogin": "Enable portal login",
+  "disablePortalLogin": "Disable portal login",
+  "disablePortalConfirm": "This customer will not be able to sign in until portal login is re-enabled.",
+  "enablePortalConfirm": "Re-enable portal login for this customer? You can set a new password next.",
+  "reactivate": "Reactivate",
+  "showInactive": "Show inactive",
+  "hideInactive": "Hide inactive"
 }

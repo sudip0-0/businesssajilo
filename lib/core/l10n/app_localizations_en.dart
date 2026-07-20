@@ -1391,4 +1391,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openMenu => 'Open menu';
+
+  @override
+  String get cartEmpty => 'Your cart is empty';
+
+  @override
+  String get accountNotLinked =>
+      'Your account is not linked to a customer profile. Ask the owner for help.';
+
+  @override
+  String get needsAction => 'Needs action';
+
+  @override
+  String get inProgress => 'In progress';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get allOrders => 'All';
+
+  @override
+  String get portalActive => 'Portal login: Active';
+
+  @override
+  String get portalDisabled => 'Portal login: Disabled';
+
+  @override
+  String get enablePortalLogin => 'Enable portal login';
+
+  @override
+  String get disablePortalLogin => 'Disable portal login';
+
+  @override
+  String get disablePortalConfirm =>
+      'This customer will not be able to sign in until portal login is re-enabled.';
+
+  @override
+  String get enablePortalConfirm =>
+      'Re-enable portal login for this customer? You can set a new password next.';
+
+  @override
+  String get reactivate => 'Reactivate';
+
+  @override
+  String get showInactive => 'Show inactive';
+
+  @override
+  String get hideInactive => 'Hide inactive';
 }

@@ -53,6 +53,7 @@ abstract class ProductsRepository {
     String? imageUrl,
   });
   Future<void> deactivate(String id);
+  Future<void> activate(String id);
   Future<String> uploadImage({
     required String businessId,
     required String productId,

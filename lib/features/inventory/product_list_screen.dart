@@ -32,6 +32,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   String _query = '';
   PaginatedListState<Product>? _pager;
   final _scrollController = ScrollController();
+  bool _showInactive = false;
 
   @override
   void initState() {
@@ -43,7 +44,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     _pager = PaginatedListState<Product>(
       loadPage: (offset, limit) => ref
           .read(productsRepositoryProvider)
-          .list(offset: offset, limit: limit),
+          .list(
+            activeOnly: !_showInactive,
+            offset: offset,
+            limit: limit,
+          ),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -51,6 +56,13 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     _pager!.refresh().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _setShowInactive(bool value) async {
+    if (_showInactive == value) return;
+    setState(() => _showInactive = value);
+    await _pager?.refresh();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -91,6 +103,15 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             onChanged: (v) => setState(() => _query = v),
           ),
         ),
+        if (widget.canEdit)
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text(
+              _showInactive ? l10n.hideInactive : l10n.showInactive,
+            ),
+            value: _showInactive,
+            onChanged: _setShowInactive,
+          ),
         Expanded(child: _buildListBody(l10n, pager)),
       ],
     );
@@ -148,9 +169,12 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           return ListTile(
             leading: ProductImage(storagePath: product.imageUrl),
             title: Text(product.name),
-            subtitle: product.sku != null && product.sku!.isNotEmpty
-                ? Text(product.sku!)
-                : null,
+            subtitle: Text(
+              [
+                if (product.sku != null && product.sku!.isNotEmpty) product.sku!,
+                if (!product.isActive) l10n.inactive,
+              ].join(' · '),
+            ),
             trailing: StockBadge(product: product),
             onTap: () => _openDetail(context, product),
           );

@@ -17,6 +17,9 @@ import '../../ui/web_empty_state.dart';
 import '../../ui/web_side_panel.dart';
 import '../web_page_scaffold.dart';
 
+bool _isStaffRole(Role role) =>
+    role == Role.sales || role == Role.warehouse || role == Role.owner;
+
 class WebStaffListPage extends ConsumerStatefulWidget {
   const WebStaffListPage({super.key});
 
@@ -27,6 +30,7 @@ class WebStaffListPage extends ConsumerStatefulWidget {
 class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
   int? _sortColumnIndex;
   bool _sortAscending = true;
+  bool _showInactive = true;
 
   Future<void> _openAddMember() async {
     final l10n = AppLocalizations.of(context);
@@ -62,6 +66,11 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
     ref.invalidate(staffListProvider);
   }
 
+  Future<void> _reactivate(Member member) async {
+    await ref.read(membersRepositoryProvider).activateMember(member.id);
+    ref.invalidate(staffListProvider);
+  }
+
   List<Member> _sorted(List<Member> members) {
     final sorted = List<Member>.from(members);
     if (_sortColumnIndex == null) return sorted;
@@ -86,6 +95,14 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
       title: l10n.staffManagement,
       breadcrumbs: [l10n.staffManagement],
       actions: [
+        FilterChip(
+          label: Text(
+            _showInactive ? l10n.hideInactive : l10n.showInactive,
+          ),
+          selected: _showInactive,
+          onSelected: (v) => setState(() => _showInactive = v),
+        ),
+        const SizedBox(width: 8),
         FilledButton.icon(
           onPressed: _openAddMember,
           icon: Icon(PhosphorIconsRegular.userPlus),
@@ -96,8 +113,11 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
         value: staffAsync,
         onRetry: () => ref.invalidate(staffListProvider),
         data: (members) {
-          final active = members.where((m) => m.isActive).toList();
-          if (active.isEmpty) {
+          final staff = members
+              .where((m) => _isStaffRole(m.role))
+              .where((m) => _showInactive || m.isActive)
+              .toList();
+          if (staff.isEmpty) {
             return WebEmptyState(
               message: l10n.noStaff,
               icon: PhosphorIconsRegular.users,
@@ -106,7 +126,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
             );
           }
 
-          final sorted = _sorted(active);
+          final sorted = _sorted(staff);
 
           return WebDataTable<Member>(
             columns: [
@@ -131,6 +151,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                   _sortAscending = asc;
                 }),
               ),
+              DataColumn(label: Text(l10n.active)),
               DataColumn(label: Text('')),
             ],
             items: sorted,
@@ -166,6 +187,11 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                 ),
                 DataCell(Text(member.phone ?? '—')),
                 DataCell(
+                  Chip(
+                    label: Text(member.isActive ? l10n.active : l10n.inactive),
+                  ),
+                ),
+                DataCell(
                   member.role == Role.owner
                       ? const SizedBox.shrink()
                       : Row(
@@ -180,11 +206,18 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                                 memberName: member.displayName,
                               ),
                             ),
-                            IconButton(
-                              tooltip: l10n.deactivate,
-                              icon: Icon(PhosphorIconsRegular.userMinus),
-                              onPressed: () => _deactivate(member),
-                            ),
+                            if (member.isActive)
+                              IconButton(
+                                tooltip: l10n.deactivate,
+                                icon: Icon(PhosphorIconsRegular.userMinus),
+                                onPressed: () => _deactivate(member),
+                              )
+                            else
+                              IconButton(
+                                tooltip: l10n.reactivate,
+                                icon: Icon(PhosphorIconsRegular.userPlus),
+                                onPressed: () => _reactivate(member),
+                              ),
                           ],
                         ),
                 ),

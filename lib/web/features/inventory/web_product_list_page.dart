@@ -46,6 +46,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   PaginatedListState<Product>? _pager;
   final _scrollController = ScrollController();
   late final TextEditingController _searchController;
+  bool _showInactive = false;
 
   @override
   void initState() {
@@ -65,7 +66,11 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     _pager = PaginatedListState<Product>(
       loadPage: (offset, limit) => ref
           .read(productsRepositoryProvider)
-          .list(offset: offset, limit: limit),
+          .list(
+            activeOnly: !_showInactive,
+            offset: offset,
+            limit: limit,
+          ),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -73,6 +78,13 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     _pager!.refresh().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _setShowInactive(bool value) async {
+    if (_showInactive == value) return;
+    setState(() => _showInactive = value);
+    await _pager?.refresh();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -122,13 +134,22 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     return WebPageScaffold(
       title: l10n.stock,
       actions: [
-        if (widget.canEdit)
+        if (widget.canEdit) ...[
+          FilterChip(
+            label: Text(
+              _showInactive ? l10n.hideInactive : l10n.showInactive,
+            ),
+            selected: _showInactive,
+            onSelected: _setShowInactive,
+          ),
+          const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () =>
                 context.push('${_webRolePrefix(context)}/inventory/new'),
             icon: Icon(PhosphorIconsRegular.plus),
             label: Text(l10n.addProduct),
           ),
+        ],
       ],
       body: WebMasterDetail(
         hasSelection: selectedId != null,
@@ -277,6 +298,14 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                                     sku,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: WebPalette.inkSoft),
+                                  ),
+                                ],
+                                if (!product.isActive) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    l10n.inactive,
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(color: WebPalette.inkSoft),
                                   ),

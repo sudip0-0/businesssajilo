@@ -121,6 +121,27 @@ class ProductDetailScreen extends ConsumerWidget {
                 ],
               ),
             ],
+            if (canEditProduct) ...[
+              const SizedBox(height: 12),
+              if (!product.isActive)
+                Chip(label: Text(l10n.inactive)),
+              if (embedded) ...[
+                const SizedBox(height: 8),
+                if (product.isActive)
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        _deactivate(context, ref, product.id, l10n),
+                    icon: const Icon(Icons.visibility_off_outlined),
+                    label: Text(l10n.deactivateProduct),
+                  )
+                else
+                  OutlinedButton.icon(
+                    onPressed: () => _activate(context, ref, product.id, l10n),
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: Text(l10n.reactivate),
+                  ),
+              ],
+            ],
             const SizedBox(height: 16),
             Text(
               l10n.movementHistory,
@@ -166,9 +187,17 @@ class ProductDetailScreen extends ConsumerWidget {
                 ),
               if (canEditProduct)
                 IconButton(
-                  icon: const Icon(Icons.visibility_off_outlined),
-                  tooltip: l10n.deactivateProduct,
-                  onPressed: () => _deactivate(context, ref, product.id, l10n),
+                  icon: Icon(
+                    product.isActive
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  tooltip: product.isActive
+                      ? l10n.deactivateProduct
+                      : l10n.reactivate,
+                  onPressed: () => product.isActive
+                      ? _deactivate(context, ref, product.id, l10n)
+                      : _activate(context, ref, product.id, l10n),
                 ),
             ],
           ),
@@ -243,9 +272,27 @@ class ProductDetailScreen extends ConsumerWidget {
     );
     if (confirm != true) return;
     await ref.read(productsRepositoryProvider).deactivate(id);
+    ref.invalidate(productDetailProvider(id));
     ref.invalidate(productListProvider);
     bumpInventoryRevision(ref);
-    if (context.mounted) Navigator.pop(context, true);
+    if (context.mounted && !embedded) Navigator.pop(context, true);
+  }
+
+  Future<void> _activate(
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+    AppLocalizations l10n,
+  ) async {
+    await ref.read(productsRepositoryProvider).activate(id);
+    ref.invalidate(productDetailProvider(id));
+    ref.invalidate(productListProvider);
+    bumpInventoryRevision(ref);
+    if (context.mounted && !embedded) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.reactivate)));
+    }
   }
 }
 

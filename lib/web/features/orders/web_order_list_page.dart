@@ -8,10 +8,11 @@ import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/ui/status_chip.dart';
 import '../../../core/utils/bs_date.dart';
 import '../../../data/repositories/orders_repository.dart';
-import '../../../domain/enums.dart';
 import '../../../domain/models/order.dart';
+import '../../../features/customers/providers.dart';
 import '../../../features/orders/order_detail_screen.dart';
 import '../../../features/orders/providers.dart';
+import '../../../features/orders/staff_order_filter.dart';
 import '../../layout/web_master_detail.dart';
 import '../../ui/web_data_table.dart';
 import '../../ui/web_empty_state.dart';
@@ -43,6 +44,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
   String _query = '';
   PaginatedListState<Order>? _pager;
   final _scrollController = ScrollController();
+  StaffOrderFilter _filter = StaffOrderFilter.needsAction;
 
   String get _ordersBasePath {
     final prefix = _webRolePrefix(context);
@@ -61,11 +63,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
       loadPage: (offset, limit) => widget.ownOnly
           ? repo.listOwn(offset: offset, limit: limit)
           : repo.listForStaff(
-              statuses: [
-                OrderStatus.placed,
-                OrderStatus.quoted,
-                OrderStatus.accepted,
-              ],
+              statuses: _filter.statuses,
               offset: offset,
               limit: limit,
             ),
@@ -76,6 +74,12 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     _pager!.refresh().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _setFilter(StaffOrderFilter filter) async {
+    if (_filter == filter) return;
+    setState(() => _filter = filter);
+    await _refresh();
   }
 
   @override
@@ -113,6 +117,19 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     final l10n = AppLocalizations.of(context);
     final selectedId = widget.selectedOrderId;
     final pager = _pager;
+
+    if (widget.ownOnly) {
+      final profileAsync = ref.watch(ownCustomerProvider);
+      if (profileAsync.hasValue && profileAsync.value == null) {
+        return WebPageScaffold(
+          title: l10n.orders,
+          body: WebEmptyState(
+            message: l10n.accountNotLinked,
+            icon: PhosphorIconsRegular.userMinus,
+          ),
+        );
+      }
+    }
 
     Widget listBody;
     if (pager == null || pager.initialLoading) {
@@ -205,6 +222,8 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                 onChanged: (v) => setState(() => _query = v.trim()),
               ),
             ),
+            if (!widget.ownOnly)
+              StaffOrderFilterBar(value: _filter, onChanged: _setFilter),
             Expanded(child: listBody),
           ],
         ),

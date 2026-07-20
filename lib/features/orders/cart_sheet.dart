@@ -35,7 +35,13 @@ class _CartSheetState extends ConsumerState<CartSheet> {
   Future<void> _placeOrder() async {
     final l10n = AppLocalizations.of(context);
     final customer = await ref.read(ownCustomerProvider.future);
-    if (customer == null || !mounted) return;
+    if (!mounted) return;
+    if (customer == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.accountNotLinked)));
+      return;
+    }
 
     // Drop cart lines whose product was deactivated since it was added.
     final availableIds = widget.products.map((p) => p.id).toSet();
