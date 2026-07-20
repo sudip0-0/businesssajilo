@@ -74,6 +74,12 @@ class _WebProductFormPageState extends ConsumerState<WebProductFormPage> {
         key: _formKey,
         product: resolvedProduct,
         embedded: true,
+        onSaved: (product) => webProductFormSaved(
+          context,
+          ref,
+          product: product,
+          listPath: widget.inventoryListPath,
+        ),
       ),
     );
   }
@@ -83,15 +89,12 @@ class _WebProductFormPageState extends ConsumerState<WebProductFormPage> {
 void webProductFormSaved(
   BuildContext context,
   WidgetRef ref, {
-  Product? product,
+  required Product product,
   String listPath = '/owner/inventory',
 }) {
   ref.invalidate(productListProvider);
   ref.invalidate(lowStockCountProvider);
-  if (product != null) {
-    ref.invalidate(productDetailProvider(product.id));
-    context.go('$listPath/${product.id}');
-  } else {
-    context.go(listPath);
-  }
+  ref.invalidate(productDetailProvider(product.id));
+  bumpInventoryRevision(ref);
+  context.go('$listPath/${product.id}');
 }

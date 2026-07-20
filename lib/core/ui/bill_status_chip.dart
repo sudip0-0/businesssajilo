@@ -18,7 +18,6 @@ class BillStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final dark = scheme.brightness == Brightness.dark;
     final (tint, textColor, icon) = switch (status) {
       BillStatus.paid => (
         scheme.successColor,
@@ -27,7 +26,7 @@ class BillStatusChip extends StatelessWidget {
       ),
       BillStatus.partial => (
         BsColors.accent,
-        dark ? BsColors.accentDark : BsColors.amberTextOnTint,
+        BsColors.amberTextOnTint,
         Icons.timelapse,
       ),
       BillStatus.due => (

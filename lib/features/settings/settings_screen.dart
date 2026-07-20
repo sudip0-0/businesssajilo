@@ -36,7 +36,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = ref.watch(localeProvider);
-    final themeMode = ref.watch(themeModeProvider);
 
     return ListView(
       children: [
@@ -54,37 +53,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onSelectionChanged: (selected) {
               final code = selected.first;
               ref.read(localeProvider.notifier).setLocale(Locale(code));
-            },
-          ),
-        ),
-        ListTile(
-          title: Text(l10n.theme),
-          subtitle: Text(switch (themeMode) {
-            ThemeMode.system => l10n.themeSystem,
-            ThemeMode.light => l10n.themeLight,
-            ThemeMode.dark => l10n.themeDark,
-          }),
-          trailing: SegmentedButton<ThemeMode>(
-            segments: [
-              ButtonSegment(
-                value: ThemeMode.system,
-                label: Text(l10n.themeSystem),
-              ),
-              ButtonSegment(
-                value: ThemeMode.light,
-                icon: const Icon(Icons.light_mode_outlined),
-                label: Text(l10n.themeLight),
-              ),
-              ButtonSegment(
-                value: ThemeMode.dark,
-                icon: const Icon(Icons.dark_mode_outlined),
-                label: Text(l10n.themeDark),
-              ),
-            ],
-            showSelectedIcon: false,
-            selected: {themeMode},
-            onSelectionChanged: (selected) {
-              ref.read(themeModeProvider.notifier).setMode(selected.first);
             },
           ),
         ),

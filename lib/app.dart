@@ -12,7 +12,6 @@ import 'core/theme/app_theme.dart';
 import 'web/navigation/web_notification_navigation.dart';
 import 'web/theme/web_theme.dart';
 import 'core/utils/locale_prefs.dart';
-import 'core/utils/theme_prefs.dart';
 import 'domain/models/notification_item.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/notifications/notification_navigation.dart';
@@ -50,37 +49,12 @@ class LocaleNotifier extends Notifier<Locale> {
   }
 }
 
-/// App theme mode; persisted per device via SharedPreferences.
-final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
-  ThemeModeNotifier.new,
-);
-
-class ThemeModeNotifier extends Notifier<ThemeMode> {
-  @override
-  ThemeMode build() {
-    _loadSaved();
-    // Web admin UI is designed for light mode; system dark caused unreadable forms.
-    return _useWebUi ? ThemeMode.light : ThemeMode.system;
-  }
-
-  Future<void> _loadSaved() async {
-    final saved = await loadSavedThemeMode();
-    if (saved != null) state = saved;
-  }
-
-  void setMode(ThemeMode mode) {
-    state = mode;
-    saveThemeMode(mode);
-  }
-}
-
 class BusinessSajiloApp extends ConsumerWidget {
   const BusinessSajiloApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
-    final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(routerProvider);
 
     // Wire push notification taps and foreground banners into the app.
@@ -115,8 +89,7 @@ class BusinessSajiloApp extends ConsumerWidget {
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: 'BusinessSajilo',
       theme: _useWebUi ? WebTheme.light() : AppTheme.light(),
-      darkTheme: _useWebUi ? WebTheme.dark() : AppTheme.dark(),
-      themeMode: themeMode,
+      themeMode: ThemeMode.light,
       locale: locale,
       builder: (context, child) {
         // Respect user font scaling but clamp to keep layouts usable.

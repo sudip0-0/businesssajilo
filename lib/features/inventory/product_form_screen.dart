@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,20 +7,35 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/ui/error_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/products_repository.dart';
-import 'providers.dart';
-import '../../domain/models/category.dart';
 import '../../domain/models/product.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import 'product_image.dart';
+import 'providers.dart';
+
+String generateProductSku() {
+  final random = Random();
+  final hex = List.generate(
+    8,
+    (_) => random.nextInt(16).toRadixString(16),
+  ).join().toUpperCase();
+  return 'BS-$hex';
+}
 
 class ProductFormScreen extends ConsumerStatefulWidget {
-  const ProductFormScreen({super.key, this.product, this.embedded = false});
+  const ProductFormScreen({
+    super.key,
+    this.product,
+    this.embedded = false,
+    this.onSaved,
+  });
 
   final Product? product;
   final bool embedded;
+
+  /// When set (e.g. web), called with the saved product instead of popping.
+  final ValueChanged<Product>? onSaved;
 
   @override
   ConsumerState<ProductFormScreen> createState() => ProductFormScreenState();
@@ -34,7 +50,6 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   late final TextEditingController _costController;
   late final TextEditingController _refController;
   late final TextEditingController _thresholdController;
-  String? _categoryId;
   Uint8List? _imageBytes;
   String? _imageMime;
   bool _loading = false;
@@ -47,7 +62,12 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final p = widget.product;
     _nameController = TextEditingController(text: p?.name ?? '');
     _nameNpController = TextEditingController(text: p?.nameNp ?? '');
-    _skuController = TextEditingController(text: p?.sku ?? '');
+    final existingSku = p?.sku?.trim();
+    _skuController = TextEditingController(
+      text: (existingSku != null && existingSku.isNotEmpty)
+          ? existingSku
+          : generateProductSku(),
+    );
     _unitController = TextEditingController(text: p?.unit ?? 'piece');
     _costController = TextEditingController(
       text: p != null ? formatNpr(Paisa(p.costPrice), showPaisa: false) : '',
@@ -60,7 +80,6 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     _thresholdController = TextEditingController(
       text: p?.lowStockThreshold.toString() ?? '0',
     );
-    _categoryId = p?.categoryId;
   }
 
   @override
@@ -109,6 +128,7 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       final threshold = int.tryParse(_thresholdController.text) ?? 0;
       final session = ref.read(authProvider).value;
       final businessId = session?.member?.businessId;
+      final sku = _skuController.text.trim();
 
       Product saved;
       if (_isEdit) {
@@ -118,10 +138,8 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           nameNp: _nameNpController.text.trim().isEmpty
               ? null
               : _nameNpController.text.trim(),
-          sku: _skuController.text.trim().isEmpty
-              ? null
-              : _skuController.text.trim(),
-          categoryId: _categoryId,
+          sku: sku.isEmpty ? null : sku,
+          categoryId: widget.product!.categoryId,
           unit: _unitController.text.trim(),
           costPrice: cost,
           referencePrice: refPrice,
@@ -134,10 +152,8 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           nameNp: _nameNpController.text.trim().isEmpty
               ? null
               : _nameNpController.text.trim(),
-          sku: _skuController.text.trim().isEmpty
-              ? null
-              : _skuController.text.trim(),
-          categoryId: _categoryId,
+          sku: sku.isEmpty ? null : sku,
+          categoryId: null,
           unit: _unitController.text.trim(),
           costPrice: cost,
           referencePrice: refPrice,
@@ -166,7 +182,19 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         );
       }
 
-      if (mounted) Navigator.pop(context, true);
+      bumpInventoryRevision(ref);
+      ref.invalidate(productListProvider);
+      ref.invalidate(lowStockCountProvider);
+      if (_isEdit) {
+        ref.invalidate(productDetailProvider(saved.id));
+      }
+
+      if (!mounted) return;
+      if (widget.onSaved != null) {
+        widget.onSaved!(saved);
+      } else {
+        Navigator.pop(context, true);
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -184,21 +212,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final categoriesAsync = ref.watch(categoryListProvider);
+    final formBody = _buildForm(context, l10n);
 
-    if (widget.embedded) {
-      return categoriesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(message: l10n.loadingFailed),
-        data: (categories) => _buildForm(context, l10n, categories),
-      );
-    }
-
-    final formBody = categoriesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => ErrorState(message: l10n.loadingFailed),
-      data: (categories) => _buildForm(context, l10n, categories),
-    );
+    if (widget.embedded) return formBody;
 
     return Scaffold(
       appBar: AppBar(title: Text(_isEdit ? l10n.editProduct : l10n.addProduct)),
@@ -206,106 +222,134 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     );
   }
 
-  Widget _buildForm(
-    BuildContext context,
-    AppLocalizations l10n,
-    List<Category> categories,
-  ) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(widget.embedded ? 0 : 24),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_imageBytes != null)
-              Image.memory(_imageBytes!, height: 120, fit: BoxFit.cover)
-            else if (_isEdit)
-              ProductImage(storagePath: widget.product!.imageUrl, size: 120),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _pickImage,
-              icon: const Icon(Icons.image_outlined),
-              label: Text(l10n.pickImage),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.productName),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _nameNpController,
-              decoration: InputDecoration(labelText: l10n.productNameNp),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _skuController,
-              decoration: InputDecoration(labelText: l10n.sku),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String?>(
-              // ignore: deprecated_member_use
-              value: _categoryId,
-              decoration: InputDecoration(labelText: l10n.categories),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('—')),
-                ...categories.map(
-                  (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+  Widget _buildForm(BuildContext context, AppLocalizations l10n) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoCol = constraints.maxWidth >= 600;
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(widget.embedded ? 0 : 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_imageBytes != null)
+                  Image.memory(_imageBytes!, height: 120, fit: BoxFit.cover)
+                else if (_isEdit)
+                  ProductImage(
+                    storagePath: widget.product!.imageUrl,
+                    size: 120,
+                  ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.image_outlined),
+                  label: Text(l10n.pickImage),
                 ),
+                const SizedBox(height: 16),
+                _fieldRow(
+                  twoCol: twoCol,
+                  left: TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: l10n.productName),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? l10n.fieldRequired
+                        : null,
+                  ),
+                  right: TextFormField(
+                    controller: _nameNpController,
+                    decoration: InputDecoration(labelText: l10n.productNameNp),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _fieldRow(
+                  twoCol: twoCol,
+                  left: TextFormField(
+                    controller: _skuController,
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.sku,
+                      helperText: l10n.skuAutoGenerated,
+                    ),
+                  ),
+                  right: TextFormField(
+                    controller: _unitController,
+                    decoration: InputDecoration(labelText: l10n.unit),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? l10n.fieldRequired
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _fieldRow(
+                  twoCol: twoCol,
+                  left: TextFormField(
+                    controller: _costController,
+                    decoration: InputDecoration(labelText: l10n.costPrice),
+                    keyboardType: TextInputType.number,
+                    validator: (v) => _validateMoney(v, l10n),
+                  ),
+                  right: TextFormField(
+                    controller: _refController,
+                    decoration: InputDecoration(labelText: l10n.referencePrice),
+                    keyboardType: TextInputType.number,
+                    validator: (v) => _validateMoney(v, l10n),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _thresholdController,
+                  decoration: InputDecoration(labelText: l10n.lowStockThreshold),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return null;
+                    final n = int.tryParse(v.trim());
+                    if (n == null || n < 0) return l10n.invalidNumber;
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                if (!widget.embedded)
+                  FilledButton(
+                    onPressed: _loading ? null : _submit,
+                    child: _loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l10n.save),
+                  ),
               ],
-              onChanged: (v) => setState(() => _categoryId = v),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _unitController,
-              decoration: InputDecoration(labelText: l10n.unit),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _costController,
-              decoration: InputDecoration(labelText: l10n.costPrice),
-              keyboardType: TextInputType.number,
-              validator: (v) => _validateMoney(v, l10n),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _refController,
-              decoration: InputDecoration(labelText: l10n.referencePrice),
-              keyboardType: TextInputType.number,
-              validator: (v) => _validateMoney(v, l10n),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _thresholdController,
-              decoration: InputDecoration(labelText: l10n.lowStockThreshold),
-              keyboardType: TextInputType.number,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return null;
-                final n = int.tryParse(v.trim());
-                if (n == null || n < 0) return l10n.invalidNumber;
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-            if (!widget.embedded)
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.save),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _fieldRow({
+    required bool twoCol,
+    required Widget left,
+    required Widget right,
+  }) {
+    if (!twoCol) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          left,
+          const SizedBox(height: 12),
+          right,
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: left),
+        const SizedBox(width: 16),
+        Expanded(child: right),
+      ],
     );
   }
 }

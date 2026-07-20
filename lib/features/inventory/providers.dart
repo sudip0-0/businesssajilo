@@ -10,6 +10,21 @@ final categoryListProvider = FutureProvider.autoDispose<List<Category>>((ref) {
   return ref.watch(categoriesRepositoryProvider).list();
 });
 
+/// Bumped after product/stock writes so paginated inventory lists can refresh.
+final inventoryRevisionProvider =
+    NotifierProvider<InventoryRevision, int>(InventoryRevision.new);
+
+class InventoryRevision extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+void bumpInventoryRevision(WidgetRef ref) {
+  ref.read(inventoryRevisionProvider.notifier).bump();
+}
+
 /// Capped product list for pickers (bill form, stock-in). Pass [query] for
 /// server/local search; empty query returns the first page alphabetically.
 final productListProvider = FutureProvider.autoDispose

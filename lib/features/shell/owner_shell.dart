@@ -182,6 +182,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               if (saved == true) {
                 ref.invalidate(productListProvider);
                 ref.invalidate(lowStockCountProvider);
+                bumpInventoryRevision(ref);
               }
             },
             icon: const Icon(Icons.add),

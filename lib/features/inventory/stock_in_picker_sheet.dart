@@ -69,6 +69,7 @@ class StockInPickerSheet extends ConsumerWidget {
     if (saved == true) {
       ref.invalidate(productListProvider);
       ref.invalidate(lowStockCountProvider);
+      bumpInventoryRevision(ref);
     }
   }
 }

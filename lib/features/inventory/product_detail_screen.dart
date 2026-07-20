@@ -194,6 +194,7 @@ class ProductDetailScreen extends ConsumerWidget {
       ref.invalidate(movementListProvider(productId));
       ref.invalidate(productListProvider);
       ref.invalidate(lowStockCountProvider);
+      bumpInventoryRevision(ref);
     }
   }
 
@@ -213,6 +214,7 @@ class ProductDetailScreen extends ConsumerWidget {
       ref.invalidate(movementListProvider(productId));
       ref.invalidate(productListProvider);
       ref.invalidate(lowStockCountProvider);
+      bumpInventoryRevision(ref);
     }
   }
 
@@ -242,6 +244,7 @@ class ProductDetailScreen extends ConsumerWidget {
     if (confirm != true) return;
     await ref.read(productsRepositoryProvider).deactivate(id);
     ref.invalidate(productListProvider);
+    bumpInventoryRevision(ref);
     if (context.mounted) Navigator.pop(context, true);
   }
 }

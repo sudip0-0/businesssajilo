@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/categories_repository.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../data/repositories/products_repository.dart';
 import '../customers/providers.dart';
@@ -8,7 +7,7 @@ import '../inventory/providers.dart';
 
 enum DemoSeedResult { loaded, skipped }
 
-/// Inserts sample category, products, and customer for new businesses.
+/// Inserts sample products and customer for new businesses.
 class DemoDataSeeder {
   DemoDataSeeder(this._ref);
 
@@ -18,17 +17,12 @@ class DemoDataSeeder {
     final products = await _ref.read(productsRepositoryProvider).list();
     if (products.isNotEmpty) return DemoSeedResult.skipped;
 
-    final categories = _ref.read(categoriesRepositoryProvider);
-    final category = await categories.create(
-      name: 'Beverages',
-      nameNp: 'पेय पदार्थ',
-    );
-
     final productsRepo = _ref.read(productsRepositoryProvider);
     await productsRepo.create(
       name: 'Cola 1L',
       nameNp: 'कोला १ लिटर',
-      categoryId: category.id,
+      sku: generateDemoSku('COLA'),
+      categoryId: null,
       unit: 'piece',
       costPrice: 4500,
       referencePrice: 6000,
@@ -37,7 +31,8 @@ class DemoDataSeeder {
     await productsRepo.create(
       name: 'Mineral Water',
       nameNp: 'मिनरल वाटर',
-      categoryId: category.id,
+      sku: generateDemoSku('WATER'),
+      categoryId: null,
       unit: 'piece',
       costPrice: 1500,
       referencePrice: 2500,
@@ -46,7 +41,8 @@ class DemoDataSeeder {
     await productsRepo.create(
       name: 'Juice Pack',
       nameNp: 'जुस प्याक',
-      categoryId: category.id,
+      sku: generateDemoSku('JUICE'),
+      categoryId: null,
       unit: 'piece',
       costPrice: 3500,
       referencePrice: 5000,
@@ -71,4 +67,9 @@ class DemoDataSeeder {
 
     return DemoSeedResult.loaded;
   }
+}
+
+String generateDemoSku(String prefix) {
+  final ts = DateTime.now().millisecondsSinceEpoch.toRadixString(16).toUpperCase();
+  return 'BS-$prefix-${ts.substring(ts.length > 4 ? ts.length - 4 : 0)}';
 }

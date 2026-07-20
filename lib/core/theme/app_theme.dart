@@ -33,11 +33,6 @@ abstract final class BsColors {
   static const outlineVariant = Color(0xFFC5C5D3);
   static const border = Color(0xFFE5E7EB);
   static const rowHover = Color(0xFFF3F4F6);
-
-  static const successDark = Color(0xFF6CF8BB);
-  static const dangerDark = Color(0xFFFF8A80);
-  static const infoDark = Color(0xFF90A8FF);
-  static const accentDark = Color(0xFFF39461);
 }
 
 abstract final class BsRadii {
@@ -139,21 +134,6 @@ abstract final class AppTheme {
     );
   }
 
-  static ThemeData dark() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: BsColors.primary,
-      brightness: Brightness.dark,
-      secondary: BsColors.successDark,
-      error: BsColors.dangerDark,
-    );
-
-    return _base(scheme).copyWith(
-      scaffoldBackgroundColor: scheme.surface,
-      cardTheme: _cardTheme(scheme.surfaceContainer),
-      inputDecorationTheme: _inputTheme(scheme.surfaceContainerHigh, scheme),
-    );
-  }
-
   static ThemeData _base(ColorScheme scheme) {
     return ThemeData(
       useMaterial3: true,
@@ -233,17 +213,11 @@ abstract final class AppTheme {
       );
 }
 
-/// Status color helpers that adapt to the active brightness.
+/// Status color helpers for the light theme.
 extension BsStatusColors on ColorScheme {
-  Color get successColor =>
-      brightness == Brightness.dark ? BsColors.successDark : BsColors.success;
-  Color get dangerColor =>
-      brightness == Brightness.dark ? BsColors.dangerDark : BsColors.danger;
-  Color get infoColor =>
-      brightness == Brightness.dark ? BsColors.infoDark : BsColors.info;
-  Color get accentColor =>
-      brightness == Brightness.dark ? BsColors.accentDark : BsColors.accent;
-  Color get warningColor => brightness == Brightness.dark
-      ? BsColors.accentDark
-      : BsColors.amberTextOnTint;
+  Color get successColor => BsColors.success;
+  Color get dangerColor => BsColors.danger;
+  Color get infoColor => BsColors.info;
+  Color get accentColor => BsColors.accent;
+  Color get warningColor => BsColors.amberTextOnTint;
 }

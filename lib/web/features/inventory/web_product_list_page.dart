@@ -8,7 +8,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/ui/stock_badge.dart';
 import '../../../data/repositories/products_repository.dart';
-import '../../../domain/models/category.dart';
 import '../../../domain/models/product.dart';
 import '../../../features/inventory/product_detail_screen.dart';
 import '../../../features/inventory/product_image.dart';
@@ -44,7 +43,6 @@ class WebProductListPage extends ConsumerStatefulWidget {
 
 class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   String _query = '';
-  String? _categoryId;
   PaginatedListState<Product>? _pager;
   final _scrollController = ScrollController();
   late final TextEditingController _searchController;
@@ -99,13 +97,9 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   List<Product> get _filtered {
     final items = _pager?.items ?? [];
     return items.where((p) {
-      final matchesQuery =
-          _query.isEmpty ||
+      return _query.isEmpty ||
           p.name.toLowerCase().contains(_query.toLowerCase()) ||
           (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-      final matchesCategory =
-          _categoryId == null || p.categoryId == _categoryId;
-      return matchesQuery && matchesCategory;
     }).toList();
   }
 
@@ -116,9 +110,14 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final categoriesAsync = ref.watch(categoryListProvider);
     final pager = _pager;
     final selectedId = widget.selectedProductId;
+
+    ref.listen<int>(inventoryRevisionProvider, (prev, next) {
+      if (prev != next) {
+        _pager?.refresh();
+      }
+    });
 
     return WebPageScaffold(
       title: l10n.stock,
@@ -142,15 +141,6 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                 hint: l10n.filterProducts,
                 controller: _searchController,
                 onChanged: (v) => setState(() => _query = v),
-              ),
-            ),
-            categoriesAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
-              data: (categories) => _CategoryChips(
-                categories: categories,
-                selectedId: _categoryId,
-                onSelected: (id) => setState(() => _categoryId = id),
               ),
             ),
             Expanded(child: _buildListBody(l10n, pager)),
@@ -187,7 +177,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       );
     }
     if (filtered.isEmpty) {
-      final searching = _query.isNotEmpty || _categoryId != null;
+      final searching = _query.isNotEmpty;
       return WebEmptyState(
         message: searching ? l10n.noSearchResults : l10n.emptyNoProducts,
         icon: PhosphorIconsRegular.package,
@@ -197,7 +187,6 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
         onAction: searching
             ? () => setState(() {
                 _query = '';
-                _categoryId = null;
                 _searchController.clear();
               })
             : (widget.canEdit
@@ -248,11 +237,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
 
                 final product = filtered[index];
                 final selected = product.id == widget.selectedProductId;
-                final meta = [
-                  if (product.sku != null && product.sku!.isNotEmpty)
-                    product.sku!,
-                  if (product.categoryName != null) product.categoryName!,
-                ].join(' · ');
+                final sku = product.sku;
 
                 return Material(
                   color: selected
@@ -286,10 +271,10 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                                             : null,
                                       ),
                                 ),
-                                if (meta.isNotEmpty) ...[
+                                if (sku != null && sku.isNotEmpty) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    meta,
+                                    sku,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context).textTheme.bodySmall
@@ -310,49 +295,6 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({
-    required this.categories,
-    required this.selectedId,
-    required this.onSelected,
-  });
-
-  final List<Category> categories;
-  final String? selectedId;
-  final ValueChanged<String?> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    if (categories.isEmpty) return const SizedBox.shrink();
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Row(
-        children: [
-          FilterChip(
-            label: Text(l10n.allCategories),
-            selected: selectedId == null,
-            onSelected: (_) => onSelected(null),
-          ),
-          const SizedBox(width: 8),
-          ...categories.map(
-            (c) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(c.name),
-                selected: selectedId == c.id,
-                onSelected: (_) => onSelected(c.id),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

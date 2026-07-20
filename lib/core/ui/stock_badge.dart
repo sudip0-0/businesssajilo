@@ -17,7 +17,6 @@ class StockBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final dark = scheme.brightness == Brightness.dark;
     final level = stockLevelFor(product);
     // Each level has an icon so the state is not color-only; low stock uses a
     // darker amber for text contrast on the tinted background.
@@ -30,7 +29,7 @@ class StockBadge extends StatelessWidget {
       ),
       StockLevel.lowStock => (
         BsColors.accent,
-        dark ? BsColors.accentDark : BsColors.amberTextOnTint,
+        BsColors.amberTextOnTint,
         Icons.warning_amber_outlined,
         l10n.lowStock,
       ),
