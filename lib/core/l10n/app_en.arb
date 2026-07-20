@@ -535,6 +535,7 @@
   "sidebarCollapse": "Collapse sidebar",
   "openMenu": "Open menu",
   "cartEmpty": "Your cart is empty",
+  "viewAll": "View all",
   "accountNotLinked": "Your account is not linked to a customer profile. Ask the owner for help.",
   "needsAction": "Needs action",
   "inProgress": "In progress",

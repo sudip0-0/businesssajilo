@@ -2756,6 +2756,12 @@ abstract class AppLocalizations {
   /// **'Your cart is empty'**
   String get cartEmpty;
 
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAll;
+
   /// No description provided for @accountNotLinked.
   ///
   /// In en, this message translates to:

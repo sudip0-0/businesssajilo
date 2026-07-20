@@ -99,7 +99,12 @@ final webRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/notifications',
-        builder: (_, _) => const WebNotificationsPage(),
+        redirect: (context, state) {
+          final session = ref.read(authProvider).value;
+          final role = session?.member?.role;
+          if (role == null) return '/login';
+          return '${webRoleBasePath(role)}/notifications';
+        },
       ),
       _ownerRoutes(),
       _salesRoutes(),
@@ -284,6 +289,10 @@ ShellRoute _ownerRoutes() {
         path: '/owner/settings',
         builder: (_, _) => const WebSettingsPage(),
       ),
+      GoRoute(
+        path: '/owner/notifications',
+        builder: (_, _) => const WebNotificationsPage(),
+      ),
     ],
   );
 }
@@ -396,6 +405,10 @@ ShellRoute _salesRoutes() {
           ),
         ],
       ),
+      GoRoute(
+        path: '/sales/notifications',
+        builder: (_, _) => const WebNotificationsPage(),
+      ),
     ],
   );
 }
@@ -451,6 +464,10 @@ ShellRoute _warehouseRoutes() {
         builder: (_, _) => const WebWarehouseDashboardPage(),
         redirect: (_, _) => '/warehouse/stock',
       ),
+      GoRoute(
+        path: '/warehouse/notifications',
+        builder: (_, _) => const WebNotificationsPage(),
+      ),
     ],
   );
 }
@@ -495,6 +512,10 @@ ShellRoute _customerRoutes() {
       GoRoute(
         path: '/customer/dues',
         builder: (_, _) => const WebCustomerLedgerPage(),
+      ),
+      GoRoute(
+        path: '/customer/notifications',
+        builder: (_, _) => const WebNotificationsPage(),
       ),
     ],
   );

@@ -27,28 +27,41 @@ class WebMasterDetail extends StatelessWidget {
         listWidth ??
         (context.isWebWide ? tokens.wideListPaneWidth : tokens.listPaneWidth);
 
-    if (compact) {
-      return hasSelection && detail != null ? detail! : list;
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : null;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(width: paneWidth, child: list),
-        const VerticalDivider(width: 1),
-        Expanded(
-          child:
-              detail ??
-              Center(
-                child: Text(
-                  l10n.selectItem,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                ),
+        if (compact) {
+          final child = hasSelection && detail != null ? detail! : list;
+          if (height == null) return child;
+          return SizedBox(width: constraints.maxWidth, height: height, child: child);
+        }
+
+        return SizedBox(
+          height: height,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(width: paneWidth, height: height, child: list),
+              const VerticalDivider(width: 1),
+              Expanded(
+                child:
+                    detail ??
+                    Center(
+                      child: Text(
+                        l10n.selectItem,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                    ),
               ),
-        ),
-      ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

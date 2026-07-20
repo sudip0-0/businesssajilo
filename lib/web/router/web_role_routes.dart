@@ -23,7 +23,7 @@ bool webPathAllowedForRole(String path, Role role) {
   if (path.startsWith('/warehouse')) return role == Role.warehouse;
   if (path.startsWith('/customer')) return role == Role.customer;
   // Shared authenticated routes (not role-prefixed).
-  if (path == '/notifications' || path == '/change-password') return true;
+  if (path == '/change-password') return true;
   if (path == '/login' || path == '/register' || path == '/') return true;
   return false;
 }

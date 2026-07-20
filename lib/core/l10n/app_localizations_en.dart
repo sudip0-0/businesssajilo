@@ -1396,6 +1396,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cartEmpty => 'Your cart is empty';
 
   @override
+  String get viewAll => 'View all';
+
+  @override
   String get accountNotLinked =>
       'Your account is not linked to a customer profile. Ask the owner for help.';
 

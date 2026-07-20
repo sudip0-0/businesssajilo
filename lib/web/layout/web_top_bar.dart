@@ -4,15 +4,18 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/role_label.dart';
 import '../../domain/enums.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/notifications/notification_dropdown.dart';
 import '../../features/notifications/providers.dart';
 import '../../features/settings/account_section.dart';
 import '../../features/shell/logout_action.dart';
+import '../navigation/web_notification_navigation.dart';
+import '../router/web_role_routes.dart';
 import '../theme/web_palette.dart';
 import '../theme/web_tokens.dart';
-import '../../core/ui/locale_toggle.dart';
 
 class WebTopBar extends ConsumerWidget {
   const WebTopBar({super.key, this.showMenuButton = false, this.onMenuPressed});
@@ -53,26 +56,48 @@ class WebTopBar extends ConsumerWidget {
           const Spacer(),
           const LocaleToggle(compact: true),
           const SizedBox(width: 4),
-          IconButton(
-            tooltip: l10n.notifications,
-            onPressed: () => context.push('/notifications'),
-            icon: Badge(
-              isLabelVisible: unread > 0,
-              backgroundColor: WebPalette.brass,
-              label: Text(
-                unread > 9 ? '9+' : '$unread',
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+          Builder(
+            builder: (buttonContext) {
+              return IconButton(
+                tooltip: l10n.notifications,
+                onPressed: () {
+                  final memberRole =
+                      ref.read(authProvider).value?.member?.role;
+                  showNotificationDropdown(
+                    buttonContext: buttonContext,
+                    onOpenItem: (navContext, item) {
+                      openWebNotificationTarget(
+                        navContext,
+                        item,
+                        role: ref.read(authProvider).value?.member?.role,
+                      );
+                    },
+                    onViewAll: memberRole == null
+                        ? null
+                        : () => context.go(
+                            '${webRoleBasePath(memberRole)}/notifications',
+                          ),
+                  );
+                },
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  backgroundColor: WebPalette.brass,
+                  label: Text(
+                    unread > 9 ? '9+' : '$unread',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  child: const Icon(
+                    PhosphorIconsRegular.bell,
+                    color: WebPalette.inkSoft,
+                    size: 21,
+                  ),
                 ),
-              ),
-              child: const Icon(
-                PhosphorIconsRegular.bell,
-                color: WebPalette.inkSoft,
-                size: 21,
-              ),
-            ),
+              );
+            },
           ),
           if (isOwner)
             IconButton(

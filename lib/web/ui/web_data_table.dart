@@ -83,61 +83,76 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: WebPalette.card,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: WebPalette.hairline),
-              boxShadow: WebPalette.cardShadow,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // Keep a readable column floor so narrow panes scroll
-                  // horizontally instead of clipping cell content.
-                  const minTableWidth = 640.0;
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth < minTableWidth
-                            ? minTableWidth
-                            : constraints.maxWidth,
-                      ),
-                      child: SingleChildScrollView(
-                        child: DataTable(
-                          sortColumnIndex: widget.sortColumnIndex,
-                          sortAscending: widget.sortAscending,
-                          columns: widget.columns,
-                          rows: rows,
-                          headingRowHeight: 44,
-                          dataRowMinHeight: rowHeight,
-                          dataRowMaxHeight: rowHeight + 8,
-                          columnSpacing: 24,
-                          horizontalMargin: 20,
-                          showCheckboxColumn: false,
-                          dividerThickness: 1,
-                        ),
-                      ),
-                    ),
-                  );
-                },
+    final tableCard = DecoratedBox(
+      decoration: BoxDecoration(
+        color: WebPalette.card,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: WebPalette.hairline),
+        boxShadow: WebPalette.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Keep a readable column floor so narrow panes scroll
+            // horizontally instead of clipping cell content.
+            const minTableWidth = 640.0;
+            final maxW = constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : minTableWidth;
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: maxW < minTableWidth ? minTableWidth : maxW,
+                ),
+                child: SingleChildScrollView(
+                  child: DataTable(
+                    sortColumnIndex: widget.sortColumnIndex,
+                    sortAscending: widget.sortAscending,
+                    columns: widget.columns,
+                    rows: rows,
+                    headingRowHeight: 44,
+                    dataRowMinHeight: rowHeight,
+                    dataRowMaxHeight: rowHeight + 8,
+                    columnSpacing: 24,
+                    horizontalMargin: 20,
+                    showCheckboxColumn: false,
+                    dividerThickness: 1,
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
-        if (widget.onPageChanged != null && widget.totalItems != null)
-          _TablePagination(
+      ),
+    );
+
+    final pagination =
+        widget.onPageChanged != null && widget.totalItems != null
+        ? _TablePagination(
             page: widget.page,
             totalItems: widget.totalItems!,
             onPageChanged: widget.onPageChanged!,
-          ),
-      ],
+          )
+        : null;
+
+    // Only use Expanded when the parent gives a finite height. Nesting this
+    // table in a ListView (or other unbounded parent) used to throw
+    // "RenderFlex children have non-zero flex but incoming height
+    // constraints are unbounded".
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bounded = constraints.hasBoundedHeight;
+        return Column(
+          mainAxisSize: bounded ? MainAxisSize.max : MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (bounded) Expanded(child: tableCard) else tableCard,
+            ?pagination,
+          ],
+        );
+      },
     );
   }
 }

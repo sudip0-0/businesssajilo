@@ -32,4 +32,44 @@ void main() {
     expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
     expect(find.text('0'), findsNothing);
   });
+
+  testWidgets('notification bell opens dropdown panel', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          notificationListProvider.overrideWith((ref) => Stream.value([])),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            appBar: PreferredSize(
+              preferredSize: Size.fromHeight(56),
+              child: ColoredBox(
+                color: Colors.white,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: NotificationBellAction(),
+                ),
+              ),
+            ),
+            body: SizedBox.expand(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notifications'), findsWidgets);
+    expect(find.text('No notifications yet'), findsOneWidget);
+    expect(find.text('Mark all read'), findsOneWidget);
+  });
 }

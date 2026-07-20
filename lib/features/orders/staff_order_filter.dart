@@ -49,21 +49,20 @@ class StaffOrderFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Row(
+    // Intrinsic height only — avoid scroll views that can confuse parent
+    // Columns that also use Expanded (owner/sales web order list).
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: [
-          for (final filter in StaffOrderFilter.values) ...[
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(filter.label(l10n)),
-                selected: value == filter,
-                onSelected: (_) => onChanged(filter),
-              ),
+          for (final filter in StaffOrderFilter.values)
+            FilterChip(
+              label: Text(filter.label(l10n)),
+              selected: value == filter,
+              onSelected: (_) => onChanged(filter),
             ),
-          ],
         ],
       ),
     );

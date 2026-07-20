@@ -43,7 +43,6 @@ class WebOrderListPage extends ConsumerStatefulWidget {
 class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
   String _query = '';
   PaginatedListState<Order>? _pager;
-  final _scrollController = ScrollController();
   StaffOrderFilter _filter = StaffOrderFilter.needsAction;
 
   String get _ordersBasePath {
@@ -70,7 +69,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
       onChanged: () {
         if (mounted) setState(() {});
       },
-    )..attachScrollController(_scrollController);
+    );
     _pager!.refresh().then((_) {
       if (mounted) setState(() {});
     });
@@ -80,12 +79,6 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     if (_filter == filter) return;
     setState(() => _filter = filter);
     await _refresh();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _selectOrder(Order order) {
@@ -112,6 +105,56 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     if (mounted) setState(() {});
   }
 
+  Widget _orderTable(AppLocalizations l10n, List<Order> filtered) {
+    final selectedId = widget.selectedOrderId;
+    // WebDataTable uses Expanded internally — must be a direct child of a
+    // bounded Expanded parent (never inside ListView / nested Column+Expanded).
+    return WebDataTable<Order>(
+      columns: [
+        DataColumn(
+          label: Text(widget.ownOnly ? l10n.orderQueue : l10n.customers),
+        ),
+        DataColumn(label: Text(l10n.orderItems)),
+        DataColumn(label: Text(l10n.status)),
+      ],
+      items: filtered,
+      selectedId: selectedId,
+      idFor: (o) => o.id,
+      onRowTap: _selectOrder,
+      rowBuilder: (order, _) {
+        final dateStr = order.createdAt != null
+            ? BsDate.both(
+                order.createdAt!,
+                locale: Localizations.localeOf(context),
+              )
+            : '—';
+        final title = widget.ownOnly
+            ? dateStr
+            : (order.customerShopName ?? '—');
+        return DataRow(
+          cells: [
+            DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(title),
+                  if (!widget.ownOnly)
+                    Text(
+                      dateStr,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+            DataCell(Text('${order.items.length}')),
+            DataCell(StatusChip(order.status)),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -131,7 +174,18 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
       }
     }
 
-    Widget listBody;
+    final filtered = pager == null || pager.initialLoading
+        ? const <Order>[]
+        : _filterOrders(pager.items);
+    final showTable =
+        pager != null &&
+        !pager.initialLoading &&
+        pager.error == null &&
+        filtered.isNotEmpty;
+    final showLoadMore =
+        showTable && (pager.hasMore || pager.loading);
+
+    late final Widget listBody;
     if (pager == null || pager.initialLoading) {
       listBody = const WebListSkeleton();
     } else if (pager.error != null && pager.items.isEmpty) {
@@ -141,71 +195,17 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
         onAction: _refresh,
         icon: PhosphorIconsRegular.warning,
       );
+    } else if (filtered.isEmpty) {
+      listBody = WebEmptyState(
+        message: _query.isNotEmpty ? l10n.noSearchResults : l10n.noOrders,
+        icon: PhosphorIconsRegular.shoppingCart,
+        actionLabel: _query.isNotEmpty ? l10n.clearSearch : null,
+        onAction: _query.isNotEmpty
+            ? () => setState(() => _query = '')
+            : null,
+      );
     } else {
-      final filtered = _filterOrders(pager.items);
-      if (filtered.isEmpty) {
-        listBody = WebEmptyState(
-          message: _query.isNotEmpty ? l10n.noSearchResults : l10n.noOrders,
-          icon: PhosphorIconsRegular.shoppingCart,
-          actionLabel: _query.isNotEmpty ? l10n.clearSearch : null,
-          onAction: _query.isNotEmpty
-              ? () => setState(() => _query = '')
-              : null,
-        );
-      } else {
-        listBody = RefreshIndicator(
-          onRefresh: _refresh,
-          child: ListView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              WebDataTable<Order>(
-                columns: [
-                  DataColumn(label: Text(l10n.customers)),
-                  DataColumn(label: Text(l10n.orderItems)),
-                  DataColumn(label: Text(l10n.orderQueue)),
-                ],
-                items: filtered,
-                selectedId: selectedId,
-                idFor: (o) => o.id,
-                onRowTap: _selectOrder,
-                rowBuilder: (order, _) {
-                  final dateStr = order.createdAt != null
-                      ? BsDate.both(
-                          order.createdAt!,
-                          locale: Localizations.localeOf(context),
-                        )
-                      : '—';
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(order.customerShopName ?? '—'),
-                            Text(
-                              dateStr,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      DataCell(Text('${order.items.length}')),
-                      DataCell(StatusChip(order.status)),
-                    ],
-                  );
-                },
-              ),
-              if (pager.hasMore || pager.loading)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-            ],
-          ),
-        );
-      }
+      listBody = _orderTable(l10n, filtered);
     }
 
     return WebPageScaffold(
@@ -225,6 +225,22 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
             if (!widget.ownOnly)
               StaffOrderFilterBar(value: _filter, onChanged: _setFilter),
             Expanded(child: listBody),
+            if (showLoadMore)
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Center(
+                  child: pager.loading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : TextButton(
+                          onPressed: pager.loadMore,
+                          child: Text(l10n.loadMore),
+                        ),
+                ),
+              ),
           ],
         ),
         detail: selectedId == null

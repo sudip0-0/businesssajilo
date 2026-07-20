@@ -1393,6 +1393,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get cartEmpty => 'तपाईंको कार्ट खाली छ';
 
   @override
+  String get viewAll => 'सबै हेर्नुहोस्';
+
+  @override
   String get accountNotLinked =>
       'तपाईंको खाता ग्राहक प्रोफाइलसँग जोडिएको छैन। मालिकलाई सम्पर्क गर्नुहोस्।';
 
