@@ -128,11 +128,6 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                       error: (_, _) => '—',
                     ),
                     icon: PhosphorIconsRegular.wallet,
-                    subtitle: stats.when(
-                      data: (d) => d.totalDues > 0 ? l10n.needsAttention : null,
-                      loading: () => null,
-                      error: (_, _) => null,
-                    ),
                     onTap: () => context.go('/owner/reports/dues'),
                   ),
                   WebStatTile(
@@ -585,61 +580,132 @@ class _TransactionsTable extends StatelessWidget {
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        headingRowHeight: 40,
-        dataRowMinHeight: 44,
-        dataRowMaxHeight: 52,
-        columnSpacing: 24,
-        columns: [
-          DataColumn(label: Text(l10n.sn)),
-          DataColumn(label: Text(l10n.customerName)),
-          DataColumn(label: Text(l10n.time)),
-          DataColumn(label: Text(l10n.payment)),
-          DataColumn(label: Text(l10n.amountNpr)),
-          DataColumn(label: Text(l10n.status)),
-        ],
-        rows: [
-          for (var i = 0; i < bills.length; i++)
-            DataRow(
-              onSelectChanged: (_) =>
-                  context.go('/owner/billing/${bills[i].id}'),
-              cells: [
-                DataCell(
-                  Text(
-                    '#${bills[i].billNo.split('-').last}',
-                    style: WebTypography.mono(
-                      fontSize: 12,
-                      color: WebPalette.inkSoft,
+    final headerStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
+      color: WebPalette.inkSoft,
+      fontWeight: FontWeight.w600,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const minTableWidth = 720.0;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: constraints.maxWidth < minTableWidth
+                  ? minTableWidth
+                  : constraints.maxWidth,
+            ),
+            child: Table(
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              columnWidths: const {
+                0: FixedColumnWidth(72),
+                1: FlexColumnWidth(2.4),
+                2: FlexColumnWidth(1.1),
+                3: FlexColumnWidth(1.1),
+                4: FlexColumnWidth(1.3),
+                5: FlexColumnWidth(1.2),
+              },
+              children: [
+                TableRow(
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: WebPalette.hairline),
                     ),
                   ),
+                  children: [
+                    _headerCell(l10n.sn, headerStyle),
+                    _headerCell(l10n.customerName, headerStyle),
+                    _headerCell(l10n.time, headerStyle),
+                    _headerCell(l10n.payment, headerStyle),
+                    _headerCell(l10n.amountNpr, headerStyle),
+                    _headerCell(l10n.status, headerStyle),
+                  ],
                 ),
-                DataCell(
-                  Text(bills[i].customerShopName ?? l10n.walkInCustomer),
-                ),
-                DataCell(
-                  Text(
-                    bills[i].createdAt != null
-                        ? timeFmt.format(bills[i].createdAt!.toLocal())
-                        : '—',
-                  ),
-                ),
-                DataCell(Text(_paymentLabel(bills[i].status, l10n))),
-                DataCell(
-                  Text(
-                    formatNpr(Paisa(bills[i].grandTotal), showPaisa: false),
-                    style: WebTypography.mono(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: WebPalette.ink,
+                for (final bill in bills)
+                  TableRow(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: WebPalette.hairline),
+                      ),
                     ),
+                    children: [
+                      _dataCell(
+                        onTap: () => context.go('/owner/billing/${bill.id}'),
+                        child: Text(
+                          '#${bill.billNo.split('-').last}',
+                          style: WebTypography.mono(
+                            fontSize: 12,
+                            color: WebPalette.inkSoft,
+                          ),
+                        ),
+                      ),
+                      _dataCell(
+                        onTap: () => context.go('/owner/billing/${bill.id}'),
+                        child: Text(
+                          bill.customerShopName ?? l10n.walkInCustomer,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      _dataCell(
+                        onTap: () => context.go('/owner/billing/${bill.id}'),
+                        child: Text(
+                          bill.createdAt != null
+                              ? timeFmt.format(bill.createdAt!.toLocal())
+                              : '—',
+                        ),
+                      ),
+                      _dataCell(
+                        onTap: () => context.go('/owner/billing/${bill.id}'),
+                        child: Text(_paymentLabel(bill.status, l10n)),
+                      ),
+                      _dataCell(
+                        onTap: () => context.go('/owner/billing/${bill.id}'),
+                        child: Text(
+                          formatNpr(
+                            Paisa(bill.grandTotal),
+                            showPaisa: false,
+                          ),
+                          style: WebTypography.mono(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: WebPalette.ink,
+                          ),
+                        ),
+                      ),
+                      _dataCell(
+                        onTap: () => context.go('/owner/billing/${bill.id}'),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: BillStatusChip(bill.status),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                DataCell(BillStatusChip(bills[i].status)),
               ],
             ),
-        ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _headerCell(String label, TextStyle? style) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+      child: Text(label, style: style),
+    );
+  }
+
+  Widget _dataCell({required Widget child, required VoidCallback onTap}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: child,
+        ),
       ),
     );
   }

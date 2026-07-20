@@ -128,11 +128,6 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   error: (_, _) => '—',
                 ),
                 icon: Icons.account_balance_wallet_outlined,
-                subtitle: stats.when(
-                  data: (d) => d.totalDues > 0 ? l10n.needsAttention : null,
-                  loading: () => null,
-                  error: (_, _) => null,
-                ),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
