@@ -198,6 +198,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
                 child: const AddCustomerSheet(),
               );
               if (created == true) {
+                bumpCustomersRevision(ref);
                 ref.invalidate(customerListProvider);
                 ref.invalidate(totalDuesProvider);
               }
@@ -214,6 +215,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
                 MaterialPageRoute(builder: (_) => const BillFormScreen()),
               );
               if (saved == true) {
+                bumpBillingRevision(ref);
                 ref.invalidate(billListProvider);
                 ref.invalidate(todaysSalesProvider);
                 ref.invalidate(todaysBillCountProvider);

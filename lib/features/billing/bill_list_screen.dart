@@ -98,6 +98,12 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
 
+    ref.listen<int>(billingRevisionProvider, (prev, next) {
+      if (prev != next) {
+        _pager?.refresh();
+      }
+    });
+
     final listPane = Column(
       children: [
         Padding(

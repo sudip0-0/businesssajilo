@@ -14,6 +14,7 @@ import 'providers.dart';
 import 'statement_share_sheet.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import 'record_payment_sheet.dart';
+import 'record_sale_sheet.dart';
 
 Future<void> _openRecordPaymentSheet(
   BuildContext context,
@@ -31,6 +32,24 @@ Future<void> _openRecordPaymentSheet(
     ),
   );
   // Cache invalidation is handled by recordCustomerPayment.
+}
+
+Future<void> _openRecordSaleSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required String customerId,
+  required String customerName,
+}) async {
+  final l10n = AppLocalizations.of(context);
+  await showAdaptiveSheet<bool>(
+    context: context,
+    title: l10n.recordSale,
+    child: RecordSaleSheet(
+      customerId: customerId,
+      customerName: customerName,
+    ),
+  );
+  // Cache invalidation is handled by recordCustomerSale.
 }
 
 class CustomerDetailScreen extends ConsumerWidget {
@@ -70,9 +89,21 @@ class CustomerDetailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    if (canRecordPayments && customer.balanceDue > 0)
+                    if (canRecordPayments)
                       FilledButton.icon(
+                        icon: const Icon(Icons.point_of_sale_outlined, size: 18),
+                        label: Text(l10n.recordSale),
+                        onPressed: () => _openRecordSaleSheet(
+                          context,
+                          ref,
+                          customerId: customerId,
+                          customerName: customer.shopName,
+                        ),
+                      ),
+                    if (canRecordPayments && customer.balanceDue > 0)
+                      FilledButton.tonalIcon(
                         icon: const Icon(Icons.payments_outlined, size: 18),
                         label: Text(l10n.recordPayment),
                         onPressed: () => _openRecordPaymentSheet(
@@ -247,6 +278,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                   ),
                 );
                 if (saved == true) {
+                  bumpCustomersRevision(ref);
                   ref.invalidate(customerDetailProvider(customerId));
                   ref.invalidate(customerLedgerProvider(customerId));
                   ref.invalidate(customerListProvider);
@@ -257,19 +289,42 @@ class CustomerDetailScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: canRecordPayments
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                final customer = customerAsync.value;
-                if (customer == null) return;
-                await _openRecordPaymentSheet(
-                  context,
-                  ref,
-                  customerId: customerId,
-                  customerName: customer.shopName,
-                );
-              },
-              icon: const Icon(Icons.payments_outlined),
-              label: Text(l10n.recordPayment),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'record_sale_$customerId',
+                  onPressed: () async {
+                    final customer = customerAsync.value;
+                    if (customer == null) return;
+                    await _openRecordSaleSheet(
+                      context,
+                      ref,
+                      customerId: customerId,
+                      customerName: customer.shopName,
+                    );
+                  },
+                  icon: const Icon(Icons.point_of_sale_outlined),
+                  label: Text(l10n.recordSale),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton.extended(
+                  heroTag: 'record_payment_$customerId',
+                  onPressed: () async {
+                    final customer = customerAsync.value;
+                    if (customer == null) return;
+                    await _openRecordPaymentSheet(
+                      context,
+                      ref,
+                      customerId: customerId,
+                      customerName: customer.shopName,
+                    );
+                  },
+                  icon: const Icon(Icons.payments_outlined),
+                  label: Text(l10n.recordPayment),
+                ),
+              ],
             )
           : null,
       body: body,

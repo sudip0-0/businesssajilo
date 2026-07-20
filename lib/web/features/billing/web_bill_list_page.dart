@@ -12,6 +12,7 @@ import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
 import '../../../domain/models/bill.dart';
 import '../../../features/billing/bill_detail_screen.dart';
+import '../../../features/billing/providers.dart';
 import '../../layout/web_master_detail.dart';
 import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
@@ -111,6 +112,12 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     final prefix = _webRolePrefix(context);
     final selectedId = widget.selectedBillId;
     final pager = _pager;
+
+    ref.listen<int>(billingRevisionProvider, (prev, next) {
+      if (prev != next) {
+        _pager?.refresh();
+      }
+    });
 
     return WebPageScaffold(
       title: l10n.billing,

@@ -6,6 +6,26 @@ import '../../data/repositories/payments_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 
+/// Bumped after customer writes so paginated customer lists can refresh.
+final customersRevisionProvider =
+    NotifierProvider<CustomersRevision, int>(CustomersRevision.new);
+
+class CustomersRevision extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+void bumpCustomersRevision(WidgetRef ref) {
+  ref.read(customersRevisionProvider.notifier).bump();
+}
+
+/// Bridge for callers that only have [Ref] (e.g. invalidate helpers).
+void bumpCustomersRevisionFromRef(Ref ref) {
+  ref.read(customersRevisionProvider.notifier).bump();
+}
+
 /// Capped customer list for pickers / autocomplete. Pass [query] for search.
 final customerListProvider = FutureProvider.autoDispose
     .family<List<Customer>, String>((ref, query) {

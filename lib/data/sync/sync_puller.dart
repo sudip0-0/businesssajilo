@@ -456,7 +456,7 @@ class SyncPuller {
                   LocalBillItemsCompanion.insert(
                     id: i['id'] as String,
                     billId: billId,
-                    productId: i['product_id'] as String,
+                    productId: i['product_id'] as String? ?? '',
                     nameSnapshot: i['name_snapshot'] as String,
                     qty: i['qty'] as int,
                     rate: Value((i['rate'] as num?)?.toInt() ?? 0),

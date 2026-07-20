@@ -152,6 +152,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
               MaterialPageRoute(builder: (_) => const BillFormScreen()),
             );
             if (saved == true) {
+              bumpBillingRevision(ref);
               ref.invalidate(billListProvider);
               ref.invalidate(todaysSalesProvider);
               ref.invalidate(todaysBillCountProvider);

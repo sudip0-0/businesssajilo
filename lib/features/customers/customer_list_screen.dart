@@ -79,6 +79,12 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
 
+    ref.listen<int>(customersRevisionProvider, (prev, next) {
+      if (prev != next) {
+        _pager?.refresh();
+      }
+    });
+
     final listPane = Column(
       children: [
         Padding(
@@ -201,7 +207,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
       child: const AddCustomerSheet(),
     );
     if (created == true) {
-      await _pager?.refresh();
+      bumpCustomersRevision(ref);
       ref.invalidate(customerListProvider);
       ref.invalidate(totalDuesProvider);
     }

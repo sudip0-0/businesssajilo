@@ -339,7 +339,6 @@ class _DashboardPage extends StatelessWidget {
                 label: 'Total Dues',
                 value: formatNpr(const Paisa(23480000), showPaisa: false),
                 icon: PhosphorIconsRegular.wallet,
-                subtitle: 'Needs attention',
                 onTap: () {},
               ),
               WebStatTile(

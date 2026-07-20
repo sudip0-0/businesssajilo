@@ -902,6 +902,36 @@ abstract class AppLocalizations {
   /// **'Record payment'**
   String get recordPayment;
 
+  /// No description provided for @recordSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Record sale'**
+  String get recordSale;
+
+  /// No description provided for @saleAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale amount'**
+  String get saleAmount;
+
+  /// No description provided for @saleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get saleNote;
+
+  /// No description provided for @paidNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid now'**
+  String get paidNow;
+
+  /// No description provided for @paidNowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Record payment with this sale so balance stays unchanged'**
+  String get paidNowHint;
+
   /// No description provided for @paymentMethod.
   ///
   /// In en, this message translates to:

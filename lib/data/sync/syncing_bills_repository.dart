@@ -300,4 +300,105 @@ class SyncingBillsRepository implements BillsRepository {
   }) {
     throw UnsupportedError('Order billing requires connectivity');
   }
+
+  @override
+  Future<Bill> recordAmountSale({
+    required String customerId,
+    required String createdByMemberId,
+    required int amountPaisa,
+    String? refNote,
+    bool paidNow = false,
+    PaymentMethod paymentMethod = PaymentMethod.cash,
+  }) async {
+    final billId = _uuid.v4();
+    final meta = await _db.select(_db.deviceMeta).getSingle();
+    final provisionalNo = await _db.nextProvisionalBillNo();
+    final customer = await (_db.select(
+      _db.localCustomers,
+    )..where((c) => c.id.equals(customerId))).getSingleOrNull();
+    final shopName = customer?.shopName;
+    final status = paidNow ? BillStatus.paid : BillStatus.due;
+    final note = refNote?.trim();
+    final nameSnapshot = (note == null || note.isEmpty) ? 'Manual sale' : note;
+
+    await _db.transaction(() async {
+      await _db
+          .into(_db.localBills)
+          .insert(
+            LocalBillsCompanion.insert(
+              id: billId,
+              businessId: _businessId,
+              customerId: Value(customerId),
+              billNo: provisionalNo,
+              provisionalBillNo: Value(provisionalNo),
+              devicePrefix: Value(meta.devicePrefix),
+              itemsTotal: Value(amountPaisa),
+              discount: const Value(0),
+              grandTotal: Value(amountPaisa),
+              status: status.name,
+              createdBy: createdByMemberId,
+              customerShopName: Value(shopName),
+              syncStatus: const Value('pending'),
+            ),
+          );
+
+      await _db
+          .into(_db.localBillItems)
+          .insert(
+            LocalBillItemsCompanion.insert(
+              id: _uuid.v4(),
+              billId: billId,
+              productId: '',
+              nameSnapshot: nameSnapshot,
+              qty: 1,
+              rate: Value(amountPaisa),
+              discount: const Value(0),
+              lineTotal: Value(amountPaisa),
+            ),
+          );
+
+      await _db.customStatement(
+        'UPDATE local_customers SET balance_due = balance_due + ? WHERE id = ?',
+        [amountPaisa, customerId],
+      );
+
+      Map<String, dynamic>? paymentPayload;
+      if (paidNow) {
+        final paymentId = _uuid.v4();
+        paymentPayload = {
+          'id': paymentId,
+          'amount': amountPaisa,
+          'method': paymentMethod.name,
+          'ref_note': note,
+        };
+        await _payments.record(
+          id: paymentId,
+          customerId: customerId,
+          amount: amountPaisa,
+          method: paymentMethod,
+          refNote: note,
+          billId: billId,
+          receivedByMemberId: createdByMemberId,
+          enqueueRemote: false,
+        );
+      }
+
+      await _db.enqueue(
+        entityType: 'bill',
+        entityId: billId,
+        payload: {
+          'id': billId,
+          'manual_sale': true,
+          'customer_id': customerId,
+          'amount': amountPaisa,
+          'ref_note': note,
+          'device_prefix': meta.devicePrefix,
+          'payment': ?paymentPayload,
+        },
+      );
+    });
+
+    unawaited(_sync.syncNow());
+    return get(billId);
+  }
 }

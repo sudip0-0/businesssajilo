@@ -417,6 +417,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordPayment => 'Record payment';
 
   @override
+  String get recordSale => 'Record sale';
+
+  @override
+  String get saleAmount => 'Sale amount';
+
+  @override
+  String get saleNote => 'Note (optional)';
+
+  @override
+  String get paidNow => 'Paid now';
+
+  @override
+  String get paidNowHint =>
+      'Record payment with this sale so balance stays unchanged';
+
+  @override
   String get paymentMethod => 'Payment method';
 
   @override

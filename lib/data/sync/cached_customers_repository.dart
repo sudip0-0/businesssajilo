@@ -1,3 +1,8 @@
+import 'dart:async';
+
+import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/utils/ledger_balance.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
@@ -6,18 +11,20 @@ import '../local/app_database.dart';
 import '../local/local_mappers.dart';
 import '../repositories/customers_repository.dart';
 import '../repositories/members_repository.dart';
-import 'package:drift/drift.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'sync_service.dart';
 
 class CachedCustomersRepository implements CustomersRepository {
   CachedCustomersRepository({
     required AppDatabase db,
     required SupabaseClient? client,
+    SyncService? sync,
   }) : _db = db,
-       _client = client;
+       _client = client,
+       _sync = sync;
 
   final AppDatabase _db;
   final SupabaseClient? _client;
+  final SyncService? _sync;
 
   @override
   Future<List<Customer>> list({
@@ -137,7 +144,11 @@ class CachedCustomersRepository implements CustomersRepository {
           'opening_balance': openingBalance,
         })
         .eq('id', id);
-    return get(id);
+    final updated = await _fetchBalanceRow(id);
+    await _upsertLocal(updated);
+    final sync = _sync;
+    if (sync != null) unawaited(sync.syncNow());
+    return updated;
   }
 
   @override
@@ -167,6 +178,56 @@ class CachedCustomersRepository implements CustomersRepository {
     if (customerId == null) {
       throw Exception('Customer was not created');
     }
-    return get(customerId);
+    final customer = await _fetchBalanceRow(customerId);
+    await _upsertLocal(customer);
+    final sync = _sync;
+    if (sync != null) unawaited(sync.syncNow());
+    return customer;
+  }
+
+  Future<Customer> _fetchBalanceRow(String customerId) async {
+    final client = _client;
+    if (client == null) throw Exception('Supabase not configured');
+    final row = await client
+        .from('customer_balances')
+        .select()
+        .eq('customer_id', customerId)
+        .single();
+    final map = Map<String, dynamic>.from(row as Map);
+    return Customer(
+      id: map['customer_id'] as String,
+      businessId: map['business_id'] as String,
+      memberId: map['member_id'] as String? ?? '',
+      shopName: map['shop_name'] as String,
+      contactName: map['contact_name'] as String?,
+      phone: map['phone'] as String?,
+      address: map['address'] as String?,
+      openingBalance: (map['opening_balance'] as num?)?.toInt() ?? 0,
+      balanceDue: (map['balance_due'] as num?)?.toInt() ?? 0,
+      createdAt: map['created_at'] == null
+          ? null
+          : DateTime.parse(map['created_at'] as String),
+    );
+  }
+
+  Future<void> _upsertLocal(Customer customer) async {
+    final now = DateTime.now().toUtc();
+    await _db
+        .into(_db.localCustomers)
+        .insertOnConflictUpdate(
+          LocalCustomersCompanion.insert(
+            id: customer.id,
+            businessId: customer.businessId,
+            memberId: customer.memberId,
+            shopName: customer.shopName,
+            contactName: Value(customer.contactName),
+            phone: Value(customer.phone),
+            address: Value(customer.address),
+            openingBalance: Value(customer.openingBalance),
+            balanceDue: Value(customer.balanceDue),
+            updatedAt: now,
+            createdAt: Value(customer.createdAt),
+          ),
+        );
   }
 }

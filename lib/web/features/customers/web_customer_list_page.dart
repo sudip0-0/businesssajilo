@@ -93,6 +93,12 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     final selectedId = widget.selectedCustomerId;
     final pager = _pager;
 
+    ref.listen<int>(customersRevisionProvider, (prev, next) {
+      if (prev != next) {
+        _pager?.refresh();
+      }
+    });
+
     return WebPageScaffold(
       title: l10n.customers,
       actions: widget.canEdit

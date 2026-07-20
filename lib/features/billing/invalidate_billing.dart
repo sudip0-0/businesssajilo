@@ -24,6 +24,8 @@ void invalidateAfterBillSaved(
   ref.invalidate(todaysBillsProvider);
   ref.invalidate(totalDuesProvider);
   ref.invalidate(ownerDashboardStatsProvider);
+  bumpBillingRevisionFromRef(ref);
+  bumpCustomersRevisionFromRef(ref);
   if (customerId != null) {
     ref.invalidate(customerListProvider);
     ref.invalidate(customerDetailProvider(customerId));
@@ -45,6 +47,8 @@ void invalidateAfterCustomerPayment(Ref ref, {required String customerId}) {
   ref.invalidate(customerListProvider);
   ref.invalidate(totalDuesProvider);
   ref.invalidate(ownerDashboardStatsProvider);
+  bumpCustomersRevisionFromRef(ref);
+  bumpBillingRevisionFromRef(ref);
 }
 
 /// Invalidates bill + ledger caches after a credit note is created.

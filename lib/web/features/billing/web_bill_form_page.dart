@@ -33,6 +33,7 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
   final _formKey = GlobalKey<WebBillFormContentState>();
 
   void _onSaved() {
+    bumpBillingRevision(ref);
     ref.invalidate(billListProvider);
     ref.invalidate(todaysSalesProvider);
     ref.invalidate(todaysBillCountProvider);

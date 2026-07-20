@@ -51,7 +51,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
   final _displayNameController = TextEditingController();
   final _districtController = TextEditingController();
   final _panController = TextEditingController();
-  final _creditLimitController = TextEditingController(text: '0');
+  final _openingBalanceController = TextEditingController(text: '0');
   String? _city;
   bool _loading = false;
   bool _showMore = false;
@@ -67,7 +67,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
     _displayNameController.dispose();
     _districtController.dispose();
     _panController.dispose();
-    _creditLimitController.dispose();
+    _openingBalanceController.dispose();
     super.dispose();
   }
 
@@ -111,10 +111,11 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                 ? null
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
-            openingBalance: parseNpr(_creditLimitController.text)?.value ?? 0,
+            openingBalance: parseNpr(_openingBalanceController.text)?.value ?? 0,
           );
       ref.invalidate(customerListProvider);
       ref.invalidate(totalDuesProvider);
+      bumpCustomersRevision(ref);
       if (mounted) context.go('/owner/customers');
     } catch (_) {
       if (mounted) {
@@ -191,6 +192,15 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _openingBalanceController,
+                    decoration: InputDecoration(
+                      labelText: l10n.openingBalance,
+                      prefixText: 'Rs. ',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
@@ -249,25 +259,13 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                         ),
                       ],
                     ),
-                    WebFormSectionLabel(l10n.financialInformation),
-                    WebFormRow(
-                      children: [
-                        TextFormField(
-                          controller: _panController,
-                          decoration: InputDecoration(
-                            labelText: l10n.panVatNumber,
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        TextFormField(
-                          controller: _creditLimitController,
-                          decoration: InputDecoration(
-                            labelText: l10n.openingBalance,
-                            prefixText: 'Rs. ',
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ],
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _panController,
+                      decoration: InputDecoration(
+                        labelText: l10n.panVatNumber,
+                      ),
+                      keyboardType: TextInputType.number,
                     ),
                   ],
                   SwitchListTile(

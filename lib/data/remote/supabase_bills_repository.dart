@@ -215,6 +215,33 @@ class SupabaseBillsRepository implements BillsRepository {
     return get(bill.id);
   }
 
+  @override
+  Future<Bill> recordAmountSale({
+    required String customerId,
+    required String createdByMemberId,
+    required int amountPaisa,
+    String? refNote,
+    bool paidNow = false,
+    PaymentMethod paymentMethod = PaymentMethod.cash,
+  }) async {
+    final client = _requireClient();
+    final billId = const Uuid().v4();
+    final payload = <String, dynamic>{
+      'id': billId,
+      'customer_id': customerId,
+      'amount': amountPaisa,
+      'ref_note': refNote,
+      if (paidNow)
+        'payment': {
+          'amount': amountPaisa,
+          'method': paymentMethod.name,
+          'ref_note': refNote,
+        },
+    };
+    await client.rpc('record_customer_sale', params: {'p': payload});
+    return get(billId);
+  }
+
   Bill _mapBillRow(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
     final customer = map.remove('customers');
@@ -224,9 +251,11 @@ class SupabaseBillsRepository implements BillsRepository {
     final itemsRaw = map.remove('bill_items');
     final bill = Bill.fromJson(map);
     if (itemsRaw is List) {
-      final items = itemsRaw
-          .map((i) => BillItem.fromJson(Map<String, dynamic>.from(i as Map)))
-          .toList();
+      final items = itemsRaw.map((i) {
+        final itemMap = Map<String, dynamic>.from(i as Map);
+        itemMap['product_id'] ??= '';
+        return BillItem.fromJson(itemMap);
+      }).toList();
       return bill.copyWith(items: items);
     }
     return bill;

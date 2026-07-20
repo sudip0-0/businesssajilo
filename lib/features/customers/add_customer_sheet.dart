@@ -49,7 +49,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
   final _contactNameController = TextEditingController();
   final _districtController = TextEditingController();
   final _panController = TextEditingController();
-  final _creditLimitController = TextEditingController(text: '0');
+  final _openingBalanceController = TextEditingController(text: '0');
   String? _city;
   bool _loading = false;
   String? _error;
@@ -66,7 +66,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
     _contactNameController.dispose();
     _districtController.dispose();
     _panController.dispose();
-    _creditLimitController.dispose();
+    _openingBalanceController.dispose();
     super.dispose();
   }
 
@@ -113,7 +113,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 ? null
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
-            openingBalance: parseNpr(_creditLimitController.text)?.value ?? 0,
+            openingBalance: parseNpr(_openingBalanceController.text)?.value ?? 0,
           );
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(true);
@@ -158,6 +158,15 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
               ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _openingBalanceController,
+                decoration: InputDecoration(
+                  labelText: l10n.openingBalance,
+                  prefixText: 'Rs. ',
+                ),
+                keyboardType: TextInputType.number,
+              ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => setState(() => _showMore = !_showMore),
@@ -184,15 +193,6 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 TextFormField(
                   controller: _districtController,
                   decoration: InputDecoration(labelText: l10n.district),
-                ),
-                BsFormSectionLabel(l10n.financialInformation),
-                TextFormField(
-                  controller: _creditLimitController,
-                  decoration: InputDecoration(
-                    labelText: l10n.openingBalance,
-                    prefixText: 'Rs. ',
-                  ),
-                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

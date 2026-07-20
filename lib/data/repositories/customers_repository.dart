@@ -14,7 +14,11 @@ final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   final bundle = ref.watch(syncBundleProvider);
   if (bundle != null) {
-    return CachedCustomersRepository(db: bundle.db, client: client);
+    return CachedCustomersRepository(
+      db: bundle.db,
+      client: client,
+      sync: bundle.sync,
+    );
   }
   return SupabaseCustomersRepository(client);
 });

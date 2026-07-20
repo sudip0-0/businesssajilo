@@ -417,6 +417,22 @@ class AppLocalizationsNe extends AppLocalizations {
   String get recordPayment => 'भुक्तानी रेकर्ड';
 
   @override
+  String get recordSale => 'बिक्री रेकर्ड';
+
+  @override
+  String get saleAmount => 'बिक्री रकम';
+
+  @override
+  String get saleNote => 'नोट (ऐच्छिक)';
+
+  @override
+  String get paidNow => 'अहिले तिरेको';
+
+  @override
+  String get paidNowHint =>
+      'यस बिक्रीसँग भुक्तानी रेकर्ड गर्नुहोस् ताकि बाँकी नबढोस्';
+
+  @override
   String get paymentMethod => 'भुक्तानी विधि';
 
   @override

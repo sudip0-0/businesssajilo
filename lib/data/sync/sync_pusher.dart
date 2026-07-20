@@ -75,15 +75,21 @@ class SyncPusher {
     }
   }
 
-  /// Pushes a bill through the transactional `create_bill` RPC. The RPC is
+  /// Pushes a bill through the transactional `create_bill` RPC (or
+  /// `record_customer_sale` for amount-only manual sales). The RPC is
   /// idempotent on the bill id; replays return the existing bill. The
   /// server-assigned `bill_no` finalizes the provisional local number.
   /// When the payload embeds a payment, that local payment is marked synced.
   Future<void> _pushBill(String billId, Map<String, dynamic> payload) async {
-    final result = await _client.rpc<dynamic>(
-      'create_bill',
-      params: {'p': payload},
-    );
+    final result = payload['manual_sale'] == true
+        ? await _client.rpc<dynamic>(
+            'record_customer_sale',
+            params: {'p': payload},
+          )
+        : await _client.rpc<dynamic>(
+            'create_bill',
+            params: {'p': payload},
+          );
     final map = result as Map<String, dynamic>;
     final bill = map['bill'] as Map<String, dynamic>?;
     final serverBillNo = bill?['bill_no'] as String?;

@@ -58,6 +58,17 @@ abstract class BillsRepository {
     String? paymentRefNote,
     int? paymentAmount,
   });
+
+  /// Amount-only customer sale (no product lines). Status is due unless
+  /// [paidNow] is true (then a matching payment is recorded).
+  Future<Bill> recordAmountSale({
+    required String customerId,
+    required String createdByMemberId,
+    required int amountPaisa,
+    String? refNote,
+    bool paidNow = false,
+    PaymentMethod paymentMethod = PaymentMethod.cash,
+  });
 }
 
 class BillLineInput {
