@@ -10,14 +10,34 @@ abstract final class AppLog {
     debugPrint(message);
   }
 
-  static void warn(String message, [Object? error, StackTrace? stackTrace]) {
+  static void info(String message, {Map<String, dynamic>? extras}) {
+    debugPrint('INFO: $message');
+    if (!Env.hasSentry) return;
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        message: message,
+        level: SentryLevel.info,
+        data: extras?.isNotEmpty == true ? extras : null,
+      ),
+    );
+  }
+
+  static void warn(
+    String message, [
+    Object? error,
+    StackTrace? stackTrace,
+    Map<String, dynamic>? extras,
+  ]) {
     debugPrint('WARN: $message${error != null ? ' — $error' : ''}');
     if (!Env.hasSentry) return;
     Sentry.addBreadcrumb(
       Breadcrumb(
         message: message,
         level: SentryLevel.warning,
-        data: error != null ? {'error': error.toString()} : null,
+        data: {
+          if (error != null) 'error': error.toString(),
+          if (extras != null) ...extras,
+        },
       ),
     );
     if (error != null) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/network/supabase_health_probe.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
@@ -47,7 +48,8 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
     final lines = _lines ?? [];
 
     final connectivity = await Connectivity().checkConnectivity();
-    final isOnline = !connectivity.contains(ConnectivityResult.none);
+    final hasLink = connectivity.any((r) => r != ConnectivityResult.none);
+    final isOnline = hasLink && await isSupabaseReachable();
 
     final error = validateCreditNoteSubmit(lines: lines, isOnline: isOnline);
     if (error != null) {

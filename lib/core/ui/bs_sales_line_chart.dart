@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import '../utils/money.dart';
 import '../utils/report_range.dart';
 import '../../domain/models/sales_period_point.dart';
 
@@ -16,11 +17,13 @@ class BsSalesLineChart extends StatelessWidget {
     required this.points,
     this.height = 180,
     this.period = SalesChartPeriod.weekly,
+    this.errorMessage,
   });
 
   final List<SalesPeriodPoint> points;
   final double height;
   final SalesChartPeriod period;
+  final String? errorMessage;
 
   static const _leftAxisWidth = 52.0;
   static const _gridLines = 4;
@@ -30,7 +33,6 @@ class BsSalesLineChart extends StatelessWidget {
     if (period == SalesChartPeriod.weekly) {
       return DateFormat.E().format(DateTime(npt.year, npt.month, npt.day));
     }
-    // Format from NPT calendar fields so locale/timezone can't shift the day.
     return '${npt.month}/${npt.day}';
   }
 
@@ -56,6 +58,23 @@ class BsSalesLineChart extends StatelessWidget {
       return '${(value / 1000).toStringAsFixed(value >= 10000 ? 0 : 1)}K';
     }
     return value.toString();
+  }
+
+  String _periodLabel(AppLocalizations l10n) =>
+      period == SalesChartPeriod.weekly ? l10n.weekly : l10n.monthly;
+
+  String _buildSummary(AppLocalizations l10n) {
+    if (errorMessage != null) return errorMessage!;
+    if (points.isEmpty) return l10n.noSalesInPeriod;
+    final total = points.fold<int>(0, (sum, p) => sum + p.totalSales);
+    if (total == 0) return l10n.noSalesInPeriod;
+    final peak = points.reduce(
+      (a, b) => a.totalSales >= b.totalSales ? a : b,
+    );
+    return '${_periodLabel(l10n)} sales chart. '
+        'Total ${formatNpr(Paisa(total), showPaisa: false)}. '
+        'Peak ${formatNpr(Paisa(peak.totalSales), showPaisa: false)} '
+        'on ${_nptLabel(points.indexOf(peak))}.';
   }
 
   Widget _emptyChart(BuildContext context, String message) {
@@ -87,16 +106,33 @@ class BsSalesLineChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final summary = _buildSummary(l10n);
+
+    if (errorMessage != null) {
+      return Semantics(
+        label: summary,
+        liveRegion: true,
+        child: ExcludeSemantics(child: _emptyChart(context, errorMessage!)),
+      );
+    }
+
     if (points.isEmpty) {
-      return _emptyChart(context, l10n.noSalesInPeriod);
+      return Semantics(
+        label: summary,
+        child: ExcludeSemantics(child: _emptyChart(context, l10n.noSalesInPeriod)),
+      );
     }
 
     final maxSales = points
         .map((p) => p.totalSales)
         .fold<int>(0, (m, v) => v > m ? v : m);
     if (maxSales == 0) {
-      return _emptyChart(context, l10n.noSalesInPeriod);
+      return Semantics(
+        label: summary,
+        child: ExcludeSemantics(child: _emptyChart(context, l10n.noSalesInPeriod)),
+      );
     }
+
     final effectiveMax = maxSales;
     final dense = points.length > 10;
     final labelIndices = _labelIndices();
@@ -104,103 +140,107 @@ class BsSalesLineChart extends StatelessWidget {
       context,
     ).textTheme.labelSmall?.copyWith(color: BsColors.outline, fontSize: 10);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: height,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: _leftAxisWidth,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    for (var i = _gridLines; i >= 0; i--)
-                      Text(
-                        _formatAxisValue(
-                          (effectiveMax * i / _gridLines).round(),
-                        ),
-                        style: labelStyle,
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: CustomPaint(
-                  painter: _SalesLinePainter(
-                    points: points,
-                    maxValue: effectiveMax.toDouble(),
-                    lineColor: BsColors.primary,
-                    fillColor: BsColors.primary.withValues(alpha: 0.08),
-                    gridLines: _gridLines,
-                    showDots: !dense,
-                  ),
-                  child: const SizedBox.expand(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.only(left: _leftAxisWidth + 8),
-          child: SizedBox(
-            height: 16,
-            child: period == SalesChartPeriod.weekly
-                ? Row(
+    return Semantics(
+      label: summary,
+      excludeSemantics: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: height,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: _leftAxisWidth,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      for (var i = 0; i < points.length; i++)
-                        Expanded(
-                          child: Text(
-                            _nptLabel(i),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            style: labelStyle,
+                      for (var i = _gridLines; i >= 0; i--)
+                        Text(
+                          _formatAxisValue(
+                            (effectiveMax * i / _gridLines).round(),
                           ),
+                          style: labelStyle,
                         ),
                     ],
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      const labelWidth = 36.0;
-                      final count = points.length;
-                      final last = count - 1;
-                      return Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          for (final i in labelIndices)
-                            Positioned(
-                              left: () {
-                                if (count <= 1) {
-                                  return (constraints.maxWidth - labelWidth) /
-                                      2;
-                                }
-                                final center =
-                                    (i / last) * constraints.maxWidth;
-                                return (center - labelWidth / 2).clamp(
-                                  0.0,
-                                  constraints.maxWidth - labelWidth,
-                                );
-                              }(),
-                              width: labelWidth,
-                              child: Text(
-                                _nptLabel(i),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                style: labelStyle,
-                              ),
-                            ),
-                        ],
-                      );
-                    },
                   ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CustomPaint(
+                    painter: _SalesLinePainter(
+                      points: points,
+                      maxValue: effectiveMax.toDouble(),
+                      lineColor: BsColors.primary,
+                      fillColor: BsColors.primary.withValues(alpha: 0.08),
+                      gridLines: _gridLines,
+                      showDots: !dense,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: _leftAxisWidth + 8),
+            child: SizedBox(
+              height: 16,
+              child: period == SalesChartPeriod.weekly
+                  ? Row(
+                      children: [
+                        for (var i = 0; i < points.length; i++)
+                          Expanded(
+                            child: Text(
+                              _nptLabel(i),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              style: labelStyle,
+                            ),
+                          ),
+                      ],
+                    )
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        const labelWidth = 36.0;
+                        final count = points.length;
+                        final last = count - 1;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            for (final i in labelIndices)
+                              Positioned(
+                                left: () {
+                                  if (count <= 1) {
+                                    return (constraints.maxWidth - labelWidth) /
+                                        2;
+                                  }
+                                  final center =
+                                      (i / last) * constraints.maxWidth;
+                                  return (center - labelWidth / 2).clamp(
+                                    0.0,
+                                    constraints.maxWidth - labelWidth,
+                                  );
+                                }(),
+                                width: labelWidth,
+                                child: Text(
+                                  _nptLabel(i),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  style: labelStyle,
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

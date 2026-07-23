@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/role_label.dart';
@@ -43,48 +44,43 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref
-          .read(membersRepositoryProvider)
-          .createMember(
-            email: _emailController.text.trim().isEmpty
-                ? null
-                : _emailController.text.trim(),
-            password: _passwordController.text,
-            role: _role,
-            displayName: _displayNameController.text.trim(),
-            phone: _phoneController.text.trim().isEmpty
-                ? null
-                : _phoneController.text.trim(),
-            shopName: _role == Role.customer
-                ? _shopNameController.text.trim()
-                : null,
-            contactName:
-                _role == Role.customer &&
-                    _contactNameController.text.trim().isNotEmpty
-                ? _contactNameController.text.trim()
-                : null,
-            address:
-                _role == Role.customer &&
-                    _addressController.text.trim().isNotEmpty
-                ? _addressController.text.trim()
-                : null,
-          );
-      if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) {
-        setState(
-          () =>
-              _error = AppFailure.from(e).message(AppLocalizations.of(context)),
+    final l10n = AppLocalizations.of(context);
+    await runInlineFormAction(
+      action: () async {
+        await ref.read(membersRepositoryProvider).createMember(
+          email: _emailController.text.trim().isEmpty
+              ? null
+              : _emailController.text.trim(),
+          password: _passwordController.text,
+          role: _role,
+          displayName: _displayNameController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty
+              ? null
+              : _phoneController.text.trim(),
+          shopName: _role == Role.customer
+              ? _shopNameController.text.trim()
+              : null,
+          contactName:
+              _role == Role.customer &&
+                  _contactNameController.text.trim().isNotEmpty
+              ? _contactNameController.text.trim()
+              : null,
+          address:
+              _role == Role.customer &&
+                  _addressController.text.trim().isNotEmpty
+              ? _addressController.text.trim()
+              : null,
         );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+        if (mounted) Navigator.pop(context, true);
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
   }
 
   @override

@@ -20,6 +20,7 @@ const TITLE_BY_TYPE: Record<string, string> = {
   chat_message: "New chat message",
   payment_recorded: "Payment recorded",
   low_stock: "Low stock alert",
+  negative_stock: "Negative stock alert",
 };
 
 Deno.serve(async (req) => {
@@ -98,7 +99,13 @@ Deno.serve(async (req) => {
       type: notification.type,
       notification_id: notification.id,
     };
-    for (const key of ["order_id", "bill_id", "customer_id", "product_id"]) {
+    for (const key of [
+      "order_id",
+      "bill_id",
+      "customer_id",
+      "product_id",
+      "quote_id",
+    ]) {
       const value = (notification.payload as Record<string, unknown>)?.[key];
       if (value != null) routingData[key] = value;
     }

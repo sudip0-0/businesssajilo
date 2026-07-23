@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/config/env.dart';
+import '../../core/logging/app_log.dart';
+import '../../core/logging/sentry_scope.dart';
+import '../../core/network/supabase_health_probe.dart';
 import '../local/app_database.dart';
 import 'sync_helpers.dart';
 import 'sync_puller.dart';
@@ -24,7 +24,7 @@ class SyncService {
   }) : _db = db,
        _connectivity = connectivity ?? Connectivity(),
        _connectivityCheck = connectivityCheck,
-       _reachabilityProbe = reachabilityProbe ?? _defaultReachabilityProbe,
+       _reachabilityProbe = reachabilityProbe ?? isSupabaseReachable,
        _puller = SyncPuller(db: db, client: client),
        _pusher = SyncPusher(db: db, client: client);
 
@@ -37,23 +37,26 @@ class SyncService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   final SyncCoalesce _coalesce = SyncCoalesce();
 
+  /// True when the last bootstrap pass hit page/duration budget.
+  bool get bootstrapIncomplete => _puller.bootstrapIncomplete;
+
   Future<void> init(String deviceId) async {
     await _db.ensureDeviceMeta(deviceId);
     _connectivitySub ??= _connectivity.onConnectivityChanged.listen((_) {
       unawaited(syncNow());
     });
-    // Initial sync is best-effort: a network failure must not break init.
+    AppLog.info('sync_init', extras: {'deviceIdPrefix': deviceId.substring(0, 8)});
     try {
-      await syncNow();
-    } catch (e) {
-      debugPrint('Initial sync failed (will retry later): $e');
+      await syncNow(initial: true);
+    } catch (e, st) {
+      AppLog.warn('Initial sync failed (will retry later)', e, st, {
+        'phase': 'initial_sync',
+      });
     }
   }
 
-  /// Number of terminally failed queue items.
   Future<int> failedCount() => _db.failedCount();
 
-  /// Resets failed items and triggers a sync.
   Future<void> retryFailed() async {
     await _db.retryFailed();
     await syncNow();
@@ -64,8 +67,6 @@ class SyncService {
     _connectivitySub = null;
   }
 
-  /// True when the device has a non-none link *and* the Supabase host is
-  /// reachable (avoids captive-portal false positives).
   Future<bool> get isOnline async {
     final results =
         await (_connectivityCheck?.call() ?? _connectivity.checkConnectivity());
@@ -73,48 +74,54 @@ class SyncService {
     return _reachabilityProbe();
   }
 
-  Future<void> syncNow() async {
+  Future<void> syncNow({bool initial = false}) async {
     if (_coalesce.syncing) {
       _coalesce.markQueuedIfBusy();
       return;
     }
     if (!await isOnline) return;
-    // Re-check after the async online probe — another sync may have started.
     if (!_coalesce.tryEnter()) return;
+
+    final started = DateTime.now().toUtc();
+    final pendingStart = await _db.pendingCount();
+    addSyncStartBreadcrumb(pendingCount: pendingStart);
+
     try {
       do {
         _coalesce.clearQueued();
         await _puller.pull();
-        await _pusher.push();
-        await _puller.pull();
+        if (initial) {
+          AppLog.info(
+            'initial_sync_pull_complete',
+            extras: {'bootstrapIncomplete': _puller.bootstrapIncomplete},
+          );
+        }
+        final uploaded = await _pusher.push();
+        if (uploaded > 0) {
+          await _puller.pull();
+        }
       } while (_coalesce.shouldRepeat);
       await _db.pruneSyncedQueue();
     } finally {
+      final duration = DateTime.now().toUtc().difference(started);
+      final pendingEnd = await _db.pendingCount();
+      addSyncEndBreadcrumb(
+        duration: duration,
+        pendingCount: pendingEnd,
+        bootstrapIncomplete: _puller.bootstrapIncomplete,
+      );
+      AppLog.info(
+        'sync_complete',
+        extras: {
+          'durationMs': duration.inMilliseconds,
+          'pendingCount': pendingEnd,
+          'bootstrapIncomplete': _puller.bootstrapIncomplete,
+          'initial': initial,
+        },
+      );
       _coalesce.end();
     }
   }
 
   String newId() => _uuid.v4();
-
-  /// Lightweight HEAD/GET against Supabase Auth health endpoint.
-  static Future<bool> _defaultReachabilityProbe() async {
-    final base = Env.supabaseUrl;
-    if (base.isEmpty) return false;
-    final uri = Uri.parse('$base/auth/v1/health');
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
-    try {
-      final request = await client
-          .getUrl(uri)
-          .timeout(const Duration(seconds: 3));
-      final response = await request.close().timeout(
-        const Duration(seconds: 3),
-      );
-      await response.drain<void>();
-      return response.statusCode < 500;
-    } catch (_) {
-      return false;
-    } finally {
-      client.close(force: true);
-    }
-  }
 }

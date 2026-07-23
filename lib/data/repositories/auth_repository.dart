@@ -1,3 +1,5 @@
+// AuthRepository intentionally keeps Supabase SDK usage inline — it is the
+// session/auth boundary and is not split into lib/data/remote/ like data repos.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
@@ -71,29 +73,47 @@ class AuthRepository {
 
   /// Sets a new password for the signed-in user and clears the
   /// owner-initiated forced-change flag.
-  Future<void> updateOwnPassword(String newPassword) async {
+  ///
+  /// When [currentPassword] is provided (voluntary change), re-authenticates
+  /// first so a stolen session alone cannot change the password.
+  Future<void> updateOwnPassword(
+    String newPassword, {
+    String? currentPassword,
+  }) async {
     final client = _requireClient();
+    if (currentPassword != null && currentPassword.isNotEmpty) {
+      final email = client.auth.currentUser?.email;
+      if (email == null || email.isEmpty) {
+        throw const AuthException('Account has no email for re-authentication');
+      }
+      await client.auth.signInWithPassword(
+        email: email,
+        password: currentPassword,
+      );
+    }
     await client.auth.updateUser(UserAttributes(password: newPassword));
     await client.rpc('clear_must_change_password');
   }
 
   /// Deletes the current account via the `delete-account` Edge Function.
   /// [deleteBusiness] is only valid for owners and purges the whole tenant.
-  /// Business deletion requires [password] for re-authentication.
+  /// Both self and business deletion require [password] for re-authentication.
   Future<void> deleteAccount({
     bool deleteBusiness = false,
     String? password,
   }) async {
     final client = _requireClient();
+    if (password == null || password.isEmpty) {
+      throw AuthException(
+        deleteBusiness
+            ? 'Password required to delete business'
+            : 'Password required to delete account',
+      );
+    }
     final body = <String, dynamic>{
       'mode': deleteBusiness ? 'business' : 'self',
+      'password': password,
     };
-    if (deleteBusiness) {
-      if (password == null || password.isEmpty) {
-        throw const AuthException('Password required to delete business');
-      }
-      body['password'] = password;
-    }
     final response = await client.functions.invoke(
       'delete-account',
       body: body,

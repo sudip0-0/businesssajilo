@@ -51,8 +51,12 @@ select ok(
   'customers updated_at bumps on update'
 );
 
--- Staff can read audit log via helper insert + select.
+-- Staff can read audit log via service-role helper insert + select.
+-- insert_audit_log is no longer executable by authenticated clients.
+set local role service_role;
 select insert_audit_log('products', 'b1111111-1111-1111-1111-111111111111', 'name', 'Cola', 'Cola New', 'sync_lww');
+reset role;
+select test_set_auth('22222222-2222-2222-2222-222222222222');
 
 select is(
   (select count(*)::int from audit_log where table_name = 'products'),

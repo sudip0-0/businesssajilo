@@ -155,6 +155,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingSyncItems => 'Pending sync';
 
   @override
+  String get syncIncompleteContinue => 'Sync incomplete — continue';
+
+  @override
   String get syncFailed => 'Sync failed';
 
   @override
@@ -679,6 +682,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifLowStock => 'Low stock alert';
+
+  @override
+  String get notifNegativeStock => 'Negative stock alert';
 
   @override
   String get salesSummary => 'Sales summary';
@@ -1309,6 +1315,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordTooShort => 'Password must be at least 8 characters';
+
+  @override
+  String get passwordTooLong => 'Password must be at most 72 characters';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get imageTooLarge => 'Image must be 5 MB or smaller';
+
+  @override
+  String get imageInvalidType => 'Only JPEG, PNG, or WebP images are allowed';
+
+  @override
+  String get messageTooLong => 'Message is too long';
 
   @override
   String get changePassword => 'Change password';

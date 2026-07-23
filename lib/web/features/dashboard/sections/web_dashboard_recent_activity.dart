@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/ui/error_state.dart';
 import '../../../../domain/models/bill.dart';
 import '../../../../domain/models/customer.dart';
 import '../../../../domain/models/product.dart';
+import '../../../../features/reports/dashboard/dashboard_activity_feed.dart';
 import '../../../theme/web_palette.dart';
 
 /// Recent bills / low-stock / new-customer feed for the owner dashboard.
@@ -16,57 +18,43 @@ class WebDashboardRecentActivity extends StatelessWidget {
     required this.bills,
     required this.lowStockAlerts,
     required this.recentCustomers,
+    this.onRetry,
   });
 
   final AsyncValue<List<Bill>> bills;
   final AsyncValue<List<Product>> lowStockAlerts;
   final AsyncValue<List<Customer>> recentCustomers;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final items = <_ActivityItem>[];
 
-    bills.whenData((list) {
-      for (final bill in list.take(3)) {
-        items.add(
-          _ActivityItem(
-            icon: PhosphorIconsRegular.receipt,
-            color: WebPalette.navy,
-            text: l10n.newBillCreated(bill.billNo),
-            onTap: () => context.go('/owner/billing/${bill.id}'),
-          ),
-        );
-      }
-    });
+    if (dashboardActivityHasError(
+      billsError: bills.hasError,
+      lowStockError: lowStockAlerts.hasError,
+      recentCustomersError: recentCustomers.hasError,
+    )) {
+      return ErrorState(message: l10n.loadingFailed, onRetry: onRetry);
+    }
 
-    lowStockAlerts.whenData((list) {
-      for (final p in list) {
-        items.add(
-          _ActivityItem(
-            icon: PhosphorIconsRegular.warning,
-            color: WebPalette.danger,
-            text: l10n.lowStockAlert(p.name),
-            onTap: () => context.go('/owner/inventory/${p.id}'),
-          ),
-        );
-      }
-    });
+    if (bills.isLoading || lowStockAlerts.isLoading || recentCustomers.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    recentCustomers.whenData((list) {
-      for (final c in list) {
-        items.add(
-          _ActivityItem(
-            icon: PhosphorIconsRegular.user,
-            color: WebPalette.success,
-            text: l10n.newCustomerAdded(c.shopName),
-            onTap: () => context.go('/owner/customers/${c.id}'),
-          ),
-        );
-      }
-    });
+    final items = buildDashboardActivityFeed(
+      l10n: l10n,
+      bills: bills.value,
+      lowStockAlerts: lowStockAlerts.value,
+      recentCustomers: recentCustomers.value,
+    );
 
-    if (items.isEmpty) {
+    if (dashboardActivityIsEmpty(
+      items: items,
+      billsLoaded: bills.hasValue,
+      lowStockLoaded: lowStockAlerts.hasValue,
+      recentCustomersLoaded: recentCustomers.hasValue,
+    )) {
       return Center(
         child: Text(
           l10n.noRecentActivity,
@@ -78,9 +66,35 @@ class WebDashboardRecentActivity extends StatelessWidget {
     }
 
     return ListView.separated(
-      itemCount: items.length.clamp(0, 5),
+      itemCount: items.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, index) => items[index],
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return _ActivityItem(
+          icon: switch (item.kind) {
+            DashboardActivityKind.bill => PhosphorIconsRegular.receipt,
+            DashboardActivityKind.lowStock => PhosphorIconsRegular.warning,
+            DashboardActivityKind.newCustomer => PhosphorIconsRegular.user,
+          },
+          color: switch (item.kind) {
+            DashboardActivityKind.bill => WebPalette.navy,
+            DashboardActivityKind.lowStock => WebPalette.danger,
+            DashboardActivityKind.newCustomer => WebPalette.success,
+          },
+          text: item.text,
+          onTap: switch (item.kind) {
+            DashboardActivityKind.bill => item.entityId == null
+                ? null
+                : () => context.go('/owner/billing/${item.entityId}'),
+            DashboardActivityKind.lowStock => item.entityId == null
+                ? null
+                : () => context.go('/owner/inventory/${item.entityId}'),
+            DashboardActivityKind.newCustomer => item.entityId == null
+                ? null
+                : () => context.go('/owner/customers/${item.entityId}'),
+          },
+        );
+      },
     );
   }
 }

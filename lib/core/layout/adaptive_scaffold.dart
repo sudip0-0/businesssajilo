@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-const kWideBreakpoint = 900.0;
+import '../layout/bs_breakpoints.dart';
 
 bool isWideLayout(BuildContext context) =>
-    MediaQuery.sizeOf(context).width >= kWideBreakpoint;
+    BsBreakpoints.isTabletWideOrWider(context);
 
 class AdaptiveScaffold extends StatelessWidget {
   const AdaptiveScaffold({

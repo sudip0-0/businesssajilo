@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/layout/bs_breakpoints.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/locale_toggle.dart';
@@ -60,7 +61,7 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final compact = MediaQuery.sizeOf(context).width < 900;
+    final compact = MediaQuery.sizeOf(context).width < BsBreakpoints.tabletWide;
 
     ref.listen(authProvider, (_, next) {
       final error = next.error;

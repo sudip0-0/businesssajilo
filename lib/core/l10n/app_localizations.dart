@@ -386,6 +386,12 @@ abstract class AppLocalizations {
   /// **'Pending sync'**
   String get pendingSyncItems;
 
+  /// No description provided for @syncIncompleteContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync incomplete — continue'**
+  String get syncIncompleteContinue;
+
   /// No description provided for @syncFailed.
   ///
   /// In en, this message translates to:
@@ -1423,6 +1429,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Low stock alert'**
   String get notifLowStock;
+
+  /// No description provided for @notifNegativeStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative stock alert'**
+  String get notifNegativeStock;
 
   /// No description provided for @salesSummary.
   ///
@@ -2593,6 +2605,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password must be at least 8 characters'**
   String get passwordTooShort;
+
+  /// No description provided for @passwordTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at most 72 characters'**
+  String get passwordTooLong;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPassword;
+
+  /// No description provided for @imageTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Image must be 5 MB or smaller'**
+  String get imageTooLarge;
+
+  /// No description provided for @imageInvalidType.
+  ///
+  /// In en, this message translates to:
+  /// **'Only JPEG, PNG, or WebP images are allowed'**
+  String get imageInvalidType;
+
+  /// No description provided for @messageTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Message is too long'**
+  String get messageTooLong;
 
   /// No description provided for @changePassword.
   ///

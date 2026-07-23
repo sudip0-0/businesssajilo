@@ -4,7 +4,10 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/logging/app_log.dart';
+import '../../core/validation/image_upload.dart';
+import '../../core/validation/message_validator.dart';
 import '../../domain/models/message.dart';
 import '../repositories/messages_repository.dart';
 import 'supabase_provider.dart';
@@ -40,6 +43,9 @@ class SupabaseMessagesRepository implements MessagesRepository {
     required String senderMemberId,
     required String body,
   }) async {
+    if (MessageValidator.isBodyTooLong(body)) {
+      throw const AppFailure.validation(detail: 'message too long');
+    }
     final client = requireSupabaseClient(_client);
     final id = const Uuid().v4();
     final row = await client
@@ -63,6 +69,15 @@ class SupabaseMessagesRepository implements MessagesRepository {
     required Uint8List bytes,
     required String fileName,
   }) async {
+    final uploadError = ImageUpload.validate(bytes);
+    if (uploadError != null) {
+      throw AppFailure.validation(
+        detail: uploadError == ImageUploadError.tooLarge
+            ? 'image too large'
+            : 'invalid image type',
+      );
+    }
+    final mime = ImageUpload.sniffMime(bytes)!;
     final client = requireSupabaseClient(_client);
     final path = '$businessId/$orderId/${const Uuid().v4()}_$fileName';
     await client.storage
@@ -70,7 +85,7 @@ class SupabaseMessagesRepository implements MessagesRepository {
         .uploadBinary(
           path,
           bytes,
-          fileOptions: FileOptions(contentType: _contentTypeFor(fileName)),
+          fileOptions: FileOptions(contentType: mime),
         );
 
     final id = const Uuid().v4();
@@ -95,13 +110,6 @@ class SupabaseMessagesRepository implements MessagesRepository {
       }
       rethrow;
     }
-  }
-
-  static String _contentTypeFor(String fileName) {
-    final lower = fileName.toLowerCase();
-    if (lower.endsWith('.png')) return 'image/png';
-    if (lower.endsWith('.webp')) return 'image/webp';
-    return 'image/jpeg';
   }
 
   @override

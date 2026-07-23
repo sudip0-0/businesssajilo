@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/repositories/members_repository.dart';
@@ -41,25 +42,22 @@ class _ResetMemberPasswordSheetState
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref
-          .read(membersRepositoryProvider)
-          .resetMemberPassword(
-            memberId: widget.memberId,
-            newPassword: _passwordController.text,
-          );
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) setState(() => _error = AppFailure.from(e).message(l10n));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    await runInlineFormAction(
+      action: () async {
+        await ref.read(membersRepositoryProvider).resetMemberPassword(
+          memberId: widget.memberId,
+          newPassword: _passwordController.text,
+        );
+        if (mounted) Navigator.pop(context, true);
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
   }
 
   @override

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/money.dart';
-import '../../web/theme/web_palette.dart';
 
 /// Visual treatment for [BillSummary] — dense bar (mobile) vs card (web).
 enum BillSummaryStyle { denseBar, card }
@@ -17,6 +16,9 @@ class BillSummary extends StatelessWidget {
     required this.grandTotal,
     required this.onDiscountChanged,
     this.style = BillSummaryStyle.denseBar,
+    this.accentColor,
+    this.cardBackground,
+    this.cardBorderColor,
   });
 
   final int itemsTotal;
@@ -24,6 +26,11 @@ class BillSummary extends StatelessWidget {
   final int grandTotal;
   final VoidCallback onDiscountChanged;
   final BillSummaryStyle style;
+
+  /// Optional accent for card style (e.g. web navy). Defaults to [BsColors.primary].
+  final Color? accentColor;
+  final Color? cardBackground;
+  final Color? cardBorderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +41,7 @@ class BillSummary extends StatelessWidget {
         ? l10n.discountExceedsItems
         : null;
 
-    final accent = style == BillSummaryStyle.card
-        ? WebPalette.navy
-        : BsColors.primary;
+    final accent = accentColor ?? BsColors.primary;
 
     final discountField = TextFormField(
       controller: billDiscountController,
@@ -94,12 +99,16 @@ class BillSummary extends StatelessWidget {
     );
 
     if (style == BillSummaryStyle.card) {
+      final bg =
+          cardBackground ?? accent.withValues(alpha: 0.04);
+      final border =
+          cardBorderColor ?? accent.withValues(alpha: 0.12);
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: WebPalette.navy.withValues(alpha: 0.04),
+          color: bg,
           borderRadius: BorderRadius.circular(BsRadii.lg),
-          border: Border.all(color: WebPalette.navy.withValues(alpha: 0.12)),
+          border: Border.all(color: border),
         ),
         child: body,
       );

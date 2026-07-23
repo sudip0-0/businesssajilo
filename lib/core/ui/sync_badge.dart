@@ -17,23 +17,43 @@ class SyncBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final (color, icon, label) = switch (state) {
-      SyncState.synced => (BsColors.success, Icons.cloud_done, l10n.synced),
+      SyncState.synced => (
+        BsSemanticColors.syncSynced,
+        Icons.cloud_done,
+        l10n.synced,
+      ),
       SyncState.pending => (
-        BsColors.accent,
+        BsSemanticColors.syncPending,
         Icons.cloud_upload,
         l10n.pendingSync(pendingCount),
       ),
-      SyncState.offline => (BsColors.outline, Icons.cloud_off, l10n.offline),
+      SyncState.offline => (
+        BsSemanticColors.syncOffline,
+        Icons.cloud_off,
+        l10n.offline,
+      ),
+      SyncState.incomplete => (
+        BsSemanticColors.syncPending,
+        Icons.cloud_sync_outlined,
+        l10n.syncIncompleteContinue,
+      ),
     };
     return Semantics(
       label: '${l10n.syncStatus}: $label',
+      liveRegion: state == SyncState.incomplete,
       excludeSemantics: true,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: color, fontSize: 12)),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(color: color, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

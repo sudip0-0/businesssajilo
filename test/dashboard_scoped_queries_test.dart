@@ -1,4 +1,5 @@
 import 'package:businesssajilo/data/local/app_database.dart';
+import 'package:businesssajilo/data/remote/supabase_customers_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_products_repository.dart';
 import 'package:businesssajilo/data/sync/cached_customers_repository.dart';
 import 'package:businesssajilo/data/sync/cached_products_repository.dart';
@@ -137,7 +138,10 @@ void main() {
           ),
         );
 
-    final repo = CachedCustomersRepository(db: db, client: null);
+    final repo = CachedCustomersRepository(
+      db: db,
+      remote: SupabaseCustomersRepository(null),
+    );
     final recent = await repo.listRecent(limit: 2);
     expect(recent.map((c) => c.id).toList(), ['c-new', 'c-mid']);
   });

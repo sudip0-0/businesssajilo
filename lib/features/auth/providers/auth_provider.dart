@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging/app_log.dart';
+import '../../../core/logging/sentry_scope.dart';
 import '../../../core/notifications/push_service_provider.dart';
 import '../../../core/utils/login_identifier.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/businesses_repository.dart';
+import '../../../data/sync/sync_config.dart';
 import '../../../data/sync/sync_providers.dart';
 import '../../../domain/models/business.dart';
 import '../../../domain/models/session_state.dart';
@@ -40,6 +42,14 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   /// Sync bootstrap and push registration are best-effort side effects.
   /// They must never fail login/registration/session restore (offline-first).
   void _startSessionSideEffects(SessionState session) {
+    final member = session.member;
+    if (member != null) {
+      configureSentrySessionScope(
+        memberId: member.id,
+        role: member.role,
+        syncEnabled: syncEnabledFor(member.role),
+      );
+    }
     unawaited(() async {
       try {
         await syncBootstrapForSession(session);
@@ -97,14 +107,20 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
 
   /// Sets a new password for the signed-in member and refreshes the session
   /// so the forced-change flag clears.
-  Future<void> updateOwnPassword(String newPassword) async {
-    await ref.read(authRepositoryProvider).updateOwnPassword(newPassword);
+  /// Pass [currentPassword] for voluntary changes (forced reset may omit it).
+  Future<void> updateOwnPassword(
+    String newPassword, {
+    String? currentPassword,
+  }) async {
+    await ref
+        .read(authRepositoryProvider)
+        .updateOwnPassword(newPassword, currentPassword: currentPassword);
     await _reload();
     if (state.hasError) throw state.error!;
   }
 
   /// Deletes the account (or entire business for owners) and clears session.
-  /// [password] is required when [deleteBusiness] is true.
+  /// [password] is always required for re-authentication.
   Future<void> deleteAccount({
     bool deleteBusiness = false,
     String? password,
@@ -118,6 +134,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
         .read(authRepositoryProvider)
         .deleteAccount(deleteBusiness: deleteBusiness, password: password);
     await disposeSyncBundle();
+    clearSentrySessionScope();
     ref.read(syncBundleVersionProvider.notifier).bump();
     state = const AsyncValue.data(SessionState.empty);
   }
@@ -130,6 +147,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
       AppLog.warn('Push unregister failed', e, st);
     }
     await disposeSyncBundle();
+    clearSentrySessionScope();
     ref.read(syncBundleVersionProvider.notifier).bump();
     await ref.read(authRepositoryProvider).signOut();
     state = const AsyncValue.data(SessionState.empty);

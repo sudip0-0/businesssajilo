@@ -1,4 +1,5 @@
 import 'package:businesssajilo/data/local/app_database.dart';
+import 'package:businesssajilo/data/remote/supabase_customers_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_products_repository.dart';
 import 'package:businesssajilo/data/repositories/payments_repository.dart';
 import 'package:businesssajilo/data/sync/cached_customers_repository.dart';
@@ -203,7 +204,10 @@ void main() {
             ),
           );
     }
-    final repo = CachedCustomersRepository(db: db, client: null);
+    final repo = CachedCustomersRepository(
+      db: db,
+      remote: SupabaseCustomersRepository(null),
+    );
     final page = await repo.list(offset: 0, limit: 2);
     expect(page.map((c) => c.shopName).toList(), ['A Shop', 'M Shop']);
   });

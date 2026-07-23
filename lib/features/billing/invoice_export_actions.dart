@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/invoicing/invoice_document.dart';
 import '../../core/invoicing/invoice_document_factory.dart';
 import '../../core/invoicing/invoice_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/credit_note.dart';
 import '../auth/providers/auth_provider.dart';
@@ -15,14 +17,17 @@ Future<void> exportBillAsPng(
   BuildContext context,
   Bill bill,
 ) async {
-  await _exportBill(ref, context, bill, (service, doc, l10n) async {
-    final factory = ref.read(invoiceDocumentFactoryProvider);
-    await service.sharePng(
-      doc,
-      subject: doc.documentNo,
-      text: factory.shareCaption(doc, l10n),
-    );
-  });
+  await _runExport(
+    context,
+    () => _exportBill(ref, context, bill, (service, doc, l10n) async {
+      final factory = ref.read(invoiceDocumentFactoryProvider);
+      await service.sharePng(
+        doc,
+        subject: doc.documentNo,
+        text: factory.shareCaption(doc, l10n),
+      );
+    }),
+  );
 }
 
 Future<void> exportBillPrint(
@@ -30,9 +35,12 @@ Future<void> exportBillPrint(
   BuildContext context,
   Bill bill,
 ) async {
-  await _exportBill(ref, context, bill, (service, doc, _) async {
-    await service.printPdf(doc);
-  });
+  await _runExport(
+    context,
+    () => _exportBill(ref, context, bill, (service, doc, _) async {
+      await service.printPdf(doc);
+    }),
+  );
 }
 
 Future<void> exportBillPdfDownload(
@@ -40,9 +48,12 @@ Future<void> exportBillPdfDownload(
   BuildContext context,
   Bill bill,
 ) async {
-  await _exportBill(ref, context, bill, (service, doc, _) async {
-    await service.downloadPdf(doc);
-  });
+  await _runExport(
+    context,
+    () => _exportBill(ref, context, bill, (service, doc, _) async {
+      await service.downloadPdf(doc);
+    }),
+  );
 }
 
 Future<void> exportBillAfterSave(
@@ -67,13 +78,34 @@ typedef _ExportAction =
       AppLocalizations l10n,
     );
 
+Future<void> _runExport(
+  BuildContext context,
+  Future<void> Function() action,
+) async {
+  if (!context.mounted) return;
+  final l10n = AppLocalizations.of(context);
+  try {
+    await action();
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppFailure.from(e).message(l10n)),
+        backgroundColor: BsColors.danger,
+      ),
+    );
+  }
+}
+
 Future<void> _exportBill(
   WidgetRef ref,
   BuildContext context,
   Bill bill,
   _ExportAction action,
 ) async {
+  if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);
+  final locale = Localizations.localeOf(context);
   final business = await ref.read(currentBusinessProvider.future);
   if (business == null) {
     if (context.mounted) {
@@ -90,7 +122,7 @@ Future<void> _exportBill(
     business: business,
     bill: bill,
     l10n: l10n,
-    locale: Localizations.localeOf(context),
+    locale: locale,
   );
   await action(service, doc, l10n);
 }
@@ -101,19 +133,22 @@ Future<void> exportCreditNoteAsPng(
   CreditNote note, {
   String? customerLabel,
 }) async {
-  await _exportCreditNote(
-    ref,
+  await _runExport(
     context,
-    note,
-    customerLabel: customerLabel,
-    action: (service, doc, l10n) async {
-      final factory = ref.read(invoiceDocumentFactoryProvider);
-      await service.sharePng(
-        doc,
-        subject: doc.documentNo,
-        text: factory.shareCaption(doc, l10n),
-      );
-    },
+    () => _exportCreditNote(
+      ref,
+      context,
+      note,
+      customerLabel: customerLabel,
+      action: (service, doc, l10n) async {
+        final factory = ref.read(invoiceDocumentFactoryProvider);
+        await service.sharePng(
+          doc,
+          subject: doc.documentNo,
+          text: factory.shareCaption(doc, l10n),
+        );
+      },
+    ),
   );
 }
 
@@ -124,7 +159,9 @@ Future<void> _exportCreditNote(
   String? customerLabel,
   required _ExportAction action,
 }) async {
+  if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);
+  final locale = Localizations.localeOf(context);
   final business = await ref.read(currentBusinessProvider.future);
   if (business == null) {
     if (context.mounted) {
@@ -142,7 +179,7 @@ Future<void> _exportCreditNote(
     note: note,
     customerLabel: customerLabel ?? l10n.walkIn,
     l10n: l10n,
-    locale: Localizations.localeOf(context),
+    locale: locale,
   );
   await action(service, doc, l10n);
 }

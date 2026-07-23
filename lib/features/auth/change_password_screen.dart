@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/validation/password_validator.dart';
 import '../shell/logout_action.dart';
 import 'providers/auth_provider.dart';
 
@@ -37,6 +39,7 @@ class ForcedChangePasswordScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
+                // Forced reset: no current password (owner already reset it).
                 const ChangePasswordForm(),
               ],
             ),
@@ -49,10 +52,17 @@ class ForcedChangePasswordScreen extends StatelessWidget {
 
 /// New password + confirmation form; calls [AuthController.updateOwnPassword].
 class ChangePasswordForm extends ConsumerStatefulWidget {
-  const ChangePasswordForm({super.key, this.onChanged});
+  const ChangePasswordForm({
+    super.key,
+    this.onChanged,
+    this.requireCurrentPassword = false,
+  });
 
   /// Called after the password has been updated successfully.
   final VoidCallback? onChanged;
+
+  /// When true (settings sheet), collect the current password for re-auth.
+  final bool requireCurrentPassword;
 
   @override
   ConsumerState<ChangePasswordForm> createState() => _ChangePasswordFormState();
@@ -60,6 +70,7 @@ class ChangePasswordForm extends ConsumerStatefulWidget {
 
 class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
   final _formKey = GlobalKey<FormState>();
+  final _currentController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _loading = false;
@@ -68,32 +79,49 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
 
   @override
   void dispose() {
+    _currentController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
   }
 
+  String? _passwordError(String? v, AppLocalizations l10n) {
+    return switch (PasswordValidator.validate(v)) {
+      PasswordValidationError.required => l10n.fieldRequired,
+      PasswordValidationError.tooShort => l10n.passwordTooShort,
+      PasswordValidationError.tooLong => l10n.passwordTooLong,
+      null => null,
+    };
+  }
+
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref
-          .read(authProvider.notifier)
-          .updateOwnPassword(_passwordController.text);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
-        widget.onChanged?.call();
-      }
-    } catch (e) {
-      if (mounted) setState(() => _error = AppFailure.from(e).message(l10n));
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    final ok = await runInlineFormAction(
+      action: () async {
+        await ref.read(authProvider.notifier).updateOwnPassword(
+          _passwordController.text,
+          currentPassword: widget.requireCurrentPassword
+              ? _currentController.text
+              : null,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
+          widget.onChanged?.call();
+        }
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
+    if (!ok && mounted) {
+      // error already set via onState
     }
   }
 
@@ -106,6 +134,19 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.requireCurrentPassword) ...[
+            TextFormField(
+              controller: _currentController,
+              decoration: InputDecoration(labelText: l10n.currentPassword),
+              obscureText: true,
+              autofillHints: const [AutofillHints.password],
+              validator: (v) {
+                if (v == null || v.isEmpty) return l10n.fieldRequired;
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
           TextFormField(
             controller: _passwordController,
             decoration: InputDecoration(
@@ -122,11 +163,7 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
             ),
             obscureText: _obscure,
             autofillHints: const [AutofillHints.newPassword],
-            validator: (v) {
-              if (v == null || v.isEmpty) return l10n.fieldRequired;
-              if (v.length < 8) return l10n.passwordTooShort;
-              return null;
-            },
+            validator: (v) => _passwordError(v, l10n),
           ),
           const SizedBox(height: 12),
           TextFormField(

@@ -44,6 +44,7 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 - Direct `INSERT` on `bills`, `bill_items`, and `payments` is revoked for `authenticated`.
 - Clients must use `create_bill` / `record_payment` SECURITY DEFINER RPCs (migration 16).
 - Offline sync pushes payments via `record_payment`; legacy `bill_items` queue entries are rejected.
+- Edge Function shared validators (`supabase/functions/_shared/validation.ts`) have Deno unit tests — run via `scripts/local_hardening_gate.ps1` or `deno test supabase/functions/_shared/validation_test.ts`.
 
 ## Observability
 

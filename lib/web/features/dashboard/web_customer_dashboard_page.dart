@@ -7,6 +7,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/orders/providers.dart';
+import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../ui/web_stat_tile.dart';
 import '../web_page_scaffold.dart';
@@ -31,7 +32,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
       ],
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(ownOrderCountProvider);
+          invalidateCustomerDashboardWidget(ref);
           ref.invalidate(ownCustomerProvider);
         },
         child: SingleChildScrollView(

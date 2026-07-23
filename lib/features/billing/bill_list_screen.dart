@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +7,7 @@ import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/layout/two_pane_layout.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
+import '../../core/ui/debounced_list_search.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
@@ -28,18 +27,23 @@ class BillListScreen extends ConsumerStatefulWidget {
 }
 
 class _BillListScreenState extends ConsumerState<BillListScreen> {
-  String _query = '';
   String? _selectedBillId;
   PaginatedListState<Bill>? _pager;
   final _scrollController = ScrollController();
-  Timer? _searchDebounce;
-  List<Bill>? _searchResults;
-  bool _searching = false;
+  DebouncedListSearchController<Bill>? _search;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _search = DebouncedListSearchController<Bill>(
+        search: (query) => ref.read(billsRepositoryProvider).search(query),
+        onChanged: () {
+          if (mounted) setState(() {});
+        },
+      );
+      _initPager();
+    });
   }
 
   void _initPager() {
@@ -57,42 +61,12 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
+    _search?.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _onQueryChanged(String value) {
-    _query = value.trim();
-    _searchDebounce?.cancel();
-    if (_query.isEmpty) {
-      setState(() {
-        _searchResults = null;
-        _searching = false;
-      });
-      return;
-    }
-    setState(() => _searching = true);
-    _searchDebounce = Timer(const Duration(milliseconds: 350), _runSearch);
-  }
-
-  Future<void> _runSearch() async {
-    final query = _query;
-    try {
-      final results = await ref.read(billsRepositoryProvider).search(query);
-      if (!mounted || _query != query) return;
-      setState(() {
-        _searchResults = results;
-        _searching = false;
-      });
-    } catch (_) {
-      if (!mounted || _query != query) return;
-      setState(() {
-        _searchResults = const [];
-        _searching = false;
-      });
-    }
-  }
+  void _onQueryChanged(String value) => _search?.onQueryChanged(value);
 
   @override
   Widget build(BuildContext context) {
@@ -133,20 +107,24 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     AppLocalizations l10n,
     PaginatedListState<Bill>? pager,
   ) {
-    if (_query.isNotEmpty) {
-      if (_searching && _searchResults == null) {
+    if (_search?.isActive == true) {
+      final search = _search!;
+      if (search.phase == ListSearchPhase.loading) {
         return const ListSkeleton();
       }
-      final results = _searchResults ?? const <Bill>[];
+      if (search.phase == ListSearchPhase.error) {
+        return ErrorState(
+          message: l10n.loadingFailed,
+          onRetry: search.retry,
+        );
+      }
+      final results = search.results ?? const <Bill>[];
       if (results.isEmpty) {
         return EmptyState(
           icon: Icons.receipt_long_outlined,
           message: l10n.noSearchResults,
           actionLabel: l10n.clearSearch,
-          onAction: () => setState(() {
-            _query = '';
-            _searchResults = null;
-          }),
+          onAction: () => _search?.onQueryChanged(''),
         );
       }
       return ListView.separated(
@@ -229,7 +207,12 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   }
 
   Future<void> _openDetail(BuildContext context, Bill bill) async {
-    await context.push('/bill/${bill.id}');
+    final changed = await context.push<bool>('/bill/${bill.id}');
+    if (changed == true) {
+      await _pager?.refresh();
+      ref.invalidate(todaysSalesProvider);
+      ref.invalidate(todaysBillCountProvider);
+    }
   }
 }
 

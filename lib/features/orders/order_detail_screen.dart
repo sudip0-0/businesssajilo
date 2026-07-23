@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/order_status_timeline.dart';
 import '../../core/ui/status_chip.dart';
@@ -14,6 +13,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/order_item.dart';
 import '../auth/providers/auth_provider.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/submit_action.dart';
 import '../billing/bill_from_order_sheet.dart';
 import '../chat/order_chat_screen.dart';
 import '../inventory/product_image.dart';
@@ -368,30 +368,18 @@ class _ActionButtons extends ConsumerWidget {
       );
       if (confirmed != true || !context.mounted) return;
     }
-    try {
-      await ref.read(ordersRepositoryProvider).updateStatus(orderId, next);
-      _invalidate(ref);
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(label)));
-      }
-    } on OrderStatusException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.invalidStatusChange)));
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppFailure.from(e).message(l10n)),
-            backgroundColor: BsColors.danger,
-          ),
-        );
-      }
-    }
+    await runSubmitAction(
+      context,
+      action: () async {
+        try {
+          await ref.read(ordersRepositoryProvider).updateStatus(orderId, next);
+          _invalidate(ref);
+        } on OrderStatusException {
+          throw AppFailure.validation(detail: l10n.invalidStatusChange);
+        }
+      },
+      successMessage: label,
+    );
   }
 
   void _invalidate(WidgetRef ref) {

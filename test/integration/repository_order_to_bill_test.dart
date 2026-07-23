@@ -1,39 +1,44 @@
 import 'package:businesssajilo/core/config/env.dart';
 import 'package:businesssajilo/data/remote/supabase_bills_repository.dart';
+import 'package:businesssajilo/data/remote/supabase_members_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_orders_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_payments_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_products_repository.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
-import 'package:businesssajilo/data/repositories/members_repository.dart';
 import 'package:businesssajilo/data/repositories/orders_repository.dart';
 import 'package:businesssajilo/data/repositories/quotes_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/order.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../support/hardening_gate.dart';
 import 'support/bootstrap.dart';
 
-/// Happy path against local Supabase: order → quote → accept → bill.
-/// Skips cleanly when Docker/`supabase start` is unavailable.
+/// Repository integration (not UI): order → quote → accept → bill against local
+/// Supabase. Classified as remote repository coverage; see
+/// `ui_order_to_bill_flow_test.dart` for the widget-driven path.
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
   late bool supabaseAvailable;
 
   setUpAll(() async {
     supabaseAvailable = await isSupabaseAvailable();
   });
 
-  testWidgets('order → quote → accept → bill from order', (tester) async {
+  test('order → quote → accept → bill via repositories', () async {
     if (!Env.isConfigured) {
-      markTestSkipped('Set SUPABASE_URL and SUPABASE_ANON_KEY dart-defines');
+      requireForHardeningGate(
+        false,
+        'Set SUPABASE_URL and SUPABASE_ANON_KEY dart-defines',
+      );
       return;
     }
     if (!supabaseAvailable) {
-      markTestSkipped('Supabase not reachable. Run: supabase start');
+      requireForHardeningGate(
+        false,
+        'Supabase not reachable — run: supabase start',
+      );
       return;
     }
 
@@ -60,7 +65,7 @@ void main() {
       password: ownerPassword,
     );
 
-    final members = MembersRepository(client);
+    final members = SupabaseMembersRepository(client);
     final products = SupabaseProductsRepository(client);
     final suffix = const Uuid().v4().substring(0, 8);
     final customerEmail = 'e2e-cust-$suffix@test.com';
@@ -83,7 +88,6 @@ void main() {
       lowStockThreshold: 0,
     );
 
-    // Customer places the order.
     await client.auth.signInWithPassword(
       email: customerEmail,
       password: customerPassword,
@@ -95,7 +99,6 @@ void main() {
     );
     expect(order.status, OrderStatus.placed);
 
-    // Owner sends a quote.
     await client.auth.signInWithPassword(
       email: ownerEmail,
       password: ownerPassword,
@@ -123,7 +126,6 @@ void main() {
     );
     expect(quote.status, QuoteStatus.sent);
 
-    // Customer accepts.
     await client.auth.signInWithPassword(
       email: customerEmail,
       password: customerPassword,
@@ -131,7 +133,6 @@ void main() {
     final accepted = await QuotesRepository(client).accept(quote.id);
     expect(accepted.status, QuoteStatus.accepted);
 
-    // Owner creates bill from order (due).
     await client.auth.signInWithPassword(
       email: ownerEmail,
       password: ownerPassword,

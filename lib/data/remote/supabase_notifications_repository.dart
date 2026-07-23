@@ -42,11 +42,10 @@ class SupabaseNotificationsRepository implements NotificationsRepository {
   @override
   Future<int> unreadCount() async {
     final client = requireSupabaseClient(_client);
-    final rows = await client
+    return client
         .from('notifications')
-        .select('id')
+        .count(CountOption.exact)
         .isFilter('read_at', null);
-    return (rows as List).length;
   }
 
   @override

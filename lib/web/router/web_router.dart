@@ -18,6 +18,7 @@ import '../features/dashboard/web_owner_dashboard_page.dart';
 import '../features/dashboard/web_sales_dashboard_page.dart';
 import '../features/dashboard/web_warehouse_dashboard_page.dart';
 import '../features/notifications/web_notifications_page.dart';
+import '../features/quotes/web_quote_detail_page.dart';
 import '../features/settings/web_settings_page.dart';
 import '../features/staff/web_staff_list_page.dart';
 import '../shell/customer_web_shell.dart';
@@ -293,6 +294,12 @@ ShellRoute _ownerRoutes() {
         path: '/owner/notifications',
         builder: (_, _) => const WebNotificationsPage(),
       ),
+      GoRoute(
+        path: '/owner/quotes/:quoteId',
+        builder: (_, state) => WebQuoteDetailPage(
+          quoteId: state.pathParameters['quoteId']!,
+        ),
+      ),
     ],
   );
 }
@@ -409,6 +416,12 @@ ShellRoute _salesRoutes() {
         path: '/sales/notifications',
         builder: (_, _) => const WebNotificationsPage(),
       ),
+      GoRoute(
+        path: '/sales/quotes/:quoteId',
+        builder: (_, state) => WebQuoteDetailPage(
+          quoteId: state.pathParameters['quoteId']!,
+        ),
+      ),
     ],
   );
 }
@@ -514,8 +527,20 @@ ShellRoute _customerRoutes() {
         builder: (_, _) => const WebCustomerLedgerPage(),
       ),
       GoRoute(
+        path: '/customer/billing/:billId',
+        builder: (_, state) => WebCustomerBillDetailPage(
+          billId: state.pathParameters['billId']!,
+        ),
+      ),
+      GoRoute(
         path: '/customer/notifications',
         builder: (_, _) => const WebNotificationsPage(),
+      ),
+      GoRoute(
+        path: '/customer/quotes/:quoteId',
+        builder: (_, state) => WebQuoteDetailPage(
+          quoteId: state.pathParameters['quoteId']!,
+        ),
       ),
     ],
   );

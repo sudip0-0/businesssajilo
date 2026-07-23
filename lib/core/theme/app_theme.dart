@@ -35,6 +35,19 @@ abstract final class BsColors {
   static const rowHover = Color(0xFFF3F4F6);
 }
 
+/// Semantic status colors shared by sync, notifications, and badges.
+abstract final class BsSemanticColors {
+  static const success = BsColors.success;
+  static const danger = BsColors.danger;
+  static const warning = BsColors.accent;
+  static const info = BsColors.info;
+
+  static const syncSynced = BsColors.success;
+  static const syncPending = BsColors.accent;
+  static const syncOffline = BsColors.outline;
+  static const notificationUnread = BsColors.primary;
+}
+
 abstract final class BsRadii {
   static const sm = 2.0;
   static const md = 4.0;

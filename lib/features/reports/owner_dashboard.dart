@@ -9,6 +9,7 @@ import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/bs_sales_line_chart.dart';
 import '../../core/ui/bs_stat_tile.dart';
 import '../../core/utils/money.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -16,6 +17,9 @@ import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
 import '../billing/providers.dart';
 import '../inventory/providers.dart';
+import 'dashboard/dashboard_invalidation.dart';
+import 'dashboard/dashboard_activity_feed.dart';
+import 'dashboard/dashboard_kpi_format.dart';
 import 'dues_aging_screen.dart';
 import 'providers.dart';
 import 'sales_summary_screen.dart';
@@ -34,11 +38,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
   bool _weeklyChart = true;
 
   Future<void> _refresh() async {
-    ref.invalidate(last7DaySalesProvider);
-    ref.invalidate(salesDailyProvider(ReportRange.last30Days));
-    ref.invalidate(ownerDashboardStatsProvider);
-    ref.invalidate(lowStockAlertsProvider);
-    ref.invalidate(todaysBillsProvider);
+    invalidateOwnerDashboardWidget(ref);
   }
 
   @override
@@ -88,9 +88,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.todaysSales,
                 value: stats.when(
-                  data: (d) => d.todaySales == null
-                      ? l10n.valueUnavailable
-                      : formatNpr(Paisa(d.todaySales!), showPaisa: false),
+                  data: (d) => formatDashboardKpiAmount(l10n, d.todaySales),
                   loading: () => '…',
                   error: (_, _) => l10n.loadingFailed,
                 ),
@@ -107,12 +105,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   error: (_, _) => null,
                 ),
                 trendLabel: stats.when(
-                  data: (d) {
-                    final pct = d.salesTrendPercent;
-                    return pct == null
-                        ? null
-                        : '${pct.abs().toStringAsFixed(0)}%';
-                  },
+                  data: (d) => formatDashboardTrendPercent(d),
                   loading: () => null,
                   error: (_, _) => null,
                 ),
@@ -125,11 +118,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.totalDues,
                 value: stats.when(
-                  data: (d) => d.totalDues == null
-                      ? l10n.valueUnavailable
-                      : formatNpr(Paisa(d.totalDues!), showPaisa: false),
+                  data: (d) => formatDashboardKpiAmount(l10n, d.totalDues),
                   loading: () => '…',
-                  error: (_, _) => '—',
+                  error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.account_balance_wallet_outlined,
                 onTap: () => Navigator.push(
@@ -141,11 +132,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.lowStock,
                 value: stats.when(
-                  data: (d) => d.lowStockCount == null
-                      ? l10n.valueUnavailable
-                      : '${d.lowStockCount}',
+                  data: (d) => formatDashboardKpiCount(l10n, d.lowStockCount),
                   loading: () => '…',
-                  error: (_, _) => '—',
+                  error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.inventory_2_outlined,
                 subtitle: stats.when(
@@ -166,11 +155,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.pendingOrders,
                 value: stats.when(
-                  data: (d) => d.pendingOrders == null
-                      ? l10n.valueUnavailable
-                      : '${d.pendingOrders}',
+                  data: (d) => formatDashboardKpiCount(l10n, d.pendingOrders),
                   loading: () => '…',
-                  error: (_, _) => '—',
+                  error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.shopping_cart_outlined,
                 trendLabel: stats.when(
@@ -252,7 +239,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                       );
                     },
                     loading: () => const LinearProgressIndicator(),
-                    error: (_, _) => const SizedBox.shrink(),
+                    error: (_, _) => BsSalesLineChart(
+                      points: const [],
+                      errorMessage: l10n.loadingFailed,
+                    ),
                   ),
                 ],
               ),
@@ -274,6 +264,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   _RecentActivityList(
                     bills: todaysBills,
                     lowStockAlerts: lowStockAlerts,
+                    onRetry: _refresh,
                   ),
                 ],
               ),
@@ -296,7 +287,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                     data: (bills) => _TransactionsList(bills: bills),
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (_, _) => Text(l10n.loadingFailed),
+                    error: (_, _) => ErrorState(
+                      message: l10n.loadingFailed,
+                      onRetry: () => ref.invalidate(todaysBillsProvider),
+                    ),
                   ),
                 ],
               ),
@@ -320,43 +314,41 @@ class _RecentActivityList extends StatelessWidget {
   const _RecentActivityList({
     required this.bills,
     required this.lowStockAlerts,
+    required this.onRetry,
   });
 
   final AsyncValue<List<Bill>> bills;
   final AsyncValue<List<Product>> lowStockAlerts;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final items = <Widget>[];
 
-    bills.whenData((list) {
-      for (final bill in list.take(3)) {
-        items.add(
-          _ActivityRow(
-            icon: Icons.shopping_cart_outlined,
-            color: BsColors.primary,
-            text: l10n.newBillCreated(bill.billNo),
-          ),
-        );
-      }
-    });
+    if (dashboardActivityHasError(
+      billsError: bills.hasError,
+      lowStockError: lowStockAlerts.hasError,
+    )) {
+      return ErrorState(message: l10n.loadingFailed, onRetry: onRetry);
+    }
 
-    lowStockAlerts.whenData((list) {
-      for (final p in list) {
-        items.add(
-          _ActivityRow(
-            icon: Icons.warning_amber_outlined,
-            color: BsColors.danger,
-            text: l10n.lowStockAlert(p.name),
-          ),
-        );
-      }
-    });
+    if (bills.isLoading || lowStockAlerts.isLoading) {
+      return const LinearProgressIndicator();
+    }
 
-    if (items.isEmpty) {
+    final items = buildDashboardActivityFeed(
+      l10n: l10n,
+      bills: bills.value,
+      lowStockAlerts: lowStockAlerts.value,
+    );
+
+    if (dashboardActivityIsEmpty(
+      items: items,
+      billsLoaded: bills.hasValue,
+      lowStockLoaded: lowStockAlerts.hasValue,
+    )) {
       return Text(
-        l10n.noSalesInPeriod,
+        l10n.noRecentActivity,
         style: Theme.of(
           context,
         ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
@@ -365,9 +357,21 @@ class _RecentActivityList extends StatelessWidget {
 
     return Column(
       children: [
-        for (var i = 0; i < items.length.clamp(0, 5); i++) ...[
+        for (var i = 0; i < items.length; i++) ...[
           if (i > 0) const SizedBox(height: 10),
-          items[i],
+          _ActivityRow(
+            icon: switch (items[i].kind) {
+              DashboardActivityKind.bill => Icons.shopping_cart_outlined,
+              DashboardActivityKind.lowStock => Icons.warning_amber_outlined,
+              DashboardActivityKind.newCustomer => Icons.person_add_outlined,
+            },
+            color: switch (items[i].kind) {
+              DashboardActivityKind.bill => BsColors.primary,
+              DashboardActivityKind.lowStock => BsColors.danger,
+              DashboardActivityKind.newCustomer => BsColors.success,
+            },
+            text: items[i].text,
+          ),
         ],
       ],
     );

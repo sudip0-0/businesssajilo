@@ -141,11 +141,13 @@ select throws_ok(
   'customer not found'
 );
 
--- 10. insert_audit_log forbidden for customers.
+-- 10. insert_audit_log forbidden for authenticated clients (including customers).
 select test_set_auth('55555555-5555-5555-5555-555555555555');
 select throws_ok(
   $$select insert_audit_log('products', 'b1111111-1111-1111-1111-111111111111', 'name', 'a', 'b', 'sync_lww')$$,
-  'forbidden'
+  '42501',
+  null,
+  'authenticated cannot execute insert_audit_log'
 );
 
 -- 12. Owner cannot escalate member roles.

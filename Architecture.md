@@ -141,6 +141,14 @@ lib/
 - Flutter flavors: `dev`, `prod` (API URLs/keys via `--dart-define`).
 - CI (GitHub Actions `ci.yml`): `dart format`, `build_runner`, `flutter analyze`, `flutter test`, `supabase test db`; CanvasKit web build artifact on `main`.
 - Release (`release.yml` on `v*` tags): Android AAB + web build with prod dart-defines; optional Vercel deploy when secrets are set. iOS IPA is not in CI yet (manual / future Codemagic or macOS runner).
+- **Local hardening gate:** `scripts/local_hardening_gate.ps1` mirrors CI checks and optionally runs pgTAP + Deno validation tests. See `docs/LOCAL_TESTING.md`.
+
+### Test coverage (verified 2026-07-23)
+
+- **Dart:** ~214 unit/widget tests passing; 9 integration tests skip without local Supabase. Remote repository HTTP contracts in `test/data/remote_repo_http_test.dart`; auth lifecycle in `test/auth_*`; sync orchestration in `test/sync_*`.
+- **Postgres:** pgTAP suites under `supabase/tests/` (phases 1–8, 10–13, 15, 22 local hardening).
+- **Edge Functions:** Deno unit tests for `_shared/validation.ts`.
+- **Integration:** Repository-level order→quote→bill in `test/integration/repository_order_to_bill_test.dart`; UI stub in `ui_order_to_bill_flow_test.dart`.
 
 ## 10. Key Risks & Mitigations
 

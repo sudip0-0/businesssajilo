@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_form_section.dart';
@@ -84,53 +85,48 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final shop = _shopNameController.text.trim();
-      final contact = _contactNameController.text.trim();
-      final displayName = _enablePortal
-          ? (_displayNameController.text.trim().isEmpty
-                ? (contact.isEmpty ? shop : contact)
-                : _displayNameController.text.trim())
-          : (contact.isEmpty ? shop : contact);
-      final password = _enablePortal
-          ? _passwordController.text
-          : _autoPassword();
+    final l10n = AppLocalizations.of(context);
+    await runInlineFormAction(
+      action: () async {
+        final shop = _shopNameController.text.trim();
+        final contact = _contactNameController.text.trim();
+        final displayName = _enablePortal
+            ? (_displayNameController.text.trim().isEmpty
+                  ? (contact.isEmpty ? shop : contact)
+                  : _displayNameController.text.trim())
+            : (contact.isEmpty ? shop : contact);
+        final password = _enablePortal
+            ? _passwordController.text
+            : _autoPassword();
 
-      await ref
-          .read(customersRepositoryProvider)
-          .createWithCredentials(
-            email: _emailController.text.trim().isEmpty
-                ? null
-                : _emailController.text.trim().toLowerCase(),
-            password: password,
-            displayName: displayName,
-            shopName: shop,
-            contactName: contact.isEmpty ? null : contact,
-            phone: _phoneController.text.trim().isEmpty
-                ? null
-                : '+977${_phoneController.text.trim()}',
-            address: _buildAddress(),
-            openingBalance:
-                parseNpr(_openingBalanceController.text)?.value ?? 0,
-            portalEnabled: _enablePortal,
-          );
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop(true);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(
-          () =>
-              _error = AppFailure.from(e).message(AppLocalizations.of(context)),
+        await ref.read(customersRepositoryProvider).createWithCredentials(
+          email: _emailController.text.trim().isEmpty
+              ? null
+              : _emailController.text.trim().toLowerCase(),
+          password: password,
+          displayName: displayName,
+          shopName: shop,
+          contactName: contact.isEmpty ? null : contact,
+          phone: _phoneController.text.trim().isEmpty
+              ? null
+              : '+977${_phoneController.text.trim()}',
+          address: _buildAddress(),
+          openingBalance:
+              parseNpr(_openingBalanceController.text)?.value ?? 0,
+          portalEnabled: _enablePortal,
         );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(true);
+        }
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
   }
 
   Widget _formBody(AppLocalizations l10n) {

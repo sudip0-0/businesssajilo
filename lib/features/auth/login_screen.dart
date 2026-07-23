@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/locale_toggle.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../core/utils/login_identifier.dart';
 import '../../core/ui/adaptive_sheet.dart';
@@ -37,21 +38,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await ref
+    final l10n = AppLocalizations.of(context);
+    await runInlineFormAction(
+      action: () => ref
           .read(authProvider.notifier)
-          .signIn(_emailController.text, _passwordController.text);
-    } catch (e) {
-      setState(
-        () => _error = localizeAuthError(e, AppLocalizations.of(context)),
-      );
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+          .signIn(_emailController.text, _passwordController.text),
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: mapAuthInlineError,
+    );
   }
 
   @override

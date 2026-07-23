@@ -93,6 +93,16 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ T-105 Shareable customer statement: 30/90-day/all-time ledger statement (BS+AD dates, opening/closing balance) as PDF/image via share sheet; totals invariant covered by `statement_document_test.dart`
 - ✅ T-108 Registration hardening: min password length 8 (config + all validators); prod captcha/CORS/leaked-password steps documented in `docs/SECURITY.md` checklist (dashboard-side, do before launch)
 
+## Phase 12 — Local verification & docs (2026-07-23)
+- ✅ Remote repository HTTP contract tests expanded (`record_payment`, dashboard KPIs, low stock, dues aging, entity mapping, idempotent bill replay)
+- ✅ Auth repository/provider/router tests for deactivation, forced password change, re-auth, self-delete, role redirects
+- ✅ Sync strategy tests: customer-balance watermark, bootstrap resume offsets, bill/payment ordering, queue idempotency / legacy rejection
+- ✅ Repository integration order→bill reclassified; UI integration stub with `HARDENING_GATE` skip/fail semantics
+- ✅ Deno unit tests for Edge Function `validation.ts`
+- ✅ `scripts/local_hardening_gate.ps1` + `docs/LOCAL_TESTING.md`
+- ⚠️ Repair compile errors in `dashboard_scoped_queries_test.dart` and `offline_query_scale_test.dart`
+- ⚠️ Full UI pump through quote builder → bill form (stub only today)
+
 ## Backlog (post-launch, see product.md roadmap)
 - Customer self-edit of own profile (PRD matrix deferred from v1)
 - Bill-level payment allocation (oldest-first auto-allocation; accurate aging) · quote expiry + stale-order nudges · dues reminders (push) · last-quoted-rate memory per customer

@@ -11,7 +11,11 @@ import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/billing/bill_detail_screen.dart';
+import '../../features/chat/order_chat_screen.dart';
 import '../../features/inventory/product_detail_screen.dart';
+import '../../features/notifications/notification_list_screen.dart';
+import '../../features/orders/order_detail_screen.dart';
+import '../../features/quotes/quote_detail_screen.dart';
 import '../../features/shell/customer_shell.dart';
 import '../../features/shell/owner_shell.dart';
 import '../../features/shell/sales_shell.dart';
@@ -82,6 +86,27 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
             canEditProduct: role?.canManageProducts ?? false,
           );
         },
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, _) => const NotificationListScreen(),
+      ),
+      GoRoute(
+        path: '/order/:orderId',
+        builder: (context, state) =>
+            OrderDetailScreen(orderId: state.pathParameters['orderId']!),
+        routes: [
+          GoRoute(
+            path: 'chat',
+            builder: (context, state) =>
+                OrderChatScreen(orderId: state.pathParameters['orderId']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/quote/:quoteId',
+        builder: (context, state) =>
+            QuoteDetailScreen(quoteId: state.pathParameters['quoteId']!),
       ),
     ],
   );

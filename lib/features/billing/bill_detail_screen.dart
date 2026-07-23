@@ -16,7 +16,7 @@ import 'credit_note_providers.dart';
 import 'invoice_export_actions.dart';
 import 'providers.dart';
 
-class BillDetailScreen extends ConsumerWidget {
+class BillDetailScreen extends ConsumerStatefulWidget {
   const BillDetailScreen({
     super.key,
     required this.billId,
@@ -27,8 +27,16 @@ class BillDetailScreen extends ConsumerWidget {
   final bool embedded;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BillDetailScreen> createState() => _BillDetailScreenState();
+}
+
+class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
+  var _changed = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final billId = widget.billId;
     final billAsync = ref.watch(billDetailProvider(billId));
     final role = ref.watch(authProvider).value?.member?.role;
     final canReturn = role?.canBill == true;
@@ -60,7 +68,11 @@ class BillDetailScreen extends ConsumerWidget {
                   label: Text(l10n.shareViaWhatsApp),
                 ),
                 if (canReturn && bill.customerId != null)
-                  _ReturnItemsButton(bill: bill, embedded: embedded),
+                  _ReturnItemsButton(
+                    bill: bill,
+                    embedded: widget.embedded,
+                    onChanged: () => setState(() => _changed = true),
+                  ),
                 PopupMenuButton<String>(
                   tooltip: l10n.export,
                   icon: const Icon(Icons.more_horiz),
@@ -142,19 +154,31 @@ class BillDetailScreen extends ConsumerWidget {
       },
     );
 
-    if (embedded) return content;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.billDetail)),
-      body: content,
+    if (widget.embedded) return content;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.pop(_changed);
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(l10n.billDetail)),
+        body: content,
+      ),
     );
   }
 }
 
 class _ReturnItemsButton extends ConsumerWidget {
-  const _ReturnItemsButton({required this.bill, this.embedded = false});
+  const _ReturnItemsButton({
+    required this.bill,
+    this.embedded = false,
+    this.onChanged,
+  });
 
   final Bill bill;
   final bool embedded;
+  final VoidCallback? onChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -176,18 +200,28 @@ class _ReturnItemsButton extends ConsumerWidget {
             if (embedded) {
               final segments = GoRouterState.of(context).uri.pathSegments;
               if (segments.length >= 2) {
-                await context.push(
+                final changed = await context.push<bool>(
                   '/${segments[0]}/${segments[1]}/${bill.id}/return',
                 );
+                if (changed == true) {
+                  ref.invalidate(billDetailProvider(bill.id));
+                  ref.invalidate(billReturnedQtyProvider(bill.id));
+                  onChanged?.call();
+                }
               }
               return;
             }
-            await Navigator.push(
+            final changed = await Navigator.push<bool>(
               context,
               MaterialPageRoute(
                 builder: (_) => CreditNoteFormScreen(bill: bill),
               ),
             );
+            if (changed == true && context.mounted) {
+              ref.invalidate(billDetailProvider(bill.id));
+              ref.invalidate(billReturnedQtyProvider(bill.id));
+              onChanged?.call();
+            }
           },
           icon: const Icon(Icons.undo_outlined, size: 18),
           label: Text(l10n.returnItems),

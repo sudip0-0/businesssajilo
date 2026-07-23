@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../core/layout/bs_breakpoints.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/bs_sales_line_chart.dart';
@@ -87,7 +88,7 @@ class WebReportsHubPage extends ConsumerWidget {
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
-                final wide = constraints.maxWidth >= 1024;
+                final wide = constraints.maxWidth >= BsBreakpoints.desktop;
                 final chart = WebBentoTile(
                   minHeight: 280,
                   onTap: () => context.go('/owner/reports/sales'),

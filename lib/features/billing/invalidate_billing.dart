@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../customers/providers.dart';
 import '../orders/providers.dart';
-import '../reports/providers.dart';
+import '../reports/dashboard/dashboard_invalidation.dart';
 import 'credit_note_providers.dart';
 import 'providers.dart';
 
@@ -23,7 +23,7 @@ void invalidateAfterBillSaved(
   ref.invalidate(todaysBillCountProvider);
   ref.invalidate(todaysBillsProvider);
   ref.invalidate(totalDuesProvider);
-  ref.invalidate(ownerDashboardStatsProvider);
+  invalidateOwnerDashboard(ref);
   bumpBillingRevisionFromRef(ref);
   bumpCustomersRevisionFromRef(ref);
   if (customerId != null) {
@@ -46,7 +46,7 @@ void invalidateAfterCustomerPayment(Ref ref, {required String customerId}) {
   ref.invalidate(customerLedgerProvider(customerId));
   ref.invalidate(customerListProvider);
   ref.invalidate(totalDuesProvider);
-  ref.invalidate(ownerDashboardStatsProvider);
+  invalidateOwnerDashboard(ref);
   bumpCustomersRevisionFromRef(ref);
   bumpBillingRevisionFromRef(ref);
 }
@@ -59,7 +59,7 @@ void invalidateAfterCreditNoteSaved(
 }) {
   ref.invalidate(billDetailProvider(billId));
   ref.invalidate(billReturnedQtyProvider(billId));
-  ref.invalidate(ownerDashboardStatsProvider);
+  invalidateOwnerDashboard(ref);
   if (customerId != null) {
     ref.invalidate(customerLedgerProvider(customerId));
     ref.invalidate(totalDuesProvider);

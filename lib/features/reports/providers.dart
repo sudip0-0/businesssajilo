@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/report_range.dart';
+import '../../core/logging/app_log.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../data/repositories/payments_repository.dart';
@@ -64,11 +65,13 @@ final ownerDashboardStatsProvider =
     FutureProvider.autoDispose<OwnerDashboardStats>((ref) async {
       try {
         return await ref.watch(reportsRepositoryProvider).ownerDashboardStats();
-      } catch (_) {
-        Future<int?> safe(Future<int> Function() load) async {
+      } catch (e, st) {
+        AppLog.warn('owner_dashboard_stats RPC fallback', e, st);
+        Future<int?> safe(String metric, Future<int> Function() load) async {
           try {
             return await load();
-          } catch (_) {
+          } catch (inner, innerSt) {
+            AppLog.warn('owner_dashboard_stats partial fallback: $metric', inner, innerSt);
             return null;
           }
         }
@@ -78,11 +81,11 @@ final ownerDashboardStatsProvider =
         final products = ref.read(productsRepositoryProvider);
         final orders = ref.read(ordersRepositoryProvider);
         final results = await Future.wait([
-          safe(bills.todaysSales),
-          safe(bills.yesterdaysSales),
-          safe(payments.totalDues),
-          safe(products.lowStockCount),
-          safe(orders.pendingCount),
+          safe('todaySales', bills.todaysSales),
+          safe('yesterdaySales', bills.yesterdaysSales),
+          safe('totalDues', payments.totalDues),
+          safe('lowStockCount', products.lowStockCount),
+          safe('pendingOrders', orders.pendingCount),
         ]);
         return OwnerDashboardStats(
           todaySales: results[0],

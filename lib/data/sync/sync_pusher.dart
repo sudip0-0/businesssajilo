@@ -16,12 +16,13 @@ class SyncPusher {
   final AppDatabase _db;
   final SupabaseClient _client;
 
-  Future<void> push() async {
+  Future<int> push() async {
     final queue = await _db.pendingQueue();
     final unsynced = await _db.unsyncedQueue();
     final blockedIds = unsynced.map((q) => q.entityId).toSet();
     final syncedIds = <String>{};
     final now = DateTime.now().toUtc();
+    var uploadedCount = 0;
 
     for (final item in queue) {
       // Exponential backoff: skip until the item's backoff window elapsed.
@@ -55,6 +56,7 @@ class SyncPusher {
             .write(const SyncQueueCompanion(status: Value('synced')));
         syncedIds.add(item.entityId);
         blockedIds.remove(item.entityId);
+        uploadedCount++;
       } catch (e, st) {
         final attempts = item.attempts + 1;
         final terminal = attempts >= syncMaxAttempts;
@@ -74,7 +76,6 @@ class SyncPusher {
           ),
         );
         if (terminal) {
-          // No amounts / customer PII — routing identifiers only.
           AppLog.error(
             'Sync queue item terminal failure',
             error: e,
@@ -86,9 +87,22 @@ class SyncPusher {
               'lastError': truncated,
             },
           );
+        } else {
+          AppLog.warn(
+            'Sync queue item retry scheduled',
+            e,
+            st,
+            {
+              'entityType': item.entityType,
+              'entityId': item.entityId,
+              'attempts': attempts,
+              'nextAttemptInSec': backoffForAttempts(attempts).inSeconds,
+            },
+          );
         }
       }
     }
+    return uploadedCount;
   }
 
   /// Pushes a bill through the transactional `create_bill` RPC (or

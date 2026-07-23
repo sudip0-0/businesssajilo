@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../domain/models/session_state.dart';
 import '../local/app_database.dart';
+import 'sync_bundle_registry.dart';
 import 'sync_config.dart';
 import 'sync_models.dart';
 import 'sync_service.dart';
@@ -24,8 +25,6 @@ class SyncBundle {
   final String businessId;
   final String memberId;
 }
-
-SyncBundle? _activeBundle;
 
 /// Bumped whenever the active bundle changes, so [syncBundleProvider] can be
 /// refreshed from the auth notifier without `ref.invalidate` (which riverpod
@@ -45,7 +44,7 @@ final syncBundleProvider = Provider<SyncBundle?>((ref) {
   // Only watch the version bump — auth calls bump() after bootstrap/dispose
   // so we avoid a data→features circular dependency on authProvider.
   ref.watch(syncBundleVersionProvider);
-  return _activeBundle;
+  return SyncBundleRegistry.instance.active;
 });
 
 final syncServiceProvider = Provider<SyncService?>((ref) {
@@ -57,11 +56,13 @@ class SyncStatus {
     required this.state,
     this.pendingCount = 0,
     this.failedCount = 0,
+    this.bootstrapIncomplete = false,
   });
 
   final SyncState state;
   final int pendingCount;
   final int failedCount;
+  final bool bootstrapIncomplete;
 }
 
 /// Reactive sync status: re-evaluates on queue changes (drift `.watch()`)
@@ -79,14 +80,22 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
     final online = await bundle.sync.isOnline;
     final pending = await bundle.db.pendingCount();
     final failed = await bundle.db.failedCount();
+    final incomplete = bundle.sync.bootstrapIncomplete;
     final state = !online
         ? SyncState.offline
+        : incomplete
+        ? SyncState.incomplete
         : pending > 0
         ? SyncState.pending
         : SyncState.synced;
     if (controller.isClosed) return;
     controller.add(
-      SyncStatus(state: state, pendingCount: pending, failedCount: failed),
+      SyncStatus(
+        state: state,
+        pendingCount: pending,
+        failedCount: failed,
+        bootstrapIncomplete: incomplete,
+      ),
     );
   }
 
@@ -131,18 +140,18 @@ Future<void> bootstrapSyncForSession({
   final sync = SyncService(db: db, client: client);
   await sync.init(deviceId);
 
-  _activeBundle = SyncBundle(
-    db: db,
-    sync: sync,
-    businessId: businessId,
-    memberId: memberId,
+  SyncBundleRegistry.instance.replace(
+    SyncBundle(
+      db: db,
+      sync: sync,
+      businessId: businessId,
+      memberId: memberId,
+    ),
   );
 }
 
 Future<void> disposeSyncBundle() async {
-  _activeBundle?.sync.dispose();
-  await _activeBundle?.db.close();
-  _activeBundle = null;
+  await SyncBundleRegistry.instance.disposeActive();
 }
 
 Future<void> syncBootstrapForSession(SessionState session) async {

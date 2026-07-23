@@ -8,7 +8,17 @@ final notificationListProvider =
       return ref.watch(notificationsRepositoryProvider).watch();
     });
 
-final unreadNotificationCountProvider = Provider.autoDispose<int>((ref) {
-  final notifications = ref.watch(notificationListProvider).value ?? [];
-  return notifications.where((n) => n.isUnread).length;
+/// Exact unread count — refreshes when the notification stream emits.
+final unreadNotificationCountProvider = StreamProvider.autoDispose<int>((ref) async* {
+  final repo = ref.watch(notificationsRepositoryProvider);
+  await for (final _ in repo.watch()) {
+    yield await repo.unreadCount();
+  }
 });
+
+/// Formats unread badge label (caps at 99+).
+String formatUnreadBadge(int count) {
+  if (count <= 0) return '';
+  if (count > 99) return '99+';
+  return '$count';
+}

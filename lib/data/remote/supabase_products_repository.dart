@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/errors/app_failure.dart';
+import '../../core/validation/image_upload.dart';
 import '../../domain/models/product.dart';
 import '../repositories/products_repository.dart';
 import 'supabase_provider.dart';
@@ -153,19 +155,24 @@ class SupabaseProductsRepository implements ProductsRepository {
     required Uint8List bytes,
     required String mimeType,
   }) async {
+    final uploadError = ImageUpload.validate(bytes);
+    if (uploadError != null) {
+      throw AppFailure.validation(
+        detail: uploadError == ImageUploadError.tooLarge
+            ? 'image too large'
+            : 'invalid image type',
+      );
+    }
+    final sniffed = ImageUpload.sniffMime(bytes)!;
     final client = requireSupabaseClient(_client);
-    final ext = mimeType.contains('png')
-        ? 'png'
-        : mimeType.contains('webp')
-        ? 'webp'
-        : 'jpg';
+    final ext = ImageUpload.extensionForMime(sniffed);
     final path = '$businessId/$productId.$ext';
     await client.storage
         .from(_bucket)
         .uploadBinary(
           path,
           bytes,
-          fileOptions: FileOptions(contentType: mimeType, upsert: true),
+          fileOptions: FileOptions(contentType: sniffed, upsert: true),
         );
     return path;
   }

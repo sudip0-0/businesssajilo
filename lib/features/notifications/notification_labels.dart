@@ -13,6 +13,7 @@ String notificationTitle(AppLocalizations l10n, NotificationItem item) {
     'chat_message' => l10n.notifChatMessage,
     'payment_recorded' => l10n.notifPaymentRecorded,
     'low_stock' => l10n.notifLowStock,
+    'negative_stock' => l10n.notifNegativeStock,
     _ => l10n.notifications,
   };
 }
@@ -25,7 +26,7 @@ IconData notificationIcon(String type) {
     'quote_rejected' => Icons.request_quote_outlined,
     'chat_message' => Icons.chat_bubble_outline,
     'payment_recorded' => Icons.payments_outlined,
-    'low_stock' => Icons.inventory_2_outlined,
+    'low_stock' || 'negative_stock' => Icons.inventory_2_outlined,
     _ => Icons.notifications_outlined,
   };
 }

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
+import '../../core/validation/image_upload.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/models/product.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -102,9 +103,21 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     );
     if (file == null) return;
     final bytes = await file.readAsBytes();
+    final uploadError = ImageUpload.validate(bytes);
+    if (uploadError != null) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      final message = uploadError == ImageUploadError.tooLarge
+          ? l10n.imageTooLarge
+          : l10n.imageInvalidType;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
     setState(() {
       _imageBytes = bytes;
-      _imageMime = file.mimeType ?? 'image/jpeg';
+      _imageMime = ImageUpload.sniffMime(bytes) ?? 'image/jpeg';
     });
   }
 

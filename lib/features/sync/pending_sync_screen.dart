@@ -26,14 +26,25 @@ class PendingSyncScreen extends ConsumerWidget {
               error: (_, _) => EmptyState(
                 icon: Icons.error_outline,
                 message: l10n.somethingWentWrong,
+                isError: true,
                 actionLabel: l10n.tryAgain,
                 onAction: () => ref.invalidate(syncQueueProvider),
               ),
               data: (items) {
-                if (items.isEmpty) {
+                final status = ref.watch(syncStatusProvider).value;
+                final incomplete = status?.bootstrapIncomplete ?? false;
+                if (items.isEmpty && !incomplete) {
                   return EmptyState(
                     icon: Icons.cloud_done,
                     message: l10n.synced,
+                    actionLabel: l10n.syncNow,
+                    onAction: () => bundle.sync.syncNow(),
+                  );
+                }
+                if (items.isEmpty && incomplete) {
+                  return EmptyState(
+                    icon: Icons.cloud_sync_outlined,
+                    message: l10n.syncIncompleteContinue,
                     actionLabel: l10n.syncNow,
                     onAction: () => bundle.sync.syncNow(),
                   );
@@ -43,6 +54,17 @@ class PendingSyncScreen extends ConsumerWidget {
                     .length;
                 return Column(
                   children: [
+                    if (incomplete)
+                      MaterialBanner(
+                        content: Text(l10n.syncIncompleteContinue),
+                        leading: const Icon(Icons.cloud_sync_outlined),
+                        actions: [
+                          TextButton(
+                            onPressed: () => bundle.sync.syncNow(),
+                            child: Text(l10n.syncNow),
+                          ),
+                        ],
+                      ),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(

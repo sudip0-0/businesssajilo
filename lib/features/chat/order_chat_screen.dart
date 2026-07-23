@@ -9,6 +9,8 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/bs_date.dart';
+import '../../core/validation/image_upload.dart';
+import '../../core/validation/message_validator.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../auth/providers/auth_provider.dart';
 import 'providers.dart';
@@ -40,6 +42,13 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
   Future<void> _sendText() async {
     final body = _controller.text.trim();
     if (body.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    if (MessageValidator.isBodyTooLong(body)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.messageTooLong)));
+      return;
+    }
     final member = ref.read(authProvider).value?.member;
     if (member == null) return;
 
@@ -74,12 +83,16 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     if (file == null) return;
 
     final bytes = await file.readAsBytes();
-    // Soft client cap — storage bucket enforces 5 MB.
-    if (bytes.lengthInBytes > 5 * 1024 * 1024) {
+    final uploadError = ImageUpload.validate(bytes);
+    if (uploadError != null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).actionFailed)),
-        );
+        final l10n = AppLocalizations.of(context);
+        final message = uploadError == ImageUploadError.tooLarge
+            ? l10n.imageTooLarge
+            : l10n.imageInvalidType;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
       return;
     }

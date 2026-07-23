@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../utils/bs_date.dart';
 import '../utils/money.dart';
 import 'pdf_fonts.dart';
+import 'pdf_text_table.dart';
 import 'statement_document.dart';
 
 /// Builds A4 PDF bytes for customer ledger statements. Long statements
@@ -68,7 +69,7 @@ class StatementPdfBuilder {
 
   pw.Widget _table(StatementDocument doc) {
     final labels = doc.labels;
-    return pw.Table.fromTextArray(
+    return buildPdfTextTable(
       headers: [
         labels.date,
         labels.description,

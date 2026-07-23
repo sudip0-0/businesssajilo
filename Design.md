@@ -204,7 +204,11 @@ Atmosphere: subtle paper grain (`WebPaperGrain`), ledger-line auth brand panel, 
 
 `MoneyText` switches to IBM Plex Mono when `kIsWeb`. Raw `Text(formatNpr(...))` does **not** — use `MoneyText` or `WebTypography.mono(...)`.
 
-### Dark mode (web)
+### Dark mode (v1)
+
+BusinessSajilo v1 ships **light theme only** on mobile and web. `WebTheme.dark()` and Material dark schemes compile for future use but are not exposed in settings and must not be enabled in production builds until a dedicated dark-mode pass lands.
+
+### Dark mode (web — legacy note)
 
 Product web forces light (`WebTheme.light()`). `WebTheme.dark()` compiles but is not the shipped surface.
 

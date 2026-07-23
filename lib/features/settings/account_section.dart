@@ -24,6 +24,7 @@ Future<void> showChangePasswordSheet(BuildContext context) async {
           24 + MediaQuery.viewInsetsOf(sheetContext).bottom,
         ),
         child: ChangePasswordForm(
+          requireCurrentPassword: true,
           onChanged: () => Navigator.of(sheetContext).pop(),
         ),
       ),
@@ -56,7 +57,8 @@ Future<void> confirmAndDeleteAccount(
           : l10n.deleteAccountWarning,
       // Business deletion is the most destructive action in the app.
       confirmWord: deleteBusiness ? confirmWord : null,
-      requirePassword: deleteBusiness,
+      // Both self and business deletion require password re-auth.
+      requirePassword: true,
     ),
   );
   if (result == null || !result.confirmed || !context.mounted) return;

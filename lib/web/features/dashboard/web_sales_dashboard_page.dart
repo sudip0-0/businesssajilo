@@ -8,6 +8,7 @@ import '../../../core/utils/money.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/orders/providers.dart';
+import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../ui/web_stat_tile.dart';
 import '../web_page_scaffold.dart';
@@ -34,10 +35,7 @@ class WebSalesDashboardPage extends ConsumerWidget {
       ],
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(pendingOrdersCountProvider);
-          ref.invalidate(openQuotesCountProvider);
-          ref.invalidate(todaysBillCountProvider);
-          ref.invalidate(totalDuesProvider);
+          invalidateSalesDashboardWidget(ref);
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

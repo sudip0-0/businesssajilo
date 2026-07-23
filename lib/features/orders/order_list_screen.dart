@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
@@ -11,7 +12,6 @@ import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/models/order.dart';
 import '../customers/providers.dart';
-import 'order_detail_screen.dart';
 
 class OrderListScreen extends ConsumerStatefulWidget {
   const OrderListScreen({super.key, this.ownOnly = false});
@@ -130,13 +130,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   : Text(dateStr),
               trailing: StatusChip(order.status),
               onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OrderDetailScreen(orderId: order.id),
-                  ),
+                final changed = await context.push<bool>(
+                  '/order/${order.id}',
                 );
-                await _refresh();
+                if (changed == true) await _refresh();
               },
             ),
           );

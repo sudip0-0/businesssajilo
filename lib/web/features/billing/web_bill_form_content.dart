@@ -3,30 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../core/errors/app_failure.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/testing/integration_keys.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/ui/adaptive_sheet.dart';
+import '../../../core/layout/bs_breakpoints.dart';
 import '../../../core/ui/error_state.dart';
-import '../../../core/utils/money.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
-import '../../../features/billing/bill_draft_line.dart';
 import '../../../features/billing/bill_form_draft.dart';
-import '../../../features/billing/bill_form_save.dart';
-import '../../../features/billing/bill_form_validation.dart';
-import '../../../features/billing/bill_payment_sheet.dart';
+import '../../../features/billing/bill_form_submit.dart';
 import '../../../features/billing/bill_summary.dart';
-import '../../../features/billing/invalidate_billing.dart';
-import '../../../features/billing/invoice_export_actions.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../theme/web_palette.dart';
-import '../../ui/web_search_field.dart';
+import 'web_bill_form_line_table.dart';
+import 'web_bill_form_product_picker.dart';
 
 /// Web-native bill form layout with row-wise line items.
 class WebBillFormContent extends ConsumerStatefulWidget {
@@ -82,66 +74,20 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     BillStatus? forceStatus,
     bool exportAfterSave = false,
   }) async {
-    final l10n = AppLocalizations.of(context);
     _syncDraftFields();
-    final validationError = validateBillForm(_draft);
-    if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(billFormValidationMessage(l10n, validationError)),
-          backgroundColor: WebPalette.danger,
-        ),
-      );
-      return null;
-    }
-
-    BillPaymentResult? paymentResult;
-    if (forceStatus == BillStatus.due) {
-      paymentResult = duePaymentForDraft(_draft);
-    } else {
-      paymentResult = await showAdaptiveSheet<BillPaymentResult>(
-        context: context,
-        title: l10n.saveBill,
-        child: BillPaymentSheet(
-          grandTotal: _draft.grandTotal,
-          initialCustomerId: _draft.customerId,
-        ),
-      );
-    }
-    if (paymentResult == null) return null;
-
     setState(() => _loading = true);
-    Bill? savedBill;
-    try {
-      savedBill = await saveBillForm(
-        ref.read(billingRefProvider),
-        draft: _draft,
-        payment: paymentResult,
-        fallbackCustomerId: _draft.customerId,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
-        if (exportAfterSave) {
-          await exportBillAfterSave(ref, context, savedBill);
-        }
-        widget.onSaved?.call();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppFailure.from(e).message(l10n)),
-            backgroundColor: WebPalette.danger,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-    return savedBill;
+    final bill = await submitBillForm(
+      ref: ref,
+      context: context,
+      draft: _draft,
+      forceStatus: forceStatus,
+      fallbackCustomerId: _draft.customerId,
+      exportAfterSave: exportAfterSave,
+      onSaved: widget.onSaved,
+      snackbarErrorColor: WebPalette.danger,
+    );
+    if (mounted) setState(() => _loading = false);
+    return bill;
   }
 
   @override
@@ -189,48 +135,16 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                l10n.billLines,
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                              const Spacer(),
-                              TextButton.icon(
-                                key: IntegrationKeys.billFormAddProduct,
-                                onPressed: _focusProductSearch,
-                                icon: const Icon(
-                                  PhosphorIconsRegular.plus,
-                                  size: 16,
-                                ),
-                                label: Text(l10n.addProduct),
-                              ),
-                            ],
+                          WebBillFormLineTable(
+                            l10n: l10n,
+                            lines: _draft.lines,
+                            onLineChanged: () => setState(() {}),
+                            onRemoveLine: (i) =>
+                                setState(() => _draft.removeLineAt(i)),
+                            onFocusProductSearch: _focusProductSearch,
                           ),
-                          const SizedBox(height: 12),
-                          _BillItemsTableHeader(l10n: l10n),
                           const SizedBox(height: 8),
-                          if (_draft.lines.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Text(
-                                l10n.noBillLines,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: WebPalette.inkSoft),
-                              ),
-                            )
-                          else
-                            for (var i = 0; i < _draft.lines.length; i++)
-                              _BillItemRow(
-                                index: i,
-                                line: _draft.lines[i],
-                                l10n: l10n,
-                                onChanged: () => setState(() {}),
-                                onRemove: () =>
-                                    setState(() => _draft.removeLineAt(i)),
-                              ),
-                          const SizedBox(height: 8),
-                          _AddProductRow(
+                          WebBillFormProductPicker(
                             l10n: l10n,
                             controller: _productQueryController,
                             focusNode: _productSearchFocus,
@@ -246,9 +160,13 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                     const SizedBox(height: 16),
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final wide = constraints.maxWidth >= 768;
+                        final wide =
+                            constraints.maxWidth >= BsBreakpoints.tablet;
                         final summary = BillSummary(
                           style: BillSummaryStyle.card,
+                          accentColor: WebPalette.navy,
+                          cardBackground: WebPalette.navy.withValues(alpha: 0.04),
+                          cardBorderColor: WebPalette.navy.withValues(alpha: 0.12),
                           itemsTotal: _draft.itemsTotal,
                           billDiscountController: _billDiscountController,
                           grandTotal: _draft.grandTotal,
@@ -303,207 +221,6 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   }
 }
 
-class _BillItemsTableHeader extends StatelessWidget {
-  const _BillItemsTableHeader({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: WebPalette.inkSoft,
-      fontWeight: FontWeight.w600,
-    );
-
-    return Row(
-      children: [
-        SizedBox(width: 36, child: Text(l10n.sn, style: style)),
-        Expanded(flex: 3, child: Text(l10n.productName, style: style)),
-        SizedBox(width: 72, child: Text(l10n.qty, style: style)),
-        SizedBox(width: 56, child: Text(l10n.unit, style: style)),
-        SizedBox(width: 96, child: Text(l10n.rateRs, style: style)),
-        SizedBox(width: 96, child: Text(l10n.amountRs, style: style)),
-        const SizedBox(width: 40),
-      ],
-    );
-  }
-}
-
-class _BillItemRow extends StatelessWidget {
-  const _BillItemRow({
-    required this.index,
-    required this.line,
-    required this.l10n,
-    required this.onChanged,
-    required this.onRemove,
-  });
-
-  final int index;
-  final BillDraftLine line;
-  final AppLocalizations l10n;
-  final VoidCallback onChanged;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: WebPalette.hairline.withValues(alpha: 0.6)),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(width: 36, child: Text('${index + 1}')),
-          Expanded(
-            flex: 3,
-            child: Text(
-              line.product.name,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-          SizedBox(
-            width: 72,
-            child: TextFormField(
-              initialValue: '${line.qty}',
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-              ),
-              onChanged: (v) {
-                line.setQty(int.tryParse(v) ?? line.qty);
-                onChanged();
-              },
-            ),
-          ),
-          SizedBox(width: 56, child: Text(line.product.unit)),
-          SizedBox(
-            width: 96,
-            child: TextFormField(
-              initialValue: formatNpr(
-                Paisa(line.rate),
-                showSymbol: false,
-                showPaisa: false,
-              ),
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-              ),
-              onChanged: (v) {
-                line.rate = parseNpr(v)?.value ?? line.rate;
-                onChanged();
-              },
-            ),
-          ),
-          SizedBox(
-            width: 96,
-            child: Text(
-              formatNpr(Paisa(line.lineTotal), showPaisa: false),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          IconButton(
-            tooltip: l10n.remove,
-            icon: const Icon(
-              PhosphorIconsRegular.trash,
-              color: WebPalette.danger,
-            ),
-            onPressed: onRemove,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddProductRow extends StatelessWidget {
-  const _AddProductRow({
-    required this.l10n,
-    required this.controller,
-    required this.focusNode,
-    required this.onChanged,
-    required this.suggestions,
-    required this.onProductSelected,
-  });
-
-  final AppLocalizations l10n;
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
-  final List<Product> suggestions;
-  final ValueChanged<Product> onProductSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 36,
-              child: Text(
-                '…',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: WebPalette.inkSoft),
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  WebSearchField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    hint: l10n.filterProducts,
-                    onChanged: onChanged,
-                  ),
-                  if (suggestions.isNotEmpty)
-                    Material(
-                      elevation: 4,
-                      borderRadius: BorderRadius.circular(BsRadii.lg),
-                      child: Column(
-                        children: [
-                          for (final p in suggestions)
-                            ListTile(
-                              dense: true,
-                              title: Text(p.name),
-                              subtitle: Text(
-                                formatNpr(
-                                  Paisa(p.referencePrice),
-                                  showPaisa: false,
-                                ),
-                              ),
-                              onTap: () => onProductSelected(p),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 class WebFormHeaderRow extends StatelessWidget {
   const WebFormHeaderRow({
     super.key,
@@ -524,7 +241,7 @@ class WebFormHeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 768;
+        final wide = constraints.maxWidth >= BsBreakpoints.tablet;
         final customerField = customersAsync.when(
           loading: () => const LinearProgressIndicator(),
           error: (_, _) => Text(l10n.loadingFailed),

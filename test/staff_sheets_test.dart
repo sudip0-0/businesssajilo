@@ -2,6 +2,7 @@ import 'package:businesssajilo/core/errors/app_failure.dart';
 import 'package:businesssajilo/core/l10n/app_localizations.dart';
 import 'package:businesssajilo/data/repositories/members_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
+import 'package:businesssajilo/domain/models/member.dart';
 import 'package:businesssajilo/features/staff/add_member_sheet.dart';
 import 'package:businesssajilo/features/staff/reset_member_password_sheet.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +27,23 @@ Widget _wrap(Widget child, {List<dynamic> overrides = const []}) {
 }
 
 class _FailingMembers extends MembersRepository {
-  _FailingMembers() : super(null);
+  _FailingMembers();
+
+  @override
+  Future<List<Member>> listMembers() =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deactivateMember(String memberId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> activateMember(String memberId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Member?> getMember(String memberId) =>
+      throw UnimplementedError();
 
   @override
   Future<({String memberId, String? customerId})> createMember({

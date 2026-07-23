@@ -1,4 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  isUuid,
+  str,
+  validatePassword,
+} from "../_shared/validation.ts";
 
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 if (!allowedOrigin) {
@@ -69,8 +74,12 @@ Deno.serve(async (req) => {
   if (!memberId || !newPassword) {
     return json({ error: "Missing required fields" }, 400);
   }
-  if (newPassword.length < 8 || newPassword.length > 72) {
-    return json({ error: "Password must be 8-72 characters" }, 400);
+  if (!isUuid(memberId)) {
+    return json({ error: "Invalid memberId" }, 400);
+  }
+  const passwordError = validatePassword(newPassword);
+  if (passwordError) {
+    return json({ error: passwordError }, 400);
   }
 
   // Target must be an active member of the caller's own business, and the
@@ -124,10 +133,6 @@ Deno.serve(async (req) => {
     return json({ error: "Could not reset password. Please try again." }, 400);
   }
 });
-
-function str(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
-}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

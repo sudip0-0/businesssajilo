@@ -13,6 +13,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          unreadNotificationCountProvider.overrideWith(
+            (ref) => Stream.value(0),
+          ),
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: const MaterialApp(
@@ -37,6 +40,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          unreadNotificationCountProvider.overrideWith(
+            (ref) => Stream.value(0),
+          ),
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: const MaterialApp(

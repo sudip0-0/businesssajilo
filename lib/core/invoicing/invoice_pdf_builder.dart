@@ -7,6 +7,7 @@ import '../utils/bs_date.dart';
 import '../utils/money.dart';
 import 'invoice_document.dart';
 import 'pdf_fonts.dart';
+import 'pdf_text_table.dart';
 
 /// Builds PDF bytes for bills and credit notes.
 class InvoicePdfBuilder {
@@ -70,7 +71,7 @@ class InvoicePdfBuilder {
           ),
         ],
         pw.SizedBox(height: 8),
-        pw.Table.fromTextArray(
+        buildPdfTextTable(
           headers: ['Item', 'Qty', 'Rate', 'Amt'],
           headerStyle: pw.TextStyle(
             fontWeight: pw.FontWeight.bold,

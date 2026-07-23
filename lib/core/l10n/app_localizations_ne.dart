@@ -155,6 +155,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get pendingSyncItems => 'बाँकी सिंक';
 
   @override
+  String get syncIncompleteContinue => 'सिंक अपूर्ण — जारी राख्नुहोस्';
+
+  @override
   String get syncFailed => 'सिंक असफल';
 
   @override
@@ -679,6 +682,9 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get notifLowStock => 'कम स्टक चेतावनी';
+
+  @override
+  String get notifNegativeStock => 'ऋणात्मक स्टक चेतावनी';
 
   @override
   String get salesSummary => 'बिक्री सारांश';
@@ -1307,6 +1313,21 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get passwordTooShort => 'पासवर्ड कम्तीमा ८ अक्षरको हुनुपर्छ';
+
+  @override
+  String get passwordTooLong => 'पासवर्ड बढीमा ७२ अक्षरको हुनुपर्छ';
+
+  @override
+  String get currentPassword => 'हालको पासवर्ड';
+
+  @override
+  String get imageTooLarge => 'तस्बिर ५ एमबी वा कम हुनुपर्छ';
+
+  @override
+  String get imageInvalidType => 'JPEG, PNG वा WebP मात्र अनुमति छ';
+
+  @override
+  String get messageTooLong => 'सन्देश धेरै लामो छ';
 
   @override
   String get changePassword => 'पासवर्ड परिवर्तन';

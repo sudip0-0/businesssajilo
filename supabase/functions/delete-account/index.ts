@@ -75,6 +75,24 @@ Deno.serve(async (req) => {
           400,
         );
       }
+
+      // Require password confirmation so a stolen session alone cannot
+      // delete a member account.
+      const password = str(body.password);
+      if (!password) {
+        return json({ error: "Password required to delete account" }, 400);
+      }
+      if (!user.email) {
+        return json({ error: "Account has no email for re-authentication" }, 400);
+      }
+      const { error: reauthError } = await supabaseUser.auth.signInWithPassword({
+        email: user.email,
+        password,
+      });
+      if (reauthError) {
+        return json({ error: "Invalid password" }, 403);
+      }
+
       const { data: authUserId, error } = await supabaseAdmin.rpc(
         "anonymize_member_for_deletion",
         { p_member_id: caller.id },

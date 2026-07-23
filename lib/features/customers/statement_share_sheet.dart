@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../core/invoicing/statement_document.dart';
 import '../../core/invoicing/statement_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -49,70 +50,69 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
     final locale = Localizations.localeOf(context);
     final sheetNav = Navigator.of(context);
     final rootNav = Navigator.of(context, rootNavigator: true);
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final business = await ref.read(currentBusinessProvider.future);
-      if (business == null) throw StateError('no business');
+    await runInlineFormAction(
+      action: () async {
+        final business = await ref.read(currentBusinessProvider.future);
+        if (business == null) throw StateError('no business');
 
-      // Full ledger (ascending, running balances) so the range's opening
-      // balance is exact and closing matches the in-app ledger.
-      final entries = await ref
-          .read(customersRepositoryProvider)
-          .ledger(widget.customer.id);
+        final entries = await ref
+            .read(customersRepositoryProvider)
+            .ledger(widget.customer.id);
 
-      final now = DateTime.now().toUtc();
-      final from = switch (_range) {
-        _StatementRange.last30 => now.subtract(const Duration(days: 30)),
-        _StatementRange.last90 => now.subtract(const Duration(days: 90)),
-        _StatementRange.all => null,
-      };
+        final now = DateTime.now().toUtc();
+        final from = switch (_range) {
+          _StatementRange.last30 => now.subtract(const Duration(days: 30)),
+          _StatementRange.last90 => now.subtract(const Duration(days: 90)),
+          _StatementRange.all => null,
+        };
 
-      final doc = StatementDocument.fromLedger(
-        business: business,
-        customerLabel: widget.customer.shopName,
-        entries: entries,
-        from: from,
-        to: now,
-        locale: locale,
-        labels: StatementLabels(
-          title: l10n.statement,
-          period: l10n.statementPeriod,
-          customer: l10n.customers,
-          date: l10n.statementDate,
-          description: l10n.statementDescription,
-          debit: l10n.ledgerDebit,
-          credit: l10n.ledgerCredit,
-          balance: l10n.runningBalance,
-          openingBalance: l10n.entryOpeningBalance,
-          closingBalance: l10n.closingBalance,
-        ),
-        describeEntry: (entry) => _describeEntry(entry, l10n),
-      );
+        final doc = StatementDocument.fromLedger(
+          business: business,
+          customerLabel: widget.customer.shopName,
+          entries: entries,
+          from: from,
+          to: now,
+          locale: locale,
+          labels: StatementLabels(
+            title: l10n.statement,
+            period: l10n.statementPeriod,
+            customer: l10n.customers,
+            date: l10n.statementDate,
+            description: l10n.statementDescription,
+            debit: l10n.ledgerDebit,
+            credit: l10n.ledgerCredit,
+            balance: l10n.runningBalance,
+            openingBalance: l10n.entryOpeningBalance,
+            closingBalance: l10n.closingBalance,
+          ),
+          describeEntry: (entry) => _describeEntry(entry, l10n),
+        );
 
-      final service = ref.read(statementExportServiceProvider);
-      if (asPdf) {
-        await service.sharePdf(doc);
-        if (mounted) sheetNav.pop();
-        return;
-      }
+        final service = ref.read(statementExportServiceProvider);
+        if (asPdf) {
+          await service.sharePdf(doc);
+          if (mounted) sheetNav.pop();
+          return;
+        }
 
-      final png = await service.buildPngBytes(doc);
-      final fileName = service.fileName(doc);
-      if (!mounted) return;
-      sheetNav.pop();
-      await showStatementImagePreview(
-        rootNav.context,
-        pngBytes: png,
-        fileName: fileName,
-      );
-    } catch (e) {
-      if (mounted) setState(() => _error = AppFailure.from(e).message(l10n));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+        final png = await service.buildPngBytes(doc);
+        final fileName = service.fileName(doc);
+        if (!mounted) return;
+        sheetNav.pop();
+        await showStatementImagePreview(
+          rootNav.context,
+          pngBytes: png,
+          fileName: fileName,
+        );
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
   }
 
   String _describeEntry(LedgerEntry entry, AppLocalizations l10n) {

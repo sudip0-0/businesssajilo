@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/layout/bs_breakpoints.dart';
 import '../layout/web_bento_grid.dart';
 import '../theme/web_palette.dart';
 import '../theme/web_typography.dart';
@@ -109,7 +110,7 @@ class WebFormRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 768;
+    final compact = MediaQuery.sizeOf(context).width < BsBreakpoints.tablet;
     if (compact) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

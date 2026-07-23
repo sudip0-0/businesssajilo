@@ -1,27 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/ui/error_state.dart';
-import '../../core/ui/qty_stepper.dart';
-import '../../core/ui/stock_badge.dart';
-import '../../core/utils/money.dart';
-import '../../domain/models/bill.dart';
-import 'invoice_export_actions.dart';
-import '../../domain/models/product.dart';
 import '../../core/ui/bs_success_button.dart';
-import '../inventory/product_image.dart';
+import '../../core/ui/error_state.dart';
+import '../../domain/models/bill.dart';
+import '../../domain/models/product.dart';
 import '../inventory/providers.dart';
-import '../../core/ui/adaptive_sheet.dart';
-import 'bill_draft_line.dart';
 import 'bill_form_draft.dart';
-import 'bill_form_save.dart';
-import 'bill_form_validation.dart';
-import 'bill_payment_sheet.dart';
+import 'bill_form_line_editor.dart';
+import 'bill_form_product_picker.dart';
+import 'bill_form_submit.dart';
 import 'bill_summary.dart';
-import 'invalidate_billing.dart';
 
 class BillFormScreen extends ConsumerStatefulWidget {
   const BillFormScreen({super.key, this.embedded = false, this.onSaved});
@@ -60,64 +51,18 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   }
 
   Future<Bill?> _save({bool exportAfterSave = false}) async {
-    final l10n = AppLocalizations.of(context);
     _syncDiscountText();
-    final validationError = validateBillForm(_draft);
-    if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(billFormValidationMessage(l10n, validationError)),
-          backgroundColor: BsColors.danger,
-        ),
-      );
-      return null;
-    }
-
-    final paymentResult = await showAdaptiveSheet<BillPaymentResult>(
-      context: context,
-      title: l10n.saveBill,
-      child: BillPaymentSheet(grandTotal: _draft.grandTotal),
-    );
-    // Print/share is offered after save via exportBillAfterSave when requested.
-    if (paymentResult == null) return null;
-
     setState(() => _loading = true);
-    Bill? savedBill;
-    try {
-      savedBill = await saveBillForm(
-        ref.read(billingRefProvider),
-        draft: _draft,
-        payment: paymentResult,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
-        if (exportAfterSave) {
-          await exportBillAfterSave(ref, context, savedBill);
-        }
-        if (!mounted) return savedBill;
-        if (widget.onSaved != null) {
-          widget.onSaved!();
-        } else {
-          Navigator.pop(context, true);
-        }
-      }
-      return savedBill;
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppFailure.from(e).message(l10n)),
-            backgroundColor: BsColors.danger,
-          ),
-        );
-      }
-      return null;
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    final bill = await submitBillForm(
+      ref: ref,
+      context: context,
+      draft: _draft,
+      exportAfterSave: exportAfterSave,
+      onSaved: widget.onSaved,
+      popOnSuccess: widget.onSaved == null && !widget.embedded,
+    );
+    if (mounted) setState(() => _loading = false);
+    return bill;
   }
 
   @override
@@ -136,45 +81,11 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         final showPicker = !narrow || !_showCart || _draft.lines.isEmpty;
         final showCart = !narrow || _showCart;
 
-        Widget productPicker() => Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                BsSpacing.lg,
-                BsSpacing.sm,
-                BsSpacing.lg,
-                0,
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: l10n.filterProducts,
-                  prefixIcon: const Icon(Icons.search),
-                ),
-                onChanged: (v) => setState(() => _query = v.trim()),
-              ),
-            ),
-            Expanded(
-              child: ListView.separated(
-                itemCount: products.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return ListTile(
-                    leading: ProductImage(storagePath: product.imageUrl),
-                    title: Text(product.name),
-                    subtitle: Text(
-                      formatNpr(
-                        Paisa(product.referencePrice),
-                        showPaisa: false,
-                      ),
-                    ),
-                    trailing: StockBadge(product: product),
-                    onTap: () => _addProduct(product),
-                  );
-                },
-              ),
-            ),
-          ],
+        Widget productPicker() => BillFormProductPicker(
+          products: products,
+          query: _query,
+          onQueryChanged: (v) => setState(() => _query = v),
+          onProductSelected: _addProduct,
         );
 
         Widget cartPane() => Column(
@@ -209,7 +120,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                       itemCount: _draft.lines.length,
                       itemBuilder: (context, index) {
                         final line = _draft.lines[index];
-                        return _LineEditor(
+                        return BillFormLineEditor(
                           line: line,
                           onChanged: () => setState(() {}),
                           onRemove: () => setState(() {
@@ -344,114 +255,6 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _LineEditor extends StatefulWidget {
-  const _LineEditor({
-    required this.line,
-    required this.onChanged,
-    required this.onRemove,
-  });
-
-  final BillDraftLine line;
-  final VoidCallback onChanged;
-  final VoidCallback onRemove;
-
-  @override
-  State<_LineEditor> createState() => _LineEditorState();
-}
-
-class _LineEditorState extends State<_LineEditor> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final line = widget.line;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: BsSpacing.lg,
-        vertical: BsSpacing.sm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  line.product.name,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-              IconButton(
-                icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-                tooltip: l10n.edit,
-                onPressed: () => setState(() => _expanded = !_expanded),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: l10n.remove,
-                onPressed: widget.onRemove,
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              QtyStepper(
-                value: line.qty,
-                min: 1,
-                onChanged: (v) {
-                  line.setQty(v);
-                  widget.onChanged();
-                },
-              ),
-              const Spacer(),
-              Text(
-                formatNpr(Paisa(line.lineTotal), showPaisa: false),
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ],
-          ),
-          if (_expanded) ...[
-            const SizedBox(height: 8),
-            Text(l10n.rate),
-            TextFormField(
-              initialValue: formatNpr(
-                Paisa(line.rate),
-                showSymbol: false,
-                showPaisa: false,
-              ),
-              keyboardType: TextInputType.number,
-              onChanged: (v) {
-                line.rate = parseNpr(v)?.value ?? line.rate;
-                widget.onChanged();
-              },
-            ),
-            const SizedBox(height: 4),
-            Text(l10n.lineDiscount),
-            TextFormField(
-              initialValue: line.discount == 0
-                  ? ''
-                  : formatNpr(
-                      Paisa(line.discount),
-                      showSymbol: false,
-                      showPaisa: false,
-                    ),
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                errorText: line.discountValid ? null : l10n.discountExceedsLine,
-              ),
-              onChanged: (v) {
-                line.discount = parseNpr(v)?.value ?? 0;
-                widget.onChanged();
-              },
-            ),
-          ],
-        ],
       ),
     );
   }

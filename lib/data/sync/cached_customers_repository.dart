@@ -1,29 +1,26 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/utils/ledger_balance.dart';
-import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../local/app_database.dart';
 import '../local/local_mappers.dart';
+import '../remote/supabase_customers_repository.dart';
 import '../repositories/customers_repository.dart';
-import '../repositories/members_repository.dart';
 import 'sync_service.dart';
 
 class CachedCustomersRepository implements CustomersRepository {
   CachedCustomersRepository({
     required AppDatabase db,
-    required SupabaseClient? client,
+    required SupabaseCustomersRepository remote,
     SyncService? sync,
   }) : _db = db,
-       _client = client,
+       _remote = remote,
        _sync = sync;
 
   final AppDatabase _db;
-  final SupabaseClient? _client;
+  final SupabaseCustomersRepository _remote;
   final SyncService? _sync;
 
   @override
@@ -87,41 +84,14 @@ class CachedCustomersRepository implements CustomersRepository {
   }
 
   @override
-  Future<Customer?> getOwnProfile() async {
-    final client = _client;
-    if (client == null) return null;
-    final row = await client.from('customers').select().maybeSingle();
-    if (row == null) return null;
-    return Customer.fromJson(Map<String, dynamic>.from(row));
-  }
+  Future<Customer?> getOwnProfile() => _remote.getOwnProfile();
 
   @override
   Future<List<LedgerEntry>> ledger(
     String customerId, {
     int offset = 0,
     int? limit,
-  }) async {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    var query = client
-        .from('customer_ledger_entries')
-        .select()
-        .eq('customer_id', customerId)
-        .order('occurred_at', ascending: true)
-        .order('entry_type', ascending: true)
-        .order('ref_id', ascending: true);
-    if (limit != null) {
-      query = query.range(offset, offset + limit - 1);
-    }
-    final rows = await query;
-    final entries = (rows as List)
-        .map(
-          (row) => LedgerEntry.fromJson(Map<String, dynamic>.from(row as Map)),
-        )
-        .toList();
-    if (limit != null) return entries;
-    return withRunningBalance(entries);
-  }
+  }) => _remote.ledger(customerId, offset: offset, limit: limit);
 
   @override
   Future<Customer> update({
@@ -132,19 +102,15 @@ class CachedCustomersRepository implements CustomersRepository {
     String? address,
     required int openingBalance,
   }) async {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    await client
-        .from('customers')
-        .update({
-          'shop_name': shopName,
-          'contact_name': ?contactName,
-          'phone': ?phone,
-          'address': ?address,
-          'opening_balance': openingBalance,
-        })
-        .eq('id', id);
-    final updated = await _fetchBalanceRow(id);
+    await _remote.update(
+      id: id,
+      shopName: shopName,
+      contactName: contactName,
+      phone: phone,
+      address: address,
+      openingBalance: openingBalance,
+    );
+    final updated = await _remote.getBalanceRow(id);
     await _upsertLocal(updated);
     final sync = _sync;
     if (sync != null) unawaited(sync.syncNow());
@@ -163,53 +129,22 @@ class CachedCustomersRepository implements CustomersRepository {
     int openingBalance = 0,
     bool portalEnabled = true,
   }) async {
-    final membersRepo = MembersRepository(_client);
-    final result = await membersRepo.createMember(
+    final created = await _remote.createWithCredentials(
       email: email,
       password: password,
-      role: Role.customer,
       displayName: displayName,
-      phone: phone,
       shopName: shopName,
       contactName: contactName,
+      phone: phone,
       address: address,
       openingBalance: openingBalance,
-      isActive: portalEnabled,
+      portalEnabled: portalEnabled,
     );
-    final customerId = result.customerId;
-    if (customerId == null) {
-      throw Exception('Customer was not created');
-    }
-    final customer = await _fetchBalanceRow(customerId);
+    final customer = await _remote.getBalanceRow(created.id);
     await _upsertLocal(customer);
     final sync = _sync;
     if (sync != null) unawaited(sync.syncNow());
     return customer;
-  }
-
-  Future<Customer> _fetchBalanceRow(String customerId) async {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    final row = await client
-        .from('customer_balances')
-        .select()
-        .eq('customer_id', customerId)
-        .single();
-    final map = Map<String, dynamic>.from(row as Map);
-    return Customer(
-      id: map['customer_id'] as String,
-      businessId: map['business_id'] as String,
-      memberId: map['member_id'] as String? ?? '',
-      shopName: map['shop_name'] as String,
-      contactName: map['contact_name'] as String?,
-      phone: map['phone'] as String?,
-      address: map['address'] as String?,
-      openingBalance: (map['opening_balance'] as num?)?.toInt() ?? 0,
-      balanceDue: (map['balance_due'] as num?)?.toInt() ?? 0,
-      createdAt: map['created_at'] == null
-          ? null
-          : DateTime.parse(map['created_at'] as String),
-    );
   }
 
   Future<void> _upsertLocal(Customer customer) async {

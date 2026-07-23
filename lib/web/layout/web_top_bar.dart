@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/bs_touch_targets.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/role_label.dart';
 import '../../domain/enums.dart';
@@ -26,7 +28,9 @@ class WebTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final unread = ref.watch(unreadNotificationCountProvider);
+    final unreadAsync = ref.watch(unreadNotificationCountProvider);
+    final unread = unreadAsync.value ?? 0;
+    final badgeLabel = formatUnreadBadge(unread);
     final tokens = context.webTokens;
     final auth = ref.watch(authProvider).value;
     final name = auth?.member?.displayName ?? '';
@@ -58,41 +62,54 @@ class WebTopBar extends ConsumerWidget {
           const SizedBox(width: 4),
           Builder(
             builder: (buttonContext) {
-              return IconButton(
-                tooltip: l10n.notifications,
-                onPressed: () {
-                  final memberRole = ref.read(authProvider).value?.member?.role;
-                  showNotificationDropdown(
-                    buttonContext: buttonContext,
-                    onOpenItem: (navContext, item) {
-                      openWebNotificationTarget(
-                        navContext,
-                        item,
-                        role: ref.read(authProvider).value?.member?.role,
-                      );
-                    },
-                    onViewAll: memberRole == null
-                        ? null
-                        : () => context.go(
-                            '${webRoleBasePath(memberRole)}/notifications',
+              final semanticLabel = unread > 0
+                  ? '${l10n.notifications}, $unread unread'
+                  : l10n.notifications;
+              return Semantics(
+                button: true,
+                label: semanticLabel,
+                child: ExcludeSemantics(
+                  child: BsTouchTargets.ensureMin(
+                    context: context,
+                    child: IconButton(
+                      tooltip: l10n.notifications,
+                      onPressed: () {
+                        final memberRole =
+                            ref.read(authProvider).value?.member?.role;
+                        showNotificationDropdown(
+                          buttonContext: buttonContext,
+                          onOpenItem: (navContext, item) {
+                            openWebNotificationTarget(
+                              navContext,
+                              item,
+                              role: ref.read(authProvider).value?.member?.role,
+                            );
+                          },
+                          onViewAll: memberRole == null
+                              ? null
+                              : () => context.go(
+                                  '${webRoleBasePath(memberRole)}/notifications',
+                                ),
+                        );
+                      },
+                      icon: Badge(
+                        isLabelVisible: unread > 0,
+                        backgroundColor: BsSemanticColors.notificationUnread,
+                        label: Text(
+                          badgeLabel,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
                           ),
-                  );
-                },
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  backgroundColor: WebPalette.brass,
-                  label: Text(
-                    unread > 9 ? '9+' : '$unread',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                        ),
+                        child: const Icon(
+                          PhosphorIconsRegular.bell,
+                          color: WebPalette.inkSoft,
+                          size: 21,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Icon(
-                    PhosphorIconsRegular.bell,
-                    color: WebPalette.inkSoft,
-                    size: 21,
                   ),
                 ),
               );

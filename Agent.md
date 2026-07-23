@@ -33,6 +33,7 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 
 - Pick tasks from `tasks.md`, respect phase order; mark items ✅ when completed.
 - Run `flutter analyze` and `flutter test` before considering a task done; zero analyzer warnings.
+- For a full local pre-release check, run `scripts/local_hardening_gate.ps1` (see `docs/LOCAL_TESTING.md`). Set `HARDENING_GATE=1` to fail on missing Docker/Deno instead of skipping.
 - For DB/RLS/permission changes: run `supabase test db` and add or update a per-role test proving both the allow and the deny path.
 - Test on at least Android + Web for any UI change (layouts must be responsive).
 - Keep diffs focused; don't refactor unrelated code in feature PRs.

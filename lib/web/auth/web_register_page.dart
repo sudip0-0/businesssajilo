@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../app.dart';
+import '../../core/layout/bs_breakpoints.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../features/auth/login_screen.dart';
@@ -80,7 +81,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
     final l10n = AppLocalizations.of(context);
     final locale = ref.watch(localeProvider);
 
-    final compact = MediaQuery.sizeOf(context).width < 768;
+    final compact = MediaQuery.sizeOf(context).width < BsBreakpoints.tablet;
 
     return Scaffold(
       backgroundColor: WebPalette.paper,
@@ -121,7 +122,7 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
             padding: EdgeInsets.fromLTRB(48, 48, 48, 48 + bottomInset),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+              constraints: const BoxConstraints(maxWidth: BsBreakpoints.phoneCompact),
               child: Form(
                 key: _formKey,
                 child: Column(

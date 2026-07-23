@@ -3,27 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../core/export/export_actions.dart';
+import '../../../core/layout/bs_breakpoints.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/utils/money.dart';
-import '../../../core/utils/report_range.dart';
+import '../../../core/ui/error_state.dart';
 import '../../../domain/enums.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
+import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../../features/reports/providers.dart';
-import '../web_page_scaffold.dart';
+import '../../../features/reports/report_export_actions.dart';
+import '../../../core/testing/integration_keys.dart';
 import '../../layout/web_bento_grid.dart';
-import '../../../core/ui/bs_sales_line_chart.dart';
 import '../../theme/web_palette.dart';
 import '../../theme/web_typography.dart';
 import '../../ui/web_search_field.dart';
-import '../../ui/web_stat_tile.dart';
-import '../../../core/testing/integration_keys.dart';
+import '../web_page_scaffold.dart';
+import 'sections/web_dashboard_kpi_grid.dart';
 import 'sections/web_dashboard_recent_activity.dart';
+import 'sections/web_dashboard_sales_chart.dart';
 import 'sections/web_dashboard_transactions_table.dart';
-
 class WebOwnerDashboardPage extends ConsumerStatefulWidget {
   const WebOwnerDashboardPage({super.key});
 
@@ -36,14 +36,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
   bool _weeklyChart = true;
 
   Future<void> _refresh() async {
-    ref.invalidate(last7DaySalesProvider);
-    ref.invalidate(salesDailyProvider(ReportRange.last30Days));
-    ref.invalidate(ownerDashboardStatsProvider);
-    ref.invalidate(lowStockAlertsProvider);
-    ref.invalidate(todaysBillsProvider);
-    ref.invalidate(recentCustomersProvider);
+    invalidateOwnerDashboardWidget(ref);
   }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -82,209 +76,22 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              WebBentoGrid(
-                children: [
-                  WebStatTile(
-                    label: l10n.todaysSales,
-                    value: stats.when(
-                      data: (d) => d.todaySales == null
-                          ? l10n.valueUnavailable
-                          : formatNpr(Paisa(d.todaySales!), showPaisa: false),
-                      loading: () => '…',
-                      error: (_, _) => '—',
-                    ),
-                    icon: PhosphorIconsRegular.currencyDollar,
-                    trend: stats.when(
-                      data: (d) {
-                        final pct = d.salesTrendPercent;
-                        if (pct == null) return null;
-                        return pct >= 0
-                            ? WebTrendDirection.up
-                            : WebTrendDirection.down;
-                      },
-                      loading: () => null,
-                      error: (_, _) => null,
-                    ),
-                    trendLabel: stats.when(
-                      data: (d) {
-                        final pct = d.salesTrendPercent;
-                        return pct == null
-                            ? null
-                            : '${pct.abs().toStringAsFixed(0)}%';
-                      },
-                      loading: () => null,
-                      error: (_, _) => null,
-                    ),
-                    onTap: () => context.go('/owner/reports/sales'),
-                  ),
-                  WebStatTile(
-                    label: l10n.totalDues,
-                    value: stats.when(
-                      data: (d) => d.totalDues == null
-                          ? l10n.valueUnavailable
-                          : formatNpr(Paisa(d.totalDues!), showPaisa: false),
-                      loading: () => '…',
-                      error: (_, _) => '—',
-                    ),
-                    icon: PhosphorIconsRegular.wallet,
-                    onTap: () => context.go('/owner/reports/dues'),
-                  ),
-                  WebStatTile(
-                    label: l10n.lowStock,
-                    value: stats.when(
-                      data: (d) => d.lowStockCount == null
-                          ? l10n.valueUnavailable
-                          : '${d.lowStockCount} ${l10n.products.toLowerCase()}',
-                      loading: () => '…',
-                      error: (_, _) => '—',
-                    ),
-                    icon: PhosphorIconsRegular.package,
-                    subtitle: stats.when(
-                      data: (d) =>
-                          (d.lowStockCount ?? 0) > 0 ? l10n.reorderSoon : null,
-                      loading: () => null,
-                      error: (_, _) => null,
-                    ),
-                    onTap: () => context.go('/owner/reports/stock'),
-                  ),
-                  WebStatTile(
-                    label: l10n.pendingOrders,
-                    value: stats.when(
-                      data: (d) => d.pendingOrders == null
-                          ? l10n.valueUnavailable
-                          : '${d.pendingOrders} ${l10n.orders.toLowerCase()}',
-                      loading: () => '…',
-                      error: (_, _) => '—',
-                    ),
-                    icon: PhosphorIconsRegular.shoppingCart,
-                    trendLabel: stats.when(
-                      data: (d) => (d.pendingOrders ?? 0) > 0
-                          ? '${d.pendingOrders} NEW'
-                          : null,
-                      loading: () => null,
-                      error: (_, _) => null,
-                    ),
-                    trend: stats.when(
-                      data: (d) => (d.pendingOrders ?? 0) > 0
-                          ? WebTrendDirection.neutral
-                          : null,
-                      loading: () => null,
-                      error: (_, _) => null,
-                    ),
-                    onTap: () => context.go('/owner/orders'),
-                  ),
-                ],
+              WebDashboardKpiGrid(
+                stats: stats,
+                onRetry: () => ref.invalidate(ownerDashboardStatsProvider),
               ),
               const SizedBox(height: 16),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 1024;
-                  final chartSection = WebBentoTile(
-                    minHeight: 320,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        LayoutBuilder(
-                          builder: (context, headerConstraints) {
-                            final stackHeader =
-                                headerConstraints.maxWidth < 480;
-                            final titleBlock = Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.salesPerformance,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                                Text(
-                                  _weeklyChart
-                                      ? l10n.salesPerformanceSubtitle
-                                      : l10n.salesPerformanceSubtitleMonthly,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: WebPalette.inkSoft),
-                                ),
-                              ],
-                            );
-                            final rangeToggle = SegmentedButton<bool>(
-                              showSelectedIcon: false,
-                              style: const ButtonStyle(
-                                visualDensity: VisualDensity.compact,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              segments: [
-                                ButtonSegment(
-                                  value: true,
-                                  label: Text(
-                                    l10n.weekly,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                ButtonSegment(
-                                  value: false,
-                                  label: Text(
-                                    l10n.monthly,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                              selected: {_weeklyChart},
-                              onSelectionChanged: (s) =>
-                                  setState(() => _weeklyChart = s.first),
-                            );
-
-                            if (stackHeader) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  titleBlock,
-                                  const SizedBox(height: 12),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: rangeToggle,
-                                  ),
-                                ],
-                              );
-                            }
-
-                            return Row(
-                              children: [
-                                Expanded(child: titleBlock),
-                                rangeToggle,
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        chartData.when(
-                          data: (data) {
-                            final window = dateRangeFor(chartRange);
-                            final filled = fillSalesDailyGaps(
-                              points: data,
-                              from: window.from,
-                              to: window.to,
-                            );
-                            return BsSalesLineChart(
-                              key: ValueKey(chartRange),
-                              points: filled,
-                              height: 220,
-                              period: _weeklyChart
-                                  ? SalesChartPeriod.weekly
-                                  : SalesChartPeriod.monthly,
-                            );
-                          },
-                          loading: () => const SizedBox(
-                            height: 200,
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                          error: (_, _) => const SizedBox(height: 200),
-                        ),
-                      ],
-                    ),
+                  final wide = constraints.maxWidth >= BsBreakpoints.desktop;
+                  final chartSection = WebDashboardSalesChart(
+                    weeklyChart: _weeklyChart,
+                    chartData: chartData,
+                    chartRange: chartRange,
+                    onRangeChanged: (v) => setState(() => _weeklyChart = v),
+                    onRetry: () =>
+                        ref.invalidate(salesDailyProvider(chartRange)),
                   );
-
                   final sideSection = Column(
                     children: [
                       WebBentoTile(
@@ -330,8 +137,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                                 bills: todaysBills,
                                 lowStockAlerts: lowStockAlerts,
                                 recentCustomers: recentCustomers,
-                              ),
-                            ),
+                                onRetry: _refresh,
+                              ),                            ),
                           ],
                         ),
                       ),
@@ -388,8 +195,10 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                           WebDashboardTransactionsTable(bills: bills),
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (_, _) => Text(l10n.loadingFailed),
-                    ),
+                      error: (_, _) => ErrorState(
+                        message: l10n.loadingFailed,
+                        onRetry: () => ref.invalidate(todaysBillsProvider),
+                      ),                    ),
                     const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.center,

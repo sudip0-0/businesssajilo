@@ -1,29 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/enums.dart';
 import '../../domain/models/member.dart';
+import '../remote/supabase_members_repository.dart';
 import '../remote/supabase_provider.dart';
 
 final membersRepositoryProvider = Provider<MembersRepository>((ref) {
-  return MembersRepository(ref.watch(supabaseClientProvider));
+  return SupabaseMembersRepository(ref.watch(supabaseClientProvider));
 });
 
-class MembersRepository {
-  MembersRepository(this._client);
-
-  final SupabaseClient? _client;
-
-  Future<List<Member>> listMembers() async {
-    final client = requireSupabaseClient(_client);
-    final rows = await client
-        .from('members')
-        .select()
-        .order('created_at', ascending: true);
-    return (rows as List)
-        .map((row) => Member.fromJson(row as Map<String, dynamic>))
-        .toList();
-  }
+abstract class MembersRepository {
+  Future<List<Member>> listMembers();
 
   /// [email] may be omitted when [phone] is given; the Edge Function then
   /// derives a synthetic login email from the phone number.
@@ -41,76 +28,16 @@ class MembersRepository {
     String? address,
     int openingBalance = 0,
     bool isActive = true,
-  }) async {
-    final client = requireSupabaseClient(_client);
-    final response = await client.functions.invoke(
-      'create-member',
-      body: {
-        'email': ?email,
-        'password': password,
-        'role': role.name,
-        'displayName': displayName,
-        'phone': ?phone,
-        'shopName': ?shopName,
-        'contactName': ?contactName,
-        'address': ?address,
-        'openingBalance': openingBalance,
-        'isActive': isActive,
-      },
-    );
-
-    if (response.status != 200) {
-      final data = response.data;
-      final message = data is Map ? data['error']?.toString() : null;
-      throw Exception(message ?? 'Failed to create member');
-    }
-
-    final data = response.data as Map<String, dynamic>;
-    return (
-      memberId: data['memberId'] as String,
-      customerId: data['customerId'] as String?,
-    );
-  }
+  });
 
   /// Owner sets a temporary password for a member (staff or customer).
   /// The member is forced to choose a new password on next login.
   Future<void> resetMemberPassword({
     required String memberId,
     required String newPassword,
-  }) async {
-    final client = requireSupabaseClient(_client);
-    final response = await client.functions.invoke(
-      'reset-member-password',
-      body: {'memberId': memberId, 'newPassword': newPassword},
-    );
-    if (response.status != 200) {
-      final data = response.data;
-      final message = data is Map ? data['error']?.toString() : null;
-      throw Exception(message ?? 'Failed to reset password');
-    }
-  }
+  });
 
-  Future<void> deactivateMember(String memberId) async {
-    final client = requireSupabaseClient(_client);
-    await client
-        .from('members')
-        .update({'is_active': false})
-        .eq('id', memberId);
-  }
-
-  Future<void> activateMember(String memberId) async {
-    final client = requireSupabaseClient(_client);
-    await client.from('members').update({'is_active': true}).eq('id', memberId);
-  }
-
-  Future<Member?> getMember(String memberId) async {
-    final client = requireSupabaseClient(_client);
-    final row = await client
-        .from('members')
-        .select()
-        .eq('id', memberId)
-        .maybeSingle();
-    if (row == null) return null;
-    return Member.fromJson(Map<String, dynamic>.from(row));
-  }
+  Future<void> deactivateMember(String memberId);
+  Future<void> activateMember(String memberId);
+  Future<Member?> getMember(String memberId);
 }
