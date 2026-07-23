@@ -23,7 +23,7 @@ void main() {
         ShellRoute(
           builder: (context, state, child) => WebAppShell(
             navItems: [
-              WebNavItem(
+              const WebNavItem(
                 label: 'Reports',
                 path: '/owner/reports',
                 icon: PhosphorIconsRegular.chartBar,

@@ -809,7 +809,7 @@ class _FormsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              const Expanded(
                 flex: 2,
                 child: Column(
                   children: [
@@ -817,8 +817,8 @@ class _FormsPage extends StatelessWidget {
                       minHeight: 220,
                       child: Column(
                         children: [
-                          const SizedBox(height: 8),
-                          const Expanded(
+                          SizedBox(height: 8),
+                          Expanded(
                             child: WebEmptyState(
                               message: 'No customers yet. Add your first shop to start billing.',
                               actionLabel: 'Add Customer',
@@ -828,8 +828,8 @@ class _FormsPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const WebBentoTile(
+                    SizedBox(height: 16),
+                    WebBentoTile(
                       minHeight: 220,
                       padding: EdgeInsets.all(8),
                       child: SizedBox(

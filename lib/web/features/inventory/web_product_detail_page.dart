@@ -37,14 +37,14 @@ class WebProductDetailPage extends ConsumerWidget {
       actions: [
         OutlinedButton.icon(
           onPressed: () => context.go(inventoryListPath),
-          icon: Icon(PhosphorIconsRegular.arrowLeft),
+          icon: const Icon(PhosphorIconsRegular.arrowLeft),
           label: Text(l10n.inventory),
         ),
         if (canEdit) ...[
           const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () => context.push('$inventoryListPath/$productId/edit'),
-            icon: Icon(PhosphorIconsRegular.pencilSimple),
+            icon: const Icon(PhosphorIconsRegular.pencilSimple),
             label: Text(l10n.editProduct),
           ),
         ],

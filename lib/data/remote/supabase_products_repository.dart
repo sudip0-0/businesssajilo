@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -180,10 +181,12 @@ class SupabaseProductsRepository implements ProductsRepository {
         .createSignedUrl(storagePath, 60 * 60 * 24);
     _signedUrlCache[storagePath] = future;
     // Don't cache failures.
-    future.catchError((Object _) {
-      _signedUrlCache.remove(storagePath);
-      return '';
-    });
+    unawaited(
+      future.catchError((Object _) {
+        _signedUrlCache.remove(storagePath);
+        return '';
+      }),
+    );
     return future;
   }
 

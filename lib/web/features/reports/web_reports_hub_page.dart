@@ -101,7 +101,7 @@ class WebReportsHubPage extends ConsumerWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const Spacer(),
-                          Icon(
+                          const Icon(
                             PhosphorIconsRegular.arrowRight,
                             size: 16,
                             color: WebPalette.inkSoft,
@@ -223,7 +223,10 @@ class _ReportNavCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(PhosphorIconsRegular.caretRight, color: WebPalette.inkSoft),
+          const Icon(
+            PhosphorIconsRegular.caretRight,
+            color: WebPalette.inkSoft,
+          ),
         ],
       ),
     );

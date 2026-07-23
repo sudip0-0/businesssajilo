@@ -1,11 +1,10 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'auth_user.dart';
 import 'member.dart';
 
 class SessionState {
   const SessionState({this.user, this.member});
 
-  final User? user;
+  final AuthUser? user;
   final Member? member;
 
   bool get isAuthenticated =>

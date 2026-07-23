@@ -79,7 +79,7 @@ class _OwnerOnboardingOverlayState
       children: [
         widget.child,
         if (showOverlay) ...[
-          Positioned.fill(
+          const Positioned.fill(
             child: ModalBarrier(dismissible: false, color: Colors.black54),
           ),
           Center(

@@ -106,7 +106,7 @@ class _CreateBillButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: Icon(PhosphorIconsRegular.plus, size: 18),
+            child: const Icon(PhosphorIconsRegular.plus, size: 18),
           ),
         ),
       );
@@ -117,7 +117,7 @@ class _CreateBillButton extends StatelessWidget {
       child: FilledButton.icon(
         key: IntegrationKeys.sidebarCreateBill,
         onPressed: onPressed,
-        icon: Icon(PhosphorIconsRegular.plus, size: 18),
+        icon: const Icon(PhosphorIconsRegular.plus, size: 18),
         label: Text(label),
       ),
     );

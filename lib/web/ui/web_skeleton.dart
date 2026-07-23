@@ -46,7 +46,7 @@ class WebListSkeleton extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (_, i) => Row(
         children: [
-          WebSkeleton(
+          const WebSkeleton(
             width: 40,
             height: 40,
             borderRadius: 10,
@@ -56,11 +56,11 @@ class WebListSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                WebSkeleton(
+                const WebSkeleton(
                   height: 14,
                 ).animate().fadeIn(delay: (i * 60 + 20).ms),
                 const SizedBox(height: 8),
-                WebSkeleton(
+                const WebSkeleton(
                   width: 120,
                   height: 12,
                 ).animate().fadeIn(delay: (i * 60 + 40).ms),

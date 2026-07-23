@@ -23,7 +23,7 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 
 - **State management:** Riverpod 3 with hand-written `Notifier`/`AsyncNotifier` providers — **no riverpod codegen** (riverpod_generator conflicts with drift_dev on analyzer versions). Navigation: go_router with role-based redirects.
 - **Models:** freezed + json_serializable. Enums for `Role`, `OrderStatus`, `BillStatus`, `PaymentMethod` — match Postgres enums exactly.
-- **Layering:** features depend on repositories (interfaces in `domain/`); repository implementations choose remote vs local+sync. Never call `supabase_flutter` directly from widgets.
+- **Layering:** features depend on repositories (interfaces in `lib/data/repositories/`); repository implementations choose remote vs local+sync. Never call `supabase_flutter` directly from widgets.
 - **DB changes:** only via migration files in `supabase/migrations/` (Supabase CLI). Every new table ships with RLS policies + policy tests in the same migration/PR.
 - **Money:** integer paisa or `NUMERIC` in DB; format with `MoneyText`/money formatter (Nepali grouping). Never use doubles for currency math.
 - **Dates:** store UTC timestamps; display via BS/AD utils in `core/`.

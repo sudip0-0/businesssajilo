@@ -15,15 +15,15 @@ void main() {
         overrides: [
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
-        child: MaterialApp(
-          localizationsDelegates: const [
+        child: const MaterialApp(
+          localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: NotificationBellAction()),
+          home: Scaffold(body: NotificationBellAction()),
         ),
       ),
     );
@@ -39,15 +39,15 @@ void main() {
         overrides: [
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
-        child: MaterialApp(
-          localizationsDelegates: const [
+        child: const MaterialApp(
+          localizationsDelegates: [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(56),
               child: ColoredBox(

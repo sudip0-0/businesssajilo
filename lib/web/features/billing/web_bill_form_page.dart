@@ -66,7 +66,7 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
         const SizedBox(width: 8),
         FilledButton.icon(
           onPressed: () => _formKey.currentState?.saveBill(),
-          icon: Icon(PhosphorIconsRegular.floppyDisk, size: 18),
+          icon: const Icon(PhosphorIconsRegular.floppyDisk, size: 18),
           label: Text(l10n.saveBill),
         ),
       ],

@@ -28,7 +28,7 @@ class WebSalesDashboardPage extends ConsumerWidget {
       actions: [
         FilledButton.icon(
           onPressed: () => context.go('/sales/billing/new'),
-          icon: Icon(PhosphorIconsRegular.receipt),
+          icon: const Icon(PhosphorIconsRegular.receipt),
           label: Text(l10n.newBill),
         ),
       ],

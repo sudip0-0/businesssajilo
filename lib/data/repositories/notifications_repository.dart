@@ -1,71 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/models/notification_item.dart';
+import '../remote/supabase_notifications_repository.dart';
 import '../remote/supabase_provider.dart';
 
 final notificationsRepositoryProvider = Provider<NotificationsRepository>((
   ref,
 ) {
-  return NotificationsRepository(ref.watch(supabaseClientProvider));
+  return SupabaseNotificationsRepository(ref.watch(supabaseClientProvider));
 });
 
-class NotificationsRepository {
-  NotificationsRepository(this._client);
-
-  final SupabaseClient? _client;
-
-  static const _listCap = 100;
-
-  Future<List<NotificationItem>> list() async {
-    final client = requireSupabaseClient(_client);
-    final rows = await client
-        .from('notifications')
-        .select()
-        .order('created_at', ascending: false)
-        .limit(_listCap);
-    return (rows as List)
-        .map((row) => NotificationItem.fromJson(row as Map<String, dynamic>))
-        .toList();
-  }
-
-  Stream<List<NotificationItem>> watch() {
-    final client = requireSupabaseClient(_client);
-    return client
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false)
-        .map(
-          (rows) => rows
-              .take(_listCap)
-              .map((row) => NotificationItem.fromJson(row))
-              .toList(),
-        );
-  }
-
-  Future<int> unreadCount() async {
-    final client = requireSupabaseClient(_client);
-    final rows = await client
-        .from('notifications')
-        .select('id')
-        .isFilter('read_at', null);
-    return (rows as List).length;
-  }
-
-  Future<void> markRead(String id) async {
-    final client = requireSupabaseClient(_client);
-    await client
-        .from('notifications')
-        .update({'read_at': DateTime.now().toUtc().toIso8601String()})
-        .eq('id', id)
-        .isFilter('read_at', null);
-  }
-
-  Future<void> markAllRead() async {
-    final client = requireSupabaseClient(_client);
-    await client
-        .from('notifications')
-        .update({'read_at': DateTime.now().toUtc().toIso8601String()})
-        .isFilter('read_at', null);
-  }
+abstract class NotificationsRepository {
+  Future<List<NotificationItem>> list();
+  Stream<List<NotificationItem>> watch();
+  Future<int> unreadCount();
+  Future<void> markRead(String id);
+  Future<void> markAllRead();
 }

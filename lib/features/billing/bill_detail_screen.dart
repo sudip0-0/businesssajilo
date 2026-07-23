@@ -176,7 +176,7 @@ class _ReturnItemsButton extends ConsumerWidget {
             if (embedded) {
               final segments = GoRouterState.of(context).uri.pathSegments;
               if (segments.length >= 2) {
-                context.push(
+                await context.push(
                   '/${segments[0]}/${segments[1]}/${bill.id}/return',
                 );
               }

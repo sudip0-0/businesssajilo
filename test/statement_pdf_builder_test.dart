@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 StatementDocument _nepaliDoc() {
   return StatementDocument(
-    business: Business(
+    business: const Business(
       id: 'biz1',
       name: 'राम स्टोर',
       phone: '9800000000',

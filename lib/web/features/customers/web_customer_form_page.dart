@@ -148,7 +148,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(PhosphorIconsRegular.floppyDisk, size: 18),
+              : const Icon(PhosphorIconsRegular.floppyDisk, size: 18),
           label: Text(l10n.saveCustomer),
         ),
       ],

@@ -60,13 +60,13 @@ class _WebProductFormPageState extends ConsumerState<WebProductFormPage> {
               context.go(widget.inventoryListPath);
             }
           },
-          icon: Icon(PhosphorIconsRegular.x),
+          icon: const Icon(PhosphorIconsRegular.x),
           label: Text(l10n.cancel),
         ),
         const SizedBox(width: 8),
         FilledButton.icon(
           onPressed: () => _formKey.currentState?.submit(),
-          icon: Icon(PhosphorIconsRegular.floppyDisk, size: 18),
+          icon: const Icon(PhosphorIconsRegular.floppyDisk, size: 18),
           label: Text(l10n.save),
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
@@ -9,7 +10,6 @@ import '../../core/ui/paginated_list_state.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/models/product.dart';
-import 'product_detail_screen.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'providers.dart';
@@ -193,16 +193,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   Future<void> _openDetail(BuildContext context, Product product) async {
-    final changed = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProductDetailScreen(
-          productId: product.id,
-          canManageStock: widget.canManageStock,
-          canEditProduct: widget.canEdit,
-        ),
-      ),
-    );
+    final changed = await context.push<bool>('/product/${product.id}');
     if (changed == true) {
       await _pager?.refresh();
       ref.invalidate(lowStockCountProvider);

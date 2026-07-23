@@ -103,7 +103,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
         const SizedBox(width: 8),
         FilledButton.icon(
           onPressed: _openAddMember,
-          icon: Icon(PhosphorIconsRegular.userPlus),
+          icon: const Icon(PhosphorIconsRegular.userPlus),
           label: Text(l10n.addMember),
         ),
       ],
@@ -150,7 +150,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                 }),
               ),
               DataColumn(label: Text(l10n.active)),
-              DataColumn(label: Text('')),
+              const DataColumn(label: Text('')),
             ],
             items: sorted,
             sortColumnIndex: _sortColumnIndex,
@@ -197,7 +197,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                           children: [
                             IconButton(
                               tooltip: l10n.resetPassword,
-                              icon: Icon(PhosphorIconsRegular.lockKey),
+                              icon: const Icon(PhosphorIconsRegular.lockKey),
                               onPressed: () => showResetMemberPasswordSheet(
                                 context,
                                 memberId: member.id,
@@ -207,13 +207,15 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                             if (member.isActive)
                               IconButton(
                                 tooltip: l10n.deactivate,
-                                icon: Icon(PhosphorIconsRegular.userMinus),
+                                icon: const Icon(
+                                  PhosphorIconsRegular.userMinus,
+                                ),
                                 onPressed: () => _deactivate(member),
                               )
                             else
                               IconButton(
                                 tooltip: l10n.reactivate,
-                                icon: Icon(PhosphorIconsRegular.userPlus),
+                                icon: const Icon(PhosphorIconsRegular.userPlus),
                                 onPressed: () => _reactivate(member),
                               ),
                           ],

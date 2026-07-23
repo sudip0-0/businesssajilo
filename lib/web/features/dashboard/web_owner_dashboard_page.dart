@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/export/export_actions.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/report_range.dart';
 import '../../../domain/enums.dart';
-import '../../../domain/models/bill.dart';
-import '../../../domain/models/customer.dart';
-import '../../../domain/models/product.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
@@ -26,6 +21,8 @@ import '../../theme/web_typography.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_stat_tile.dart';
 import '../../../core/testing/integration_keys.dart';
+import 'sections/web_dashboard_recent_activity.dart';
+import 'sections/web_dashboard_transactions_table.dart';
 
 class WebOwnerDashboardPage extends ConsumerStatefulWidget {
   const WebOwnerDashboardPage({super.key});
@@ -74,7 +71,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
         OutlinedButton.icon(
           key: IntegrationKeys.dashboardNewBill,
           onPressed: () => context.push('/owner/billing/new'),
-          icon: Icon(PhosphorIconsRegular.receipt, size: 18),
+          icon: const Icon(PhosphorIconsRegular.receipt, size: 18),
           label: Text(l10n.newBill),
         ),
       ],
@@ -329,7 +326,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                             const SizedBox(height: 12),
                             SizedBox(
                               height: 160,
-                              child: _RecentActivityList(
+                              child: WebDashboardRecentActivity(
                                 bills: todaysBills,
                                 lowStockAlerts: lowStockAlerts,
                                 recentCustomers: recentCustomers,
@@ -377,14 +374,18 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                           onPressed: todaysBills.hasValue
                               ? () => exportTodaysBillsCsv(ref, context)
                               : null,
-                          icon: Icon(PhosphorIconsRegular.export, size: 16),
+                          icon: const Icon(
+                            PhosphorIconsRegular.export,
+                            size: 16,
+                          ),
                           label: Text(l10n.export),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     todaysBills.when(
-                      data: (bills) => _TransactionsTable(bills: bills),
+                      data: (bills) =>
+                          WebDashboardTransactionsTable(bills: bills),
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
                       error: (_, _) => Text(l10n.loadingFailed),
@@ -394,7 +395,10 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                       alignment: Alignment.center,
                       child: TextButton.icon(
                         onPressed: () => context.go('/owner/billing'),
-                        icon: Icon(PhosphorIconsRegular.arrowRight, size: 16),
+                        icon: const Icon(
+                          PhosphorIconsRegular.arrowRight,
+                          size: 16,
+                        ),
                         label: Text(l10n.viewAllHistory),
                       ),
                     ),
@@ -439,284 +443,5 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
         ),
       ),
     );
-  }
-}
-
-class _RecentActivityList extends StatelessWidget {
-  const _RecentActivityList({
-    required this.bills,
-    required this.lowStockAlerts,
-    required this.recentCustomers,
-  });
-
-  final AsyncValue<List<Bill>> bills;
-  final AsyncValue<List<Product>> lowStockAlerts;
-  final AsyncValue<List<Customer>> recentCustomers;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final items = <_ActivityItem>[];
-
-    bills.whenData((list) {
-      for (final bill in list.take(3)) {
-        items.add(
-          _ActivityItem(
-            icon: PhosphorIconsRegular.receipt,
-            color: WebPalette.navy,
-            text: l10n.newBillCreated(bill.billNo),
-            onTap: () => context.go('/owner/billing/${bill.id}'),
-          ),
-        );
-      }
-    });
-
-    lowStockAlerts.whenData((list) {
-      for (final p in list) {
-        items.add(
-          _ActivityItem(
-            icon: PhosphorIconsRegular.warning,
-            color: WebPalette.danger,
-            text: l10n.lowStockAlert(p.name),
-            onTap: () => context.go('/owner/inventory/${p.id}'),
-          ),
-        );
-      }
-    });
-
-    recentCustomers.whenData((list) {
-      for (final c in list) {
-        items.add(
-          _ActivityItem(
-            icon: PhosphorIconsRegular.user,
-            color: WebPalette.success,
-            text: l10n.newCustomerAdded(c.shopName),
-            onTap: () => context.go('/owner/customers/${c.id}'),
-          ),
-        );
-      }
-    });
-
-    if (items.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.noRecentActivity,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: items.length.clamp(0, 5),
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, index) => items[index],
-    );
-  }
-}
-
-class _ActivityItem extends StatelessWidget {
-  const _ActivityItem({
-    required this.icon,
-    required this.color,
-    required this.text,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final Color color;
-  final String text;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(icon, size: 14, color: color),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.bodySmall,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TransactionsTable extends StatelessWidget {
-  const _TransactionsTable({required this.bills});
-
-  final List<Bill> bills;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final timeFmt = DateFormat.jm();
-
-    if (bills.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Center(
-          child: Text(
-            l10n.noSalesInPeriod,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: WebPalette.inkSoft),
-          ),
-        ),
-      );
-    }
-
-    final headerStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
-      color: WebPalette.inkSoft,
-      fontWeight: FontWeight.w600,
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const minTableWidth = 720.0;
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: constraints.maxWidth < minTableWidth
-                  ? minTableWidth
-                  : constraints.maxWidth,
-            ),
-            child: Table(
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              columnWidths: const {
-                0: FixedColumnWidth(72),
-                1: FlexColumnWidth(2.4),
-                2: FlexColumnWidth(1.1),
-                3: FlexColumnWidth(1.1),
-                4: FlexColumnWidth(1.3),
-                5: FlexColumnWidth(1.2),
-              },
-              children: [
-                TableRow(
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: WebPalette.hairline),
-                    ),
-                  ),
-                  children: [
-                    _headerCell(l10n.sn, headerStyle),
-                    _headerCell(l10n.customerName, headerStyle),
-                    _headerCell(l10n.time, headerStyle),
-                    _headerCell(l10n.payment, headerStyle),
-                    _headerCell(l10n.amountNpr, headerStyle),
-                    _headerCell(l10n.status, headerStyle),
-                  ],
-                ),
-                for (final bill in bills)
-                  TableRow(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: WebPalette.hairline),
-                      ),
-                    ),
-                    children: [
-                      _dataCell(
-                        onTap: () => context.go('/owner/billing/${bill.id}'),
-                        child: Text(
-                          '#${bill.billNo.split('-').last}',
-                          style: WebTypography.mono(
-                            fontSize: 12,
-                            color: WebPalette.inkSoft,
-                          ),
-                        ),
-                      ),
-                      _dataCell(
-                        onTap: () => context.go('/owner/billing/${bill.id}'),
-                        child: Text(
-                          bill.customerShopName ?? l10n.walkInCustomer,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      _dataCell(
-                        onTap: () => context.go('/owner/billing/${bill.id}'),
-                        child: Text(
-                          bill.createdAt != null
-                              ? timeFmt.format(bill.createdAt!.toLocal())
-                              : '—',
-                        ),
-                      ),
-                      _dataCell(
-                        onTap: () => context.go('/owner/billing/${bill.id}'),
-                        child: Text(_paymentLabel(bill.status, l10n)),
-                      ),
-                      _dataCell(
-                        onTap: () => context.go('/owner/billing/${bill.id}'),
-                        child: Text(
-                          formatNpr(Paisa(bill.grandTotal), showPaisa: false),
-                          style: WebTypography.mono(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: WebPalette.ink,
-                          ),
-                        ),
-                      ),
-                      _dataCell(
-                        onTap: () => context.go('/owner/billing/${bill.id}'),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: BillStatusChip(bill.status),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _headerCell(String label, TextStyle? style) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
-      child: Text(label, style: style),
-    );
-  }
-
-  Widget _dataCell({required Widget child, required VoidCallback onTap}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  String _paymentLabel(BillStatus status, AppLocalizations l10n) {
-    return switch (status) {
-      BillStatus.paid => l10n.paymentMethodCash,
-      BillStatus.partial => l10n.partial,
-      BillStatus.due => l10n.due,
-    };
   }
 }

@@ -6,9 +6,12 @@ import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/register_screen.dart';
+import '../../features/billing/bill_detail_screen.dart';
+import '../../features/inventory/product_detail_screen.dart';
 import '../../features/shell/customer_shell.dart';
 import '../../features/shell/owner_shell.dart';
 import '../../features/shell/sales_shell.dart';
@@ -64,6 +67,22 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/sales', builder: (_, _) => const SalesShell()),
       GoRoute(path: '/warehouse', builder: (_, _) => const WarehouseShell()),
       GoRoute(path: '/customer', builder: (_, _) => const CustomerShell()),
+      GoRoute(
+        path: '/bill/:billId',
+        builder: (context, state) =>
+            BillDetailScreen(billId: state.pathParameters['billId']!),
+      ),
+      GoRoute(
+        path: '/product/:productId',
+        builder: (context, state) {
+          final role = ref.read(authProvider).value?.member?.role;
+          return ProductDetailScreen(
+            productId: state.pathParameters['productId']!,
+            canManageStock: role?.canManageStock ?? false,
+            canEditProduct: role?.canManageProducts ?? false,
+          );
+        },
+      ),
     ],
   );
 });

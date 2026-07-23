@@ -121,7 +121,7 @@ class _WebNotificationRow extends ConsumerWidget {
                   size: 10,
                   color: WebPalette.brass,
                 )
-              : Icon(
+              : const Icon(
                   PhosphorIconsRegular.caretRight,
                   size: 16,
                   color: WebPalette.inkFaint,

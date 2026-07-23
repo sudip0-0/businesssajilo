@@ -80,8 +80,25 @@ Flutter FCM is also optional — pass Firebase `--dart-define` values documented
 
 ## Remote (production)
 
+Release tags (`v*`) run `supabase link` → `db push` → `functions deploy`
+automatically when the GitHub secrets `SUPABASE_ACCESS_TOKEN`,
+`SUPABASE_PROJECT_REF`, and `SUPABASE_DB_PASSWORD` are set (see
+`.github/workflows/release.yml`). Manual fallback:
+
 ```bash
 supabase login
 supabase link --project-ref <your-project-ref>
 supabase db push
+supabase functions deploy
 ```
+
+### Migration rollback policy
+
+- **Forward-fix only.** We do not ship down-migrations; reverting a
+  bad deploy means shipping a new migration that undoes or repairs the
+  previous change.
+- **Expand–contract** for breaking schema changes: add the new
+  column/table first (expand), dual-write / migrate readers, then drop
+  the old shape in a later release (contract). Never rename or drop a
+  live column in the same migration that apps still depend on.
+- Keep `supabase/tests/` pgTAP coverage green before tagging a release.

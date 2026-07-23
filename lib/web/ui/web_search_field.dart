@@ -32,7 +32,7 @@ class WebSearchField extends StatelessWidget {
           : TextInputAction.done,
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
+        prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass, size: 20),
         isDense: true,
       ),
     );

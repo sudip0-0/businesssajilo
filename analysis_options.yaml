@@ -4,3 +4,11 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+  language:
+    strict-casts: true
+
+linter:
+  rules:
+    - unawaited_futures
+    - avoid_print
+    - prefer_const_constructors

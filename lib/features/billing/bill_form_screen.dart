@@ -20,6 +20,7 @@ import 'bill_form_draft.dart';
 import 'bill_form_save.dart';
 import 'bill_form_validation.dart';
 import 'bill_payment_sheet.dart';
+import 'bill_summary.dart';
 import 'invalidate_billing.dart';
 
 class BillFormScreen extends ConsumerStatefulWidget {
@@ -219,7 +220,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                       },
                     ),
             ),
-            _TotalsBar(
+            BillSummary(
               itemsTotal: _draft.itemsTotal,
               billDiscountController: _billDiscountController,
               grandTotal: _draft.grandTotal,
@@ -452,85 +453,6 @@ class _LineEditorState extends State<_LineEditor> {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _TotalsBar extends StatelessWidget {
-  const _TotalsBar({
-    required this.itemsTotal,
-    required this.billDiscountController,
-    required this.grandTotal,
-    required this.onDiscountChanged,
-  });
-
-  final int itemsTotal;
-  final TextEditingController billDiscountController;
-  final int grandTotal;
-  final VoidCallback onDiscountChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final discount = parseNpr(billDiscountController.text)?.value ?? 0;
-    final taxable = itemsTotal - discount;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: BsColors.primary.withValues(alpha: 0.04),
-        border: const Border(top: BorderSide(color: BsColors.border)),
-      ),
-      padding: const EdgeInsets.all(BsSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _summaryRow(context, l10n.subtotal, itemsTotal),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: billDiscountController,
-            decoration: InputDecoration(
-              labelText: l10n.billDiscount,
-              isDense: true,
-              errorText: () {
-                if (discount < 0 || discount > itemsTotal) {
-                  return l10n.discountExceedsItems;
-                }
-                return null;
-              }(),
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (_) => onDiscountChanged(),
-          ),
-          const SizedBox(height: 8),
-          _summaryRow(context, l10n.taxableAmount, taxable),
-          const Divider(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.grandTotal,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              Text(
-                formatNpr(Paisa(grandTotal), showPaisa: false),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: BsColors.primary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryRow(BuildContext context, String label, int amount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: false))],
     );
   }
 }

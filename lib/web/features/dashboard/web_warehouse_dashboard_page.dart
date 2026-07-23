@@ -24,7 +24,7 @@ class WebWarehouseDashboardPage extends ConsumerWidget {
       actions: [
         OutlinedButton.icon(
           onPressed: () => context.go('/warehouse/stock'),
-          icon: Icon(PhosphorIconsRegular.package),
+          icon: const Icon(PhosphorIconsRegular.package),
           label: Text(l10n.stock),
         ),
       ],

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/notification_payload.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/notification_item.dart';
-import '../billing/bill_detail_screen.dart';
 import '../chat/order_chat_screen.dart';
-import '../inventory/product_detail_screen.dart';
 import '../orders/order_detail_screen.dart';
 import '../quotes/quote_detail_screen.dart';
 
@@ -55,25 +54,11 @@ void openNotificationTarget(
     case 'payment_recorded':
       if (ids.billId != null) {
         if (!canViewBills) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BillDetailScreen(billId: ids.billId!),
-          ),
-        );
+        context.push('/bill/${ids.billId}');
       }
     case 'low_stock':
       if (ids.productId != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ProductDetailScreen(
-              productId: ids.productId!,
-              canEditProduct: role?.canManageProducts ?? false,
-              canManageStock: role?.canManageStock ?? false,
-            ),
-          ),
-        );
+        context.push('/product/${ids.productId}');
       }
     case 'order_placed':
     case 'order_status':

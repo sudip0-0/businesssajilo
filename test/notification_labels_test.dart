@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('notificationTitle maps known types', () {
     final l10n = AppLocalizationsEn();
-    final item = NotificationItem(
+    final item = const NotificationItem(
       id: '1',
       businessId: 'b',
       recipientMemberId: 'm',

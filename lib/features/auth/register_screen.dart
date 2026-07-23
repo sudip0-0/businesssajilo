@@ -96,7 +96,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
-                    LocaleToggle(fullWidth: true),
+                    const LocaleToggle(fullWidth: true),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _businessNameController,

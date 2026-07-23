@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
@@ -228,10 +229,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   }
 
   Future<void> _openDetail(BuildContext context, Bill bill) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => BillDetailScreen(billId: bill.id)),
-    );
+    await context.push('/bill/${bill.id}');
   }
 }
 

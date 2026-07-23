@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
+import '../../domain/models/auth_user.dart';
 import '../../domain/models/member.dart';
 import '../../domain/models/session_state.dart';
 import '../remote/supabase_provider.dart';
@@ -51,7 +52,10 @@ class AuthRepository {
       throw const AccountDeactivatedException();
     }
 
-    return SessionState(user: user, member: Member.fromJson(row));
+    return SessionState(
+      user: AuthUser(id: user.id, email: user.email),
+      member: Member.fromJson(row),
+    );
   }
 
   Future<void> signIn({required String email, required String password}) async {

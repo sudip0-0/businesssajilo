@@ -75,13 +75,13 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
       icon: PhosphorIconsRegular.database,
       children: [
         ListTile(
-          leading: Icon(PhosphorIconsRegular.flask),
+          leading: const Icon(PhosphorIconsRegular.flask),
           title: Text(l10n.loadDemoData),
           subtitle: _seeding ? const LinearProgressIndicator() : null,
           onTap: _seeding ? null : _loadDemoData,
         ),
         ListTile(
-          leading: Icon(PhosphorIconsRegular.compass),
+          leading: const Icon(PhosphorIconsRegular.compass),
           title: Text(l10n.replayTour),
           onTap: () async {
             final messenger = ScaffoldMessenger.of(context);
@@ -92,7 +92,7 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
           },
         ),
         ListTile(
-          leading: Icon(PhosphorIconsRegular.info),
+          leading: const Icon(PhosphorIconsRegular.info),
           title: Text(l10n.aboutApp),
           subtitle: _version == null ? null : Text(l10n.appVersion(_version!)),
         ),

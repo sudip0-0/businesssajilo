@@ -1,5 +1,4 @@
 import 'package:businesssajilo/core/invoicing/invoice_document.dart';
-import 'package:businesssajilo/core/invoicing/invoice_image_builder.dart';
 import 'package:businesssajilo/core/invoicing/invoice_pdf_builder.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
@@ -9,13 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 InvoiceDocument _sampleDoc() {
-  final business = Business(
+  final business = const Business(
     id: 'biz1',
     name: 'Test Shop',
     phone: '9800000000',
     address: 'Kathmandu',
   );
-  final bill = Bill(
+  final bill = const Bill(
     id: 'b1',
     businessId: 'biz1',
     billNo: 'BS-0001',
@@ -23,7 +22,7 @@ InvoiceDocument _sampleDoc() {
     grandTotal: 10000,
     status: BillStatus.due,
     createdBy: 'm1',
-    items: const [
+    items: [
       BillItem(
         id: 'i1',
         billId: 'b1',
@@ -55,13 +54,13 @@ void main() {
 
   test('InvoicePdfBuilder renders Nepali Unicode without throwing', () async {
     final doc = InvoiceDocument.fromBill(
-      business: Business(
+      business: const Business(
         id: 'biz1',
         name: 'राम स्टोर',
         phone: '9800000000',
         address: 'काठमाडौं',
       ),
-      bill: Bill(
+      bill: const Bill(
         id: 'b1',
         businessId: 'biz1',
         billNo: 'BS-0001',
@@ -69,7 +68,7 @@ void main() {
         grandTotal: 10000,
         status: BillStatus.due,
         createdBy: 'm1',
-        items: const [
+        items: [
           BillItem(
             id: 'i1',
             billId: 'b1',
@@ -100,7 +99,7 @@ void main() {
 
   test('credit note document includes line items', () {
     final doc = InvoiceDocument(
-      business: Business(id: 'biz1', name: 'Shop'),
+      business: const Business(id: 'biz1', name: 'Shop'),
       kind: InvoiceDocumentKind.creditNote,
       documentNo: 'CN-0001',
       customerLabel: 'Customer',

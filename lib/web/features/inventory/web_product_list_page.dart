@@ -140,7 +140,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
           FilledButton.icon(
             onPressed: () =>
                 context.push('${_webRolePrefix(context)}/inventory/new'),
-            icon: Icon(PhosphorIconsRegular.plus),
+            icon: const Icon(PhosphorIconsRegular.plus),
             label: Text(l10n.addProduct),
           ),
         ],

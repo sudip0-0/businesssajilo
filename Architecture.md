@@ -37,8 +37,8 @@ There is **no** `lib/application/` use-case layer: feature providers and screens
 
 ## 3. Multi-Tenancy & Security
 
-- Every business table carries `business_id`. RLS policies enforce `business_id = auth.jwt() ->> 'business_id'`.
-- User role stored in `app_metadata` (`owner | sales | warehouse | customer`) and mirrored in a `members` table; RLS policies check role per operation.
+- Every business table carries `business_id`. RLS helpers (`current_business_id()`, `current_role_name()`) resolve the active membership by querying `members` for `auth.uid()` — not by reading `auth.jwt()` claims directly.
+- User role lives on the `members` row (`owner | sales | warehouse | customer`). Auth JWT `app_metadata` is synced for convenience, but policies use the SQL helpers above.
 - Example hard rules at DB level:
   - `bills`: SELECT/INSERT only for role IN ('owner','sales'); customers can SELECT only their own bills.
   - `stock_movements`: INSERT only for role IN ('owner','warehouse').
@@ -51,7 +51,7 @@ There is **no** `lib/application/` use-case layer: feature providers and screens
 ```
 businesses(id, name, name_np, address, phone, logo_url, subscription_plan, created_at)
 members(id, business_id, auth_user_id, role, display_name, phone, is_active)
-customers(id, business_id, member_id?, shop_name, contact_name, phone, address, opening_balance)
+customers(id, business_id, member_id not null unique, shop_name, contact_name, phone, address, opening_balance)
 categories(id, business_id, name, name_np)
 products(id, business_id, category_id, name, name_np, sku, unit, cost_price,
          reference_price, image_url, low_stock_threshold, is_active)
@@ -103,7 +103,10 @@ Notes:
 
 ## 6. Realtime
 
-Supabase Realtime channels (filtered by `business_id` / `order_id`) for: order status changes, new quotes, chat messages, notification feed. Falls back to pull-to-refresh when offline.
+Supabase Realtime client streams are used for **chat messages** and the
+**notification feed** only (filtered by `order_id` / recipient). Order status
+and quote changes are pull/refresh based. Falls back to pull-to-refresh when
+offline.
 
 ## 7. Push Notifications
 

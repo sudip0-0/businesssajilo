@@ -46,7 +46,12 @@ dev only — several of them are intentionally loose.
 
 ## Deploy
 
-- [ ] `supabase db push` (or linked CI deploy) for migrations
+Release tags (`v*`) push migrations and deploy Edge Functions when
+`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, and
+`SUPABASE_DB_PASSWORD` are configured (see `.github/workflows/release.yml`
+and the rollback policy in `supabase/README.md`). Manual fallback:
+
+- [ ] `supabase db push` for migrations
 - [ ] `supabase functions deploy` for `create-member`,
   `register-business`, `reset-member-password`, `delete-account`,
   `notify`

@@ -29,7 +29,7 @@ class PushService {
   static Future<void> init() async {
     if (!Env.isFirebaseConfigured) return;
     await Firebase.initializeApp(
-      options: FirebaseOptions(
+      options: const FirebaseOptions(
         apiKey: Env.firebaseApiKey,
         appId: Env.firebaseAppId,
         messagingSenderId: Env.firebaseMessagingSenderId,

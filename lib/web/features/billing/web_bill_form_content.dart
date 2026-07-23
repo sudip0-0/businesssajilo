@@ -19,6 +19,7 @@ import '../../../features/billing/bill_form_draft.dart';
 import '../../../features/billing/bill_form_save.dart';
 import '../../../features/billing/bill_form_validation.dart';
 import '../../../features/billing/bill_payment_sheet.dart';
+import '../../../features/billing/bill_summary.dart';
 import '../../../features/billing/invalidate_billing.dart';
 import '../../../features/billing/invoice_export_actions.dart';
 import '../../../features/customers/providers.dart';
@@ -198,7 +199,10 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                               TextButton.icon(
                                 key: IntegrationKeys.billFormAddProduct,
                                 onPressed: _focusProductSearch,
-                                icon: Icon(PhosphorIconsRegular.plus, size: 16),
+                                icon: const Icon(
+                                  PhosphorIconsRegular.plus,
+                                  size: 16,
+                                ),
                                 label: Text(l10n.addProduct),
                               ),
                             ],
@@ -243,8 +247,8 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final wide = constraints.maxWidth >= 768;
-                        final summary = _BillSummaryPanel(
-                          l10n: l10n,
+                        final summary = BillSummary(
+                          style: BillSummaryStyle.card,
                           itemsTotal: _draft.itemsTotal,
                           billDiscountController: _billDiscountController,
                           grandTotal: _draft.grandTotal,
@@ -413,7 +417,10 @@ class _BillItemRow extends StatelessWidget {
           ),
           IconButton(
             tooltip: l10n.remove,
-            icon: Icon(PhosphorIconsRegular.trash, color: WebPalette.danger),
+            icon: const Icon(
+              PhosphorIconsRegular.trash,
+              color: WebPalette.danger,
+            ),
             onPressed: onRemove,
           ),
         ],
@@ -525,7 +532,7 @@ class WebFormHeaderRow extends StatelessWidget {
             initialValue: customerId,
             decoration: InputDecoration(
               labelText: l10n.customerName,
-              prefixIcon: Icon(PhosphorIconsRegular.userPlus),
+              prefixIcon: const Icon(PhosphorIconsRegular.userPlus),
             ),
             items: [
               DropdownMenuItem<String?>(
@@ -552,7 +559,10 @@ class WebFormHeaderRow extends StatelessWidget {
           Expanded(
             child: InputDecorator(
               decoration: InputDecoration(labelText: l10n.billNumber),
-              child: Text('AUTO', style: TextStyle(color: WebPalette.inkSoft)),
+              child: const Text(
+                'AUTO',
+                style: TextStyle(color: WebPalette.inkSoft),
+              ),
             ),
           ),
         ];
@@ -577,7 +587,7 @@ class WebFormHeaderRow extends StatelessWidget {
                 Expanded(
                   child: InputDecorator(
                     decoration: InputDecoration(labelText: l10n.billNumber),
-                    child: Text(
+                    child: const Text(
                       'AUTO',
                       style: TextStyle(color: WebPalette.inkSoft),
                     ),
@@ -588,94 +598,6 @@ class WebFormHeaderRow extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _BillSummaryPanel extends StatelessWidget {
-  const _BillSummaryPanel({
-    required this.l10n,
-    required this.itemsTotal,
-    required this.billDiscountController,
-    required this.grandTotal,
-    required this.onDiscountChanged,
-  });
-
-  final AppLocalizations l10n;
-  final int itemsTotal;
-  final TextEditingController billDiscountController;
-  final int grandTotal;
-  final VoidCallback onDiscountChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final discount = parseNpr(billDiscountController.text)?.value ?? 0;
-    final taxable = itemsTotal - discount;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: WebPalette.navy.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(BsRadii.lg),
-        border: Border.all(color: WebPalette.navy.withValues(alpha: 0.12)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _summaryRow(l10n.subtotal, itemsTotal),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: billDiscountController,
-                  decoration: InputDecoration(
-                    labelText: l10n.billDiscount,
-                    isDense: true,
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => onDiscountChanged(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                discount > 0
-                    ? '- ${formatNpr(Paisa(discount), showPaisa: false)}'
-                    : '—',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _summaryRow(l10n.taxableAmount, taxable),
-          const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.grandTotal,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              Text(
-                formatNpr(Paisa(grandTotal), showPaisa: false),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: WebPalette.navy,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryRow(String label, int amount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: false))],
     );
   }
 }

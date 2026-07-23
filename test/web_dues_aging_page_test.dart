@@ -33,10 +33,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [duesAgingProvider.overrideWith((ref) async => report)],
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: WebDuesAgingPage()),
+          home: Scaffold(body: WebDuesAgingPage()),
         ),
       ),
     );
@@ -60,10 +60,10 @@ void main() {
             (ref) async => const DuesAgingReport(),
           ),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: WebDuesAgingPage()),
+          home: Scaffold(body: WebDuesAgingPage()),
         ),
       ),
     );

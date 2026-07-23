@@ -41,7 +41,7 @@ class WebOrderDetailPage extends ConsumerWidget {
         actions: [
           OutlinedButton.icon(
             onPressed: () => context.go(ordersListPath),
-            icon: Icon(PhosphorIconsRegular.arrowLeft),
+            icon: const Icon(PhosphorIconsRegular.arrowLeft),
             label: Text(l10n.orders),
           ),
         ],
@@ -52,11 +52,11 @@ class WebOrderDetailPage extends ConsumerWidget {
               tabs: [
                 Tab(
                   text: l10n.orderDetail,
-                  icon: Icon(PhosphorIconsRegular.package),
+                  icon: const Icon(PhosphorIconsRegular.package),
                 ),
                 Tab(
                   text: l10n.openChat,
-                  icon: Icon(PhosphorIconsRegular.chatCircle),
+                  icon: const Icon(PhosphorIconsRegular.chatCircle),
                 ),
               ],
             ),

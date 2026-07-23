@@ -23,7 +23,7 @@ Widget _wrap(Widget child) {
 void main() {
   testWidgets('adjust sheet requires reason', (tester) async {
     await tester.pumpWidget(
-      _wrap(Scaffold(body: const StockAdjustSheet(productId: 'test-product'))),
+      _wrap(const Scaffold(body: StockAdjustSheet(productId: 'test-product'))),
     );
     await tester.pumpAndSettle();
 

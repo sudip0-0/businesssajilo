@@ -124,7 +124,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
       actions: [
         FilledButton.icon(
           onPressed: () => context.push('$prefix/billing/new'),
-          icon: Icon(PhosphorIconsRegular.plus),
+          icon: const Icon(PhosphorIconsRegular.plus),
           label: Text(l10n.newBill),
         ),
       ],

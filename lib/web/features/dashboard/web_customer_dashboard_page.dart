@@ -25,7 +25,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
       actions: [
         FilledButton.icon(
           onPressed: () => context.go('/customer/catalog'),
-          icon: Icon(PhosphorIconsRegular.storefront),
+          icon: const Icon(PhosphorIconsRegular.storefront),
           label: Text(l10n.catalog),
         ),
       ],

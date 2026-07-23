@@ -106,7 +106,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
               FilledButton.icon(
                 onPressed: () =>
                     context.go('${_webRolePrefix(context)}/customers/new'),
-                icon: Icon(PhosphorIconsRegular.userPlus),
+                icon: const Icon(PhosphorIconsRegular.userPlus),
                 label: Text(l10n.addCustomer),
               ),
             ]

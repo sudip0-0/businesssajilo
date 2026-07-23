@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('billFromOrderDraftFromQuote maps items and recomputes totals', () {
-    final quote = Quote(
+    final quote = const Quote(
       id: 'q1',
       orderId: 'o1',
       version: 1,
@@ -14,7 +14,7 @@ void main() {
       total: 99999, // intentionally wrong — draft recomputes from lines
       createdBy: 'm1',
       items: [
-        const QuoteItem(
+        QuoteItem(
           id: 'qi1',
           quoteId: 'q1',
           productId: 'p1',
@@ -24,7 +24,7 @@ void main() {
           lineTotal: 9500,
           productName: 'Rice',
         ),
-        const QuoteItem(
+        QuoteItem(
           id: 'qi2',
           quoteId: 'q1',
           productId: 'p2',
@@ -55,7 +55,7 @@ void main() {
   });
 
   test('empty quote yields empty draft', () {
-    final quote = Quote(
+    final quote = const Quote(
       id: 'q1',
       orderId: 'o1',
       version: 1,

@@ -3,7 +3,7 @@ import 'package:businesssajilo/domain/models/product.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final product = Product(
+  final product = const Product(
     id: '1',
     businessId: 'b',
     name: 'Test',
