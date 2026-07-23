@@ -15,7 +15,7 @@ class MembersRepository {
   final SupabaseClient? _client;
 
   Future<List<Member>> listMembers() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('members')
         .select()
@@ -42,7 +42,7 @@ class MembersRepository {
     int openingBalance = 0,
     bool isActive = true,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final response = await client.functions.invoke(
       'create-member',
       body: {
@@ -78,7 +78,7 @@ class MembersRepository {
     required String memberId,
     required String newPassword,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final response = await client.functions.invoke(
       'reset-member-password',
       body: {'memberId': memberId, 'newPassword': newPassword},
@@ -91,7 +91,7 @@ class MembersRepository {
   }
 
   Future<void> deactivateMember(String memberId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('members')
         .update({'is_active': false})
@@ -99,15 +99,12 @@ class MembersRepository {
   }
 
   Future<void> activateMember(String memberId) async {
-    final client = _requireClient();
-    await client
-        .from('members')
-        .update({'is_active': true})
-        .eq('id', memberId);
+    final client = requireSupabaseClient(_client);
+    await client.from('members').update({'is_active': true}).eq('id', memberId);
   }
 
   Future<Member?> getMember(String memberId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('members')
         .select()
@@ -115,13 +112,5 @@ class MembersRepository {
         .maybeSingle();
     if (row == null) return null;
     return Member.fromJson(Map<String, dynamic>.from(row));
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) {
-      throw Exception('Supabase not configured');
-    }
-    return client;
   }
 }

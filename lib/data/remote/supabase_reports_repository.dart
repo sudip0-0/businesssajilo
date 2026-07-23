@@ -9,6 +9,7 @@ import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
 import '../../domain/models/top_product_row.dart';
 import '../repositories/reports_repository.dart';
+import 'supabase_provider.dart';
 
 class SupabaseReportsRepository implements ReportsRepository {
   SupabaseReportsRepository(this._client);
@@ -20,7 +21,7 @@ class SupabaseReportsRepository implements ReportsRepository {
     required DateTime from,
     required DateTime to,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('report_sales_daily')
         .select()
@@ -32,7 +33,7 @@ class SupabaseReportsRepository implements ReportsRepository {
 
   @override
   Future<int> netSalesForNptDate(DateTime utcInstant) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final day = nptDateString(utcInstant);
     final rows = await client
         .from('report_sales_daily')
@@ -51,7 +52,7 @@ class SupabaseReportsRepository implements ReportsRepository {
     required DateTime to,
     int limit = 10,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client.rpc(
       'report_top_products_range',
       params: {
@@ -77,7 +78,7 @@ class SupabaseReportsRepository implements ReportsRepository {
     required DateTime to,
     int limit = 10,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client.rpc(
       'report_top_customers_range',
       params: {
@@ -99,7 +100,7 @@ class SupabaseReportsRepository implements ReportsRepository {
 
   @override
   Future<DuesAgingReport> duesAging() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final raw = await client.rpc('report_dues_aging');
     final map = raw is Map
         ? Map<String, dynamic>.from(raw)
@@ -123,7 +124,7 @@ class SupabaseReportsRepository implements ReportsRepository {
   Future<List<StockValuationRow>> stockValuation({
     bool lowStockOnly = false,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var query = client.from('report_stock_valuation').select();
     if (lowStockOnly) {
       query = query.eq('is_low_stock', true);
@@ -134,7 +135,7 @@ class SupabaseReportsRepository implements ReportsRepository {
 
   @override
   Future<OwnerDashboardStats> ownerDashboardStats() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final raw = await client.rpc('owner_dashboard_stats');
     final map = raw is Map
         ? Map<String, dynamic>.from(raw)
@@ -145,10 +146,4 @@ class SupabaseReportsRepository implements ReportsRepository {
   // Report views use Asia/Kathmandu dates, so convert UTC instants to NPT
   // calendar dates.
   String _dateOnly(DateTime dt) => nptDateString(dt);
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
-  }
 }

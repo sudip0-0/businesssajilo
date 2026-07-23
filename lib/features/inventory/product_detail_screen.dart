@@ -123,8 +123,7 @@ class ProductDetailScreen extends ConsumerWidget {
             ],
             if (canEditProduct) ...[
               const SizedBox(height: 12),
-              if (!product.isActive)
-                Chip(label: Text(l10n.inactive)),
+              if (!product.isActive) Chip(label: Text(l10n.inactive)),
               if (embedded) ...[
                 const SizedBox(height: 8),
                 if (product.isActive)

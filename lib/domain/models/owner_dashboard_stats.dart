@@ -1,4 +1,7 @@
 /// Aggregated owner-dashboard KPI values (amounts in paisa).
+///
+/// Individual fields may be null when the preferred RPC fails and a fallback
+/// source also fails — UI should render "—" rather than a false zero.
 class OwnerDashboardStats {
   const OwnerDashboardStats({
     required this.todaySales,
@@ -8,11 +11,11 @@ class OwnerDashboardStats {
     required this.pendingOrders,
   });
 
-  final int todaySales;
-  final int yesterdaySales;
-  final int totalDues;
-  final int lowStockCount;
-  final int pendingOrders;
+  final int? todaySales;
+  final int? yesterdaySales;
+  final int? totalDues;
+  final int? lowStockCount;
+  final int? pendingOrders;
 
   factory OwnerDashboardStats.fromJson(Map<String, dynamic> json) {
     int asInt(Object? v) => (v as num?)?.toInt() ?? 0;
@@ -25,9 +28,12 @@ class OwnerDashboardStats {
     );
   }
 
-  /// Percent change today vs yesterday (null when no baseline).
+  /// Percent change today vs yesterday (null when either side is missing).
   double? get salesTrendPercent {
-    if (yesterdaySales == 0) return todaySales > 0 ? 100.0 : null;
-    return ((todaySales - yesterdaySales) / yesterdaySales) * 100;
+    final today = todaySales;
+    final yesterday = yesterdaySales;
+    if (today == null || yesterday == null) return null;
+    if (yesterday == 0) return today > 0 ? 100.0 : null;
+    return ((today - yesterday) / yesterday) * 100;
   }
 }

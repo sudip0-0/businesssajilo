@@ -58,8 +58,7 @@ class WebNotificationsPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(BsRadii.lg),
               child: RefreshIndicator(
                 color: WebPalette.navy,
-                onRefresh: () async =>
-                    ref.invalidate(notificationListProvider),
+                onRefresh: () async => ref.invalidate(notificationListProvider),
                 child: ListView.separated(
                   itemCount: items.length,
                   separatorBuilder: (_, _) =>
@@ -102,10 +101,7 @@ class _WebNotificationRow extends ConsumerWidget {
         },
         hoverColor: WebPalette.paperDeep.withValues(alpha: 0.55),
         child: ListTile(
-          leading: Icon(
-            notificationIcon(item.type),
-            color: WebPalette.navy,
-          ),
+          leading: Icon(notificationIcon(item.type), color: WebPalette.navy),
           title: Text(
             notificationTitle(l10n, item),
             style: theme.textTheme.bodyMedium?.copyWith(

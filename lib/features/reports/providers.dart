@@ -59,16 +59,17 @@ final last7DaySalesProvider =
 
 /// Owner dashboard KPI tiles — prefers `owner_dashboard_stats` RPC; on failure
 /// (e.g. offline staff mobile) falls back to existing local-capable methods.
+/// Individual fallbacks that also fail become null (UI shows "—", not a false 0).
 final ownerDashboardStatsProvider =
     FutureProvider.autoDispose<OwnerDashboardStats>((ref) async {
       try {
         return await ref.watch(reportsRepositoryProvider).ownerDashboardStats();
       } catch (_) {
-        Future<int> safe(Future<int> Function() load) async {
+        Future<int?> safe(Future<int> Function() load) async {
           try {
             return await load();
           } catch (_) {
-            return 0;
+            return null;
           }
         }
 

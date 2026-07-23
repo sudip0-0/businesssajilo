@@ -61,8 +61,7 @@ class WebTopBar extends ConsumerWidget {
               return IconButton(
                 tooltip: l10n.notifications,
                 onPressed: () {
-                  final memberRole =
-                      ref.read(authProvider).value?.member?.role;
+                  final memberRole = ref.read(authProvider).value?.member?.role;
                   showNotificationDropdown(
                     buttonContext: buttonContext,
                     onOpenItem: (navContext, item) {

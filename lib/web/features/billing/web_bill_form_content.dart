@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../core/errors/app_failure.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/testing/integration_keys.dart';
 import '../../../core/theme/app_theme.dart';
@@ -127,11 +128,11 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         }
         widget.onSaved?.call();
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.actionFailed),
+            content: Text(AppFailure.from(e).message(l10n)),
             backgroundColor: WebPalette.danger,
           ),
         );

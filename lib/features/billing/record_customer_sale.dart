@@ -6,11 +6,7 @@ import '../../domain/models/bill.dart';
 import '../auth/providers/auth_provider.dart';
 import 'invalidate_billing.dart';
 
-enum RecordSaleValidationError {
-  amountRequired,
-  amountNotPositive,
-  noCustomer,
-}
+enum RecordSaleValidationError { amountRequired, amountNotPositive, noCustomer }
 
 RecordSaleValidationError? validateRecordSale({
   required String? customerId,

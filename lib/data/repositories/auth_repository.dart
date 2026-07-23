@@ -75,11 +75,24 @@ class AuthRepository {
 
   /// Deletes the current account via the `delete-account` Edge Function.
   /// [deleteBusiness] is only valid for owners and purges the whole tenant.
-  Future<void> deleteAccount({bool deleteBusiness = false}) async {
+  /// Business deletion requires [password] for re-authentication.
+  Future<void> deleteAccount({
+    bool deleteBusiness = false,
+    String? password,
+  }) async {
     final client = _requireClient();
+    final body = <String, dynamic>{
+      'mode': deleteBusiness ? 'business' : 'self',
+    };
+    if (deleteBusiness) {
+      if (password == null || password.isEmpty) {
+        throw const AuthException('Password required to delete business');
+      }
+      body['password'] = password;
+    }
     final response = await client.functions.invoke(
       'delete-account',
-      body: {'mode': deleteBusiness ? 'business' : 'self'},
+      body: body,
     );
     if (response.status != 200) {
       final data = response.data;

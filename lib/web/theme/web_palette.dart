@@ -89,11 +89,7 @@ abstract final class WebPalette {
 
   /// Level 1 — resting cards: barely-there lift.
   static const cardShadow = [
-    BoxShadow(
-      color: Color(0x0A2A2416),
-      blurRadius: 3,
-      offset: Offset(0, 1),
-    ),
+    BoxShadow(color: Color(0x0A2A2416), blurRadius: 3, offset: Offset(0, 1)),
   ];
 
   /// Level 2 — KPI tiles / hover lift.
@@ -104,11 +100,7 @@ abstract final class WebPalette {
       offset: Offset(0, 5),
       spreadRadius: -2,
     ),
-    BoxShadow(
-      color: Color(0x082A2416),
-      blurRadius: 4,
-      offset: Offset(0, 2),
-    ),
+    BoxShadow(color: Color(0x082A2416), blurRadius: 4, offset: Offset(0, 2)),
   ];
 
   /// Level 3 — modals / overlays.
@@ -119,11 +111,7 @@ abstract final class WebPalette {
       offset: Offset(0, 12),
       spreadRadius: -6,
     ),
-    BoxShadow(
-      color: Color(0x0A2A2416),
-      blurRadius: 8,
-      offset: Offset(0, 3),
-    ),
+    BoxShadow(color: Color(0x0A2A2416), blurRadius: 8, offset: Offset(0, 3)),
   ];
 
   // ── Gradients ───────────────────────────────────────────────────

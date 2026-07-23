@@ -4,8 +4,9 @@ import '../../data/repositories/bills_repository.dart';
 import '../../domain/models/bill.dart';
 
 /// Bumped after bill/payment writes so paginated bill lists can refresh.
-final billingRevisionProvider =
-    NotifierProvider<BillingRevision, int>(BillingRevision.new);
+final billingRevisionProvider = NotifierProvider<BillingRevision, int>(
+  BillingRevision.new,
+);
 
 class BillingRevision extends Notifier<int> {
   @override

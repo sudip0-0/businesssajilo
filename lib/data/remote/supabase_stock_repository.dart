@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/stock_movement.dart';
 import '../repositories/stock_repository.dart';
+import 'supabase_provider.dart';
 
 class SupabaseStockRepository implements StockRepository {
   SupabaseStockRepository(this._client);
@@ -13,7 +14,7 @@ class SupabaseStockRepository implements StockRepository {
 
   @override
   Future<List<StockMovement>> listMovements(String productId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('stock_movements')
         .select('*, members(display_name)')
@@ -59,7 +60,7 @@ class SupabaseStockRepository implements StockRepository {
     String? reason,
     required String createdByMemberId,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final product = await client
         .from('products')
         .select('business_id')
@@ -95,11 +96,5 @@ class SupabaseStockRepository implements StockRepository {
       map['created_by_name'] = member['display_name'];
     }
     return StockMovement.fromJson(map);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

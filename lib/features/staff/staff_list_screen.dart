@@ -38,9 +38,7 @@ class _StaffListScreenState extends ConsumerState<StaffListScreen> {
       children: [
         SwitchListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            _showInactive ? l10n.hideInactive : l10n.showInactive,
-          ),
+          title: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
           value: _showInactive,
           onChanged: (v) => setState(() => _showInactive = v),
         ),

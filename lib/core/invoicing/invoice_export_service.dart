@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';

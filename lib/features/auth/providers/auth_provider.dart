@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging/app_log.dart';
 import '../../../core/notifications/push_service_provider.dart';
 import '../../../core/utils/login_identifier.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -44,15 +44,19 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
       try {
         await syncBootstrapForSession(session);
         ref.read(syncBundleVersionProvider.notifier).bump();
-      } catch (e) {
-        debugPrint('Sync bootstrap failed (will retry on connectivity): $e');
+      } catch (e, st) {
+        AppLog.warn(
+          'Sync bootstrap failed (will retry on connectivity)',
+          e,
+          st,
+        );
       }
       final member = session.member;
       if (member != null) {
         try {
           await ref.read(pushServiceProvider).registerForMember(member.id);
-        } catch (e) {
-          debugPrint('Push token registration failed: $e');
+        } catch (e, st) {
+          AppLog.warn('Push token registration failed', e, st);
         }
       }
     }());
@@ -100,15 +104,19 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   }
 
   /// Deletes the account (or entire business for owners) and clears session.
-  Future<void> deleteAccount({bool deleteBusiness = false}) async {
+  /// [password] is required when [deleteBusiness] is true.
+  Future<void> deleteAccount({
+    bool deleteBusiness = false,
+    String? password,
+  }) async {
     try {
       await ref.read(pushServiceProvider).unregister();
-    } catch (e) {
-      debugPrint('Push unregister failed: $e');
+    } catch (e, st) {
+      AppLog.warn('Push unregister failed', e, st);
     }
     await ref
         .read(authRepositoryProvider)
-        .deleteAccount(deleteBusiness: deleteBusiness);
+        .deleteAccount(deleteBusiness: deleteBusiness, password: password);
     await disposeSyncBundle();
     ref.read(syncBundleVersionProvider.notifier).bump();
     state = const AsyncValue.data(SessionState.empty);
@@ -118,8 +126,8 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     // Delete the device token server-side while the session is still valid.
     try {
       await ref.read(pushServiceProvider).unregister();
-    } catch (e) {
-      debugPrint('Push unregister failed: $e');
+    } catch (e, st) {
+      AppLog.warn('Push unregister failed', e, st);
     }
     await disposeSyncBundle();
     ref.read(syncBundleVersionProvider.notifier).bump();
@@ -148,10 +156,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
         phone: phone?.trim(),
         address: address?.trim(),
       );
-      await repo.signIn(
-        email: email.trim().toLowerCase(),
-        password: password,
-      );
+      await repo.signIn(email: email.trim().toLowerCase(), password: password);
       return repo.loadSession();
     });
     if (state.hasError) throw state.error!;

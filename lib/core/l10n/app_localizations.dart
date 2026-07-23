@@ -1880,6 +1880,48 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Try again.'**
   String get actionFailed;
 
+  /// No description provided for @errorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Check your network and try again.'**
+  String get errorNetwork;
+
+  /// No description provided for @errorPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission for this action.'**
+  String get errorPermission;
+
+  /// No description provided for @errorValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check the form and try again.'**
+  String get errorValidation;
+
+  /// No description provided for @errorConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This record already exists or conflicts with another.'**
+  String get errorConflict;
+
+  /// No description provided for @errorNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'App is not configured. Contact support.'**
+  String get errorNotConfigured;
+
+  /// No description provided for @quoteRatesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Some product rates could not be loaded. Enter them manually.'**
+  String get quoteRatesLoadFailed;
+
+  /// No description provided for @valueUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get valueUnavailable;
+
   /// No description provided for @more.
   ///
   /// In en, this message translates to:
@@ -2617,6 +2659,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account deleted'**
   String get accountDeleted;
+
+  /// No description provided for @confirmPasswordToDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to confirm'**
+  String get confirmPasswordToDelete;
+
+  /// No description provided for @passwordRequiredToDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required to delete the business'**
+  String get passwordRequiredToDelete;
 
   /// No description provided for @reorder.
   ///

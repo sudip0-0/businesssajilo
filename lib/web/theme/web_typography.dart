@@ -112,7 +112,11 @@ abstract final class WebTypography {
         fontWeight: FontWeight.w600,
         height: 1.4,
       ),
-      titleSmall: _sans(fontSize: 13.5, fontWeight: FontWeight.w600, height: 1.4),
+      titleSmall: _sans(
+        fontSize: 13.5,
+        fontWeight: FontWeight.w600,
+        height: 1.4,
+      ),
       bodyLarge: _sans(
         fontSize: 15.5,
         fontWeight: FontWeight.w400,

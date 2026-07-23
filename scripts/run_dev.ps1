@@ -22,4 +22,5 @@ Set-Location $projectRoot
 flutter run `
     --dart-define=SUPABASE_URL=$env:SUPABASE_URL `
     --dart-define=SUPABASE_ANON_KEY=$env:SUPABASE_ANON_KEY `
+    --dart-define=SENTRY_DSN=$($env:SENTRY_DSN) `
     @args

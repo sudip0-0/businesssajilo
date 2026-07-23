@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/role_label.dart';
@@ -74,9 +75,12 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
                 : null,
           );
       if (mounted) Navigator.pop(context, true);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        setState(() => _error = AppLocalizations.of(context).actionFailed);
+        setState(
+          () =>
+              _error = AppFailure.from(e).message(AppLocalizations.of(context)),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

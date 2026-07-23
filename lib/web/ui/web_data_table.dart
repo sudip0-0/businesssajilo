@@ -128,8 +128,7 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
       ),
     );
 
-    final pagination =
-        widget.onPageChanged != null && widget.totalItems != null
+    final pagination = widget.onPageChanged != null && widget.totalItems != null
         ? _TablePagination(
             page: widget.page,
             totalItems: widget.totalItems!,
@@ -278,9 +277,7 @@ class _WebHoverableRowState extends State<WebHoverableRow> {
               : _hovered
               ? WebPalette.paperDeep.withValues(alpha: 0.55)
               : null,
-          border: const Border(
-            bottom: BorderSide(color: WebPalette.hairline),
-          ),
+          border: const Border(bottom: BorderSide(color: WebPalette.hairline)),
         ),
         child: Material(
           color: Colors.transparent,

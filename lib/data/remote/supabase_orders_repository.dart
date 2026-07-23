@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/order.dart';
 import '../repositories/orders_repository.dart';
+import 'supabase_provider.dart';
 
 class SupabaseOrdersRepository implements OrdersRepository {
   SupabaseOrdersRepository(this._client);
@@ -21,7 +22,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
     int offset = 0,
     int? limit,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var query = client.from('orders').select(_listSelectStaff);
     if (statuses != null && statuses.isNotEmpty) {
       query = query.inFilter('status', statuses.map((s) => s.name).toList());
@@ -36,7 +37,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   @override
   Future<List<Order>> listOwn({int offset = 0, int? limit}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var query = client
         .from('orders')
         .select(_listSelectOwn)
@@ -59,7 +60,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   @override
   Future<int> pendingCount() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     return client.from('orders').count(CountOption.exact).inFilter('status', [
       OrderStatus.placed.name,
       OrderStatus.quoted.name,
@@ -69,7 +70,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   @override
   Future<int> openQuotesCount() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     return client
         .from('orders')
         .count(CountOption.exact)
@@ -78,13 +79,13 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   @override
   Future<int> ownOrderCount() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     return client.from('orders').count(CountOption.exact);
   }
 
   @override
   Future<int> fulfillmentActiveCount() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     return client.from('orders').count(CountOption.exact).inFilter('status', [
       OrderStatus.confirmed.name,
       OrderStatus.packed.name,
@@ -93,7 +94,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   @override
   Future<Order> get(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('orders')
         .select(_detailSelect)
@@ -108,7 +109,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
     required List<OrderLineInput> lines,
     String? note,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final orderId = const Uuid().v4();
 
     await client.from('orders').insert({
@@ -140,18 +141,12 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   @override
   Future<Order> updateStatus(String id, OrderStatus status) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     try {
       await client.from('orders').update({'status': status.name}).eq('id', id);
     } on PostgrestException catch (e) {
       throw OrderStatusException(e.message);
     }
     return get(id);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

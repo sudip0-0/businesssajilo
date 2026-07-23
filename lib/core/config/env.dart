@@ -17,6 +17,9 @@ abstract final class Env {
   );
   static const firebaseVapidKey = String.fromEnvironment('FIREBASE_VAPID_KEY');
 
+  /// Optional Sentry DSN. When empty, crash reporting is a no-op.
+  static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+
   /// Integration tests on desktop use the web shell when true.
   static const forceWebUi = bool.fromEnvironment('FORCE_WEB_UI');
 
@@ -28,4 +31,6 @@ abstract final class Env {
       firebaseAppId.isNotEmpty &&
       firebaseMessagingSenderId.isNotEmpty &&
       firebaseProjectId.isNotEmpty;
+
+  static bool get hasSentry => sentryDsn.isNotEmpty;
 }

@@ -924,6 +924,30 @@ class AppLocalizationsNe extends AppLocalizations {
   String get actionFailed => 'केही गडबड भयो। फेरि प्रयास गर्नुहोस्।';
 
   @override
+  String get errorNetwork =>
+      'जडान छैन। नेटवर्क जाँच गरी फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get errorPermission => 'तपाईंसँग यो कार्यको अनुमति छैन।';
+
+  @override
+  String get errorValidation => 'फारम जाँच गरी फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get errorConflict => 'यो रेकर्ड पहिले नै छ वा द्वन्द्व छ।';
+
+  @override
+  String get errorNotConfigured =>
+      'एप कन्फिगर छैन। सहयोगसँग सम्पर्क गर्नुहोस्।';
+
+  @override
+  String get quoteRatesLoadFailed =>
+      'केही उत्पादन दर लोड गर्न सकिएन। म्यानुअल रूपमा लेख्नुहोस्।';
+
+  @override
+  String get valueUnavailable => '—';
+
+  @override
   String get more => 'थप';
 
   @override
@@ -1321,6 +1345,12 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get accountDeleted => 'खाता मेटाइयो';
+
+  @override
+  String get confirmPasswordToDelete => 'पुष्टि गर्न आफ्नो पासवर्ड लेख्नुहोस्';
+
+  @override
+  String get passwordRequiredToDelete => 'व्यवसाय मेटाउन पासवर्ड आवश्यक छ';
 
   @override
   String get reorder => 'पुनः अर्डर';

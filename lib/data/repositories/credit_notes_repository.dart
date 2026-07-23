@@ -14,16 +14,8 @@ class CreditNotesRepository {
 
   final SupabaseClient? _client;
 
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) {
-      throw StateError('Supabase is not configured');
-    }
-    return client;
-  }
-
   Future<Map<String, int>> returnedQtyByBillItem(String billId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client.rpc(
       'bill_returned_qty',
       params: {'p_bill_id': billId},
@@ -45,7 +37,7 @@ class CreditNotesRepository {
     required bool restock,
     String? reason,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final id = const Uuid().v4();
     final payload = {
       'id': id,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/error_state.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import 'bill_payment_sheet.dart';
 import 'create_bill_from_order.dart';
@@ -65,31 +66,24 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
       child: BillPaymentSheet(grandTotal: draft.grandTotal),
     );
     if (payment == null) return;
+    if (!mounted) return;
 
     setState(() => _loading = true);
-    try {
-      await saveBillFromOrder(
-        ref.read(billingRefProvider),
-        orderId: widget.orderId,
-        customerId: widget.customerId,
-        draft: draft,
-        payment: payment,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.billSaved)));
-        Navigator.pop(context, true);
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    final ok = await runSubmitAction(
+      context,
+      action: () async {
+        await saveBillFromOrder(
+          ref.read(billingRefProvider),
+          orderId: widget.orderId,
+          customerId: widget.customerId,
+          draft: draft,
+          payment: payment,
+        );
+      },
+      successMessage: l10n.billSaved,
+    );
+    if (ok && mounted) Navigator.pop(context, true);
+    if (mounted) setState(() => _loading = false);
   }
 
   @override

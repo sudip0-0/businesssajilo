@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
+import '../logging/app_log.dart';
 import '../../data/repositories/device_tokens_repository.dart';
 
 class PushService {
@@ -61,8 +62,8 @@ class PushService {
       _currentToken = newToken;
       try {
         await _tokens.upsert(memberId: member, token: newToken);
-      } catch (e) {
-        debugPrint('Token refresh upsert failed: $e');
+      } catch (e, st) {
+        AppLog.warn('Token refresh upsert failed', e, st);
       }
     });
 
@@ -91,8 +92,8 @@ class PushService {
     if (handler == null) return;
     try {
       handler(Map<String, dynamic>.from(message.data));
-    } catch (e) {
-      debugPrint('Notification tap handling failed: $e');
+    } catch (e, st) {
+      AppLog.warn('Notification tap handling failed', e, st);
     }
   }
 
@@ -112,8 +113,8 @@ class PushService {
     if (token == null || memberId == null) return;
     try {
       await _tokens.deleteToken(memberId: memberId, token: token);
-    } catch (e) {
-      debugPrint('Device token delete failed: $e');
+    } catch (e, st) {
+      AppLog.warn('Device token delete failed', e, st);
     }
   }
 }

@@ -66,9 +66,8 @@ Future<T?> showWebSidePanel<T>({
                                     title,
                                     style: Theme.of(ctx).textTheme.titleLarge
                                         ?.copyWith(
-                                          color: panelTheme
-                                              .colorScheme
-                                              .onSurface,
+                                          color:
+                                              panelTheme.colorScheme.onSurface,
                                         ),
                                   ),
                                 ),

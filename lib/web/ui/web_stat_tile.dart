@@ -73,11 +73,7 @@ class _WebStatTileState extends State<WebStatTile> {
                       color: WebPalette.navy.withValues(alpha: 0.1),
                     ),
                   ),
-                  child: Icon(
-                    widget.icon,
-                    size: 18,
-                    color: WebPalette.navy,
-                  ),
+                  child: Icon(widget.icon, size: 18, color: WebPalette.navy),
                 ),
                 const Spacer(),
                 if (widget.trend != null)
@@ -91,9 +87,7 @@ class _WebStatTileState extends State<WebStatTile> {
                   Icon(
                     PhosphorIconsRegular.arrowUpRight,
                     size: 15,
-                    color: _hovered
-                        ? WebPalette.navy
-                        : WebPalette.inkFaint,
+                    color: _hovered ? WebPalette.navy : WebPalette.inkFaint,
                   ),
               ],
             ),

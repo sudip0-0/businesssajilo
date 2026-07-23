@@ -14,7 +14,7 @@ class CategoriesRepository {
   final SupabaseClient? _client;
 
   Future<List<Category>> list() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('categories')
         .select()
@@ -25,7 +25,7 @@ class CategoriesRepository {
   }
 
   Future<Category> create({required String name, String? nameNp}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('categories')
         .insert({'name': name, 'name_np': ?nameNp})
@@ -39,7 +39,7 @@ class CategoriesRepository {
     required String name,
     String? nameNp,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('categories')
         .update({'name': name, 'name_np': ?nameNp})
@@ -50,13 +50,7 @@ class CategoriesRepository {
   }
 
   Future<void> delete(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client.from('categories').delete().eq('id', id);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

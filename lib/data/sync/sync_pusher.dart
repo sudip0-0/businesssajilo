@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/logging/app_log.dart';
 import '../local/app_database.dart';
 import 'sync_backoff.dart';
 import 'sync_helpers.dart';
@@ -54,16 +55,17 @@ class SyncPusher {
             .write(const SyncQueueCompanion(status: Value('synced')));
         syncedIds.add(item.entityId);
         blockedIds.remove(item.entityId);
-      } catch (e) {
+      } catch (e, st) {
         final attempts = item.attempts + 1;
         final terminal = attempts >= syncMaxAttempts;
+        final truncated = truncateSyncError(e);
         await (_db.update(
           _db.syncQueue,
         )..where((q) => q.id.equals(item.id))).write(
           SyncQueueCompanion(
             status: Value(terminal ? 'failed' : 'pending'),
             attempts: Value(attempts),
-            lastError: Value(truncateSyncError(e)),
+            lastError: Value(truncated),
             nextAttemptAt: Value(
               terminal
                   ? null
@@ -71,6 +73,20 @@ class SyncPusher {
             ),
           ),
         );
+        if (terminal) {
+          // No amounts / customer PII — routing identifiers only.
+          AppLog.error(
+            'Sync queue item terminal failure',
+            error: e,
+            stackTrace: st,
+            extras: {
+              'entityType': item.entityType,
+              'entityId': item.entityId,
+              'attempts': attempts,
+              'lastError': truncated,
+            },
+          );
+        }
       }
     }
   }
@@ -86,10 +102,7 @@ class SyncPusher {
             'record_customer_sale',
             params: {'p': payload},
           )
-        : await _client.rpc<dynamic>(
-            'create_bill',
-            params: {'p': payload},
-          );
+        : await _client.rpc<dynamic>('create_bill', params: {'p': payload});
     final map = result as Map<String, dynamic>;
     final bill = map['bill'] as Map<String, dynamic>?;
     final serverBillNo = bill?['bill_no'] as String?;

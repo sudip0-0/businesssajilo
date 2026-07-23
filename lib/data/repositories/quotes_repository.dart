@@ -43,7 +43,7 @@ class QuotesRepository {
   final SupabaseClient? _client;
 
   Future<Quote> get(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('quotes')
         .select('*, quote_items(*, products(name))')
@@ -53,7 +53,7 @@ class QuotesRepository {
   }
 
   Future<List<Quote>> listForOrder(String orderId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('quotes')
         .select('*, quote_items(*, products(name))')
@@ -81,7 +81,7 @@ class QuotesRepository {
     required int total,
     required List<QuoteLineInput> lines,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final Map result;
     try {
       result =
@@ -109,7 +109,7 @@ class QuotesRepository {
   }
 
   Future<Quote> accept(String quoteId, {String? comment}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('quotes')
         .update({
@@ -126,7 +126,7 @@ class QuotesRepository {
   }
 
   Future<Quote> reject(String quoteId, {required String comment}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('quotes')
         .update({
@@ -158,11 +158,5 @@ class QuotesRepository {
       return quote.copyWith(items: items);
     }
     return quote;
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

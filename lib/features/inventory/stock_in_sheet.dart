@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/ui/qty_stepper.dart';
+import '../../core/ui/submit_action.dart';
 import '../../data/repositories/stock_repository.dart';
 import '../auth/providers/auth_provider.dart';
 
@@ -24,27 +24,20 @@ class _StockInSheetState extends ConsumerState<StockInSheet> {
     final memberId = ref.read(authProvider).value?.member?.id;
     if (memberId == null) return;
     setState(() => _loading = true);
-    try {
-      await ref
-          .read(stockRepositoryProvider)
-          .stockIn(
-            productId: widget.productId,
-            qty: _qty,
-            createdByMemberId: memberId,
-          );
-      if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).actionFailed),
-            backgroundColor: BsColors.danger,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    await runSubmitAction(
+      context,
+      action: () async {
+        await ref
+            .read(stockRepositoryProvider)
+            .stockIn(
+              productId: widget.productId,
+              qty: _qty,
+              createdByMemberId: memberId,
+            );
+        if (mounted) Navigator.pop(context, true);
+      },
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   @override

@@ -45,10 +45,7 @@ Future<void> _openRecordSaleSheet(
   await showAdaptiveSheet<bool>(
     context: context,
     title: l10n.recordSale,
-    child: RecordSaleSheet(
-      customerId: customerId,
-      customerName: customerName,
-    ),
+    child: RecordSaleSheet(customerId: customerId, customerName: customerName),
   );
   // Cache invalidation is handled by recordCustomerSale.
 }
@@ -94,7 +91,10 @@ class CustomerDetailScreen extends ConsumerWidget {
                   children: [
                     if (canRecordPayments)
                       FilledButton.icon(
-                        icon: const Icon(Icons.point_of_sale_outlined, size: 18),
+                        icon: const Icon(
+                          Icons.point_of_sale_outlined,
+                          size: 18,
+                        ),
                         label: Text(l10n.recordSale),
                         onPressed: () => _openRecordSaleSheet(
                           context,
@@ -458,4 +458,3 @@ class _PortalLoginButton extends ConsumerWidget {
     );
   }
 }
-

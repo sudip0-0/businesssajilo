@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../domain/models/bill.dart';
@@ -65,17 +65,20 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
 
     final selected = lines.where((line) => line.qty > 0).toList();
 
+    if (!mounted) return;
     setState(() => _loading = true);
-    try {
-      final note = await saveCreditNote(
-        ref.read(billingRefProvider),
-        bill: widget.bill,
-        selected: selected,
-        restock: _restock,
-        reason: _reasonController.text.trim(),
-      );
+    await runSubmitAction(
+      context,
+      action: () async {
+        final note = await saveCreditNote(
+          ref.read(billingRefProvider),
+          bill: widget.bill,
+          selected: selected,
+          restock: _restock,
+          reason: _reasonController.text.trim(),
+        );
 
-      if (mounted) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.creditNoteSaved),
@@ -95,19 +98,9 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
         } else {
           Navigator.pop(context, true);
         }
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.actionFailed),
-            backgroundColor: BsColors.danger,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+      },
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   @override

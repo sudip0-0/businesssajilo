@@ -18,7 +18,7 @@ class NotificationsRepository {
   static const _listCap = 100;
 
   Future<List<NotificationItem>> list() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('notifications')
         .select()
@@ -30,7 +30,7 @@ class NotificationsRepository {
   }
 
   Stream<List<NotificationItem>> watch() {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     return client
         .from('notifications')
         .stream(primaryKey: ['id'])
@@ -44,7 +44,7 @@ class NotificationsRepository {
   }
 
   Future<int> unreadCount() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('notifications')
         .select('id')
@@ -53,7 +53,7 @@ class NotificationsRepository {
   }
 
   Future<void> markRead(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('notifications')
         .update({'read_at': DateTime.now().toUtc().toIso8601String()})
@@ -62,16 +62,10 @@ class NotificationsRepository {
   }
 
   Future<void> markAllRead() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('notifications')
         .update({'read_at': DateTime.now().toUtc().toIso8601String()})
         .isFilter('read_at', null);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

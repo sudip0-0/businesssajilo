@@ -96,6 +96,23 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Require recent password confirmation so a stolen session alone
+      // cannot purge the entire business.
+      const password = str(body.password);
+      if (!password) {
+        return json({ error: "Password required to delete business" }, 400);
+      }
+      if (!user.email) {
+        return json({ error: "Account has no email for re-authentication" }, 400);
+      }
+      const { error: reauthError } = await supabaseUser.auth.signInWithPassword({
+        email: user.email,
+        password,
+      });
+      if (reauthError) {
+        return json({ error: "Invalid password" }, 403);
+      }
+
       const businessId = caller.business_id as string;
 
       // Remove tenant storage objects (product + chat images).

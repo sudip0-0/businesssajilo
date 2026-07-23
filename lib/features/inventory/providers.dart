@@ -11,8 +11,9 @@ final categoryListProvider = FutureProvider.autoDispose<List<Category>>((ref) {
 });
 
 /// Bumped after product/stock writes so paginated inventory lists can refresh.
-final inventoryRevisionProvider =
-    NotifierProvider<InventoryRevision, int>(InventoryRevision.new);
+final inventoryRevisionProvider = NotifierProvider<InventoryRevision, int>(
+  InventoryRevision.new,
+);
 
 class InventoryRevision extends Notifier<int> {
   @override

@@ -9,8 +9,9 @@ import '../../domain/models/ledger_entry.dart';
 import '../../domain/models/member.dart';
 
 /// Bumped after customer writes so paginated customer lists can refresh.
-final customersRevisionProvider =
-    NotifierProvider<CustomersRevision, int>(CustomersRevision.new);
+final customersRevisionProvider = NotifierProvider<CustomersRevision, int>(
+  CustomersRevision.new,
+);
 
 class CustomersRevision extends Notifier<int> {
   @override

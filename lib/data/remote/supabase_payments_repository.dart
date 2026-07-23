@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/payment.dart';
 import '../repositories/payments_repository.dart';
+import 'supabase_provider.dart';
 
 class SupabasePaymentsRepository implements PaymentsRepository {
   SupabasePaymentsRepository(this._client);
@@ -12,7 +13,7 @@ class SupabasePaymentsRepository implements PaymentsRepository {
 
   @override
   Future<List<Payment>> listByCustomer(String customerId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('payments')
         .select()
@@ -34,7 +35,7 @@ class SupabasePaymentsRepository implements PaymentsRepository {
     required String receivedByMemberId,
     bool enqueueRemote = true,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final paymentId = id ?? const Uuid().v4();
     final result = await client.rpc<dynamic>(
       'record_payment',
@@ -57,7 +58,7 @@ class SupabasePaymentsRepository implements PaymentsRepository {
 
   @override
   Future<int> totalDues() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client.from('customer_balances').select('balance_due');
     var total = 0;
     for (final row in rows as List) {
@@ -65,11 +66,5 @@ class SupabasePaymentsRepository implements PaymentsRepository {
       if (due != null && due > 0) total += due.toInt();
     }
     return total;
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

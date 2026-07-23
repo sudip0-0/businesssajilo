@@ -117,9 +117,7 @@ class _TitleBlock extends StatelessWidget {
           ),
         Text(
           title,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: WebPalette.ink,
-          ),
+          style: theme.textTheme.headlineSmall?.copyWith(color: WebPalette.ink),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 5),

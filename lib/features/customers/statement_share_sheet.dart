@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/invoicing/statement_document.dart';
 import '../../core/invoicing/statement_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -107,8 +108,8 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
         pngBytes: png,
         fileName: fileName,
       );
-    } catch (_) {
-      if (mounted) setState(() => _error = l10n.actionFailed);
+    } catch (e) {
+      if (mounted) setState(() => _error = AppFailure.from(e).message(l10n));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

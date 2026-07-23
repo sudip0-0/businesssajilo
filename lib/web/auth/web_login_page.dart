@@ -150,9 +150,9 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
                     const SizedBox(height: 10),
                     Text(
                       l10n.tagline,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: WebPalette.inkSoft),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: WebPalette.inkSoft,
+                      ),
                     ).animate().fadeIn(duration: 380.ms, delay: 80.ms),
                     const SizedBox(height: 28),
                     const LocaleToggle(fullWidth: true),

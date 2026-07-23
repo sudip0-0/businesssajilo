@@ -145,9 +145,7 @@ class _WebBentoTileState extends State<WebBentoTile> {
           color: WebPalette.card,
           borderRadius: BorderRadius.circular(tokens.cardRadius),
           border: Border.all(
-            color: lifted
-                ? WebPalette.hairlineStrong
-                : WebPalette.hairline,
+            color: lifted ? WebPalette.hairlineStrong : WebPalette.hairline,
           ),
           boxShadow: lifted || widget.elevated
               ? tokens.metricShadow

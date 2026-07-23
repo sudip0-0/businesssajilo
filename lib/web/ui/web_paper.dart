@@ -40,10 +40,9 @@ class _GrainPainter extends CustomPainter {
       final dx = random.nextDouble() * size.width;
       final dy = random.nextDouble() * size.height;
       final dark = random.nextBool();
-      paint.color =
-          (dark ? WebPalette.ink : Colors.white).withValues(
-            alpha: (dark ? 0.028 : 0.35) * opacity,
-          );
+      paint.color = (dark ? WebPalette.ink : Colors.white).withValues(
+        alpha: (dark ? 0.028 : 0.35) * opacity,
+      );
       canvas.drawPoints(PointMode.points, [Offset(dx, dy)], paint);
     }
   }

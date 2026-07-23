@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/models/product.dart';
@@ -121,92 +121,85 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    try {
-      final repo = ref.read(productsRepositoryProvider);
-      final cost = parseNpr(_costController.text)?.value ?? 0;
-      final refPrice = parseNpr(_refController.text)?.value ?? 0;
-      final threshold = int.tryParse(_thresholdController.text) ?? 0;
-      final session = ref.read(authProvider).value;
-      final businessId = session?.member?.businessId;
-      final sku = _skuController.text.trim();
+    await runSubmitAction(
+      context,
+      action: () async {
+        final repo = ref.read(productsRepositoryProvider);
+        final cost = parseNpr(_costController.text)?.value ?? 0;
+        final refPrice = parseNpr(_refController.text)?.value ?? 0;
+        final threshold = int.tryParse(_thresholdController.text) ?? 0;
+        final session = ref.read(authProvider).value;
+        final businessId = session?.member?.businessId;
+        final sku = _skuController.text.trim();
 
-      Product saved;
-      if (_isEdit) {
-        saved = await repo.update(
-          id: widget.product!.id,
-          name: _nameController.text.trim(),
-          nameNp: _nameNpController.text.trim().isEmpty
-              ? null
-              : _nameNpController.text.trim(),
-          sku: sku.isEmpty ? null : sku,
-          categoryId: widget.product!.categoryId,
-          unit: _unitController.text.trim(),
-          costPrice: cost,
-          referencePrice: refPrice,
-          lowStockThreshold: threshold,
-          imageUrl: widget.product!.imageUrl,
-        );
-      } else {
-        saved = await repo.create(
-          name: _nameController.text.trim(),
-          nameNp: _nameNpController.text.trim().isEmpty
-              ? null
-              : _nameNpController.text.trim(),
-          sku: sku.isEmpty ? null : sku,
-          categoryId: null,
-          unit: _unitController.text.trim(),
-          costPrice: cost,
-          referencePrice: refPrice,
-          lowStockThreshold: threshold,
-        );
-      }
+        Product saved;
+        if (_isEdit) {
+          saved = await repo.update(
+            id: widget.product!.id,
+            name: _nameController.text.trim(),
+            nameNp: _nameNpController.text.trim().isEmpty
+                ? null
+                : _nameNpController.text.trim(),
+            sku: sku.isEmpty ? null : sku,
+            categoryId: widget.product!.categoryId,
+            unit: _unitController.text.trim(),
+            costPrice: cost,
+            referencePrice: refPrice,
+            lowStockThreshold: threshold,
+            imageUrl: widget.product!.imageUrl,
+          );
+        } else {
+          saved = await repo.create(
+            name: _nameController.text.trim(),
+            nameNp: _nameNpController.text.trim().isEmpty
+                ? null
+                : _nameNpController.text.trim(),
+            sku: sku.isEmpty ? null : sku,
+            categoryId: null,
+            unit: _unitController.text.trim(),
+            costPrice: cost,
+            referencePrice: refPrice,
+            lowStockThreshold: threshold,
+          );
+        }
 
-      if (_imageBytes != null && businessId != null) {
-        final path = await repo.uploadImage(
-          businessId: businessId,
-          productId: saved.id,
-          bytes: _imageBytes!,
-          mimeType: _imageMime ?? 'image/jpeg',
-        );
-        saved = await repo.update(
-          id: saved.id,
-          name: saved.name,
-          nameNp: saved.nameNp,
-          sku: saved.sku,
-          categoryId: saved.categoryId,
-          unit: saved.unit,
-          costPrice: saved.costPrice,
-          referencePrice: saved.referencePrice,
-          lowStockThreshold: saved.lowStockThreshold,
-          imageUrl: path,
-        );
-      }
+        if (_imageBytes != null && businessId != null) {
+          final path = await repo.uploadImage(
+            businessId: businessId,
+            productId: saved.id,
+            bytes: _imageBytes!,
+            mimeType: _imageMime ?? 'image/jpeg',
+          );
+          saved = await repo.update(
+            id: saved.id,
+            name: saved.name,
+            nameNp: saved.nameNp,
+            sku: saved.sku,
+            categoryId: saved.categoryId,
+            unit: saved.unit,
+            costPrice: saved.costPrice,
+            referencePrice: saved.referencePrice,
+            lowStockThreshold: saved.lowStockThreshold,
+            imageUrl: path,
+          );
+        }
 
-      bumpInventoryRevision(ref);
-      ref.invalidate(productListProvider);
-      ref.invalidate(lowStockCountProvider);
-      if (_isEdit) {
-        ref.invalidate(productDetailProvider(saved.id));
-      }
+        bumpInventoryRevision(ref);
+        ref.invalidate(productListProvider);
+        ref.invalidate(lowStockCountProvider);
+        if (_isEdit) {
+          ref.invalidate(productDetailProvider(saved.id));
+        }
 
-      if (!mounted) return;
-      if (widget.onSaved != null) {
-        widget.onSaved!(saved);
-      } else {
-        Navigator.pop(context, true);
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).actionFailed),
-            backgroundColor: BsColors.danger,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+        if (!mounted) return;
+        if (widget.onSaved != null) {
+          widget.onSaved!(saved);
+        } else {
+          Navigator.pop(context, true);
+        }
+      },
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   @override
@@ -299,7 +292,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _thresholdController,
-                  decoration: InputDecoration(labelText: l10n.lowStockThreshold),
+                  decoration: InputDecoration(
+                    labelText: l10n.lowStockThreshold,
+                  ),
                   keyboardType: TextInputType.number,
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return null;
@@ -336,11 +331,7 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     if (!twoCol) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          left,
-          const SizedBox(height: 12),
-          right,
-        ],
+        children: [left, const SizedBox(height: 12), right],
       );
     }
     return Row(

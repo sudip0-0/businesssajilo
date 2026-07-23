@@ -123,9 +123,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
           return Card(
             child: ListTile(
               title: Text(
-                widget.ownOnly
-                    ? dateStr
-                    : (order.customerShopName ?? '—'),
+                widget.ownOnly ? dateStr : (order.customerShopName ?? '—'),
               ),
               subtitle: widget.ownOnly
                   ? Text('${order.items.length} ${l10n.orderItems}')

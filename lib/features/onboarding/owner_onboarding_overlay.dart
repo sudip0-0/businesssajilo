@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/submit_action.dart';
 import 'demo_data_seeder.dart';
 import 'onboarding_prefs.dart';
 
@@ -47,24 +48,24 @@ class _OwnerOnboardingOverlayState
 
   Future<void> _seedAndFinish() async {
     final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _seeding = true);
-    try {
-      final result = await DemoDataSeeder(ref).seed();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            result == DemoSeedResult.loaded
-                ? l10n.demoDataLoaded
-                : l10n.demoDataSkipped,
+    await runSubmitAction(
+      context,
+      action: () async {
+        final result = await DemoDataSeeder(ref).seed();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result == DemoSeedResult.loaded
+                  ? l10n.demoDataLoaded
+                  : l10n.demoDataSkipped,
+            ),
           ),
-        ),
-      );
-    } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
-    } finally {
-      if (mounted) setState(() => _seeding = false);
-    }
+        );
+      },
+    );
+    if (mounted) setState(() => _seeding = false);
     await _finish();
   }
 

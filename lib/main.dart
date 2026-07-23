@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/config/env.dart';
+import 'core/logging/app_log.dart';
 import 'core/notifications/push_service.dart';
 
 Future<void> main() async {
@@ -13,9 +15,21 @@ Future<void> main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
+      if (Env.hasSentry) {
+        await SentryFlutter.init((options) {
+          options.dsn = Env.sentryDsn;
+          options.environment = Env.flavor;
+          options.tracesSampleRate = 0.0;
+        });
+      }
+
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
-        debugPrint('FlutterError: ${details.exceptionAsString()}');
+        AppLog.error(
+          'FlutterError',
+          error: details.exception,
+          stackTrace: details.stack,
+        );
       };
 
       if (!Env.isConfigured) {
@@ -34,7 +48,7 @@ Future<void> main() async {
       runApp(const ProviderScope(child: BusinessSajiloApp()));
     },
     (error, stack) {
-      debugPrint('Uncaught zone error: $error\n$stack');
+      AppLog.error('Uncaught zone error', error: error, stackTrace: stack);
     },
   );
 }

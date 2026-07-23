@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/error_state.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/quotes_repository.dart';
 import '../../domain/enums.dart';
@@ -55,26 +56,22 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
     if (confirmed != true || !mounted) return;
 
     setState(() => _loading = true);
-    try {
-      final updated = await ref
-          .read(quotesRepositoryProvider)
-          .accept(
-            widget.quoteId,
-            comment: _commentController.text.trim().isEmpty
-                ? null
-                : _commentController.text.trim(),
-          );
-      _invalidateOrder(updated.orderId);
-      if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).actionFailed)),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    final ok = await runSubmitAction(
+      context,
+      action: () async {
+        final updated = await ref
+            .read(quotesRepositoryProvider)
+            .accept(
+              widget.quoteId,
+              comment: _commentController.text.trim().isEmpty
+                  ? null
+                  : _commentController.text.trim(),
+            );
+        _invalidateOrder(updated.orderId);
+      },
+    );
+    if (ok && mounted) Navigator.pop(context, true);
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _reject() async {
@@ -86,21 +83,17 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
       return;
     }
     setState(() => _loading = true);
-    try {
-      final updated = await ref
-          .read(quotesRepositoryProvider)
-          .reject(widget.quoteId, comment: _commentController.text.trim());
-      _invalidateOrder(updated.orderId);
-      if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    final ok = await runSubmitAction(
+      context,
+      action: () async {
+        final updated = await ref
+            .read(quotesRepositoryProvider)
+            .reject(widget.quoteId, comment: _commentController.text.trim());
+        _invalidateOrder(updated.orderId);
+      },
+    );
+    if (ok && mounted) Navigator.pop(context, true);
+    if (mounted) setState(() => _loading = false);
   }
 
   void _invalidateOrder(String orderId) {

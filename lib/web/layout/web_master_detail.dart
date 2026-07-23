@@ -36,7 +36,11 @@ class WebMasterDetail extends StatelessWidget {
         if (compact) {
           final child = hasSelection && detail != null ? detail! : list;
           if (height == null) return child;
-          return SizedBox(width: constraints.maxWidth, height: height, child: child);
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: height,
+            child: child,
+          );
         }
 
         return SizedBox(

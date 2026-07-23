@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/bs_date.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../auth/providers/auth_provider.dart';
@@ -43,28 +44,20 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     if (member == null) return;
 
     setState(() => _sending = true);
-    try {
-      await ref
-          .read(messagesRepositoryProvider)
-          .sendText(
-            orderId: widget.orderId,
-            senderMemberId: member.id,
-            body: body,
-          );
-      _controller.clear();
-    } catch (_) {
-      _showSendFailed();
-    } finally {
-      if (mounted) setState(() => _sending = false);
-    }
-  }
-
-  void _showSendFailed() {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(
+    final ok = await runSubmitAction(
       context,
-    ).showSnackBar(SnackBar(content: Text(l10n.messageSendFailed)));
+      action: () async {
+        await ref
+            .read(messagesRepositoryProvider)
+            .sendText(
+              orderId: widget.orderId,
+              senderMemberId: member.id,
+              body: body,
+            );
+      },
+    );
+    if (ok) _controller.clear();
+    if (mounted) setState(() => _sending = false);
   }
 
   Future<void> _attachImage() async {
@@ -91,22 +84,23 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
       return;
     }
     final safeName = file.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    if (!mounted) return;
     setState(() => _sending = true);
-    try {
-      await ref
-          .read(messagesRepositoryProvider)
-          .sendImage(
-            orderId: widget.orderId,
-            senderMemberId: member.id,
-            businessId: businessId,
-            bytes: bytes,
-            fileName: safeName.isEmpty ? 'chat.jpg' : safeName,
-          );
-    } catch (_) {
-      _showSendFailed();
-    } finally {
-      if (mounted) setState(() => _sending = false);
-    }
+    await runSubmitAction(
+      context,
+      action: () async {
+        await ref
+            .read(messagesRepositoryProvider)
+            .sendImage(
+              orderId: widget.orderId,
+              senderMemberId: member.id,
+              businessId: businessId,
+              bytes: bytes,
+              fileName: safeName.isEmpty ? 'chat.jpg' : safeName,
+            );
+      },
+    );
+    if (mounted) setState(() => _sending = false);
   }
 
   /// Time-only for same-day messages; BS date + time otherwise.

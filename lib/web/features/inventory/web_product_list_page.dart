@@ -66,11 +66,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     _pager = PaginatedListState<Product>(
       loadPage: (offset, limit) => ref
           .read(productsRepositoryProvider)
-          .list(
-            activeOnly: !_showInactive,
-            offset: offset,
-            limit: limit,
-          ),
+          .list(activeOnly: !_showInactive, offset: offset, limit: limit),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -136,9 +132,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       actions: [
         if (widget.canEdit) ...[
           FilterChip(
-            label: Text(
-              _showInactive ? l10n.hideInactive : l10n.showInactive,
-            ),
+            label: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
             selected: _showInactive,
             onSelected: _setShowInactive,
           ),
@@ -261,9 +255,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                 final sku = product.sku;
 
                 return Material(
-                  color: selected
-                      ? WebPalette.navyWash
-                      : Colors.transparent,
+                  color: selected ? WebPalette.navyWash : Colors.transparent,
                   child: InkWell(
                     onTap: () => _openProduct(product),
                     hoverColor: WebPalette.paperDeep,

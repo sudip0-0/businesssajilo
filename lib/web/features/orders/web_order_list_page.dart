@@ -140,10 +140,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                 children: [
                   Text(title),
                   if (!widget.ownOnly)
-                    Text(
-                      dateStr,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    Text(dateStr, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -182,8 +179,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
         !pager.initialLoading &&
         pager.error == null &&
         filtered.isNotEmpty;
-    final showLoadMore =
-        showTable && (pager.hasMore || pager.loading);
+    final showLoadMore = showTable && (pager.hasMore || pager.loading);
 
     late final Widget listBody;
     if (pager == null || pager.initialLoading) {
@@ -200,9 +196,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
         message: _query.isNotEmpty ? l10n.noSearchResults : l10n.noOrders,
         icon: PhosphorIconsRegular.shoppingCart,
         actionLabel: _query.isNotEmpty ? l10n.clearSearch : null,
-        onAction: _query.isNotEmpty
-            ? () => setState(() => _query = '')
-            : null,
+        onAction: _query.isNotEmpty ? () => setState(() => _query = '') : null,
       );
     } else {
       listBody = _orderTable(l10n, filtered);

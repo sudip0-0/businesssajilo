@@ -96,9 +96,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
       breadcrumbs: [l10n.staffManagement],
       actions: [
         FilterChip(
-          label: Text(
-            _showInactive ? l10n.hideInactive : l10n.showInactive,
-          ),
+          label: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
           selected: _showInactive,
           onSelected: (v) => setState(() => _showInactive = v),
         ),

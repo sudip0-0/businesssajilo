@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
@@ -70,27 +71,20 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
     final refNote = _refController.text.trim();
 
     setState(() => _loading = true);
-    try {
-      await recordCustomerPayment(
-        ref.read(billingRefProvider),
-        customerId: customerId,
-        amountPaisa: amount!.value,
-        method: _method,
-        refNote: refNote.isEmpty ? null : refNote,
-      );
-      if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).actionFailed),
-            backgroundColor: BsColors.danger,
-          ),
+    await runSubmitAction(
+      context,
+      action: () async {
+        await recordCustomerPayment(
+          ref.read(billingRefProvider),
+          customerId: customerId,
+          amountPaisa: amount!.value,
+          method: _method,
+          refNote: refNote.isEmpty ? null : refNote,
         );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+        if (mounted) Navigator.pop(context, true);
+      },
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   @override

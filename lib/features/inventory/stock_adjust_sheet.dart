@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/qty_stepper.dart';
+import '../../core/ui/submit_action.dart';
 import '../../data/repositories/stock_repository.dart';
 import '../auth/providers/auth_provider.dart';
 
@@ -42,29 +43,22 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
     final memberId = ref.read(authProvider).value?.member?.id;
     if (memberId == null) return;
     setState(() => _loading = true);
-    try {
-      final delta = _negative ? -_qtyDelta : _qtyDelta;
-      await ref
-          .read(stockRepositoryProvider)
-          .adjust(
-            productId: widget.productId,
-            qtyDelta: delta,
-            reason: _reasonController.text.trim(),
-            createdByMemberId: memberId,
-          );
-      if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).actionFailed),
-            backgroundColor: BsColors.danger,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    await runSubmitAction(
+      context,
+      action: () async {
+        final delta = _negative ? -_qtyDelta : _qtyDelta;
+        await ref
+            .read(stockRepositoryProvider)
+            .adjust(
+              productId: widget.productId,
+              qtyDelta: delta,
+              reason: _reasonController.text.trim(),
+              createdByMemberId: memberId,
+            );
+        if (mounted) Navigator.pop(context, true);
+      },
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   @override

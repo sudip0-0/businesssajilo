@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/submit_action.dart';
 import '../../domain/enums.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../auth/change_password_screen.dart';
@@ -30,10 +31,14 @@ Future<void> showChangePasswordSheet(BuildContext context) async {
   );
 }
 
+/// Result of the delete-confirm dialog.
+typedef _DeleteConfirmResult = ({bool confirmed, String? password});
+
 /// Confirmation + deletion flow.
 ///
 /// Customers/staff delete their own login (anonymized; business records
-/// stay). Owners delete the entire business, guarded by type-to-confirm.
+/// stay). Owners delete the entire business, guarded by type-to-confirm
+/// plus password re-authentication.
 Future<void> confirmAndDeleteAccount(
   BuildContext context,
   WidgetRef ref, {
@@ -42,7 +47,7 @@ Future<void> confirmAndDeleteAccount(
   final l10n = AppLocalizations.of(context);
   const confirmWord = 'DELETE';
 
-  final confirmed = await showDialog<bool>(
+  final result = await showDialog<_DeleteConfirmResult>(
     context: context,
     builder: (dialogContext) => _DeleteConfirmDialog(
       title: deleteBusiness ? l10n.deleteBusiness : l10n.deleteAccount,
@@ -51,19 +56,23 @@ Future<void> confirmAndDeleteAccount(
           : l10n.deleteAccountWarning,
       // Business deletion is the most destructive action in the app.
       confirmWord: deleteBusiness ? confirmWord : null,
+      requirePassword: deleteBusiness,
     ),
   );
-  if (confirmed != true || !context.mounted) return;
+  if (result == null || !result.confirmed || !context.mounted) return;
 
-  final messenger = ScaffoldMessenger.of(context);
-  try {
-    await ref
-        .read(authProvider.notifier)
-        .deleteAccount(deleteBusiness: deleteBusiness);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.accountDeleted)));
-  } catch (_) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
-  }
+  await runSubmitAction(
+    context,
+    action: () async {
+      await ref
+          .read(authProvider.notifier)
+          .deleteAccount(
+            deleteBusiness: deleteBusiness,
+            password: result.password,
+          );
+    },
+    successMessage: l10n.accountDeleted,
+  );
 }
 
 class _DeleteConfirmDialog extends StatefulWidget {
@@ -71,11 +80,13 @@ class _DeleteConfirmDialog extends StatefulWidget {
     required this.title,
     required this.warning,
     this.confirmWord,
+    this.requirePassword = false,
   });
 
   final String title;
   final String warning;
   final String? confirmWord;
+  final bool requirePassword;
 
   @override
   State<_DeleteConfirmDialog> createState() => _DeleteConfirmDialogState();
@@ -83,29 +94,44 @@ class _DeleteConfirmDialog extends StatefulWidget {
 
 class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
   final _controller = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _matches = false;
+  bool _passwordOk = false;
 
   @override
   void initState() {
     super.initState();
     _matches = widget.confirmWord == null;
-    _controller.addListener(() {
-      final matches =
-          widget.confirmWord == null ||
-          _controller.text.trim() == widget.confirmWord;
-      if (matches != _matches) setState(() => _matches = matches);
-    });
+    _passwordOk = !widget.requirePassword;
+    _controller.addListener(_recompute);
+    _passwordController.addListener(_recompute);
+  }
+
+  void _recompute() {
+    final matches =
+        widget.confirmWord == null ||
+        _controller.text.trim() == widget.confirmWord;
+    final passwordOk =
+        !widget.requirePassword || _passwordController.text.isNotEmpty;
+    if (matches != _matches || passwordOk != _passwordOk) {
+      setState(() {
+        _matches = matches;
+        _passwordOk = passwordOk;
+      });
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final canConfirm = _matches && _passwordOk;
     return AlertDialog(
       title: Text(widget.title),
       content: Column(
@@ -122,16 +148,35 @@ class _DeleteConfirmDialogState extends State<_DeleteConfirmDialog> {
               ),
             ),
           ],
+          if (widget.requirePassword) ...[
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              autofillHints: const [AutofillHints.password],
+              decoration: InputDecoration(
+                labelText: l10n.confirmPasswordToDelete,
+              ),
+            ),
+          ],
         ],
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
+          onPressed: () =>
+              Navigator.pop(context, (confirmed: false, password: null)),
           child: Text(l10n.cancel),
         ),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: BsColors.danger),
-          onPressed: _matches ? () => Navigator.pop(context, true) : null,
+          onPressed: canConfirm
+              ? () => Navigator.pop(context, (
+                  confirmed: true,
+                  password: widget.requirePassword
+                      ? _passwordController.text
+                      : null,
+                ))
+              : null,
           child: Text(widget.title),
         ),
       ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/logging/app_log.dart';
 import '../../domain/models/message.dart';
 import '../remote/supabase_provider.dart';
 
@@ -22,7 +23,7 @@ class MessagesRepository {
   final Map<String, Future<String>> _signedUrlCache = {};
 
   Future<List<Message>> list(String orderId) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('messages')
         .select('*, members(display_name)')
@@ -32,7 +33,7 @@ class MessagesRepository {
   }
 
   Stream<List<Message>> watch(String orderId) {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     // Capped at the most recent messages to avoid unbounded payloads.
     return client
         .from('messages')
@@ -50,7 +51,7 @@ class MessagesRepository {
     required String senderMemberId,
     required String body,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final id = const Uuid().v4();
     final row = await client
         .from('messages')
@@ -72,9 +73,15 @@ class MessagesRepository {
     required Uint8List bytes,
     required String fileName,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final path = '$businessId/$orderId/${const Uuid().v4()}_$fileName';
-    await client.storage.from(_bucket).uploadBinary(path, bytes);
+    await client.storage
+        .from(_bucket)
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: _contentTypeFor(fileName)),
+        );
 
     final id = const Uuid().v4();
     try {
@@ -93,14 +100,23 @@ class MessagesRepository {
       // Best-effort cleanup of the orphaned storage object.
       try {
         await client.storage.from(_bucket).remove([path]);
-      } catch (_) {}
+      } catch (cleanupError, st) {
+        AppLog.warn('Orphan chat image cleanup failed', cleanupError, st);
+      }
       rethrow;
     }
   }
 
+  static String _contentTypeFor(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
   Future<String?> signedImageUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final cached = _signedUrlCache[storagePath];
     if (cached != null) return cached;
     final future = client.storage
@@ -122,11 +138,5 @@ class MessagesRepository {
       map['sender_name'] = member['display_name'];
     }
     return Message.fromJson(map);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

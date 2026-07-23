@@ -344,6 +344,13 @@
     }
   },
   "actionFailed": "Something went wrong. Try again.",
+  "errorNetwork": "No connection. Check your network and try again.",
+  "errorPermission": "You do not have permission for this action.",
+  "errorValidation": "Please check the form and try again.",
+  "errorConflict": "This record already exists or conflicts with another.",
+  "errorNotConfigured": "App is not configured. Contact support.",
+  "quoteRatesLoadFailed": "Some product rates could not be loaded. Enter them manually.",
+  "valueUnavailable": "—",
   "more": "More",
   "replayTour": "Replay tour",
   "replayTourDone": "Tour will show on the next dashboard visit",
@@ -512,6 +519,8 @@
     }
   },
   "accountDeleted": "Account deleted",
+  "confirmPasswordToDelete": "Enter your password to confirm",
+  "passwordRequiredToDelete": "Password is required to delete the business",
   "reorder": "Reorder",
   "statement": "Statement",
   "shareStatement": "Share statement",

@@ -7,6 +7,7 @@ import '../../domain/models/bill.dart';
 import '../../domain/models/bill_item.dart';
 import '../repositories/bills_repository.dart';
 import '../repositories/payments_repository.dart';
+import 'supabase_provider.dart';
 
 class SupabaseBillsRepository implements BillsRepository {
   SupabaseBillsRepository(this._client, PaymentsRepository payments);
@@ -15,7 +16,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<List<Bill>> list({int offset = 0, int? limit}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var query = client
         .from('bills')
         .select('*, customers(shop_name)')
@@ -29,7 +30,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<List<Bill>> search(String query, {int limit = 50}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('bills')
         .select('*, customers(shop_name)')
@@ -41,7 +42,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<Bill> get(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('bills')
         .select('*, customers(shop_name), bill_items(*)')
@@ -53,7 +54,7 @@ class SupabaseBillsRepository implements BillsRepository {
   @override
   Future<int> todaysSales() async {
     // Net of credit notes — same source as report_sales_daily.
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final day = nptDateString(nptDayStartUtc());
     final rows = await client
         .from('report_sales_daily')
@@ -68,7 +69,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<int> todaysBillCount() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final start = nptDayStartUtc();
     final count = await client
         .from('bills')
@@ -79,7 +80,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<int> yesterdaysSales() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final yesterdayStart = nptDayStartUtc().subtract(const Duration(days: 1));
     final day = nptDateString(yesterdayStart);
     final rows = await client
@@ -95,7 +96,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<List<Bill>> listTodaysBills({int limit = 20}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final start = nptDayStartUtc();
     final rows = await client
         .from('bills')
@@ -171,7 +172,7 @@ class SupabaseBillsRepository implements BillsRepository {
     required String? paymentRefNote,
     required int? paymentAmount,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final billId = const Uuid().v4();
 
     int? amount;
@@ -224,7 +225,7 @@ class SupabaseBillsRepository implements BillsRepository {
     bool paidNow = false,
     PaymentMethod paymentMethod = PaymentMethod.cash,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final billId = const Uuid().v4();
     final payload = <String, dynamic>{
       'id': billId,
@@ -259,11 +260,5 @@ class SupabaseBillsRepository implements BillsRepository {
       return bill.copyWith(items: items);
     }
     return bill;
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

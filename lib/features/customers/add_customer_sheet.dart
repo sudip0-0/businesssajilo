@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_form_section.dart';
@@ -113,15 +114,19 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 ? null
                 : '+977${_phoneController.text.trim()}',
             address: _buildAddress(),
-            openingBalance: parseNpr(_openingBalanceController.text)?.value ?? 0,
+            openingBalance:
+                parseNpr(_openingBalanceController.text)?.value ?? 0,
             portalEnabled: _enablePortal,
           );
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop(true);
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        setState(() => _error = AppLocalizations.of(context).actionFailed);
+        setState(
+          () =>
+              _error = AppFailure.from(e).message(AppLocalizations.of(context)),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

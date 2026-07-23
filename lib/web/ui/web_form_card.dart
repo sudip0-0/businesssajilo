@@ -94,9 +94,7 @@ class WebFormSectionLabel extends StatelessWidget {
         children: [
           Text(label.toUpperCase(), style: WebTypography.eyebrow()),
           const SizedBox(width: 10),
-          const Expanded(
-            child: Divider(height: 1, color: WebPalette.hairline),
-          ),
+          const Expanded(child: Divider(height: 1, color: WebPalette.hairline)),
         ],
       ),
     );

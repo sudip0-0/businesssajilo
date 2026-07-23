@@ -44,11 +44,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     _pager = PaginatedListState<Product>(
       loadPage: (offset, limit) => ref
           .read(productsRepositoryProvider)
-          .list(
-            activeOnly: !_showInactive,
-            offset: offset,
-            limit: limit,
-          ),
+          .list(activeOnly: !_showInactive, offset: offset, limit: limit),
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -106,9 +102,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         if (widget.canEdit)
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            title: Text(
-              _showInactive ? l10n.hideInactive : l10n.showInactive,
-            ),
+            title: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
             value: _showInactive,
             onChanged: _setShowInactive,
           ),
@@ -171,7 +165,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             title: Text(product.name),
             subtitle: Text(
               [
-                if (product.sku != null && product.sku!.isNotEmpty) product.sku!,
+                if (product.sku != null && product.sku!.isNotEmpty)
+                  product.sku!,
                 if (!product.isActive) l10n.inactive,
               ].join(' · '),
             ),

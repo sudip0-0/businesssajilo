@@ -13,7 +13,7 @@ class DeviceTokensRepository {
   final SupabaseClient? _client;
 
   Future<void> upsert({required String memberId, required String token}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client.from('device_tokens').upsert({
       'member_id': memberId,
       'token': token,
@@ -25,7 +25,7 @@ class DeviceTokensRepository {
     required String memberId,
     required String token,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('device_tokens')
         .delete()
@@ -43,11 +43,5 @@ class DeviceTokensRepository {
       default:
         return 'web';
     }
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

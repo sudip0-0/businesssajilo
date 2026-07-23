@@ -88,7 +88,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.todaysSales,
                 value: stats.when(
-                  data: (d) => formatNpr(Paisa(d.todaySales), showPaisa: false),
+                  data: (d) => d.todaySales == null
+                      ? l10n.valueUnavailable
+                      : formatNpr(Paisa(d.todaySales!), showPaisa: false),
                   loading: () => '…',
                   error: (_, _) => l10n.loadingFailed,
                 ),
@@ -123,7 +125,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.totalDues,
                 value: stats.when(
-                  data: (d) => formatNpr(Paisa(d.totalDues), showPaisa: false),
+                  data: (d) => d.totalDues == null
+                      ? l10n.valueUnavailable
+                      : formatNpr(Paisa(d.totalDues!), showPaisa: false),
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
@@ -137,13 +141,16 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.lowStock,
                 value: stats.when(
-                  data: (d) => '${d.lowStockCount}',
+                  data: (d) => d.lowStockCount == null
+                      ? l10n.valueUnavailable
+                      : '${d.lowStockCount}',
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
                 icon: Icons.inventory_2_outlined,
                 subtitle: stats.when(
-                  data: (d) => d.lowStockCount > 0 ? l10n.reorderSoon : null,
+                  data: (d) =>
+                      (d.lowStockCount ?? 0) > 0 ? l10n.reorderSoon : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),
@@ -159,20 +166,24 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 compact: !wide,
                 label: l10n.pendingOrders,
                 value: stats.when(
-                  data: (d) => '${d.pendingOrders}',
+                  data: (d) => d.pendingOrders == null
+                      ? l10n.valueUnavailable
+                      : '${d.pendingOrders}',
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
                 icon: Icons.shopping_cart_outlined,
                 trendLabel: stats.when(
-                  data: (d) =>
-                      d.pendingOrders > 0 ? '${d.pendingOrders} NEW' : null,
+                  data: (d) => (d.pendingOrders ?? 0) > 0
+                      ? '${d.pendingOrders} NEW'
+                      : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),
                 trend: stats.when(
-                  data: (d) =>
-                      d.pendingOrders > 0 ? BsTrendDirection.neutral : null,
+                  data: (d) => (d.pendingOrders ?? 0) > 0
+                      ? BsTrendDirection.neutral
+                      : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),

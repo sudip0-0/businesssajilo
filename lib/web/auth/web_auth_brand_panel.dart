@@ -119,18 +119,19 @@ class WebAuthBrandPanel extends StatelessWidget {
                 const SizedBox(height: 18),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
-                  child: Text(
-                        subhead,
-                        style: WebTypography.serif(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w400,
-                          height: 1.55,
-                          color: Colors.white.withValues(alpha: 0.78),
-                        ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 480.ms, delay: 260.ms)
-                      .slideY(begin: 0.08, end: 0, duration: 480.ms),
+                  child:
+                      Text(
+                            subhead,
+                            style: WebTypography.serif(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w400,
+                              height: 1.55,
+                              color: Colors.white.withValues(alpha: 0.78),
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 480.ms, delay: 260.ms)
+                          .slideY(begin: 0.08, end: 0, duration: 480.ms),
                 ),
                 if (showFeatures) ...[
                   const SizedBox(height: 44),

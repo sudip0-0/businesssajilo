@@ -1,8 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../domain/models/product.dart';
 import '../repositories/products_repository.dart';
+import 'supabase_provider.dart';
 
 class SupabaseProductsRepository implements ProductsRepository {
   SupabaseProductsRepository(this._client);
@@ -17,7 +19,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     int? limit,
     String? query,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var built = client.from('products').select('*, categories(name)');
     if (activeOnly) {
       built = built.eq('is_active', true);
@@ -41,7 +43,7 @@ class SupabaseProductsRepository implements ProductsRepository {
   Future<int> lowStockCount() async {
     // PostgREST cannot compare two columns in a filter, so fetch only the
     // two columns needed instead of full product rows.
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('products')
         .select('stock_cached, low_stock_threshold')
@@ -60,7 +62,7 @@ class SupabaseProductsRepository implements ProductsRepository {
   @override
   Future<List<Product>> listLowStock({int limit = 2}) async {
     // PostgREST cannot compare two columns; fetch candidates then filter.
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('products')
         .select('*, categories(name)')
@@ -80,7 +82,7 @@ class SupabaseProductsRepository implements ProductsRepository {
 
   @override
   Future<Product> get(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('products')
         .select('*, categories(name)')
@@ -100,7 +102,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     int referencePrice = 0,
     int lowStockThreshold = 0,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('products')
         .insert({
@@ -131,7 +133,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     int lowStockThreshold = 0,
     String? imageUrl,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client
         .from('products')
         .update({
@@ -153,13 +155,13 @@ class SupabaseProductsRepository implements ProductsRepository {
 
   @override
   Future<void> deactivate(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client.from('products').update({'is_active': false}).eq('id', id);
   }
 
   @override
   Future<void> activate(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client.from('products').update({'is_active': true}).eq('id', id);
   }
 
@@ -170,7 +172,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     required Uint8List bytes,
     required String mimeType,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final ext = mimeType.contains('png')
         ? 'png'
         : mimeType.contains('webp')
@@ -190,7 +192,7 @@ class SupabaseProductsRepository implements ProductsRepository {
   @override
   Future<String?> signedImageUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     return client.storage
         .from(_bucket)
         .createSignedUrl(storagePath, 60 * 60 * 24);
@@ -203,11 +205,5 @@ class SupabaseProductsRepository implements ProductsRepository {
       map['category_name'] = category['name'];
     }
     return Product.fromJson(map);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

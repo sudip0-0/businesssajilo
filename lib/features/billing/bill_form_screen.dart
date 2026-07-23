@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/error_state.dart';
@@ -103,11 +104,11 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         }
       }
       return savedBill;
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.actionFailed),
+            content: Text(AppFailure.from(e).message(l10n)),
             backgroundColor: BsColors.danger,
           ),
         );

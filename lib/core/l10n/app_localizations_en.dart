@@ -927,6 +927,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionFailed => 'Something went wrong. Try again.';
 
   @override
+  String get errorNetwork => 'No connection. Check your network and try again.';
+
+  @override
+  String get errorPermission => 'You do not have permission for this action.';
+
+  @override
+  String get errorValidation => 'Please check the form and try again.';
+
+  @override
+  String get errorConflict =>
+      'This record already exists or conflicts with another.';
+
+  @override
+  String get errorNotConfigured => 'App is not configured. Contact support.';
+
+  @override
+  String get quoteRatesLoadFailed =>
+      'Some product rates could not be loaded. Enter them manually.';
+
+  @override
+  String get valueUnavailable => '—';
+
+  @override
   String get more => 'More';
 
   @override
@@ -1324,6 +1347,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountDeleted => 'Account deleted';
+
+  @override
+  String get confirmPasswordToDelete => 'Enter your password to confirm';
+
+  @override
+  String get passwordRequiredToDelete =>
+      'Password is required to delete the business';
 
   @override
   String get reorder => 'Reorder';

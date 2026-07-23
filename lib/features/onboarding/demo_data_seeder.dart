@@ -70,6 +70,8 @@ class DemoDataSeeder {
 }
 
 String generateDemoSku(String prefix) {
-  final ts = DateTime.now().millisecondsSinceEpoch.toRadixString(16).toUpperCase();
+  final ts = DateTime.now().millisecondsSinceEpoch
+      .toRadixString(16)
+      .toUpperCase();
   return 'BS-$prefix-${ts.substring(ts.length > 4 ? ts.length - 4 : 0)}';
 }

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/qty_stepper.dart';
+import '../../core/ui/submit_action.dart';
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../domain/models/order_item.dart';
@@ -18,6 +20,7 @@ class _DraftLine {
     required this.name,
     required this.qty,
     required this.rate,
+    this.rateLoadFailed = false,
   }) : discount = 0,
        rateController = TextEditingController(
          text: formatNpr(Paisa(rate), showPaisa: false),
@@ -29,6 +32,7 @@ class _DraftLine {
   int qty;
   int rate;
   int discount;
+  final bool rateLoadFailed;
   final TextEditingController rateController;
   final TextEditingController discountController;
 
@@ -81,62 +85,52 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     }
 
     setState(() => _loading = true);
-    try {
-      await ref
-          .read(quotesRepositoryProvider)
-          .sendQuote(
-            orderId: widget.orderId,
-            createdByMemberId: member.id,
-            total: _total,
-            lines: _lines
-                .map(
-                  (l) => QuoteLineInput(
-                    productId: l.productId,
-                    qty: l.qty,
-                    rate: l.rate,
-                    discount: l.discount,
-                    lineTotal: l.lineTotal,
-                  ),
-                )
-                .toList(),
-          );
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.quoteSent)));
-        Navigator.pop(context, true);
-      }
-    } on QuoteSendException catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    final ok = await runSubmitAction(
+      context,
+      action: () async {
+        await ref
+            .read(quotesRepositoryProvider)
+            .sendQuote(
+              orderId: widget.orderId,
+              createdByMemberId: member.id,
+              total: _total,
+              lines: _lines
+                  .map(
+                    (l) => QuoteLineInput(
+                      productId: l.productId,
+                      qty: l.qty,
+                      rate: l.rate,
+                      discount: l.discount,
+                      lineTotal: l.lineTotal,
+                    ),
+                  )
+                  .toList(),
+            );
+      },
+      successMessage: l10n.quoteSent,
+    );
+    if (ok && mounted) Navigator.pop(context, true);
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _initLines(List<OrderItem> items) async {
     final productsRepo = ref.read(productsRepositoryProvider);
     for (final item in items) {
       var rate = 0;
+      var rateLoadFailed = false;
       try {
         final product = await productsRepo.get(item.productId);
         rate = product.referencePrice;
-      } catch (_) {}
+      } catch (_) {
+        rateLoadFailed = true;
+      }
       _lines.add(
         _DraftLine(
           productId: item.productId,
           name: item.productName ?? '—',
           qty: item.qty,
           rate: rate,
+          rateLoadFailed: rateLoadFailed,
         ),
       );
     }
@@ -164,6 +158,22 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
 
           return Column(
             children: [
+              if (_lines.any((l) => l.rateLoadFailed))
+                Container(
+                  width: double.infinity,
+                  color: BsColors.accent.withValues(alpha: 0.15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(l10n.quoteRatesLoadFailed)),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -180,7 +190,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                               line.name,
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
-                            if (line.rate == 0)
+                            if (line.rate == 0 || line.rateLoadFailed)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
                                 child: Chip(
@@ -206,7 +216,12 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                             ),
                             TextField(
                               controller: line.rateController,
-                              decoration: InputDecoration(labelText: l10n.rate),
+                              decoration: InputDecoration(
+                                labelText: l10n.rate,
+                                errorText: line.rateLoadFailed && line.rate == 0
+                                    ? l10n.rateMissing
+                                    : null,
+                              ),
                               keyboardType: TextInputType.number,
                               onChanged: (v) => setState(() {
                                 line.rate = parseNpr(v)?.value ?? line.rate;

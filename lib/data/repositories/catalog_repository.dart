@@ -14,7 +14,7 @@ class CatalogRepository {
   final SupabaseClient? _client;
 
   Future<List<CatalogProduct>> list() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client.rpc('list_catalog_products');
     return (rows as List).map(_mapRow).toList();
   }
@@ -22,11 +22,5 @@ class CatalogRepository {
   CatalogProduct _mapRow(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
     return CatalogProduct.fromJson(map);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

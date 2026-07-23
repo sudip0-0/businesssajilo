@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../shell/logout_action.dart';
@@ -89,8 +90,8 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
         ).showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
         widget.onChanged?.call();
       }
-    } catch (_) {
-      if (mounted) setState(() => _error = l10n.somethingWentWrong);
+    } catch (e) {
+      if (mounted) setState(() => _error = AppFailure.from(e).message(l10n));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

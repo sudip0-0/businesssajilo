@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/ledger_balance.dart';
 import '../../domain/enums.dart';
@@ -71,7 +71,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
     int? limit,
     String? query,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var filter = client.from('customer_balances').select();
     final q = query?.trim();
     if (q != null && q.isNotEmpty) {
@@ -91,7 +91,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
 
   @override
   Future<List<Customer>> listRecent({int limit = 2}) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final rows = await client
         .from('customer_balances')
         .select()
@@ -102,7 +102,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
 
   @override
   Future<Customer> get(String id) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client.from('customers').select().eq('id', id).single();
     final customer = _mapCustomerRow(row);
     final balanceRow = await client
@@ -120,7 +120,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
 
   @override
   Future<Customer?> getOwnProfile() async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     final row = await client.from('customers').select().maybeSingle();
     if (row == null) return null;
     final customer = _mapCustomerRow(row);
@@ -139,7 +139,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
     int offset = 0,
     int? limit,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     var query = client
         .from('customer_ledger_entries')
         .select()
@@ -169,7 +169,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
     String? address,
     required int openingBalance,
   }) async {
-    final client = _requireClient();
+    final client = requireSupabaseClient(_client);
     await client
         .from('customers')
         .update({
@@ -236,11 +236,5 @@ class SupabaseCustomersRepository implements CustomersRepository {
   Customer _mapCustomerRow(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
     return Customer.fromJson(map);
-  }
-
-  SupabaseClient _requireClient() {
-    final client = _client;
-    if (client == null) throw Exception('Supabase not configured');
-    return client;
   }
 }

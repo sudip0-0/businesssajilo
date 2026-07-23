@@ -6,11 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/ui/submit_action.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../features/auth/login_screen.dart' show emailRegex;
 import '../../../features/customers/providers.dart';
-import '../../theme/web_palette.dart';
 import '../../ui/web_form_card.dart';
 import '../web_page_scaffold.dart';
 
@@ -85,51 +85,45 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    try {
-      final shop = _shopNameController.text.trim();
-      final contact = _contactNameController.text.trim();
-      final displayName = _enablePortal
-          ? (_displayNameController.text.trim().isEmpty
-                ? (contact.isEmpty ? shop : contact)
-                : _displayNameController.text.trim())
-          : (contact.isEmpty ? shop : contact);
-      final password = _enablePortal
-          ? _passwordController.text
-          : _autoPassword();
+    await runSubmitAction(
+      context,
+      action: () async {
+        final shop = _shopNameController.text.trim();
+        final contact = _contactNameController.text.trim();
+        final displayName = _enablePortal
+            ? (_displayNameController.text.trim().isEmpty
+                  ? (contact.isEmpty ? shop : contact)
+                  : _displayNameController.text.trim())
+            : (contact.isEmpty ? shop : contact);
+        final password = _enablePortal
+            ? _passwordController.text
+            : _autoPassword();
 
-      await ref
-          .read(customersRepositoryProvider)
-          .createWithCredentials(
-            email: _emailController.text.trim().isEmpty
-                ? null
-                : _emailController.text.trim().toLowerCase(),
-            password: password,
-            displayName: displayName,
-            shopName: shop,
-            contactName: contact.isEmpty ? null : contact,
-            phone: _phoneController.text.trim().isEmpty
-                ? null
-                : '+977${_phoneController.text.trim()}',
-            address: _buildAddress(),
-            openingBalance: parseNpr(_openingBalanceController.text)?.value ?? 0,
-            portalEnabled: _enablePortal,
-          );
-      ref.invalidate(customerListProvider);
-      ref.invalidate(totalDuesProvider);
-      bumpCustomersRevision(ref);
-      if (mounted) context.go('/owner/customers');
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).actionFailed),
-            backgroundColor: WebPalette.danger,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+        await ref
+            .read(customersRepositoryProvider)
+            .createWithCredentials(
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim().toLowerCase(),
+              password: password,
+              displayName: displayName,
+              shopName: shop,
+              contactName: contact.isEmpty ? null : contact,
+              phone: _phoneController.text.trim().isEmpty
+                  ? null
+                  : '+977${_phoneController.text.trim()}',
+              address: _buildAddress(),
+              openingBalance:
+                  parseNpr(_openingBalanceController.text)?.value ?? 0,
+              portalEnabled: _enablePortal,
+            );
+        ref.invalidate(customerListProvider);
+        ref.invalidate(totalDuesProvider);
+        bumpCustomersRevision(ref);
+        if (mounted) context.go('/owner/customers');
+      },
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   @override
@@ -243,9 +237,7 @@ class _WebCustomerFormPageState extends ConsumerState<WebCustomerFormPage> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _panController,
-                      decoration: InputDecoration(
-                        labelText: l10n.panVatNumber,
-                      ),
+                      decoration: InputDecoration(labelText: l10n.panVatNumber),
                       keyboardType: TextInputType.number,
                     ),
                   ],
