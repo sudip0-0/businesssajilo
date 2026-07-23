@@ -22,16 +22,6 @@ class MessagesRepository {
   /// Signed URLs cached per storage path so rebuilds don't re-request them.
   final Map<String, Future<String>> _signedUrlCache = {};
 
-  Future<List<Message>> list(String orderId) async {
-    final client = requireSupabaseClient(_client);
-    final rows = await client
-        .from('messages')
-        .select('*, members(display_name)')
-        .eq('order_id', orderId)
-        .order('created_at', ascending: true);
-    return (rows as List).map(_mapRow).toList();
-  }
-
   Stream<List<Message>> watch(String orderId) {
     final client = requireSupabaseClient(_client);
     // Capped at the most recent messages to avoid unbounded payloads.

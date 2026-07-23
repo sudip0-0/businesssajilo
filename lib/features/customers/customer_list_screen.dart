@@ -88,7 +88,12 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     final listPane = Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.fromLTRB(
+            BsSpacing.lg,
+            BsSpacing.sm,
+            BsSpacing.lg,
+            0,
+          ),
           child: TextField(
             decoration: InputDecoration(
               hintText: l10n.filterCustomers,
@@ -153,7 +158,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         itemBuilder: (context, index) {
           if (index >= items.length) {
             return Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(BsSpacing.lg),
               child: Center(
                 child: pager.loading
                     ? const CircularProgressIndicator()
@@ -231,57 +236,67 @@ class _CustomerTile extends StatelessWidget {
     final theme = Theme.of(context).textTheme;
     final due = customer.balanceDue;
 
-    return ListTile(
-      onTap: onTap,
+    final subtitle = [
+      if (customer.contactName != null) customer.contactName!,
+      if (customer.phone != null) customer.phone!,
+    ].join(' · ');
+    final dueLabel = due < 0
+        ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'
+        : formatNpr(Paisa(due), showPaisa: false);
+
+    return Semantics(
+      button: true,
       selected: selected,
-      leading: CircleAvatar(
-        backgroundColor: BsColors.primary.withValues(alpha: 0.12),
-        child: Text(
-          customer.shopName.isNotEmpty
-              ? customer.shopName[0].toUpperCase()
-              : '?',
-          style: const TextStyle(color: BsColors.primary),
+      label: [
+        customer.shopName,
+        if (subtitle.isNotEmpty) subtitle,
+        dueLabel,
+      ].join(', '),
+      child: ListTile(
+        onTap: onTap,
+        selected: selected,
+        leading: CircleAvatar(
+          backgroundColor: BsColors.primary.withValues(alpha: 0.12),
+          child: Text(
+            customer.shopName.isNotEmpty
+                ? customer.shopName[0].toUpperCase()
+                : '?',
+            style: const TextStyle(color: BsColors.primary),
+          ),
         ),
-      ),
-      title: Text(customer.shopName),
-      subtitle: Text(
-        [
-          if (customer.contactName != null) customer.contactName!,
-          if (customer.phone != null) customer.phone!,
-        ].join(' · '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: due < 0
-          ? Chip(
-              label: Text(
-                '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}',
-              ),
-              labelStyle: theme.labelSmall?.copyWith(
-                color: BsColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              visualDensity: VisualDensity.compact,
-              side: const BorderSide(color: BsColors.primary),
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  due > 0 ? Icons.arrow_upward : Icons.check,
-                  size: 14,
-                  color: due > 0 ? BsColors.danger : BsColors.success,
+        title: Text(customer.shopName),
+        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: due < 0
+            ? Chip(
+                label: Text(
+                  '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}',
                 ),
-                const SizedBox(width: 2),
-                Text(
-                  formatNpr(Paisa(due), showPaisa: false),
-                  style: theme.titleSmall?.copyWith(
+                labelStyle: theme.labelSmall?.copyWith(
+                  color: BsColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+                visualDensity: VisualDensity.compact,
+                side: const BorderSide(color: BsColors.primary),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    due > 0 ? Icons.arrow_upward : Icons.check,
+                    size: 14,
                     color: due > 0 ? BsColors.danger : BsColors.success,
-                    fontWeight: FontWeight.w600,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 2),
+                  Text(
+                    formatNpr(Paisa(due), showPaisa: false),
+                    style: theme.titleSmall?.copyWith(
+                      color: due > 0 ? BsColors.danger : BsColors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }

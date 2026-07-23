@@ -217,6 +217,12 @@ class SyncingBillsRepository implements BillsRepository {
                 lineTotal: Value(line.lineTotal),
               ),
             );
+        // Mirror server counter-sale stock deduction locally so offline UI
+        // stays honest until pull adopts the server value. Negative stock is
+        // allowed (alert-only policy); amount-only lines have empty productId.
+        if (line.productId.isNotEmpty) {
+          await _decrementLocalStock(line.productId, line.qty);
+        }
         itemRows.add({
           'product_id': line.productId,
           'name_snapshot': line.nameSnapshot,
@@ -400,5 +406,19 @@ class SyncingBillsRepository implements BillsRepository {
 
     unawaited(_sync.syncNow());
     return get(billId);
+  }
+
+  /// Decrements [LocalProducts.stockCached] by [qty]. Negative results are
+  /// allowed — matches the server alert-only negative-stock policy.
+  Future<void> _decrementLocalStock(String productId, int qty) async {
+    final product = await (_db.select(
+      _db.localProducts,
+    )..where((p) => p.id.equals(productId))).getSingleOrNull();
+    if (product == null) return;
+    await (_db.update(
+      _db.localProducts,
+    )..where((p) => p.id.equals(productId))).write(
+      LocalProductsCompanion(stockCached: Value(product.stockCached - qty)),
+    );
   }
 }

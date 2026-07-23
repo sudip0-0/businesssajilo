@@ -14,7 +14,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakePaymentsRepository implements PaymentsRepository {
   @override
-  Future<List<Payment>> listByCustomer(String customerId) async => const [];
+  Future<List<Payment>> listByCustomer(
+    String customerId, {
+    int offset = 0,
+    int limit = 50,
+  }) async => const [];
 
   @override
   Future<Payment> record({

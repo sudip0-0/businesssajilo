@@ -263,6 +263,19 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Deletes successfully synced queue rows older than [olderThan].
+  Future<int> pruneSyncedQueue({
+    Duration olderThan = const Duration(days: 7),
+  }) async {
+    final cutoff = DateTime.now().toUtc().subtract(olderThan);
+    return (delete(syncQueue)..where(
+          (q) =>
+              q.status.equals('synced') &
+              q.createdAt.isSmallerThanValue(cutoff),
+        ))
+        .go();
+  }
+
   Future<DateTime?> watermark(String remoteTable) async {
     final row = await (select(
       syncWatermarks,

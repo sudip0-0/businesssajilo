@@ -82,21 +82,25 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
           icon: const Icon(Icons.dashboard_outlined),
           selectedIcon: const Icon(Icons.dashboard),
           label: l10n.dashboard,
+          tooltip: l10n.dashboard,
         ),
         NavigationDestination(
           icon: const Icon(Icons.storefront_outlined),
           selectedIcon: const Icon(Icons.storefront),
           label: l10n.catalog,
+          tooltip: l10n.catalog,
         ),
         NavigationDestination(
           icon: const Icon(Icons.shopping_bag_outlined),
           selectedIcon: const Icon(Icons.shopping_bag),
           label: l10n.myOrders,
+          tooltip: l10n.myOrders,
         ),
         NavigationDestination(
           icon: const Icon(Icons.account_balance_wallet_outlined),
           selectedIcon: const Icon(Icons.account_balance_wallet),
           label: l10n.myDues,
+          tooltip: l10n.myDues,
         ),
       ],
     );

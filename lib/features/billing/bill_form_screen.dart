@@ -138,7 +138,12 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         Widget productPicker() => Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              padding: const EdgeInsets.fromLTRB(
+                BsSpacing.lg,
+                BsSpacing.sm,
+                BsSpacing.lg,
+                0,
+              ),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: l10n.filterProducts,
@@ -175,7 +180,12 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           children: [
             if (narrow && _draft.lines.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  BsSpacing.sm,
+                  BsSpacing.xs,
+                  BsSpacing.sm,
+                  0,
+                ),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
@@ -228,7 +238,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
               if (widget.embedded)
                 SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(BsSpacing.lg),
                     child: FilledButton(
                       onPressed: _loading
                           ? null
@@ -271,7 +281,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
             if (widget.embedded)
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(BsSpacing.lg),
                   child: FilledButton(
                     onPressed: _loading ? null : _save,
                     child: _loading
@@ -303,7 +313,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       body: body,
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(BsSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -361,7 +371,10 @@ class _LineEditorState extends State<_LineEditor> {
     final l10n = AppLocalizations.of(context);
     final line = widget.line;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BsSpacing.lg,
+        vertical: BsSpacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -467,7 +480,7 @@ class _TotalsBar extends StatelessWidget {
         color: BsColors.primary.withValues(alpha: 0.04),
         border: const Border(top: BorderSide(color: BsColors.border)),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BsSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

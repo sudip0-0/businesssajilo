@@ -26,8 +26,8 @@ abstract final class WebPalette {
   /// Secondary text.
   static const inkSoft = Color(0xFF57606E);
 
-  /// Tertiary text, placeholders, disabled.
-  static const inkFaint = Color(0xFF8B91A0);
+  /// Tertiary text, placeholders, disabled (AA on paper #F7F4EC).
+  static const inkFaint = Color(0xFF6B7280);
 
   // ── Hairlines ───────────────────────────────────────────────────
   /// Default border — warm hairline.

@@ -146,7 +146,7 @@ abstract final class WebTypography {
         fontWeight: FontWeight.w600,
         height: 1.3,
         letterSpacing: 0.9,
-        color: scheme.onSurface.withValues(alpha: 0.62),
+        color: scheme.onSurface.withValues(alpha: 0.72),
       ),
     );
   }

@@ -59,7 +59,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
       onRefresh: _refresh,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(BsSpacing.lg),
         children: [
           Text(
             l10n.namasteGreeting(name),
@@ -195,7 +195,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
           Card(
             margin: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(BsSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -262,7 +262,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
           Card(
             margin: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(BsSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -283,7 +283,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
           Card(
             margin: EdgeInsets.zero,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(BsSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -420,7 +420,7 @@ class _TransactionsList extends StatelessWidget {
 
     if (bills.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: BsSpacing.md),
         child: Text(
           l10n.noSalesInPeriod,
           style: Theme.of(

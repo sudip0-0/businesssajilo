@@ -160,18 +160,24 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             );
           }
           final product = filtered[index];
-          return ListTile(
-            leading: ProductImage(storagePath: product.imageUrl),
-            title: Text(product.name),
-            subtitle: Text(
-              [
-                if (product.sku != null && product.sku!.isNotEmpty)
-                  product.sku!,
-                if (!product.isActive) l10n.inactive,
-              ].join(' · '),
+          final subtitleParts = [
+            if (product.sku != null && product.sku!.isNotEmpty) product.sku!,
+            if (!product.isActive) l10n.inactive,
+          ];
+          return Semantics(
+            button: true,
+            label: [
+              product.name,
+              ...subtitleParts,
+              '${product.stockCached}',
+            ].join(', '),
+            child: ListTile(
+              leading: ProductImage(storagePath: product.imageUrl),
+              title: Text(product.name),
+              subtitle: Text(subtitleParts.join(' · ')),
+              trailing: StockBadge(product: product),
+              onTap: () => _openDetail(context, product),
             ),
-            trailing: StockBadge(product: product),
-            onTap: () => _openDetail(context, product),
           );
         },
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 import '../utils/report_range.dart';
 import '../../domain/models/sales_period_point.dart';
@@ -57,26 +58,46 @@ class BsSalesLineChart extends StatelessWidget {
     return value.toString();
   }
 
+  Widget _emptyChart(BuildContext context, String message) {
+    return SizedBox(
+      height: height,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.show_chart_outlined,
+              size: 36,
+              color: BsColors.outline.withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: BsSpacing.sm),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (points.isEmpty) {
-      return SizedBox(
-        height: height,
-        child: Center(
-          child: Text(
-            '—',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
-          ),
-        ),
-      );
+      return _emptyChart(context, l10n.noSalesInPeriod);
     }
 
     final maxSales = points
         .map((p) => p.totalSales)
         .fold<int>(0, (m, v) => v > m ? v : m);
-    final effectiveMax = maxSales == 0 ? 1 : maxSales;
+    if (maxSales == 0) {
+      return _emptyChart(context, l10n.noSalesInPeriod);
+    }
+    final effectiveMax = maxSales;
     final dense = points.length > 10;
     final labelIndices = _labelIndices();
     final labelStyle = Theme.of(

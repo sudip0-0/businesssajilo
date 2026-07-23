@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/config/env.dart';
 import '../local/app_database.dart';
 import 'sync_helpers.dart';
 import 'sync_puller.dart';
@@ -17,13 +19,19 @@ class SyncService {
     required AppDatabase db,
     required SupabaseClient client,
     Connectivity? connectivity,
+    Future<List<ConnectivityResult>> Function()? connectivityCheck,
+    Future<bool> Function()? reachabilityProbe,
   }) : _db = db,
        _connectivity = connectivity ?? Connectivity(),
+       _connectivityCheck = connectivityCheck,
+       _reachabilityProbe = reachabilityProbe ?? _defaultReachabilityProbe,
        _puller = SyncPuller(db: db, client: client),
        _pusher = SyncPusher(db: db, client: client);
 
   final AppDatabase _db;
   final Connectivity _connectivity;
+  final Future<List<ConnectivityResult>> Function()? _connectivityCheck;
+  final Future<bool> Function() _reachabilityProbe;
   final SyncPuller _puller;
   final SyncPusher _pusher;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
@@ -56,9 +64,13 @@ class SyncService {
     _connectivitySub = null;
   }
 
+  /// True when the device has a non-none link *and* the Supabase host is
+  /// reachable (avoids captive-portal false positives).
   Future<bool> get isOnline async {
-    final results = await _connectivity.checkConnectivity();
-    return results.any((r) => r != ConnectivityResult.none);
+    final results =
+        await (_connectivityCheck?.call() ?? _connectivity.checkConnectivity());
+    if (!results.any((r) => r != ConnectivityResult.none)) return false;
+    return _reachabilityProbe();
   }
 
   Future<void> syncNow() async {
@@ -76,10 +88,33 @@ class SyncService {
         await _pusher.push();
         await _puller.pull();
       } while (_coalesce.shouldRepeat);
+      await _db.pruneSyncedQueue();
     } finally {
       _coalesce.end();
     }
   }
 
   String newId() => _uuid.v4();
+
+  /// Lightweight HEAD/GET against Supabase Auth health endpoint.
+  static Future<bool> _defaultReachabilityProbe() async {
+    final base = Env.supabaseUrl;
+    if (base.isEmpty) return false;
+    final uri = Uri.parse('$base/auth/v1/health');
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
+    try {
+      final request = await client
+          .getUrl(uri)
+          .timeout(const Duration(seconds: 3));
+      final response = await request.close().timeout(
+        const Duration(seconds: 3),
+      );
+      await response.drain<void>();
+      return response.statusCode < 500;
+    } catch (_) {
+      return false;
+    } finally {
+      client.close(force: true);
+    }
+  }
 }

@@ -75,11 +75,13 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
           icon: const Icon(Icons.inventory_2_outlined),
           selectedIcon: const Icon(Icons.inventory_2),
           label: l10n.stock,
+          tooltip: l10n.stock,
         ),
         NavigationDestination(
           icon: const Icon(Icons.local_shipping_outlined),
           selectedIcon: const Icon(Icons.local_shipping),
           label: l10n.fulfillment,
+          tooltip: l10n.fulfillment,
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/pagination.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/payment.dart';
 import '../remote/supabase_payments_repository.dart';
@@ -20,7 +21,11 @@ final paymentsRepositoryProvider = Provider<PaymentsRepository>((ref) {
 });
 
 abstract class PaymentsRepository {
-  Future<List<Payment>> listByCustomer(String customerId);
+  Future<List<Payment>> listByCustomer(
+    String customerId, {
+    int offset = 0,
+    int limit = kListPageSize,
+  });
 
   /// When [enqueueRemote] is false (offline bill path), the payment is stored
   /// locally only — the bill sync payload carries it into `create_bill`.

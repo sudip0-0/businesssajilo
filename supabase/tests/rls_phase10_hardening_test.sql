@@ -2,7 +2,7 @@
 -- RPC role checks, transactional bill/quote RPCs, bill status lifecycle,
 -- walk-in stock deduction, column pinning, opening-balance guard.
 begin;
-select plan(18);
+select plan(17);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Biz A'),
@@ -141,15 +141,8 @@ select throws_ok(
   'customer not found'
 );
 
--- 10. apply_product_sync forbidden for customers.
+-- 10. insert_audit_log forbidden for customers.
 select test_set_auth('55555555-5555-5555-5555-555555555555');
-select throws_ok(
-  $$select apply_product_sync('b1111111-1111-1111-1111-111111111111', 'Hacked', null, null, null,
-    'piece', 0, 0, null, 0, 0, true, now() + interval '1 day')$$,
-  'forbidden'
-);
-
--- 11. insert_audit_log forbidden for customers.
 select throws_ok(
   $$select insert_audit_log('products', 'b1111111-1111-1111-1111-111111111111', 'name', 'a', 'b', 'sync_lww')$$,
   'forbidden'

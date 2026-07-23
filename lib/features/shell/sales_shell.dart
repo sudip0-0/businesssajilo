@@ -101,26 +101,31 @@ class _SalesShellState extends ConsumerState<SalesShell> {
           icon: const Icon(Icons.home_outlined),
           selectedIcon: const Icon(Icons.home),
           label: l10n.dashboard,
+          tooltip: l10n.dashboard,
         ),
         NavigationDestination(
           icon: const Icon(Icons.inventory_2_outlined),
           selectedIcon: const Icon(Icons.inventory_2),
           label: l10n.stock,
+          tooltip: l10n.stock,
         ),
         NavigationDestination(
           icon: const Icon(Icons.shopping_cart_outlined),
           selectedIcon: const Icon(Icons.shopping_cart),
           label: l10n.orders,
+          tooltip: l10n.orders,
         ),
         NavigationDestination(
           icon: const Icon(Icons.storefront_outlined),
           selectedIcon: const Icon(Icons.storefront),
           label: l10n.customers,
+          tooltip: l10n.customers,
         ),
         NavigationDestination(
           icon: const Icon(Icons.receipt_long_outlined),
           selectedIcon: const Icon(Icons.receipt_long),
           label: l10n.billing,
+          tooltip: l10n.billing,
         ),
       ],
       actions: const [

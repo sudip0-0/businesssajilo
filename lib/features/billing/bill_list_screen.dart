@@ -251,42 +251,54 @@ class _BillTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final customerLabel = bill.customerShopName ?? l10n.walkIn;
 
-    return ListTile(
-      onTap: onTap,
+    final amountLabel = formatNpr(Paisa(bill.grandTotal), showPaisa: false);
+    return Semantics(
+      button: true,
       selected: selected,
-      leading: bill.pendingSync
-          ? const Icon(Icons.schedule, color: BsColors.accent)
-          : const Icon(Icons.receipt_long_outlined, color: BsColors.primary),
-      title: Row(
-        children: [
-          Expanded(child: Text(bill.billNo)),
-          if (bill.pendingSync) ...[
-            const SizedBox(width: 4),
-            Tooltip(
-              message: l10n.provisionalBillNo,
-              child: const Icon(
-                Icons.schedule,
-                size: 14,
-                color: BsColors.accent,
+      label: [
+        bill.billNo,
+        customerLabel,
+        amountLabel,
+        bill.status.name,
+        if (bill.pendingSync) l10n.provisionalBillNo,
+      ].join(', '),
+      child: ListTile(
+        onTap: onTap,
+        selected: selected,
+        leading: bill.pendingSync
+            ? const Icon(Icons.schedule, color: BsColors.accent)
+            : const Icon(Icons.receipt_long_outlined, color: BsColors.primary),
+        title: Row(
+          children: [
+            Expanded(child: Text(bill.billNo)),
+            if (bill.pendingSync) ...[
+              const SizedBox(width: 4),
+              Tooltip(
+                message: l10n.provisionalBillNo,
+                child: const Icon(
+                  Icons.schedule,
+                  size: 14,
+                  color: BsColors.accent,
+                ),
               ),
-            ),
+            ],
           ],
-        ],
-      ),
-      subtitle: Text(customerLabel),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            formatNpr(Paisa(bill.grandTotal), showPaisa: false),
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          BillStatusChip(bill.status),
-        ],
+        ),
+        subtitle: Text(customerLabel),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              amountLabel,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            BillStatusChip(bill.status),
+          ],
+        ),
       ),
     );
   }

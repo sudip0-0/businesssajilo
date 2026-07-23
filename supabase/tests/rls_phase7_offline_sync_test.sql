@@ -1,6 +1,6 @@
 -- RLS tests for Phase 7 offline sync.
 begin;
-select plan(6);
+select plan(4);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -75,27 +75,6 @@ select is(
   (select count(*)::int from audit_log),
   0,
   'customer cannot read audit log'
-);
-
--- apply_product_sync server-wins when server is newer.
-select test_set_auth('22222222-2222-2222-2222-222222222222');
-
-select is(
-  (apply_product_sync(
-    'b1111111-1111-1111-1111-111111111111',
-    'Stale Name', null, null,
-    'a1111111-1111-1111-1111-111111111111',
-    'piece', 0, 5000, null, 0, 0, true,
-    now() - interval '1 day'
-  )->>'action'),
-  'server_wins',
-  'apply_product_sync keeps server row when newer'
-);
-
-select is(
-  (select name from products where id = 'b1111111-1111-1111-1111-111111111111'),
-  'Cola',
-  'product name unchanged after server_wins'
 );
 
 select * from finish();

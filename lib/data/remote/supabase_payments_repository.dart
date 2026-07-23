@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/config/pagination.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/payment.dart';
 import '../repositories/payments_repository.dart';
@@ -12,13 +13,18 @@ class SupabasePaymentsRepository implements PaymentsRepository {
   final SupabaseClient? _client;
 
   @override
-  Future<List<Payment>> listByCustomer(String customerId) async {
+  Future<List<Payment>> listByCustomer(
+    String customerId, {
+    int offset = 0,
+    int limit = kListPageSize,
+  }) async {
     final client = requireSupabaseClient(_client);
     final rows = await client
         .from('payments')
         .select()
         .eq('customer_id', customerId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
     return (rows as List)
         .map((row) => Payment.fromJson(row as Map<String, dynamic>))
         .toList();
@@ -59,12 +65,7 @@ class SupabasePaymentsRepository implements PaymentsRepository {
   @override
   Future<int> totalDues() async {
     final client = requireSupabaseClient(_client);
-    final rows = await client.from('customer_balances').select('balance_due');
-    var total = 0;
-    for (final row in rows as List) {
-      final due = (row as Map)['balance_due'] as num?;
-      if (due != null && due > 0) total += due.toInt();
-    }
-    return total;
+    final result = await client.rpc<dynamic>('total_dues');
+    return (result as num?)?.toInt() ?? 0;
   }
 }

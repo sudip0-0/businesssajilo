@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/config/pagination.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/payment.dart';
 import '../local/app_database.dart';
@@ -25,11 +26,16 @@ class SyncingPaymentsRepository implements PaymentsRepository {
   static const _uuid = Uuid();
 
   @override
-  Future<List<Payment>> listByCustomer(String customerId) async {
+  Future<List<Payment>> listByCustomer(
+    String customerId, {
+    int offset = 0,
+    int limit = kListPageSize,
+  }) async {
     final rows =
         await (_db.select(_db.localPayments)
               ..where((p) => p.customerId.equals(customerId))
-              ..orderBy([(p) => OrderingTerm.desc(p.createdAt)]))
+              ..orderBy([(p) => OrderingTerm.desc(p.createdAt)])
+              ..limit(limit, offset: offset))
             .get();
     return rows.map(mapLocalPayment).toList();
   }

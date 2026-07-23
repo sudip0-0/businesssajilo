@@ -23,6 +23,7 @@ class QuoteDetailScreen extends ConsumerStatefulWidget {
 class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   final _commentController = TextEditingController();
   bool _loading = false;
+  int _reloadToken = 0;
 
   @override
   void dispose() {
@@ -108,13 +109,17 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.quoteDetail)),
       body: FutureBuilder(
+        key: ValueKey(_reloadToken),
         future: ref.read(quotesRepositoryProvider).get(widget.quoteId),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return ErrorState(message: l10n.loadingFailed);
+            return ErrorState(
+              message: l10n.loadingFailed,
+              onRetry: () => setState(() => _reloadToken++),
+            );
           }
           final quote = snapshot.data!;
 

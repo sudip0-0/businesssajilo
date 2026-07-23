@@ -43,6 +43,16 @@ abstract final class BsRadii {
   static const full = 9999.0;
 }
 
+/// Spacing scale per Design.md (4 / 8 / 12 / 16 / 24 / 32).
+abstract final class BsSpacing {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 24.0;
+  static const xxl = 32.0;
+}
+
 abstract final class BsElevation {
   static const level2 = [
     BoxShadow(
@@ -135,10 +145,20 @@ abstract final class AppTheme {
   }
 
   static ThemeData _base(ColorScheme scheme) {
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(BsRadii.md),
+    );
+    final buttonPadding = const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 10,
+    );
+    const buttonMinSize = Size(64, 48);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       textTheme: _textTheme,
+      fontFamily: 'Inter',
       fontFamilyFallback: const ['Noto Sans Devanagari'],
       navigationBarTheme: NavigationBarThemeData(
         indicatorColor: BsColors.secondary.withValues(alpha: 0.12),
@@ -164,11 +184,23 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(64, 40),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(BsRadii.md),
-          ),
+          minimumSize: buttonMinSize,
+          padding: buttonPadding,
+          shape: buttonShape,
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: buttonMinSize,
+          padding: buttonPadding,
+          shape: buttonShape,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: buttonMinSize,
+          padding: buttonPadding,
+          shape: buttonShape,
         ),
       ),
       chipTheme: ChipThemeData(

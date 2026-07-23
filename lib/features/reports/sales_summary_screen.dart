@@ -5,6 +5,7 @@ import '../../core/export/export_actions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/error_state.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
 import '../../domain/enums.dart';
@@ -61,7 +62,10 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
         const SizedBox(height: 16),
         salesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text(l10n.loadingFailed),
+          error: (e, _) => ErrorState(
+            message: l10n.loadingFailed,
+            onRetry: () => ref.invalidate(salesDailyProvider(_range)),
+          ),
           data: (points) {
             final total = points.fold<int>(0, (sum, p) => sum + p.totalSales);
             return Column(
@@ -91,7 +95,10 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
         Text(l10n.topProducts, style: Theme.of(context).textTheme.titleMedium),
         productsAsync.when(
           loading: () => const LinearProgressIndicator(),
-          error: (e, _) => Text(l10n.loadingFailed),
+          error: (e, _) => ErrorState(
+            message: l10n.loadingFailed,
+            onRetry: () => ref.invalidate(topProductsProvider(_range)),
+          ),
           data: (rows) => _RankedList(
             wide: isWideLayout(context),
             nameLabel: l10n.name,
@@ -110,7 +117,10 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
         Text(l10n.topCustomers, style: Theme.of(context).textTheme.titleMedium),
         customersAsync.when(
           loading: () => const LinearProgressIndicator(),
-          error: (e, _) => Text(l10n.loadingFailed),
+          error: (e, _) => ErrorState(
+            message: l10n.loadingFailed,
+            onRetry: () => ref.invalidate(topCustomersProvider(_range)),
+          ),
           data: (rows) => _RankedList(
             wide: isWideLayout(context),
             nameLabel: l10n.name,

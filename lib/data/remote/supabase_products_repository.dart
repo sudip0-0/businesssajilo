@@ -11,6 +11,7 @@ class SupabaseProductsRepository implements ProductsRepository {
 
   final SupabaseClient? _client;
   static const _bucket = 'product-images';
+  final Map<String, Future<String>> _signedUrlCache = {};
 
   @override
   Future<List<Product>> list({
@@ -41,43 +42,22 @@ class SupabaseProductsRepository implements ProductsRepository {
 
   @override
   Future<int> lowStockCount() async {
-    // PostgREST cannot compare two columns in a filter, so fetch only the
-    // two columns needed instead of full product rows.
     final client = requireSupabaseClient(_client);
-    final rows = await client
-        .from('products')
-        .select('stock_cached, low_stock_threshold')
-        .eq('is_active', true)
-        .gt('low_stock_threshold', 0);
-    var count = 0;
-    for (final row in rows as List) {
-      final map = row as Map;
-      final stock = (map['stock_cached'] as num?)?.toInt() ?? 0;
-      final threshold = (map['low_stock_threshold'] as num?)?.toInt() ?? 0;
-      if (stock <= threshold) count++;
-    }
-    return count;
+    final result = await client.rpc<dynamic>('low_stock_count');
+    return (result as num?)?.toInt() ?? 0;
   }
 
   @override
   Future<List<Product>> listLowStock({int limit = 2}) async {
-    // PostgREST cannot compare two columns; fetch candidates then filter.
     final client = requireSupabaseClient(_client);
-    final rows = await client
-        .from('products')
-        .select('*, categories(name)')
-        .eq('is_active', true)
-        .gt('low_stock_threshold', 0)
-        .order('name', ascending: true);
-    final low = <Product>[];
-    for (final row in rows as List) {
-      final product = _mapProduct(row);
-      if (product.stockCached <= product.lowStockThreshold) {
-        low.add(product);
-        if (low.length >= limit) break;
-      }
-    }
-    return low;
+    final result = await client.rpc<dynamic>(
+      'list_low_stock',
+      params: {'p_limit': limit},
+    );
+    final rows = result is List ? result : const [];
+    return rows
+        .map((row) => Product.fromJson(Map<String, dynamic>.from(row as Map)))
+        .toList();
   }
 
   @override
@@ -193,9 +173,18 @@ class SupabaseProductsRepository implements ProductsRepository {
   Future<String?> signedImageUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
     final client = requireSupabaseClient(_client);
-    return client.storage
+    final cached = _signedUrlCache[storagePath];
+    if (cached != null) return cached;
+    final future = client.storage
         .from(_bucket)
         .createSignedUrl(storagePath, 60 * 60 * 24);
+    _signedUrlCache[storagePath] = future;
+    // Don't cache failures.
+    future.catchError((Object _) {
+      _signedUrlCache.remove(storagePath);
+      return '';
+    });
+    return future;
   }
 
   Product _mapProduct(dynamic row) {

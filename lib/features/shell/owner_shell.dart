@@ -85,41 +85,49 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         icon: const Icon(Icons.dashboard_outlined),
         selectedIcon: const Icon(Icons.dashboard),
         label: l10n.dashboard,
+        tooltip: l10n.dashboard,
       ),
       NavigationDestination(
         icon: const Icon(Icons.inventory_2_outlined),
         selectedIcon: const Icon(Icons.inventory_2),
         label: l10n.inventory,
+        tooltip: l10n.inventory,
       ),
       NavigationDestination(
         icon: const Icon(Icons.storefront_outlined),
         selectedIcon: const Icon(Icons.storefront),
         label: l10n.customers,
+        tooltip: l10n.customers,
       ),
       NavigationDestination(
         icon: const Icon(Icons.receipt_long_outlined),
         selectedIcon: const Icon(Icons.receipt_long),
         label: l10n.billing,
+        tooltip: l10n.billing,
       ),
       NavigationDestination(
         icon: const Icon(Icons.shopping_cart_outlined),
         selectedIcon: const Icon(Icons.shopping_cart),
         label: l10n.orders,
+        tooltip: l10n.orders,
       ),
       NavigationDestination(
         icon: const Icon(Icons.people_outline),
         selectedIcon: const Icon(Icons.people),
         label: l10n.staff,
+        tooltip: l10n.staff,
       ),
       NavigationDestination(
         icon: const Icon(Icons.assessment_outlined),
         selectedIcon: const Icon(Icons.assessment),
         label: l10n.reports,
+        tooltip: l10n.reports,
       ),
       NavigationDestination(
         icon: const Icon(Icons.settings_outlined),
         selectedIcon: const Icon(Icons.settings),
         label: l10n.settings,
+        tooltip: l10n.settings,
       ),
     ];
 
@@ -134,6 +142,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         icon: const Icon(Icons.more_horiz_outlined),
         selectedIcon: const Icon(Icons.more_horiz),
         label: l10n.more,
+        tooltip: l10n.more,
       ),
     ];
     final mobileTitles = [
