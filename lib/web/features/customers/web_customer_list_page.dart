@@ -224,6 +224,19 @@ class _CustomerRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context).textTheme;
     final due = customer.balanceDue;
+    final subtitle = [
+      if (customer.contactName != null) customer.contactName!,
+      if (customer.phone != null) customer.phone!,
+    ].join(' · ');
+
+    final amountStyle = theme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: due < 0
+          ? WebPalette.navy
+          : due > 0
+          ? WebPalette.danger
+          : WebPalette.success,
+    );
 
     return WebHoverableRow(
       selected: selected,
@@ -232,15 +245,10 @@ class _CustomerRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: WebPalette.navyWash,
-              child: Text(
-                customer.shopName.isNotEmpty
-                    ? customer.shopName[0].toUpperCase()
-                    : '?',
-                style: const TextStyle(color: WebPalette.navy),
-              ),
+            const Icon(
+              PhosphorIconsRegular.storefront,
+              color: WebPalette.navy,
+              size: 20,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -249,52 +257,32 @@ class _CustomerRow extends StatelessWidget {
                 children: [
                   Text(
                     customer.shopName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (customer.contactName != null || customer.phone != null)
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Text(
-                      [
-                        if (customer.contactName != null) customer.contactName!,
-                        if (customer.phone != null) customer.phone!,
-                      ].join(' · '),
+                      subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
-            if (due < 0)
-              Text(
-                '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}',
-                style: theme.labelSmall?.copyWith(
-                  color: WebPalette.navy,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            else
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    due > 0 ? Icons.arrow_upward : Icons.check,
-                    size: 14,
-                    color: due > 0 ? WebPalette.danger : WebPalette.success,
-                  ),
-                  const SizedBox(width: 2),
-                  Text(
-                    formatNpr(Paisa(due), showPaisa: false),
-                    style: theme.titleSmall?.copyWith(
-                      color: due > 0 ? WebPalette.danger : WebPalette.success,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+            Text(
+              due < 0
+                  ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'
+                  : formatNpr(Paisa(due), showPaisa: false),
+              style: amountStyle,
+            ),
           ],
         ),
       ),
