@@ -2,15 +2,12 @@ import 'dart:io';
 
 import 'package:businesssajilo/app.dart';
 import 'package:businesssajilo/core/config/env.dart';
-import 'package:businesssajilo/features/onboarding/onboarding_prefs.dart';
 import 'package:businesssajilo/main.dart' show ConfigErrorApp;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 bool _supabaseReady = false;
-bool _prefsMocked = false;
 
 /// Quick health check before initializing Supabase in integration tests.
 Future<bool> isSupabaseAvailable() async {
@@ -35,12 +32,6 @@ Future<bool> bootstrapIntegrationApp() async {
     runApp(const ConfigErrorApp());
     return false;
   }
-
-  if (!_prefsMocked) {
-    SharedPreferences.setMockInitialValues({'onboarding_complete': true});
-    _prefsMocked = true;
-  }
-  await setOnboardingComplete();
 
   try {
     if (!_supabaseReady) {

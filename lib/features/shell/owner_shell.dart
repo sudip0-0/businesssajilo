@@ -20,7 +20,6 @@ import '../reports/owner_dashboard.dart';
 import '../reports/providers.dart';
 import '../reports/reports_hub_screen.dart';
 import '../settings/settings_screen.dart';
-import '../onboarding/owner_onboarding_overlay.dart';
 import '../sync/sync_badge_action.dart';
 import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
@@ -164,94 +163,92 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         ? pages[wideIndex]
         : (mobileIndex < 4 ? pages[_index] : const _MorePage());
 
-    return OwnerOnboardingOverlay(
-      child: AdaptiveScaffold(
-        selectedIndex: effectiveIndex,
-        onDestinationSelected: (i) => setState(() {
-          if (wide) {
-            _index = i;
-          } else {
-            // "More" is a virtual page; mark it with a sentinel index.
-            _index = i < 4 ? _mobilePageIndexes[i] : -1;
-          }
-        }),
-        destinations: wide ? destinations : mobileDestinations,
-        titles: wide ? titles : mobileTitles,
-        actions: const [SyncBadgeAction(), NotificationBellAction()],
-        body: body,
-        floatingActionButton: switch (_index) {
-          1 => FloatingActionButton.extended(
-            backgroundColor: BsColors.secondary,
-            foregroundColor: BsColors.onSecondary,
-            onPressed: () async {
-              final saved = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (_) => const ProductFormScreen()),
-              );
-              if (saved == true) {
-                ref.invalidate(productListProvider);
-                ref.invalidate(lowStockCountProvider);
-                bumpInventoryRevision(ref);
-              }
-            },
-            icon: const Icon(Icons.add),
-            label: Text(l10n.addProduct),
-          ),
-          2 => FloatingActionButton.extended(
-            backgroundColor: BsColors.secondary,
-            foregroundColor: BsColors.onSecondary,
-            onPressed: () async {
-              final created = await showAdaptiveSheet<bool>(
-                context: context,
-                title: l10n.addCustomer,
-                child: const AddCustomerSheet(),
-              );
-              if (created == true) {
-                bumpCustomersRevision(ref);
-                ref.invalidate(customerListProvider);
-                ref.invalidate(totalDuesProvider);
-              }
-            },
-            icon: const Icon(Icons.person_add),
-            label: Text(l10n.addCustomer),
-          ),
-          3 => FloatingActionButton.extended(
-            backgroundColor: BsColors.secondary,
-            foregroundColor: BsColors.onSecondary,
-            onPressed: () async {
-              final saved = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (_) => const BillFormScreen()),
-              );
-              if (saved == true) {
-                bumpBillingRevision(ref);
-                ref.invalidate(billListProvider);
-                ref.invalidate(todaysSalesProvider);
-                ref.invalidate(todaysBillCountProvider);
-                ref.invalidate(totalDuesProvider);
-                ref.invalidate(ownerDashboardStatsProvider);
-              }
-            },
-            icon: const Icon(Icons.add),
-            label: Text(l10n.newBill),
-          ),
-          5 => FloatingActionButton.extended(
-            backgroundColor: BsColors.secondary,
-            foregroundColor: BsColors.onSecondary,
-            onPressed: () async {
-              final created = await showAdaptiveSheet<bool>(
-                context: context,
-                title: l10n.addMember,
-                child: const AddMemberSheet(),
-              );
-              if (created == true) ref.invalidate(staffListProvider);
-            },
-            icon: const Icon(Icons.person_add),
-            label: Text(l10n.addMember),
-          ),
-          _ => null,
-        },
-      ),
+    return AdaptiveScaffold(
+      selectedIndex: effectiveIndex,
+      onDestinationSelected: (i) => setState(() {
+        if (wide) {
+          _index = i;
+        } else {
+          // "More" is a virtual page; mark it with a sentinel index.
+          _index = i < 4 ? _mobilePageIndexes[i] : -1;
+        }
+      }),
+      destinations: wide ? destinations : mobileDestinations,
+      titles: wide ? titles : mobileTitles,
+      actions: const [SyncBadgeAction(), NotificationBellAction()],
+      body: body,
+      floatingActionButton: switch (_index) {
+        1 => FloatingActionButton.extended(
+          backgroundColor: BsColors.secondary,
+          foregroundColor: BsColors.onSecondary,
+          onPressed: () async {
+            final saved = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(builder: (_) => const ProductFormScreen()),
+            );
+            if (saved == true) {
+              ref.invalidate(productListProvider);
+              ref.invalidate(lowStockCountProvider);
+              bumpInventoryRevision(ref);
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: Text(l10n.addProduct),
+        ),
+        2 => FloatingActionButton.extended(
+          backgroundColor: BsColors.secondary,
+          foregroundColor: BsColors.onSecondary,
+          onPressed: () async {
+            final created = await showAdaptiveSheet<bool>(
+              context: context,
+              title: l10n.addCustomer,
+              child: const AddCustomerSheet(),
+            );
+            if (created == true) {
+              bumpCustomersRevision(ref);
+              ref.invalidate(customerListProvider);
+              ref.invalidate(totalDuesProvider);
+            }
+          },
+          icon: const Icon(Icons.person_add),
+          label: Text(l10n.addCustomer),
+        ),
+        3 => FloatingActionButton.extended(
+          backgroundColor: BsColors.secondary,
+          foregroundColor: BsColors.onSecondary,
+          onPressed: () async {
+            final saved = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(builder: (_) => const BillFormScreen()),
+            );
+            if (saved == true) {
+              bumpBillingRevision(ref);
+              ref.invalidate(billListProvider);
+              ref.invalidate(todaysSalesProvider);
+              ref.invalidate(todaysBillCountProvider);
+              ref.invalidate(totalDuesProvider);
+              ref.invalidate(ownerDashboardStatsProvider);
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: Text(l10n.newBill),
+        ),
+        5 => FloatingActionButton.extended(
+          backgroundColor: BsColors.secondary,
+          foregroundColor: BsColors.onSecondary,
+          onPressed: () async {
+            final created = await showAdaptiveSheet<bool>(
+              context: context,
+              title: l10n.addMember,
+              child: const AddMemberSheet(),
+            );
+            if (created == true) ref.invalidate(staffListProvider);
+          },
+          icon: const Icon(Icons.person_add),
+          label: Text(l10n.addMember),
+        ),
+        _ => null,
+      },
     );
   }
 }

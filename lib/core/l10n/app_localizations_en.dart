@@ -804,33 +804,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get demoDataSkipped => 'Sample data already exists';
 
   @override
-  String get onboardingWelcome => 'Welcome to BusinessSajilo';
-
-  @override
-  String get onboardingKpis =>
-      'Your dashboard shows today\'s sales, dues, stock alerts, and orders.';
-
-  @override
-  String get onboardingProducts =>
-      'Add products in Inventory to start billing.';
-
-  @override
-  String get onboardingCustomers =>
-      'Add customers to track udharo and payments.';
-
-  @override
-  String get onboardingBills => 'Create bills from the Billing tab.';
-
-  @override
-  String get onboardingNext => 'Next';
-
-  @override
-  String get onboardingDone => 'Get started';
-
-  @override
-  String get onboardingSkip => 'Skip tour';
-
-  @override
   String get accountDeactivated =>
       'This account has been deactivated. Contact your business owner.';
 
@@ -959,12 +932,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get more => 'More';
 
   @override
-  String get replayTour => 'Replay tour';
-
-  @override
-  String get replayTourDone => 'Tour will show on the next dashboard visit';
-
-  @override
   String get confirmDeleteCategory =>
       'Delete this category? Products in it will keep working without a category.';
 
@@ -1000,14 +967,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get decreaseQuantity => 'Decrease quantity';
-
-  @override
-  String get onboardingOrders =>
-      'Track customer orders and quotes from the Orders tab.';
-
-  @override
-  String get onboardingReports =>
-      'See sales, dues, and stock reports in Reports.';
 
   @override
   String get syncStatus => 'Sync status';

@@ -7,7 +7,6 @@ import '../../core/router/router_keys.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../../features/onboarding/owner_onboarding_overlay.dart';
 import '../auth/web_login_page.dart';
 import '../auth/web_register_page.dart';
 import '../features/customers/web_customer_form_page.dart';
@@ -117,8 +116,7 @@ final webRouterProvider = Provider<GoRouter>((ref) {
 
 ShellRoute _ownerRoutes() {
   return ShellRoute(
-    builder: (context, state, child) =>
-        OwnerOnboardingOverlay(child: OwnerWebShell(child: child)),
+    builder: (context, state, child) => OwnerWebShell(child: child),
     routes: [
       GoRoute(
         path: '/owner/dashboard',

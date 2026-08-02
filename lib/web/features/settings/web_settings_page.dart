@@ -6,7 +6,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../app.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../features/onboarding/demo_data_actions.dart';
-import '../../../features/onboarding/onboarding_prefs.dart';
 import '../../../features/settings/account_section.dart';
 import '../../theme/web_tokens.dart';
 import '../web_page_scaffold.dart';
@@ -79,17 +78,6 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
           title: Text(l10n.loadDemoData),
           subtitle: _seeding ? const LinearProgressIndicator() : null,
           onTap: _seeding ? null : _loadDemoData,
-        ),
-        ListTile(
-          leading: const Icon(PhosphorIconsRegular.compass),
-          title: Text(l10n.replayTour),
-          onTap: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            await resetOnboarding();
-            messenger.showSnackBar(
-              SnackBar(content: Text(l10n.replayTourDone)),
-            );
-          },
         ),
         ListTile(
           leading: const Icon(PhosphorIconsRegular.info),

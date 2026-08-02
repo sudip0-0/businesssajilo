@@ -1664,54 +1664,6 @@ abstract class AppLocalizations {
   /// **'Sample data already exists'**
   String get demoDataSkipped;
 
-  /// No description provided for @onboardingWelcome.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to BusinessSajilo'**
-  String get onboardingWelcome;
-
-  /// No description provided for @onboardingKpis.
-  ///
-  /// In en, this message translates to:
-  /// **'Your dashboard shows today\'s sales, dues, stock alerts, and orders.'**
-  String get onboardingKpis;
-
-  /// No description provided for @onboardingProducts.
-  ///
-  /// In en, this message translates to:
-  /// **'Add products in Inventory to start billing.'**
-  String get onboardingProducts;
-
-  /// No description provided for @onboardingCustomers.
-  ///
-  /// In en, this message translates to:
-  /// **'Add customers to track udharo and payments.'**
-  String get onboardingCustomers;
-
-  /// No description provided for @onboardingBills.
-  ///
-  /// In en, this message translates to:
-  /// **'Create bills from the Billing tab.'**
-  String get onboardingBills;
-
-  /// No description provided for @onboardingNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get onboardingNext;
-
-  /// No description provided for @onboardingDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Get started'**
-  String get onboardingDone;
-
-  /// No description provided for @onboardingSkip.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip tour'**
-  String get onboardingSkip;
-
   /// No description provided for @accountDeactivated.
   ///
   /// In en, this message translates to:
@@ -1940,18 +1892,6 @@ abstract class AppLocalizations {
   /// **'More'**
   String get more;
 
-  /// No description provided for @replayTour.
-  ///
-  /// In en, this message translates to:
-  /// **'Replay tour'**
-  String get replayTour;
-
-  /// No description provided for @replayTourDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Tour will show on the next dashboard visit'**
-  String get replayTourDone;
-
   /// No description provided for @confirmDeleteCategory.
   ///
   /// In en, this message translates to:
@@ -2023,18 +1963,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decrease quantity'**
   String get decreaseQuantity;
-
-  /// No description provided for @onboardingOrders.
-  ///
-  /// In en, this message translates to:
-  /// **'Track customer orders and quotes from the Orders tab.'**
-  String get onboardingOrders;
-
-  /// No description provided for @onboardingReports.
-  ///
-  /// In en, this message translates to:
-  /// **'See sales, dues, and stock reports in Reports.'**
-  String get onboardingReports;
 
   /// No description provided for @syncStatus.
   ///

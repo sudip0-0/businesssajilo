@@ -803,32 +803,6 @@ class AppLocalizationsNe extends AppLocalizations {
   String get demoDataSkipped => 'नमूना डाटा पहिले नै छ';
 
   @override
-  String get onboardingWelcome => 'BusinessSajilo मा स्वागत छ';
-
-  @override
-  String get onboardingKpis =>
-      'ड्यासबोर्डमा आजको बिक्री, बाँकी, स्टक र अर्डर देखिन्छ।';
-
-  @override
-  String get onboardingProducts =>
-      'बिलिङ सुरु गर्न इन्भेन्टरीमा सामान थप्नुहोस्।';
-
-  @override
-  String get onboardingCustomers => 'उधारो ट्र्याक गर्न ग्राहक थप्नुहोस्।';
-
-  @override
-  String get onboardingBills => 'बिलिङ ट्याबबाट बिल बनाउनुहोस्।';
-
-  @override
-  String get onboardingNext => 'अर्को';
-
-  @override
-  String get onboardingDone => 'सुरु गर्नुहोस्';
-
-  @override
-  String get onboardingSkip => 'टुर छोड्नुहोस्';
-
-  @override
   String get accountDeactivated =>
       'यो खाता निष्क्रिय गरिएको छ। आफ्नो व्यवसाय मालिकलाई सम्पर्क गर्नुहोस्।';
 
@@ -957,12 +931,6 @@ class AppLocalizationsNe extends AppLocalizations {
   String get more => 'थप';
 
   @override
-  String get replayTour => 'टुर फेरि हेर्नुहोस्';
-
-  @override
-  String get replayTourDone => 'अर्को पटक ड्यासबोर्ड खोल्दा टुर देखिनेछ';
-
-  @override
   String get confirmDeleteCategory =>
       'यो श्रेणी मेट्ने? यसका सामानहरू श्रेणीबिना नै रहनेछन्।';
 
@@ -998,14 +966,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get decreaseQuantity => 'मात्रा घटाउनुहोस्';
-
-  @override
-  String get onboardingOrders =>
-      'अर्डर ट्याबबाट ग्राहकका अर्डर र कोटेशन हेर्नुहोस्।';
-
-  @override
-  String get onboardingReports =>
-      'रिपोर्टमा बिक्री, बाँकी र स्टक रिपोर्ट हेर्नुहोस्।';
 
   @override
   String get syncStatus => 'सिंक स्थिति';

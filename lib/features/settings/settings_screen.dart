@@ -6,7 +6,6 @@ import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../auth/providers/auth_provider.dart';
 import '../onboarding/demo_data_actions.dart';
-import '../onboarding/onboarding_prefs.dart';
 import '../sync/pending_sync_screen.dart';
 import 'account_section.dart';
 
@@ -78,16 +77,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onSeedingChanged: (seeding) =>
                       setState(() => _seeding = seeding),
                 ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.replay_outlined),
-          title: Text(l10n.replayTour),
-          onTap: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            final message = l10n.replayTourDone;
-            await resetOnboarding();
-            messenger.showSnackBar(SnackBar(content: Text(message)));
-          },
         ),
         const Divider(height: 1),
         ListTile(
