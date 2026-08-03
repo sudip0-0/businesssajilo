@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../../../features/billing/bill_draft_line.dart';
 import '../../theme/web_palette.dart';
+
+/// Shared column metrics so header labels and row cells stay aligned.
+const double _kSnWidth = 40;
+const double _kQtyWidth = 88;
+const double _kUnitWidth = 72;
+const double _kRateWidth = 112;
+const double _kAmountWidth = 112;
+const double _kActionWidth = 44;
+const double _kColGap = 12;
 
 /// Table header for bill line items on web.
 class WebBillItemsTableHeader extends StatelessWidget {
@@ -19,16 +29,40 @@ class WebBillItemsTableHeader extends StatelessWidget {
       fontWeight: FontWeight.w600,
     );
 
-    return Row(
-      children: [
-        SizedBox(width: 36, child: Text(l10n.sn, style: style)),
-        Expanded(flex: 3, child: Text(l10n.productName, style: style)),
-        SizedBox(width: 72, child: Text(l10n.qty, style: style)),
-        SizedBox(width: 56, child: Text(l10n.unit, style: style)),
-        SizedBox(width: 96, child: Text(l10n.rateRs, style: style)),
-        SizedBox(width: 96, child: Text(l10n.amountRs, style: style)),
-        const SizedBox(width: 40),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _kSnWidth,
+            child: Text(l10n.sn, style: style),
+          ),
+          const SizedBox(width: _kColGap),
+          Expanded(child: Text(l10n.productName, style: style)),
+          const SizedBox(width: _kColGap),
+          SizedBox(
+            width: _kQtyWidth,
+            child: Text(l10n.qty, style: style, textAlign: TextAlign.center),
+          ),
+          const SizedBox(width: _kColGap),
+          SizedBox(
+            width: _kUnitWidth,
+            child: Text(l10n.unit, style: style),
+          ),
+          const SizedBox(width: _kColGap),
+          SizedBox(
+            width: _kRateWidth,
+            child: Text(l10n.rateRs, style: style, textAlign: TextAlign.end),
+          ),
+          const SizedBox(width: _kColGap),
+          SizedBox(
+            width: _kAmountWidth,
+            child: Text(l10n.amountRs, style: style, textAlign: TextAlign.end),
+          ),
+          const SizedBox(width: _kColGap),
+          const SizedBox(width: _kActionWidth),
+        ],
+      ),
     );
   }
 }
@@ -154,6 +188,11 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
     widget.onDoneEditing?.call();
   }
 
+  static const _fieldDecoration = InputDecoration(
+    isDense: true,
+    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -167,50 +206,55 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(width: 36, child: Text('${widget.index + 1}')),
+          SizedBox(
+            width: _kSnWidth,
+            child: Text('${widget.index + 1}'),
+          ),
+          const SizedBox(width: _kColGap),
           Expanded(
-            flex: 3,
             child: Text(
               widget.line.product.name,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
+          const SizedBox(width: _kColGap),
           SizedBox(
-            width: 72,
+            width: _kQtyWidth,
             child: TextField(
               controller: _qtyController,
               focusNode: _qtyFocus,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-              ),
+              textAlign: TextAlign.center,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: _fieldDecoration,
               onChanged: (v) {
-                widget.line.setQty(int.tryParse(v) ?? widget.line.qty);
+                final parsed = int.tryParse(v);
+                if (parsed == null) return;
+                widget.line.setQty(parsed);
                 widget.onChanged();
               },
               onSubmitted: (_) => _submitQty(),
             ),
           ),
-          SizedBox(width: 56, child: Text(widget.line.product.unit)),
+          const SizedBox(width: _kColGap),
           SizedBox(
-            width: 96,
+            width: _kUnitWidth,
+            child: Text(
+              widget.line.product.unit,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          const SizedBox(width: _kColGap),
+          SizedBox(
+            width: _kRateWidth,
             child: TextField(
               controller: _rateController,
               focusNode: _rateFocus,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 8,
-                ),
-              ),
+              textAlign: TextAlign.end,
+              decoration: _fieldDecoration,
               onChanged: (v) {
                 widget.line.rate = parseNpr(v)?.value ?? widget.line.rate;
                 widget.onChanged();
@@ -218,22 +262,28 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
               onSubmitted: (_) => _submitRate(),
             ),
           ),
+          const SizedBox(width: _kColGap),
           SizedBox(
-            width: 96,
+            width: _kAmountWidth,
             child: Text(
               formatNpr(Paisa(widget.line.lineTotal), showPaisa: false),
+              textAlign: TextAlign.end,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
-          IconButton(
-            tooltip: widget.l10n.remove,
-            icon: const Icon(
-              PhosphorIconsRegular.trash,
-              color: WebPalette.danger,
+          const SizedBox(width: _kColGap),
+          SizedBox(
+            width: _kActionWidth,
+            child: IconButton(
+              tooltip: widget.l10n.remove,
+              icon: const Icon(
+                PhosphorIconsRegular.trash,
+                color: WebPalette.danger,
+              ),
+              onPressed: widget.onRemove,
             ),
-            onPressed: widget.onRemove,
           ),
         ],
       ),
