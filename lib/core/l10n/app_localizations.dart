@@ -2120,6 +2120,30 @@ abstract class AppLocalizations {
   /// **'Save as Draft'**
   String get saveAsDraft;
 
+  /// No description provided for @unsavedBillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this bill?'**
+  String get unsavedBillTitle;
+
+  /// No description provided for @unsavedBillMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. If you leave now, this bill will be lost.'**
+  String get unsavedBillMessage;
+
+  /// No description provided for @discardAndLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardAndLeave;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
   /// No description provided for @printAndSave.
   ///
   /// In en, this message translates to:

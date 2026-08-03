@@ -17,6 +17,7 @@ import '../../../domain/models/product.dart';
 import '../../../features/billing/bill_form_draft.dart';
 import '../../../features/billing/bill_form_submit.dart';
 import '../../../features/billing/bill_summary.dart';
+import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
@@ -82,6 +83,15 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     _draft.billDiscountText = _billDiscountController.text;
   }
 
+  bool get _isDirty =>
+      _draft.lines.isNotEmpty ||
+      _selectedCustomer != null ||
+      _draft.billDiscount != 0;
+
+  void _syncDirtyFlag() {
+    ref.read(billFormDirtyProvider.notifier).setDirty(_isDirty);
+  }
+
   void _focusProductSearch() {
     _productSearchFocus.requestFocus();
   }
@@ -112,6 +122,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       _productQueryController.clear();
       _focusQtyProductId = product.id;
     });
+    _syncDirtyFlag();
   }
 
   void _clearQtyFocusRequest() {
@@ -126,6 +137,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       _customerQuery = '';
       _customerQueryController.clear();
     });
+    _syncDirtyFlag();
     _focusProductSearch();
   }
 
@@ -136,6 +148,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       _customerQuery = '';
       _customerQueryController.clear();
     });
+    _syncDirtyFlag();
     _customerSearchFocus.requestFocus();
   }
 
@@ -158,7 +171,10 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       forceStatus: forceStatus,
       fallbackCustomerId: _draft.customerId,
       exportAfterSave: exportAfterSave,
-      onSaved: widget.onSaved,
+      onSaved: () {
+        ref.read(billFormDirtyProvider.notifier).clear();
+        widget.onSaved?.call();
+      },
       snackbarErrorColor: WebPalette.danger,
     );
     if (mounted) setState(() => _loading = false);
@@ -202,8 +218,14 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               onFocusProductSearch: _focusProductSearch,
               focusQtyProductId: _focusQtyProductId,
               onQtyFocusHandled: _clearQtyFocusRequest,
-              onLineChanged: () => setState(() {}),
-              onRemoveLine: (i) => setState(() => _draft.removeLineAt(i)),
+              onLineChanged: () {
+                setState(() {});
+                _syncDirtyFlag();
+              },
+              onRemoveLine: (i) {
+                setState(() => _draft.removeLineAt(i));
+                _syncDirtyFlag();
+              },
               scrollableLines: wide,
             );
 
@@ -225,6 +247,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               onDiscountChanged: () {
                 _syncDraftFields();
                 setState(() {});
+                _syncDirtyFlag();
               },
             );
 
@@ -335,7 +358,7 @@ class _CartCard extends StatelessWidget {
       itemBuilder: _productTile,
     );
 
-    final linesBlock = Column(
+    final linesContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -346,8 +369,6 @@ class _CartCard extends StatelessWidget {
           const SizedBox(height: 8),
           linesList,
         ],
-        const SizedBox(height: 16),
-        productSearch,
       ],
     );
 
@@ -375,17 +396,37 @@ class _CartCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Keep search packed under the last line. In the tall two-pane
-          // layout, scroll the whole block so leftover height sits below
-          // the search — not between the lines and the search field.
+          // Pack search under the last line when the list is short (minHeight
+          // fills leftover space below the field). Long lists scroll normally;
+          // the dropdown flips upward if space below is tight.
           if (scrollableLines)
             Expanded(
-              child: SingleChildScrollView(
-                child: linesBlock,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          linesContent,
+                          const SizedBox(height: 16),
+                          productSearch,
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             )
-          else
-            linesBlock,
+          else ...[
+            linesContent,
+            const SizedBox(height: 16),
+            productSearch,
+          ],
         ],
       ),
     );

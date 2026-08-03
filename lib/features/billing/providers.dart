@@ -24,6 +24,24 @@ void bumpBillingRevisionFromRef(Ref ref) {
   ref.read(billingRevisionProvider.notifier).bump();
 }
 
+/// True while the web/mobile new-bill form has unsaved draft content.
+/// Used by route `onExit` and the browser beforeunload guard.
+final billFormDirtyProvider = NotifierProvider<BillFormDirty, bool>(
+  BillFormDirty.new,
+);
+
+class BillFormDirty extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setDirty(bool value) {
+    if (state == value) return;
+    state = value;
+  }
+
+  void clear() => setDirty(false);
+}
+
 final billListProvider = FutureProvider.autoDispose<List<Bill>>((ref) {
   return ref.watch(billsRepositoryProvider).list();
 });

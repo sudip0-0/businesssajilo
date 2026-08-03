@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/testing/integration_keys.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
-import 'web_bill_form_content.dart';
+import '../../utils/before_unload.dart';
 import '../web_page_scaffold.dart';
-import '../../../core/testing/integration_keys.dart';
+import 'web_bill_form_content.dart';
 
 String _billingListPath(BuildContext context) {
   final path = GoRouterState.of(context).uri.path;
@@ -32,6 +33,12 @@ class WebBillFormPage extends ConsumerStatefulWidget {
 class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
   final _formKey = GlobalKey<WebBillFormContentState>();
 
+  @override
+  void dispose() {
+    setWebBeforeUnloadGuard(false);
+    super.dispose();
+  }
+
   void _onSaved() {
     bumpBillingRevision(ref);
     ref.invalidate(billListProvider);
@@ -46,6 +53,10 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final backPath = _billingListPath(context);
+
+    ref.listen<bool>(billFormDirtyProvider, (_, dirty) {
+      setWebBeforeUnloadGuard(dirty);
+    });
 
     return WebPageScaffold(
       title: l10n.createNewBill,

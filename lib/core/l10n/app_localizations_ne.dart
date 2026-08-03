@@ -1051,6 +1051,19 @@ class AppLocalizationsNe extends AppLocalizations {
   String get saveAsDraft => 'ड्राफ्ट सुरक्षित गर्नुहोस्';
 
   @override
+  String get unsavedBillTitle => 'यो बिल छाड्ने?';
+
+  @override
+  String get unsavedBillMessage =>
+      'तपाईंका परिवर्तनहरू सुरक्षित भएका छैनन्। अहिले छाड्नुभयो भने यो बिल हराउनेछ।';
+
+  @override
+  String get discardAndLeave => 'छाड्ने';
+
+  @override
+  String get keepEditing => 'सच्याइरहने';
+
+  @override
   String get printAndSave => 'प्रिन्ट र सुरक्षित';
 
   @override

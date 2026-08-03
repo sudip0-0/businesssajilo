@@ -1053,6 +1053,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveAsDraft => 'Save as Draft';
 
   @override
+  String get unsavedBillTitle => 'Discard this bill?';
+
+  @override
+  String get unsavedBillMessage =>
+      'You have unsaved changes. If you leave now, this bill will be lost.';
+
+  @override
+  String get discardAndLeave => 'Discard';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
   String get printAndSave => 'Print & Save';
 
   @override

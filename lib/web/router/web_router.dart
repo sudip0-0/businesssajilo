@@ -7,6 +7,8 @@ import '../../core/router/router_keys.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/billing/bill_form_leave_confirm.dart';
+import '../../features/billing/providers.dart';
 import '../auth/web_login_page.dart';
 import '../auth/web_register_page.dart';
 import '../features/customers/web_customer_form_page.dart';
@@ -114,6 +116,17 @@ final webRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+/// Blocks leaving `/billing/new` when the draft has unsaved content.
+Future<bool> _onExitBillForm(BuildContext context, GoRouterState state) async {
+  final container = ProviderScope.containerOf(context);
+  if (!container.read(billFormDirtyProvider)) return true;
+  final leave = await confirmLeaveUnsavedBill(context);
+  if (leave) {
+    container.read(billFormDirtyProvider.notifier).clear();
+  }
+  return leave;
+}
+
 ShellRoute _ownerRoutes() {
   return ShellRoute(
     builder: (context, state, child) => OwnerWebShell(child: child),
@@ -197,6 +210,7 @@ ShellRoute _ownerRoutes() {
         routes: [
           GoRoute(
             path: 'new',
+            onExit: _onExitBillForm,
             builder: (_, _) => DeferredPage(
               load: bill_form.loadLibrary,
               builder: () => bill_form.WebBillFormPage(),
@@ -383,6 +397,7 @@ ShellRoute _salesRoutes() {
         routes: [
           GoRoute(
             path: 'new',
+            onExit: _onExitBillForm,
             builder: (_, _) => DeferredPage(
               load: bill_form.loadLibrary,
               builder: () => bill_form.WebBillFormPage(),

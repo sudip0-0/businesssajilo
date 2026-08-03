@@ -84,6 +84,8 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
   final _scrollController = ScrollController();
   OverlayEntry? _entry;
   int _highlighted = 0;
+  bool _openUpward = false;
+  double _overlayMaxHeight = 320;
 
   /// After a selection we re-focus the field for the next scan/keystroke, but
   /// must not reopen the list over the newly added row. Cleared on the next
@@ -97,6 +99,9 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
   double _fieldWidth = 480;
 
   bool get _isOpen => _entry != null;
+
+  static const _overlayGap = 6.0;
+  static const _viewportPadding = 8.0;
 
   @override
   void initState() {
@@ -126,9 +131,32 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
     }
   }
 
+  /// Prefer opening below the field; flip above when the viewport has more
+  /// room there (e.g. search pinned near the bottom of a long bill).
+  void _updateOverlayPlacement() {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) {
+      _openUpward = false;
+      _overlayMaxHeight = widget.maxHeight;
+      return;
+    }
+    final offset = box.localToGlobal(Offset.zero);
+    final size = box.size;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final spaceBelow =
+        screenHeight - (offset.dy + size.height) - _viewportPadding - _overlayGap;
+    final spaceAbove = offset.dy - _viewportPadding - _overlayGap;
+    final preferBelow =
+        spaceBelow >= widget.maxHeight || spaceBelow >= spaceAbove;
+    _openUpward = !preferBelow;
+    _overlayMaxHeight = (preferBelow ? spaceBelow : spaceAbove)
+        .clamp(80.0, widget.maxHeight);
+  }
+
   void _open() {
     if (_isOpen || !mounted) return;
     _highlighted = 0;
+    _updateOverlayPlacement();
     _entry = OverlayEntry(builder: _buildOverlay);
     Overlay.of(context).insert(_entry!);
   }
@@ -149,12 +177,16 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
     // OverlayEntry in that phase throws. Defer to the next frame whenever the
     // scheduler is already building.
     final phase = SchedulerBinding.instance.schedulerPhase;
+    void refresh() {
+      if (!mounted || !_isOpen) return;
+      _updateOverlayPlacement();
+      _entry?.markNeedsBuild();
+    }
+
     if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
-      _entry!.markNeedsBuild();
+      refresh();
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _isOpen) _entry?.markNeedsBuild();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => refresh());
     }
   }
 
@@ -362,11 +394,11 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
       child: CompositedTransformFollower(
         link: _link,
         showWhenUnlinked: false,
-        targetAnchor: Alignment.bottomLeft,
-        followerAnchor: Alignment.topLeft,
-        offset: const Offset(0, 6),
+        targetAnchor: _openUpward ? Alignment.topLeft : Alignment.bottomLeft,
+        followerAnchor: _openUpward ? Alignment.bottomLeft : Alignment.topLeft,
+        offset: Offset(0, _openUpward ? -_overlayGap : _overlayGap),
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: widget.maxHeight),
+          constraints: BoxConstraints(maxHeight: _overlayMaxHeight),
           child: Container(
             decoration: BoxDecoration(
               color: WebPalette.cardBright,
