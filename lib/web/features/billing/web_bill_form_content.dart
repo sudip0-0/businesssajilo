@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -5,7 +7,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/layout/bs_breakpoints.dart';
-import '../../../core/ui/error_state.dart';
+import '../../../core/testing/integration_keys.dart';
+import '../../../core/ui/stock_badge.dart';
+import '../../../core/utils/money.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
@@ -17,10 +21,15 @@ import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../theme/web_palette.dart';
+import '../../ui/web_search_dropdown.dart';
 import 'web_bill_form_line_table.dart';
-import 'web_bill_form_product_picker.dart';
 
-/// Web-native bill form layout with row-wise line items.
+/// POS-style bill form for web: product search + cart on the left, a sticky
+/// checkout rail (customer, totals) on the right on wide screens.
+///
+/// Search inputs are debounced and previously loaded results stay visible
+/// while a query is in flight — the page chrome never unmounts, so the search
+/// field never loses focus mid-typing.
 class WebBillFormContent extends ConsumerStatefulWidget {
   const WebBillFormContent({super.key, this.onSaved});
 
@@ -31,20 +40,38 @@ class WebBillFormContent extends ConsumerStatefulWidget {
 }
 
 class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+  static const _railWidth = 360.0;
+
   final _draft = BillFormDraft(billDiscountText: '0');
   final _billDiscountController = TextEditingController(text: '0');
-  final _remarksController = TextEditingController();
   final _productQueryController = TextEditingController();
   final _productSearchFocus = FocusNode();
+  final _customerQueryController = TextEditingController();
+  final _customerSearchFocus = FocusNode();
+
+  Timer? _productDebounce;
+  Timer? _customerDebounce;
   String _productQuery = '';
+  String _customerQuery = '';
+
+  /// Last successfully loaded lists — kept on screen while the next query is
+  /// in flight so the UI never flashes a loading state mid-typing.
+  List<Product> _lastProducts = const [];
+  List<Customer> _lastCustomers = const [];
+
+  Customer? _selectedCustomer;
   bool _loading = false;
 
   @override
   void dispose() {
+    _productDebounce?.cancel();
+    _customerDebounce?.cancel();
     _billDiscountController.dispose();
-    _remarksController.dispose();
     _productQueryController.dispose();
     _productSearchFocus.dispose();
+    _customerQueryController.dispose();
+    _customerSearchFocus.dispose();
     super.dispose();
   }
 
@@ -56,12 +83,52 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     _productSearchFocus.requestFocus();
   }
 
+  void _onProductQueryChanged(String raw) {
+    _productDebounce?.cancel();
+    final query = raw.trim().toLowerCase();
+    if (query == _productQuery) return;
+    _productDebounce = Timer(_searchDebounce, () {
+      if (mounted) setState(() => _productQuery = query);
+    });
+  }
+
+  void _onCustomerQueryChanged(String raw) {
+    _customerDebounce?.cancel();
+    final query = raw.trim().toLowerCase();
+    if (query == _customerQuery) return;
+    _customerDebounce = Timer(_searchDebounce, () {
+      if (mounted) setState(() => _customerQuery = query);
+    });
+  }
+
   void _addProduct(Product product) {
+    _productDebounce?.cancel();
     setState(() {
       _draft.addProduct(product);
       _productQuery = '';
       _productQueryController.clear();
     });
+  }
+
+  void _selectCustomer(Customer customer) {
+    _customerDebounce?.cancel();
+    setState(() {
+      _selectedCustomer = customer;
+      _draft.customerId = customer.id;
+      _customerQuery = '';
+      _customerQueryController.clear();
+    });
+    _focusProductSearch();
+  }
+
+  void _clearCustomer() {
+    setState(() {
+      _selectedCustomer = null;
+      _draft.customerId = null;
+      _customerQuery = '';
+      _customerQueryController.clear();
+    });
+    _customerSearchFocus.requestFocus();
   }
 
   Future<void> saveDraft() => _save(forceStatus: BillStatus.due);
@@ -92,229 +159,552 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(productListProvider(_productQuery), (_, next) {
+      final value = next.value;
+      if (value != null) setState(() => _lastProducts = value);
+    });
+    ref.listen(customerListProvider(_customerQuery), (_, next) {
+      final value = next.value;
+      if (value != null) setState(() => _lastCustomers = value);
+    });
+
     final l10n = AppLocalizations.of(context);
     final productsAsync = ref.watch(productListProvider(_productQuery));
-    final customersAsync = ref.watch(customerListProvider(''));
+    final customersAsync = ref.watch(customerListProvider(_customerQuery));
+    final products = productsAsync.value ?? _lastProducts;
+    final customers = customersAsync.value ?? _lastCustomers;
     final today = DateFormat.yMMMd().format(DateTime.now());
 
-    return productsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => ErrorState(
-        message: l10n.loadingFailed,
-        onRetry: () => ref.invalidate(productListProvider(_productQuery)),
-      ),
-      data: (products) {
-        final suggestions = _productQuery.isEmpty
-            ? const <Product>[]
-            : products.take(8).toList();
+    return Stack(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= BsBreakpoints.desktop;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            WebBentoTile(
-              minHeight: 0,
-              padding: const EdgeInsets.all(20),
-              child: WebFormHeaderRow(
-                l10n: l10n,
-                today: today,
-                customersAsync: customersAsync,
-                customerId: _draft.customerId,
-                onCustomerChanged: (id) =>
-                    setState(() => _draft.customerId = id),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    WebBentoTile(
-                      minHeight: 0,
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          WebBillFormLineTable(
-                            l10n: l10n,
-                            lines: _draft.lines,
-                            onLineChanged: () => setState(() {}),
-                            onRemoveLine: (i) =>
-                                setState(() => _draft.removeLineAt(i)),
-                            onFocusProductSearch: _focusProductSearch,
-                          ),
-                          const SizedBox(height: 8),
-                          WebBillFormProductPicker(
-                            l10n: l10n,
-                            controller: _productQueryController,
-                            focusNode: _productSearchFocus,
-                            onChanged: (v) => setState(
-                              () => _productQuery = v.trim().toLowerCase(),
-                            ),
-                            suggestions: suggestions,
-                            onProductSelected: _addProduct,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final wide =
-                            constraints.maxWidth >= BsBreakpoints.tablet;
-                        final summary = BillSummary(
-                          style: BillSummaryStyle.card,
-                          accentColor: WebPalette.navy,
-                          cardBackground: WebPalette.navy.withValues(alpha: 0.04),
-                          cardBorderColor: WebPalette.navy.withValues(alpha: 0.12),
-                          itemsTotal: _draft.itemsTotal,
-                          billDiscountController: _billDiscountController,
-                          grandTotal: _draft.grandTotal,
-                          onDiscountChanged: () {
-                            _syncDraftFields();
-                            setState(() {});
-                          },
-                        );
-                        final remarks = TextField(
-                          controller: _remarksController,
-                          maxLines: 4,
-                          decoration: InputDecoration(
-                            labelText: l10n.remarksTerms,
-                            hintText: l10n.remarksTerms,
-                            alignLabelWithHint: true,
-                            border: const OutlineInputBorder(),
-                          ),
-                        );
+            final cartCard = _CartCard(
+              l10n: l10n,
+              draft: _draft,
+              productController: _productQueryController,
+              productFocus: _productSearchFocus,
+              products: products,
+              productsLoading: productsAsync.isLoading,
+              productsFailed: productsAsync.hasError && products.isEmpty,
+              onProductQueryChanged: _onProductQueryChanged,
+              onProductSelected: _addProduct,
+              onFocusProductSearch: _focusProductSearch,
+              onLineChanged: () => setState(() {}),
+              onRemoveLine: (i) => setState(() => _draft.removeLineAt(i)),
+              scrollableLines: wide,
+            );
 
-                        if (wide) {
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: remarks),
-                              const SizedBox(width: 16),
-                              SizedBox(width: 340, child: summary),
-                            ],
-                          );
-                        }
-                        return Column(
-                          children: [
-                            remarks,
-                            const SizedBox(height: 16),
-                            summary,
-                          ],
-                        );
-                      },
-                    ),
-                    if (_loading) ...[
-                      const SizedBox(height: 16),
-                      const LinearProgressIndicator(),
-                    ],
-                    const SizedBox(height: 24),
-                  ],
-                ),
+            final rail = _CheckoutRail(
+              l10n: l10n,
+              today: today,
+              selectedCustomer: _selectedCustomer,
+              customerController: _customerQueryController,
+              customerFocus: _customerSearchFocus,
+              customers: customers,
+              customersLoading: customersAsync.isLoading,
+              customersFailed: customersAsync.hasError && customers.isEmpty,
+              onCustomerQueryChanged: _onCustomerQueryChanged,
+              onCustomerSelected: _selectCustomer,
+              onCustomerCleared: _clearCustomer,
+              itemsTotal: _draft.itemsTotal,
+              billDiscountController: _billDiscountController,
+              grandTotal: _draft.grandTotal,
+              onDiscountChanged: () {
+                _syncDraftFields();
+                setState(() {});
+              },
+            );
+
+            if (wide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: cartCard),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: _railWidth,
+                    child: SingleChildScrollView(child: rail),
+                  ),
+                ],
+              );
+            }
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [cartCard, const SizedBox(height: 16), rail],
               ),
-            ),
-          ],
-        );
-      },
+            );
+          },
+        ),
+        if (_loading)
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: LinearProgressIndicator(minHeight: 3),
+          ),
+      ],
     );
   }
 }
 
-class WebFormHeaderRow extends StatelessWidget {
-  const WebFormHeaderRow({
-    super.key,
+/// Left pane: bill-lines header, product search, and the editable cart lines.
+class _CartCard extends StatelessWidget {
+  final AppLocalizations l10n;
+  final BillFormDraft draft;
+  final TextEditingController productController;
+  final FocusNode productFocus;
+  final List<Product> products;
+  final bool productsLoading;
+  final bool productsFailed;
+  final ValueChanged<String> onProductQueryChanged;
+  final ValueChanged<Product> onProductSelected;
+  final VoidCallback onFocusProductSearch;
+  final VoidCallback onLineChanged;
+  final ValueChanged<int> onRemoveLine;
+
+  /// True when the card is laid out with a bounded height (wide two-pane
+  /// layout) and the lines area should scroll internally. False when the card
+  /// lives inside a page-level scroll view (narrow stacked layout).
+  final bool scrollableLines;
+
+  const _CartCard({
+    required this.l10n,
+    required this.draft,
+    required this.productController,
+    required this.productFocus,
+    required this.products,
+    required this.productsLoading,
+    required this.productsFailed,
+    required this.onProductQueryChanged,
+    required this.onProductSelected,
+    required this.onFocusProductSearch,
+    required this.onLineChanged,
+    required this.onRemoveLine,
+    required this.scrollableLines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final lines = draft.lines;
+    final linesList = Column(
+      children: [
+        for (var i = 0; i < lines.length; i++)
+          WebBillItemRow(
+            key: ValueKey(lines[i].product.id),
+            index: i,
+            line: lines[i],
+            l10n: l10n,
+            onChanged: onLineChanged,
+            onRemove: () => onRemoveLine(i),
+          ),
+      ],
+    );
+
+    return WebBentoTile(
+      minHeight: 0,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                lines.isEmpty
+                    ? l10n.billLines
+                    : '${l10n.billLines} (${lines.length})',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const Spacer(),
+              TextButton.icon(
+                key: IntegrationKeys.billFormAddProduct,
+                onPressed: onFocusProductSearch,
+                icon: const Icon(PhosphorIconsRegular.plus, size: 16),
+                label: Text(l10n.addProduct),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          WebSearchDropdown<Product>(
+            controller: productController,
+            focusNode: productFocus,
+            hint: l10n.filterProducts,
+            items: products,
+            loading: productsLoading,
+            emptyLabel: productsFailed
+                ? l10n.loadingFailed
+                : l10n.noSearchResults,
+            onQueryChanged: onProductQueryChanged,
+            onSelected: onProductSelected,
+            itemBuilder: _productTile,
+          ),
+          const SizedBox(height: 16),
+          if (lines.isEmpty)
+            _EmptyLinesHint(l10n: l10n)
+          else ...[
+            WebBillItemsTableHeader(l10n: l10n),
+            const SizedBox(height: 8),
+            if (scrollableLines)
+              Expanded(child: SingleChildScrollView(child: linesList))
+            else
+              linesList,
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _productTile(BuildContext context, Product product, bool highlighted) {
+    final outOfStock = product.stockCached <= 0;
+    return Container(
+      height: kWebSearchDropdownTileHeight,
+      decoration: BoxDecoration(
+        color: highlighted ? WebPalette.navyWash : Colors.transparent,
+        border: const Border(
+          bottom: BorderSide(color: WebPalette.hairline, width: 0.5),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: outOfStock ? WebPalette.inkSoft : WebPalette.ink,
+                  ),
+                ),
+                Text(
+                  '${formatNpr(Paisa(product.referencePrice), showPaisa: false)} / ${product.unit}',
+                  maxLines: 1,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          StockBadge(product: product, compact: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyLinesHint extends StatelessWidget {
+  const _EmptyLinesHint({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      decoration: BoxDecoration(
+        color: WebPalette.paperDeep.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: WebPalette.hairline),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            PhosphorIconsRegular.shoppingCart,
+            size: 28,
+            color: WebPalette.inkFaint,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.noBillLines,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: WebPalette.inkSoft),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Right rail: customer selector, bill metadata, and totals.
+class _CheckoutRail extends StatelessWidget {
+  const _CheckoutRail({
     required this.l10n,
     required this.today,
-    required this.customersAsync,
-    required this.customerId,
-    required this.onCustomerChanged,
+    required this.selectedCustomer,
+    required this.customerController,
+    required this.customerFocus,
+    required this.customers,
+    required this.customersLoading,
+    required this.customersFailed,
+    required this.onCustomerQueryChanged,
+    required this.onCustomerSelected,
+    required this.onCustomerCleared,
+    required this.itemsTotal,
+    required this.billDiscountController,
+    required this.grandTotal,
+    required this.onDiscountChanged,
   });
 
   final AppLocalizations l10n;
   final String today;
-  final AsyncValue<List<Customer>> customersAsync;
-  final String? customerId;
-  final ValueChanged<String?> onCustomerChanged;
+  final Customer? selectedCustomer;
+  final TextEditingController customerController;
+  final FocusNode customerFocus;
+  final List<Customer> customers;
+  final bool customersLoading;
+  final bool customersFailed;
+  final ValueChanged<String> onCustomerQueryChanged;
+  final ValueChanged<Customer> onCustomerSelected;
+  final VoidCallback onCustomerCleared;
+  final int itemsTotal;
+  final TextEditingController billDiscountController;
+  final int grandTotal;
+  final VoidCallback onDiscountChanged;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= BsBreakpoints.tablet;
-        final customerField = customersAsync.when(
-          loading: () => const LinearProgressIndicator(),
-          error: (_, _) => Text(l10n.loadingFailed),
-          data: (customers) => DropdownButtonFormField<String?>(
-            initialValue: customerId,
-            decoration: InputDecoration(
-              labelText: l10n.customerName,
-              prefixIcon: const Icon(PhosphorIconsRegular.userPlus),
-            ),
-            items: [
-              DropdownMenuItem<String?>(
-                value: null,
-                child: Text(l10n.walkInCustomer),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        WebBentoTile(
+          minHeight: 0,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.customerName,
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-              for (final c in customers)
-                DropdownMenuItem(value: c.id, child: Text(c.shopName)),
-            ],
-            onChanged: onCustomerChanged,
-          ),
-        );
-
-        final fields = [
-          Expanded(flex: 2, child: customerField),
-          const SizedBox(width: 16),
-          Expanded(
-            child: InputDecorator(
-              decoration: InputDecoration(labelText: l10n.billDate),
-              child: Text(today),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: InputDecorator(
-              decoration: InputDecoration(labelText: l10n.billNumber),
-              child: const Text(
-                'AUTO',
-                style: TextStyle(color: WebPalette.inkSoft),
-              ),
-            ),
-          ),
-        ];
-
-        if (wide) {
-          return Row(children: fields);
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            customerField,
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: InputDecorator(
-                    decoration: InputDecoration(labelText: l10n.billDate),
-                    child: Text(today),
-                  ),
+              const SizedBox(height: 12),
+              if (selectedCustomer == null)
+                WebSearchDropdown<Customer>(
+                  controller: customerController,
+                  focusNode: customerFocus,
+                  hint: l10n.walkInCustomer,
+                  hintIcon: PhosphorIconsRegular.userPlus,
+                  items: customers,
+                  loading: customersLoading,
+                  emptyLabel: customersFailed
+                      ? l10n.loadingFailed
+                      : l10n.noSearchResults,
+                  onQueryChanged: onCustomerQueryChanged,
+                  onSelected: onCustomerSelected,
+                  itemBuilder: _customerTile,
+                )
+              else
+                _SelectedCustomerChip(
+                  customer: selectedCustomer!,
+                  onCleared: onCustomerCleared,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InputDecorator(
-                    decoration: InputDecoration(labelText: l10n.billNumber),
-                    child: const Text(
-                      'AUTO',
-                      style: TextStyle(color: WebPalette.inkSoft),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetaItem(label: l10n.billDate, value: today),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _MetaItem(
+                      label: l10n.billNumber,
+                      value: 'AUTO',
+                      mutedValue: true,
                     ),
                   ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        BillSummary(
+          style: BillSummaryStyle.card,
+          accentColor: WebPalette.navy,
+          cardBackground: WebPalette.navy.withValues(alpha: 0.04),
+          cardBorderColor: WebPalette.navy.withValues(alpha: 0.12),
+          itemsTotal: itemsTotal,
+          billDiscountController: billDiscountController,
+          grandTotal: grandTotal,
+          onDiscountChanged: onDiscountChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _customerTile(
+    BuildContext context,
+    Customer customer,
+    bool highlighted,
+  ) {
+    final subtitle = customer.contactName ?? customer.phone ?? '';
+    return Container(
+      height: kWebSearchDropdownTileHeight,
+      decoration: BoxDecoration(
+        color: highlighted ? WebPalette.navyWash : Colors.transparent,
+        border: const Border(
+          bottom: BorderSide(color: WebPalette.hairline, width: 0.5),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          const Icon(
+            PhosphorIconsRegular.storefront,
+            size: 18,
+            color: WebPalette.inkSoft,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  customer.shopName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
+                  ),
               ],
             ),
+          ),
+          if (customer.balanceDue > 0) ...[
+            const SizedBox(width: 8),
+            Text(
+              formatNpr(Paisa(customer.balanceDue), showPaisa: false),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: WebPalette.danger,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
-        );
-      },
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectedCustomerChip extends StatelessWidget {
+  const _SelectedCustomerChip({
+    required this.customer,
+    required this.onCleared,
+  });
+
+  final Customer customer;
+  final VoidCallback onCleared;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final subtitle = customer.contactName ?? customer.phone ?? '';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: WebPalette.navyWash,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: WebPalette.navy.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            PhosphorIconsRegular.storefront,
+            size: 18,
+            color: WebPalette.navy,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  customer.shopName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.remove,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              PhosphorIconsRegular.x,
+              size: 16,
+              color: WebPalette.inkSoft,
+            ),
+            onPressed: onCleared,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaItem extends StatelessWidget {
+  const _MetaItem({
+    required this.label,
+    required this.value,
+    this.mutedValue = false,
+  });
+
+  final String label;
+  final String value;
+  final bool mutedValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: WebPalette.inkSoft),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: mutedValue ? WebPalette.inkSoft : WebPalette.ink,
+          ),
+        ),
+      ],
     );
   }
 }

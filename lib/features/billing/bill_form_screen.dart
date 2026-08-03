@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,9 +27,19 @@ class BillFormScreen extends ConsumerStatefulWidget {
 }
 
 class _BillFormScreenState extends ConsumerState<BillFormScreen> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+
   final _draft = BillFormDraft();
   final _billDiscountController = TextEditingController();
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  Timer? _searchDebounceTimer;
   String _query = '';
+
+  /// Last loaded products stay on screen while the next query is in flight,
+  /// so the search field is never unmounted mid-typing.
+  List<Product> _lastProducts = const [];
+  bool _productsLoadedOnce = false;
   bool _loading = false;
 
   /// On narrow screens, show cart review after the first line is added.
@@ -35,12 +47,24 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _billDiscountController.dispose();
+    _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
   void _syncDiscountText() {
     _draft.billDiscountText = _billDiscountController.text;
+  }
+
+  void _onQueryChanged(String raw) {
+    _searchDebounceTimer?.cancel();
+    final query = raw.trim();
+    if (query == _query) return;
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      if (mounted) setState(() => _query = query);
+    });
   }
 
   void _addProduct(Product product) {
@@ -67,149 +91,34 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(productListProvider(_query), (_, next) {
+      final value = next.value;
+      if (value != null) {
+        setState(() {
+          _lastProducts = value;
+          _productsLoadedOnce = true;
+        });
+      }
+    });
+
     final l10n = AppLocalizations.of(context);
     final productsAsync = ref.watch(productListProvider(_query));
+    final products = productsAsync.value ?? _lastProducts;
+    final firstLoad = productsAsync.isLoading && !_productsLoadedOnce;
+    final loadFailed = productsAsync.hasError && !_productsLoadedOnce;
+    final refreshing = productsAsync.isLoading && _productsLoadedOnce;
 
-    final body = productsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => ErrorState(
+    final Widget body;
+    if (firstLoad) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (loadFailed) {
+      body = ErrorState(
         message: l10n.loadingFailed,
         onRetry: () => ref.invalidate(productListProvider(_query)),
-      ),
-      data: (products) {
-        final narrow = MediaQuery.sizeOf(context).width < 720;
-        final showPicker = !narrow || !_showCart || _draft.lines.isEmpty;
-        final showCart = !narrow || _showCart;
-
-        Widget productPicker() => BillFormProductPicker(
-          products: products,
-          query: _query,
-          onQueryChanged: (v) => setState(() => _query = v),
-          onProductSelected: _addProduct,
-        );
-
-        Widget cartPane() => Column(
-          children: [
-            if (narrow && _draft.lines.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  BsSpacing.sm,
-                  BsSpacing.xs,
-                  BsSpacing.sm,
-                  0,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _showCart = false),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: Text(l10n.addProduct),
-                  ),
-                ),
-              ),
-            Expanded(
-              child: _draft.lines.isEmpty
-                  ? Center(
-                      child: TextButton.icon(
-                        onPressed: () => setState(() => _showCart = false),
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.noBillLines),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _draft.lines.length,
-                      itemBuilder: (context, index) {
-                        final line = _draft.lines[index];
-                        return BillFormLineEditor(
-                          line: line,
-                          onChanged: () => setState(() {}),
-                          onRemove: () => setState(() {
-                            _draft.removeLineAt(index);
-                            if (_draft.lines.isEmpty) _showCart = false;
-                          }),
-                        );
-                      },
-                    ),
-            ),
-            BillSummary(
-              itemsTotal: _draft.itemsTotal,
-              billDiscountController: _billDiscountController,
-              grandTotal: _draft.grandTotal,
-              onDiscountChanged: () {
-                _syncDiscountText();
-                setState(() {});
-              },
-            ),
-          ],
-        );
-
-        if (narrow) {
-          return Column(
-            children: [
-              Expanded(child: showPicker ? productPicker() : cartPane()),
-              if (widget.embedded)
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(BsSpacing.lg),
-                    child: FilledButton(
-                      onPressed: _loading
-                          ? null
-                          : () {
-                              if (showPicker && _draft.lines.isNotEmpty) {
-                                setState(() => _showCart = true);
-                                return;
-                              }
-                              _save();
-                            },
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(
-                              showPicker && _draft.lines.isNotEmpty
-                                  ? l10n.reviewAndSave
-                                  : l10n.saveBill,
-                            ),
-                    ),
-                  ),
-                ),
-            ],
-          );
-        }
-
-        return Column(
-          children: [
-            Expanded(
-              flex: _draft.lines.isEmpty ? 1 : 2,
-              child: productPicker(),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              flex: _draft.lines.isEmpty ? 0 : 3,
-              child: showCart ? cartPane() : const SizedBox.shrink(),
-            ),
-            if (widget.embedded)
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(BsSpacing.lg),
-                  child: FilledButton(
-                    onPressed: _loading ? null : _save,
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.saveBill),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
+      );
+    } else {
+      body = _buildBody(l10n, products, refreshing);
+    }
 
     if (widget.embedded) return body;
     return Scaffold(
@@ -256,6 +165,143 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBody(
+    AppLocalizations l10n,
+    List<Product> products,
+    bool refreshing,
+  ) {
+    final narrow = MediaQuery.sizeOf(context).width < 720;
+    final showPicker = !narrow || !_showCart || _draft.lines.isEmpty;
+    final showCart = !narrow || _showCart;
+
+    Widget productPicker() => BillFormProductPicker(
+      products: products,
+      controller: _searchController,
+      focusNode: _searchFocus,
+      refreshing: refreshing,
+      onQueryChanged: _onQueryChanged,
+      onProductSelected: _addProduct,
+    );
+
+    Widget cartPane() => Column(
+      children: [
+        if (narrow && _draft.lines.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              BsSpacing.sm,
+              BsSpacing.xs,
+              BsSpacing.sm,
+              0,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _showCart = false),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(l10n.addProduct),
+              ),
+            ),
+          ),
+        Expanded(
+          child: _draft.lines.isEmpty
+              ? Center(
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _showCart = false),
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.noBillLines),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _draft.lines.length,
+                  itemBuilder: (context, index) {
+                    final line = _draft.lines[index];
+                    return BillFormLineEditor(
+                      line: line,
+                      onChanged: () => setState(() {}),
+                      onRemove: () => setState(() {
+                        _draft.removeLineAt(index);
+                        if (_draft.lines.isEmpty) _showCart = false;
+                      }),
+                    );
+                  },
+                ),
+        ),
+        BillSummary(
+          itemsTotal: _draft.itemsTotal,
+          billDiscountController: _billDiscountController,
+          grandTotal: _draft.grandTotal,
+          onDiscountChanged: () {
+            _syncDiscountText();
+            setState(() {});
+          },
+        ),
+      ],
+    );
+
+    if (narrow) {
+      return Column(
+        children: [
+          Expanded(child: showPicker ? productPicker() : cartPane()),
+          if (widget.embedded)
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(BsSpacing.lg),
+                child: FilledButton(
+                  onPressed: _loading
+                      ? null
+                      : () {
+                          if (showPicker && _draft.lines.isNotEmpty) {
+                            setState(() => _showCart = true);
+                            return;
+                          }
+                          _save();
+                        },
+                  child: _loading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          showPicker && _draft.lines.isNotEmpty
+                              ? l10n.reviewAndSave
+                              : l10n.saveBill,
+                        ),
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(flex: _draft.lines.isEmpty ? 1 : 2, child: productPicker()),
+        const Divider(height: 1),
+        Expanded(
+          flex: _draft.lines.isEmpty ? 0 : 3,
+          child: showCart ? cartPane() : const SizedBox.shrink(),
+        ),
+        if (widget.embedded)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(BsSpacing.lg),
+              child: FilledButton(
+                onPressed: _loading ? null : _save,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.saveBill),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

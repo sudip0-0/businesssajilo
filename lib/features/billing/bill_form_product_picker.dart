@@ -8,17 +8,27 @@ import '../../domain/models/product.dart';
 import '../inventory/product_image.dart';
 
 /// Mobile product search + picker for bill forms.
+///
+/// The text field's controller and focus node are hoisted by the parent and
+/// the list keeps showing the last loaded products while a query is in
+/// flight, so typing never unmounts the field or steals its focus.
 class BillFormProductPicker extends StatelessWidget {
   const BillFormProductPicker({
     super.key,
     required this.products,
-    required this.query,
+    required this.controller,
+    required this.focusNode,
+    required this.refreshing,
     required this.onQueryChanged,
     required this.onProductSelected,
   });
 
   final List<Product> products;
-  final String query;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+
+  /// True while a fresh list is loading for the current query.
+  final bool refreshing;
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<Product> onProductSelected;
 
@@ -35,30 +45,43 @@ class BillFormProductPicker extends StatelessWidget {
             0,
           ),
           child: TextField(
+            controller: controller,
+            focusNode: focusNode,
             decoration: InputDecoration(
               hintText: l10n.filterProducts,
               prefixIcon: const Icon(Icons.search),
             ),
-            onChanged: (v) => onQueryChanged(v.trim()),
+            onChanged: onQueryChanged,
           ),
         ),
+        if (refreshing) const LinearProgressIndicator(minHeight: 2),
         Expanded(
-          child: ListView.separated(
-            itemCount: products.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return ListTile(
-                leading: ProductImage(storagePath: product.imageUrl),
-                title: Text(product.name),
-                subtitle: Text(
-                  formatNpr(Paisa(product.referencePrice), showPaisa: false),
+          child: products.isEmpty
+              ? Center(
+                  child: Text(
+                    l10n.noSearchResults,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                )
+              : ListView.separated(
+                  itemCount: products.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return ListTile(
+                      leading: ProductImage(storagePath: product.imageUrl),
+                      title: Text(product.name),
+                      subtitle: Text(
+                        formatNpr(
+                          Paisa(product.referencePrice),
+                          showPaisa: false,
+                        ),
+                      ),
+                      trailing: StockBadge(product: product),
+                      onTap: () => onProductSelected(product),
+                    );
+                  },
                 ),
-                trailing: StockBadge(product: product),
-                onTap: () => onProductSelected(product),
-              );
-            },
-          ),
         ),
       ],
     );

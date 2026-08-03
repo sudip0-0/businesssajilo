@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/testing/integration_keys.dart';
 import '../../../core/utils/money.dart';
 import '../../../features/billing/bill_draft_line.dart';
 import '../../theme/web_palette.dart';
@@ -132,70 +131,6 @@ class WebBillItemRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Bill line items table with header, rows, and add-product affordance.
-class WebBillFormLineTable extends StatelessWidget {
-  const WebBillFormLineTable({
-    super.key,
-    required this.l10n,
-    required this.lines,
-    required this.onLineChanged,
-    required this.onRemoveLine,
-    required this.onFocusProductSearch,
-  });
-
-  final AppLocalizations l10n;
-  final List<BillDraftLine> lines;
-  final VoidCallback onLineChanged;
-  final ValueChanged<int> onRemoveLine;
-  final VoidCallback onFocusProductSearch;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text(
-              l10n.billLines,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const Spacer(),
-            TextButton.icon(
-              key: IntegrationKeys.billFormAddProduct,
-              onPressed: onFocusProductSearch,
-              icon: const Icon(PhosphorIconsRegular.plus, size: 16),
-              label: Text(l10n.addProduct),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        WebBillItemsTableHeader(l10n: l10n),
-        const SizedBox(height: 8),
-        if (lines.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              l10n.noBillLines,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: WebPalette.inkSoft),
-            ),
-          )
-        else
-          for (var i = 0; i < lines.length; i++)
-            WebBillItemRow(
-              index: i,
-              line: lines[i],
-              l10n: l10n,
-              onChanged: onLineChanged,
-              onRemove: () => onRemoveLine(i),
-            ),
-      ],
     );
   }
 }
