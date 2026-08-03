@@ -32,6 +32,7 @@ class WebSearchDropdown<T> extends StatefulWidget {
     this.emptyLabel,
     this.hintIcon = PhosphorIconsRegular.magnifyingGlass,
     this.openOnFocus = true,
+    this.refocusOnSelect = true,
     this.maxHeight = 320,
     this.textInputAction,
   });
@@ -64,6 +65,11 @@ class WebSearchDropdown<T> extends StatefulWidget {
 
   /// Whether the dropdown opens when the field gains focus.
   final bool openOnFocus;
+
+  /// When true (default), re-focuses the field after a selection so the next
+  /// scan/keystroke is ready. Set false when the parent moves focus elsewhere
+  /// (e.g. bill line qty after picking a product).
+  final bool refocusOnSelect;
 
   final double maxHeight;
   final TextInputAction? textInputAction;
@@ -155,6 +161,7 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
   void _select(T item) {
     widget.onSelected(item);
     _close();
+    if (!widget.refocusOnSelect) return;
     // A pointer-selected option also triggers the field's tap-outside unfocus
     // later in the same pointer-down dispatch, so re-assert focus after this
     // frame. Keeps the POS flow keyboard-first: the caret stays in the search
@@ -181,6 +188,10 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
     if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
         event.logicalKey == LogicalKeyboardKey.arrowUp) {
       if (items.isEmpty) return KeyEventResult.handled;
+      // Don't browse the full list from an empty product-search field.
+      if (!widget.openOnFocus && widget.controller.text.trim().isEmpty) {
+        return KeyEventResult.ignored;
+      }
       if (!_isOpen) {
         _open();
         return KeyEventResult.handled;
@@ -267,7 +278,14 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
               textInputAction: widget.textInputAction ?? TextInputAction.done,
               onChanged: (value) {
                 widget.onQueryChanged(value);
-                if (!_isOpen && widget.focusNode.hasFocus) _open();
+                final hasQuery = value.trim().isNotEmpty;
+                if (!hasQuery) {
+                  // With openOnFocus: false (product search), don't keep a
+                  // full catalog list open after the query is cleared.
+                  if (!widget.openOnFocus) _close();
+                } else if (!_isOpen && widget.focusNode.hasFocus) {
+                  _open();
+                }
                 _refreshOverlay();
               },
               onSubmitted: _handleSubmitted,

@@ -63,6 +63,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   Customer? _selectedCustomer;
   bool _loading = false;
 
+  /// After adding a product, focus that line's qty field once.
+  String? _focusQtyProductId;
+
   @override
   void dispose() {
     _productDebounce?.cancel();
@@ -107,7 +110,12 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       _draft.addProduct(product);
       _productQuery = '';
       _productQueryController.clear();
+      _focusQtyProductId = product.id;
     });
+  }
+
+  void _clearQtyFocusRequest() {
+    _focusQtyProductId = null;
   }
 
   void _selectCustomer(Customer customer) {
@@ -192,6 +200,8 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               onProductQueryChanged: _onProductQueryChanged,
               onProductSelected: _addProduct,
               onFocusProductSearch: _focusProductSearch,
+              focusQtyProductId: _focusQtyProductId,
+              onQtyFocusHandled: _clearQtyFocusRequest,
               onLineChanged: () => setState(() {}),
               onRemoveLine: (i) => setState(() => _draft.removeLineAt(i)),
               scrollableLines: wide,
@@ -251,7 +261,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   }
 }
 
-/// Left pane: bill-lines header, product search, and the editable cart lines.
+/// Left pane: bill-lines header, editable cart lines, and product search below.
 class _CartCard extends StatelessWidget {
   final AppLocalizations l10n;
   final BillFormDraft draft;
@@ -263,6 +273,8 @@ class _CartCard extends StatelessWidget {
   final ValueChanged<String> onProductQueryChanged;
   final ValueChanged<Product> onProductSelected;
   final VoidCallback onFocusProductSearch;
+  final String? focusQtyProductId;
+  final VoidCallback onQtyFocusHandled;
   final VoidCallback onLineChanged;
   final ValueChanged<int> onRemoveLine;
 
@@ -282,6 +294,8 @@ class _CartCard extends StatelessWidget {
     required this.onProductQueryChanged,
     required this.onProductSelected,
     required this.onFocusProductSearch,
+    required this.focusQtyProductId,
+    required this.onQtyFocusHandled,
     required this.onLineChanged,
     required this.onRemoveLine,
     required this.scrollableLines,
@@ -300,7 +314,40 @@ class _CartCard extends StatelessWidget {
             l10n: l10n,
             onChanged: onLineChanged,
             onRemove: () => onRemoveLine(i),
+            autofocusQty: focusQtyProductId == lines[i].product.id,
+            onQtyFocusHandled: onQtyFocusHandled,
+            onDoneEditing: onFocusProductSearch,
           ),
+      ],
+    );
+
+    final productSearch = WebSearchDropdown<Product>(
+      controller: productController,
+      focusNode: productFocus,
+      hint: l10n.filterProducts,
+      items: products,
+      loading: productsLoading,
+      emptyLabel: productsFailed ? l10n.loadingFailed : l10n.noSearchResults,
+      onQueryChanged: onProductQueryChanged,
+      onSelected: onProductSelected,
+      openOnFocus: false,
+      refocusOnSelect: false,
+      itemBuilder: _productTile,
+    );
+
+    final linesBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (lines.isEmpty)
+          _EmptyLinesHint(l10n: l10n)
+        else ...[
+          WebBillItemsTableHeader(l10n: l10n),
+          const SizedBox(height: 8),
+          linesList,
+        ],
+        const SizedBox(height: 16),
+        productSearch,
       ],
     );
 
@@ -328,30 +375,17 @@ class _CartCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          WebSearchDropdown<Product>(
-            controller: productController,
-            focusNode: productFocus,
-            hint: l10n.filterProducts,
-            items: products,
-            loading: productsLoading,
-            emptyLabel: productsFailed
-                ? l10n.loadingFailed
-                : l10n.noSearchResults,
-            onQueryChanged: onProductQueryChanged,
-            onSelected: onProductSelected,
-            itemBuilder: _productTile,
-          ),
-          const SizedBox(height: 16),
-          if (lines.isEmpty)
-            _EmptyLinesHint(l10n: l10n)
-          else ...[
-            WebBillItemsTableHeader(l10n: l10n),
-            const SizedBox(height: 8),
-            if (scrollableLines)
-              Expanded(child: SingleChildScrollView(child: linesList))
-            else
-              linesList,
-          ],
+          // Keep search packed under the last line. In the tall two-pane
+          // layout, scroll the whole block so leftover height sits below
+          // the search — not between the lines and the search field.
+          if (scrollableLines)
+            Expanded(
+              child: SingleChildScrollView(
+                child: linesBlock,
+              ),
+            )
+          else
+            linesBlock,
         ],
       ),
     );

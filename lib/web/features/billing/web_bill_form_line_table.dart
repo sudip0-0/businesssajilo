@@ -34,7 +34,9 @@ class WebBillItemsTableHeader extends StatelessWidget {
 }
 
 /// Single editable bill line row on web.
-class WebBillItemRow extends StatelessWidget {
+///
+/// Keyboard chain: Qty → Price → [onDoneEditing] (typically product search).
+class WebBillItemRow extends StatefulWidget {
   const WebBillItemRow({
     super.key,
     required this.index,
@@ -42,6 +44,9 @@ class WebBillItemRow extends StatelessWidget {
     required this.l10n,
     required this.onChanged,
     required this.onRemove,
+    this.autofocusQty = false,
+    this.onQtyFocusHandled,
+    this.onDoneEditing,
   });
 
   final int index;
@@ -49,6 +54,105 @@ class WebBillItemRow extends StatelessWidget {
   final AppLocalizations l10n;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
+
+  /// When true after a rebuild, focus jumps to qty and selects its text.
+  final bool autofocusQty;
+
+  /// Fired once the autofocus qty request has been applied.
+  final VoidCallback? onQtyFocusHandled;
+
+  /// Fired when the user submits the price field (Enter) — parent returns to
+  /// product search for the next item.
+  final VoidCallback? onDoneEditing;
+
+  @override
+  State<WebBillItemRow> createState() => _WebBillItemRowState();
+}
+
+class _WebBillItemRowState extends State<WebBillItemRow> {
+  late final TextEditingController _qtyController;
+  late final TextEditingController _rateController;
+  late final FocusNode _qtyFocus;
+  late final FocusNode _rateFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _qtyController = TextEditingController(text: '${widget.line.qty}');
+    _rateController = TextEditingController(text: _formatRate(widget.line.rate));
+    _qtyFocus = FocusNode(debugLabel: 'billQty');
+    _rateFocus = FocusNode(debugLabel: 'billRate');
+    _qtyFocus.addListener(_onQtyFocusChange);
+    _rateFocus.addListener(_onRateFocusChange);
+    if (widget.autofocusQty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focusQty());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant WebBillItemRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_qtyFocus.hasFocus) {
+      final qtyText = '${widget.line.qty}';
+      if (_qtyController.text != qtyText) {
+        _qtyController.text = qtyText;
+      }
+    }
+    if (!_rateFocus.hasFocus) {
+      final rateText = _formatRate(widget.line.rate);
+      if (_rateController.text != rateText) {
+        _rateController.text = rateText;
+      }
+    }
+    if (widget.autofocusQty && !oldWidget.autofocusQty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focusQty());
+    }
+  }
+
+  @override
+  void dispose() {
+    _qtyFocus.removeListener(_onQtyFocusChange);
+    _rateFocus.removeListener(_onRateFocusChange);
+    _qtyFocus.dispose();
+    _rateFocus.dispose();
+    _qtyController.dispose();
+    _rateController.dispose();
+    super.dispose();
+  }
+
+  String _formatRate(int rate) =>
+      formatNpr(Paisa(rate), showSymbol: false, showPaisa: false);
+
+  void _selectAll(TextEditingController controller) {
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.text.length,
+    );
+  }
+
+  void _onQtyFocusChange() {
+    if (_qtyFocus.hasFocus) _selectAll(_qtyController);
+  }
+
+  void _onRateFocusChange() {
+    if (_rateFocus.hasFocus) _selectAll(_rateController);
+  }
+
+  void _focusQty() {
+    if (!mounted) return;
+    _qtyController.text = '${widget.line.qty}';
+    _qtyFocus.requestFocus();
+    _selectAll(_qtyController);
+    widget.onQtyFocusHandled?.call();
+  }
+
+  void _submitQty() {
+    _rateFocus.requestFocus();
+  }
+
+  void _submitRate() {
+    widget.onDoneEditing?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,19 +167,21 @@ class WebBillItemRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(width: 36, child: Text('${index + 1}')),
+          SizedBox(width: 36, child: Text('${widget.index + 1}')),
           Expanded(
             flex: 3,
             child: Text(
-              line.product.name,
+              widget.line.product.name,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
           SizedBox(
             width: 72,
-            child: TextFormField(
-              initialValue: '${line.qty}',
+            child: TextField(
+              controller: _qtyController,
+              focusNode: _qtyFocus,
               keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(
@@ -84,21 +190,20 @@ class WebBillItemRow extends StatelessWidget {
                 ),
               ),
               onChanged: (v) {
-                line.setQty(int.tryParse(v) ?? line.qty);
-                onChanged();
+                widget.line.setQty(int.tryParse(v) ?? widget.line.qty);
+                widget.onChanged();
               },
+              onSubmitted: (_) => _submitQty(),
             ),
           ),
-          SizedBox(width: 56, child: Text(line.product.unit)),
+          SizedBox(width: 56, child: Text(widget.line.product.unit)),
           SizedBox(
             width: 96,
-            child: TextFormField(
-              initialValue: formatNpr(
-                Paisa(line.rate),
-                showSymbol: false,
-                showPaisa: false,
-              ),
+            child: TextField(
+              controller: _rateController,
+              focusNode: _rateFocus,
               keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
               decoration: const InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.symmetric(
@@ -107,27 +212,28 @@ class WebBillItemRow extends StatelessWidget {
                 ),
               ),
               onChanged: (v) {
-                line.rate = parseNpr(v)?.value ?? line.rate;
-                onChanged();
+                widget.line.rate = parseNpr(v)?.value ?? widget.line.rate;
+                widget.onChanged();
               },
+              onSubmitted: (_) => _submitRate(),
             ),
           ),
           SizedBox(
             width: 96,
             child: Text(
-              formatNpr(Paisa(line.lineTotal), showPaisa: false),
+              formatNpr(Paisa(widget.line.lineTotal), showPaisa: false),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           IconButton(
-            tooltip: l10n.remove,
+            tooltip: widget.l10n.remove,
             icon: const Icon(
               PhosphorIconsRegular.trash,
               color: WebPalette.danger,
             ),
-            onPressed: onRemove,
+            onPressed: widget.onRemove,
           ),
         ],
       ),
