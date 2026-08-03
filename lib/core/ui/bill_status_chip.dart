@@ -37,31 +37,34 @@ class BillStatusChip extends StatelessWidget {
     };
     final l10n = AppLocalizations.of(context);
     final label = _label(l10n);
-    return Semantics(
-      label: label,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-        decoration: BoxDecoration(
-          color: tint.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: tint.withValues(alpha: 0.28)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: textColor),
-            const SizedBox(width: 4.5),
-            Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                color: textColor,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.55,
-                height: 1.25,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Semantics(
+        label: label,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+          decoration: BoxDecoration(
+            color: tint.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: tint.withValues(alpha: 0.28)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 12, color: textColor),
+              const SizedBox(width: 4.5),
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.55,
+                  height: 1.25,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

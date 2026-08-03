@@ -122,19 +122,18 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
               l10n.billLines,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const Divider(),
+            const SizedBox(height: 8),
+            _BillLinesHeader(l10n: l10n),
+            const Divider(height: 16),
             ...bill.items.map(
-              (item) => ListTile(
-                title: Text(item.nameSnapshot),
-                subtitle: Text(
-                  '${l10n.quantity}: ${item.qty} · ${l10n.rate}: ${formatNpr(Paisa(item.rate), showPaisa: false)}',
-                ),
-                trailing: Text(
-                  formatNpr(Paisa(item.lineTotal), showPaisa: false),
-                ),
+              (item) => _BillLineRow(
+                name: item.nameSnapshot,
+                qty: '${item.qty}',
+                rate: formatNpr(Paisa(item.rate), showPaisa: false),
+                amount: formatNpr(Paisa(item.lineTotal), showPaisa: false),
               ),
             ),
-            const Divider(),
+            const Divider(height: 16),
             _SummaryRow(
               label: l10n.total,
               value: formatNpr(Paisa(bill.itemsTotal), showPaisa: false),
@@ -164,6 +163,84 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.billDetail)),
         body: content,
+      ),
+    );
+  }
+}
+
+class _BillLinesHeader extends StatelessWidget {
+  const _BillLinesHeader({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    return Row(
+      children: [
+        Expanded(flex: 4, child: Text(l10n.productName, style: style)),
+        SizedBox(
+          width: 56,
+          child: Text(l10n.qty, style: style, textAlign: TextAlign.center),
+        ),
+        SizedBox(
+          width: 96,
+          child: Text(l10n.rate, style: style, textAlign: TextAlign.end),
+        ),
+        SizedBox(
+          width: 104,
+          child: Text(l10n.amountRs, style: style, textAlign: TextAlign.end),
+        ),
+      ],
+    );
+  }
+}
+
+class _BillLineRow extends StatelessWidget {
+  const _BillLineRow({
+    required this.name,
+    required this.qty,
+    required this.rate,
+    required this.amount,
+  });
+
+  final String name;
+  final String qty;
+  final String rate;
+  final String amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final body = Theme.of(context).textTheme.bodyMedium;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(name, style: body),
+          ),
+          SizedBox(
+            width: 56,
+            child: Text(qty, style: body, textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: 96,
+            child: Text(rate, style: body, textAlign: TextAlign.end),
+          ),
+          SizedBox(
+            width: 104,
+            child: Text(
+              amount,
+              style: body?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
       ),
     );
   }
