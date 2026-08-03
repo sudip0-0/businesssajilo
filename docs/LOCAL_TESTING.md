@@ -43,6 +43,34 @@ $env:HARDENING_GATE = "1"
 
 Integration tests expect seeded E2E owner (`e2e-owner@test.com` / `password123`) after `supabase db reset`.
 
+## Bulk demo data (E2E owner)
+
+`supabase db reset` also loads [`supabase/seeds/e2e_bulk_demo.sql`](../supabase/seeds/e2e_bulk_demo.sql): **55 products**, **55 customers**, **220 bills** for the E2E business. The script is idempotent (skips when ≥50 products already exist).
+
+**Full reset (clean slate + seed):**
+
+```powershell
+npx supabase db reset
+```
+
+**Populate without wiping** (local DB already running with the E2E owner):
+
+```powershell
+Get-Content supabase\seeds\e2e_bulk_demo.sql -Raw |
+  docker exec -i supabase_db_businesssajilo psql -U postgres -v ON_ERROR_STOP=1
+```
+
+**Verify counts:**
+
+```powershell
+docker exec -i supabase_db_businesssajilo psql -U postgres -c @"
+select
+  (select count(*) from products where business_id = 'e2e00000-0000-4000-8000-000000000010') as products,
+  (select count(*) from customers where business_id = 'e2e00000-0000-4000-8000-000000000010') as customers,
+  (select count(*) from bills where business_id = 'e2e00000-0000-4000-8000-000000000010') as bills;
+"@
+```
+
 ## Environment variables
 
 | Variable | Purpose |

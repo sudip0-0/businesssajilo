@@ -73,3 +73,5 @@ e2e-*.png
 
 # Local-only docs
 docs/enhancement-prompt.md
+login_data.md
+.gitignore

@@ -50,14 +50,19 @@ class BsSalesLineChart extends StatelessWidget {
     return sorted;
   }
 
-  String _formatAxisValue(int value) {
-    if (value >= 100000) {
-      return '${(value / 100000).toStringAsFixed(value >= 1000000 ? 0 : 1)}L';
+  /// [paisa] is chart data in paisa; labels are NPR rupees using K / L.
+  /// 1K = 1,000 NPR; 1L = 1,00,000 NPR (100 thousand).
+  String _formatAxisValue(int paisa) {
+    final rupees = paisa / 100;
+    if (rupees >= 100000) {
+      final lakhs = rupees / 100000;
+      return '${lakhs.toStringAsFixed(lakhs >= 10 ? 0 : 1)}L';
     }
-    if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(value >= 10000 ? 0 : 1)}K';
+    if (rupees >= 1000) {
+      final thousands = rupees / 1000;
+      return '${thousands.toStringAsFixed(thousands >= 10 ? 0 : 1)}K';
     }
-    return value.toString();
+    return rupees.round().toString();
   }
 
   String _periodLabel(AppLocalizations l10n) =>
