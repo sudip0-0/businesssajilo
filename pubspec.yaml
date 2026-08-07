@@ -19,7 +19,12 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.3.2
-  phosphor_flutter: ^2.1.0
+  # Flutter 3.44+ fix; replace when phosphor_flutter publishes a new version.
+  # https://github.com/phosphor-icons/flutter/pull/62
+  phosphor_flutter:
+    git:
+      url: https://github.com/subarnaPdl/phosphor_icons.git
+      ref: 514f0a883571c4453dbd6ee3041d1dcba4fb8fc7
   freezed_annotation: ^3.1.0
   go_router: ^17.3.0
   image: ^4.5.4
