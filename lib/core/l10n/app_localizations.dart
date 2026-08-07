@@ -2893,6 +2893,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide inactive'**
   String get hideInactive;
+
+  /// No description provided for @periodLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get periodLast7Days;
+
+  /// No description provided for @periodLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get periodLast30Days;
+
+  /// No description provided for @periodThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get periodThisMonth;
+
+  /// No description provided for @periodCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get periodCustom;
+
+  /// No description provided for @fromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get fromDate;
+
+  /// No description provided for @toDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get toDate;
+
+  /// No description provided for @netSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Net sales'**
+  String get netSales;
+
+  /// No description provided for @billCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills'**
+  String get billCount;
+
+  /// No description provided for @avgBillValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg bill'**
+  String get avgBillValue;
+
+  /// No description provided for @vsPreviousPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'vs previous period'**
+  String get vsPreviousPeriod;
+
+  /// No description provided for @billsInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills in period'**
+  String get billsInPeriod;
+
+  /// No description provided for @searchBillsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search bill no or customer'**
+  String get searchBillsHint;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
+
+  /// No description provided for @oldestDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest due'**
+  String get oldestDue;
+
+  /// No description provided for @customersWithDues.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers with dues'**
+  String get customersWithDues;
+
+  /// No description provided for @avgAgeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg age (days)'**
+  String get avgAgeDays;
+
+  /// No description provided for @agingOver60.
+  ///
+  /// In en, this message translates to:
+  /// **'Over 60 days'**
+  String get agingOver60;
+
+  /// No description provided for @allBuckets.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allBuckets;
+
+  /// No description provided for @searchCustomersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search customers'**
+  String get searchCustomersHint;
+
+  /// No description provided for @productsTracked.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get productsTracked;
+
+  /// No description provided for @allStock.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allStock;
+
+  /// No description provided for @stockFilterLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get stockFilterLow;
+
+  /// No description provided for @stockFilterOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get stockFilterOut;
+
+  /// No description provided for @stockFilterIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get stockFilterIn;
+
+  /// No description provided for @searchProductsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products'**
+  String get searchProductsHint;
+
+  /// No description provided for @cost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get cost;
+
+  /// No description provided for @valuation.
+  ///
+  /// In en, this message translates to:
+  /// **'Valuation'**
+  String get valuation;
+
+  /// No description provided for @noMatchingResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results'**
+  String get noMatchingResults;
+
+  /// No description provided for @salesThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get salesThisWeek;
+
+  /// No description provided for @topProductLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top product'**
+  String get topProductLabel;
 }
 
 class _AppLocalizationsDelegate

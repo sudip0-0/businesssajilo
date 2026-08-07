@@ -1465,4 +1465,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hideInactive => 'Hide inactive';
+
+  @override
+  String get periodLast7Days => 'Last 7 days';
+
+  @override
+  String get periodLast30Days => 'Last 30 days';
+
+  @override
+  String get periodThisMonth => 'This month';
+
+  @override
+  String get periodCustom => 'Custom';
+
+  @override
+  String get fromDate => 'From';
+
+  @override
+  String get toDate => 'To';
+
+  @override
+  String get netSales => 'Net sales';
+
+  @override
+  String get billCount => 'Bills';
+
+  @override
+  String get avgBillValue => 'Avg bill';
+
+  @override
+  String get vsPreviousPeriod => 'vs previous period';
+
+  @override
+  String get billsInPeriod => 'Bills in period';
+
+  @override
+  String get searchBillsHint => 'Search bill no or customer';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get oldestDue => 'Oldest due';
+
+  @override
+  String get customersWithDues => 'Customers with dues';
+
+  @override
+  String get avgAgeDays => 'Avg age (days)';
+
+  @override
+  String get agingOver60 => 'Over 60 days';
+
+  @override
+  String get allBuckets => 'All';
+
+  @override
+  String get searchCustomersHint => 'Search customers';
+
+  @override
+  String get productsTracked => 'Products';
+
+  @override
+  String get allStock => 'All';
+
+  @override
+  String get stockFilterLow => 'Low';
+
+  @override
+  String get stockFilterOut => 'Out';
+
+  @override
+  String get stockFilterIn => 'In stock';
+
+  @override
+  String get searchProductsHint => 'Search products';
+
+  @override
+  String get cost => 'Cost';
+
+  @override
+  String get valuation => 'Valuation';
+
+  @override
+  String get noMatchingResults => 'No matching results';
+
+  @override
+  String get salesThisWeek => 'This week';
+
+  @override
+  String get topProductLabel => 'Top product';
 }

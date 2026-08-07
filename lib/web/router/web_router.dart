@@ -44,10 +44,8 @@ import '../features/orders/web_order_detail_page.dart' deferred as order_detail;
 import '../features/orders/web_order_list_page.dart' deferred as order_list;
 import '../features/reports/web_dues_aging_page.dart' deferred as dues_aging;
 import '../features/reports/web_reports_hub_page.dart' deferred as reports_hub;
-import '../features/reports/web_sales_summary_page.dart'
-    deferred as sales_summary;
-import '../features/reports/web_stock_valuation_page.dart'
-    deferred as stock_valuation;
+import '../features/reports/web_sales_report_page.dart' deferred as sales_report;
+import '../features/reports/web_stock_report_page.dart' deferred as stock_report;
 
 final webRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
@@ -279,23 +277,29 @@ ShellRoute _ownerRoutes() {
       ),
       GoRoute(
         path: '/owner/reports/sales',
-        builder: (_, _) => DeferredPage(
-          load: sales_summary.loadLibrary,
-          builder: () => sales_summary.WebSalesSummaryPage(),
+        builder: (_, state) => DeferredPage(
+          load: sales_report.loadLibrary,
+          builder: () => sales_report.WebSalesReportPage(
+            initialPeriod: state.uri.queryParameters['period'],
+          ),
         ),
       ),
       GoRoute(
         path: '/owner/reports/dues',
-        builder: (_, _) => DeferredPage(
+        builder: (_, state) => DeferredPage(
           load: dues_aging.loadLibrary,
-          builder: () => dues_aging.WebDuesAgingPage(),
+          builder: () => dues_aging.WebDuesAgingPage(
+            initialBucket: state.uri.queryParameters['bucket'],
+          ),
         ),
       ),
       GoRoute(
         path: '/owner/reports/stock',
-        builder: (_, _) => DeferredPage(
-          load: stock_valuation.loadLibrary,
-          builder: () => stock_valuation.WebStockValuationPage(),
+        builder: (_, state) => DeferredPage(
+          load: stock_report.loadLibrary,
+          builder: () => stock_report.WebStockReportPage(
+            initialStatus: state.uri.queryParameters['status'],
+          ),
         ),
       ),
       GoRoute(

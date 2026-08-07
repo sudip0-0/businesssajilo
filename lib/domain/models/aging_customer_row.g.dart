@@ -14,6 +14,7 @@ _AgingCustomerRow _$AgingCustomerRowFromJson(Map<String, dynamic> json) =>
       oldestDueAt: DateTime.parse(json['oldest_due_at'] as String),
       ageDays: (json['age_days'] as num?)?.toInt() ?? 0,
       bucket: json['bucket'] as String,
+      phone: json['phone'] as String?,
     );
 
 Map<String, dynamic> _$AgingCustomerRowToJson(_AgingCustomerRow instance) =>
@@ -24,4 +25,5 @@ Map<String, dynamic> _$AgingCustomerRowToJson(_AgingCustomerRow instance) =>
       'oldest_due_at': instance.oldestDueAt.toIso8601String(),
       'age_days': instance.ageDays,
       'bucket': instance.bucket,
+      'phone': instance.phone,
     };

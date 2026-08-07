@@ -12,6 +12,7 @@ abstract class AgingCustomerRow with _$AgingCustomerRow {
     required DateTime oldestDueAt,
     @Default(0) int ageDays,
     required String bucket,
+    String? phone,
   }) = _AgingCustomerRow;
 
   factory AgingCustomerRow.fromJson(Map<String, dynamic> json) =>

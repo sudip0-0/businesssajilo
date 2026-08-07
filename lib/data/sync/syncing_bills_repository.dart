@@ -9,6 +9,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../local/app_database.dart';
 import '../local/local_mappers.dart';
+import '../remote/supabase_bills_repository.dart';
 import '../repositories/bills_repository.dart';
 import '../repositories/payments_repository.dart';
 import 'sync_service.dart';
@@ -152,6 +153,57 @@ class SyncingBillsRepository implements BillsRepository {
               ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
               ..limit(limit))
             .get();
+    return _attachItems(bills);
+  }
+
+  /// Reports always prefer remote (same as customer ledger). Falls back to
+  /// local bills when offline / no client.
+  @override
+  Future<List<Bill>> listInRange({
+    required DateTime from,
+    required DateTime to,
+    String? query,
+    int offset = 0,
+    int? limit,
+  }) async {
+    final client = _client;
+    if (client != null) {
+      try {
+        return await SupabaseBillsRepository(
+          client,
+          _payments,
+        ).listInRange(
+          from: from,
+          to: to,
+          query: query,
+          offset: offset,
+          limit: limit,
+        );
+      } catch (_) {
+        // Fall through to local.
+      }
+    }
+
+    final fromUtc = from.toUtc();
+    final toUtc = to.toUtc();
+    final q = query?.trim();
+    final pattern = (q != null && q.isNotEmpty) ? '%$q%' : null;
+    final request = _db.select(_db.localBills)
+      ..where((b) {
+        final inRange =
+            b.createdAt.isBiggerOrEqualValue(fromUtc) &
+            b.createdAt.isSmallerThanValue(toUtc);
+        if (pattern == null) return inRange;
+        final shopMatch =
+            b.customerShopName.isNotNull() &
+            b.customerShopName.like(pattern);
+        return inRange & (b.billNo.like(pattern) | shopMatch);
+      })
+      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)]);
+    if (limit != null) {
+      request.limit(limit, offset: offset);
+    }
+    final bills = await request.get();
     return _attachItems(bills);
   }
 

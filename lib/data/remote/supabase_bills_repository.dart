@@ -41,6 +41,61 @@ class SupabaseBillsRepository implements BillsRepository {
   }
 
   @override
+  Future<List<Bill>> listInRange({
+    required DateTime from,
+    required DateTime to,
+    String? query,
+    int offset = 0,
+    int? limit,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    final fromIso = from.toUtc().toIso8601String();
+    final toIso = to.toUtc().toIso8601String();
+    final q = query?.trim();
+
+    if (q == null || q.isEmpty) {
+      var request = client
+          .from('bills')
+          .select('*, customers(shop_name)')
+          .gte('created_at', fromIso)
+          .lt('created_at', toIso)
+          .order('created_at', ascending: false);
+      if (limit != null) {
+        request = request.range(offset, offset + limit - 1);
+      }
+      final rows = await request;
+      return (rows as List).map(_mapBillRow).toList();
+    }
+
+    final customers = await client
+        .from('customers')
+        .select('id')
+        .ilike('shop_name', '%$q%')
+        .limit(100);
+    final customerIds = (customers as List)
+        .map((r) => (r as Map)['id'] as String)
+        .toList();
+
+    final orParts = <String>['bill_no.ilike.%$q%'];
+    if (customerIds.isNotEmpty) {
+      orParts.add('customer_id.in.(${customerIds.join(',')})');
+    }
+
+    var request = client
+        .from('bills')
+        .select('*, customers(shop_name)')
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso)
+        .or(orParts.join(','))
+        .order('created_at', ascending: false);
+    if (limit != null) {
+      request = request.range(offset, offset + limit - 1);
+    }
+    final rows = await request;
+    return (rows as List).map(_mapBillRow).toList();
+  }
+
+  @override
   Future<Bill> get(String id) async {
     final client = requireSupabaseClient(_client);
     final row = await client

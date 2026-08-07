@@ -11,7 +11,10 @@ import '../../data/repositories/customers_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/dues_aging_report.dart';
 import '../../domain/models/ledger_entry.dart';
+import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
+import '../../domain/models/top_customer_row.dart';
+import '../../domain/models/top_product_row.dart';
 import '../billing/providers.dart';
 import 'providers.dart';
 
@@ -49,6 +52,29 @@ Future<void> exportSalesReportCsv(
     await ref.read(exportShareServiceProvider).shareCsv(
       filename: filename,
       subject: l10n.salesSummary,
+      rows: salesReportCsvRows(
+        daily: daily,
+        topProducts: topProducts,
+        topCustomers: topCustomers,
+      ),
+    );
+  });
+}
+
+Future<void> exportSalesReportCsvFromData(
+  WidgetRef ref,
+  BuildContext context, {
+  required List<SalesPeriodPoint> daily,
+  required List<TopProductRow> topProducts,
+  required List<TopCustomerRow> topCustomers,
+  required String subject,
+}) async {
+  await _shareCsvExport(context, () async {
+    final filename =
+        'businesssajilo-sales-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+    await ref.read(exportShareServiceProvider).shareCsv(
+      filename: filename,
+      subject: subject,
       rows: salesReportCsvRows(
         daily: daily,
         topProducts: topProducts,

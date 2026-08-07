@@ -45,6 +45,58 @@ void main() {
 
     expect(find.text('Dues aging'), findsWidgets);
     expect(find.text('Ram Store'), findsOneWidget);
+    expect(find.text('CUSTOMERS WITH DUES'), findsOneWidget);
+  });
+
+  testWidgets('WebDuesAgingPage filters by bucket chip', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final report = DuesAgingReport(
+      bucket0to30: 10000,
+      bucket31to60: 20000,
+      bucket60plus: 5000,
+      customers: [
+        AgingCustomerRow(
+          customerId: 'c1',
+          shopName: 'Ram Store',
+          balanceDue: 10000,
+          oldestDueAt: DateTime(2026, 6, 1),
+          ageDays: 10,
+          bucket: '0_30',
+          phone: '9800000000',
+        ),
+        AgingCustomerRow(
+          customerId: 'c2',
+          shopName: 'Shyam Store',
+          balanceDue: 5000,
+          oldestDueAt: DateTime(2026, 1, 1),
+          ageDays: 90,
+          bucket: '60_plus',
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [duesAgingProvider.overrideWith((ref) async => report)],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: WebDuesAgingPage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('Ram Store'), findsOneWidget);
+    expect(find.text('Shyam Store'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, '60+ days'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shyam Store'), findsOneWidget);
+    expect(find.text('Ram Store'), findsNothing);
   });
 
   testWidgets('WebDuesAgingPage shows empty state when no dues', (

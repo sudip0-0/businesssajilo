@@ -46,13 +46,15 @@ List<List<String>> salesReportCsvRows({
 
 List<List<String>> duesAgingCsvRows(DuesAgingReport report) {
   final rows = <List<String>>[
-    ['Customer', 'Bucket', 'Amount due'],
+    ['Customer', 'Phone', 'Bucket', 'Amount due', 'Age days'],
   ];
   for (final customer in report.customers) {
     rows.add([
       customer.shopName,
+      customer.phone ?? '',
       customer.bucket,
       formatNpr(Paisa(customer.balanceDue), showPaisa: false),
+      '${customer.ageDays}',
     ]);
   }
   return rows;

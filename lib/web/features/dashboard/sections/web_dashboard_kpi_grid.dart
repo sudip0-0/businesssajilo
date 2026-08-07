@@ -85,7 +85,7 @@ class WebDashboardKpiGrid extends StatelessWidget {
             loading: () => null,
             error: (_, _) => null,
           ),
-          onTap: () => context.go('/owner/reports/stock'),
+          onTap: () => context.go('/owner/reports/stock?status=low'),
         ),
         WebStatTile(
           label: l10n.pendingOrders,

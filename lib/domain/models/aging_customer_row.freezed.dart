@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AgingCustomerRow {
 
- String get customerId; String get shopName; int get balanceDue; DateTime get oldestDueAt; int get ageDays; String get bucket;
+ String get customerId; String get shopName; int get balanceDue; DateTime get oldestDueAt; int get ageDays; String get bucket; String? get phone;
 /// Create a copy of AgingCustomerRow
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AgingCustomerRowCopyWith<AgingCustomerRow> get copyWith => _$AgingCustomerRowCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgingCustomerRow&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.balanceDue, balanceDue) || other.balanceDue == balanceDue)&&(identical(other.oldestDueAt, oldestDueAt) || other.oldestDueAt == oldestDueAt)&&(identical(other.ageDays, ageDays) || other.ageDays == ageDays)&&(identical(other.bucket, bucket) || other.bucket == bucket));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgingCustomerRow&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.balanceDue, balanceDue) || other.balanceDue == balanceDue)&&(identical(other.oldestDueAt, oldestDueAt) || other.oldestDueAt == oldestDueAt)&&(identical(other.ageDays, ageDays) || other.ageDays == ageDays)&&(identical(other.bucket, bucket) || other.bucket == bucket)&&(identical(other.phone, phone) || other.phone == phone));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,customerId,shopName,balanceDue,oldestDueAt,ageDays,bucket);
+int get hashCode => Object.hash(runtimeType,customerId,shopName,balanceDue,oldestDueAt,ageDays,bucket,phone);
 
 @override
 String toString() {
-  return 'AgingCustomerRow(customerId: $customerId, shopName: $shopName, balanceDue: $balanceDue, oldestDueAt: $oldestDueAt, ageDays: $ageDays, bucket: $bucket)';
+  return 'AgingCustomerRow(customerId: $customerId, shopName: $shopName, balanceDue: $balanceDue, oldestDueAt: $oldestDueAt, ageDays: $ageDays, bucket: $bucket, phone: $phone)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AgingCustomerRowCopyWith<$Res>  {
   factory $AgingCustomerRowCopyWith(AgingCustomerRow value, $Res Function(AgingCustomerRow) _then) = _$AgingCustomerRowCopyWithImpl;
 @useResult
 $Res call({
- String customerId, String shopName, int balanceDue, DateTime oldestDueAt, int ageDays, String bucket
+ String customerId, String shopName, int balanceDue, DateTime oldestDueAt, int ageDays, String bucket, String? phone
 });
 
 
@@ -65,7 +65,7 @@ class _$AgingCustomerRowCopyWithImpl<$Res>
 
 /// Create a copy of AgingCustomerRow
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? customerId = null,Object? shopName = null,Object? balanceDue = null,Object? oldestDueAt = null,Object? ageDays = null,Object? bucket = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? customerId = null,Object? shopName = null,Object? balanceDue = null,Object? oldestDueAt = null,Object? ageDays = null,Object? bucket = null,Object? phone = freezed,}) {
   return _then(_self.copyWith(
 customerId: null == customerId ? _self.customerId : customerId // ignore: cast_nullable_to_non_nullable
 as String,shopName: null == shopName ? _self.shopName : shopName // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as String,balanceDue: null == balanceDue ? _self.balanceDue : balanceDue // igno
 as int,oldestDueAt: null == oldestDueAt ? _self.oldestDueAt : oldestDueAt // ignore: cast_nullable_to_non_nullable
 as DateTime,ageDays: null == ageDays ? _self.ageDays : ageDays // ignore: cast_nullable_to_non_nullable
 as int,bucket: null == bucket ? _self.bucket : bucket // ignore: cast_nullable_to_non_nullable
-as String,
+as String,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String customerId,  String shopName,  int balanceDue,  DateTime oldestDueAt,  int ageDays,  String bucket)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String customerId,  String shopName,  int balanceDue,  DateTime oldestDueAt,  int ageDays,  String bucket,  String? phone)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AgingCustomerRow() when $default != null:
-return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDueAt,_that.ageDays,_that.bucket);case _:
+return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDueAt,_that.ageDays,_that.bucket,_that.phone);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDue
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String customerId,  String shopName,  int balanceDue,  DateTime oldestDueAt,  int ageDays,  String bucket)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String customerId,  String shopName,  int balanceDue,  DateTime oldestDueAt,  int ageDays,  String bucket,  String? phone)  $default,) {final _that = this;
 switch (_that) {
 case _AgingCustomerRow():
-return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDueAt,_that.ageDays,_that.bucket);case _:
+return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDueAt,_that.ageDays,_that.bucket,_that.phone);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDue
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String customerId,  String shopName,  int balanceDue,  DateTime oldestDueAt,  int ageDays,  String bucket)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String customerId,  String shopName,  int balanceDue,  DateTime oldestDueAt,  int ageDays,  String bucket,  String? phone)?  $default,) {final _that = this;
 switch (_that) {
 case _AgingCustomerRow() when $default != null:
-return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDueAt,_that.ageDays,_that.bucket);case _:
+return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDueAt,_that.ageDays,_that.bucket,_that.phone);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.customerId,_that.shopName,_that.balanceDue,_that.oldestDue
 @JsonSerializable()
 
 class _AgingCustomerRow implements AgingCustomerRow {
-  const _AgingCustomerRow({required this.customerId, required this.shopName, this.balanceDue = 0, required this.oldestDueAt, this.ageDays = 0, required this.bucket});
+  const _AgingCustomerRow({required this.customerId, required this.shopName, this.balanceDue = 0, required this.oldestDueAt, this.ageDays = 0, required this.bucket, this.phone});
   factory _AgingCustomerRow.fromJson(Map<String, dynamic> json) => _$AgingCustomerRowFromJson(json);
 
 @override final  String customerId;
@@ -223,6 +224,7 @@ class _AgingCustomerRow implements AgingCustomerRow {
 @override final  DateTime oldestDueAt;
 @override@JsonKey() final  int ageDays;
 @override final  String bucket;
+@override final  String? phone;
 
 /// Create a copy of AgingCustomerRow
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgingCustomerRow&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.balanceDue, balanceDue) || other.balanceDue == balanceDue)&&(identical(other.oldestDueAt, oldestDueAt) || other.oldestDueAt == oldestDueAt)&&(identical(other.ageDays, ageDays) || other.ageDays == ageDays)&&(identical(other.bucket, bucket) || other.bucket == bucket));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgingCustomerRow&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.shopName, shopName) || other.shopName == shopName)&&(identical(other.balanceDue, balanceDue) || other.balanceDue == balanceDue)&&(identical(other.oldestDueAt, oldestDueAt) || other.oldestDueAt == oldestDueAt)&&(identical(other.ageDays, ageDays) || other.ageDays == ageDays)&&(identical(other.bucket, bucket) || other.bucket == bucket)&&(identical(other.phone, phone) || other.phone == phone));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,customerId,shopName,balanceDue,oldestDueAt,ageDays,bucket);
+int get hashCode => Object.hash(runtimeType,customerId,shopName,balanceDue,oldestDueAt,ageDays,bucket,phone);
 
 @override
 String toString() {
-  return 'AgingCustomerRow(customerId: $customerId, shopName: $shopName, balanceDue: $balanceDue, oldestDueAt: $oldestDueAt, ageDays: $ageDays, bucket: $bucket)';
+  return 'AgingCustomerRow(customerId: $customerId, shopName: $shopName, balanceDue: $balanceDue, oldestDueAt: $oldestDueAt, ageDays: $ageDays, bucket: $bucket, phone: $phone)';
 }
 
 
@@ -257,7 +259,7 @@ abstract mixin class _$AgingCustomerRowCopyWith<$Res> implements $AgingCustomerR
   factory _$AgingCustomerRowCopyWith(_AgingCustomerRow value, $Res Function(_AgingCustomerRow) _then) = __$AgingCustomerRowCopyWithImpl;
 @override @useResult
 $Res call({
- String customerId, String shopName, int balanceDue, DateTime oldestDueAt, int ageDays, String bucket
+ String customerId, String shopName, int balanceDue, DateTime oldestDueAt, int ageDays, String bucket, String? phone
 });
 
 
@@ -274,7 +276,7 @@ class __$AgingCustomerRowCopyWithImpl<$Res>
 
 /// Create a copy of AgingCustomerRow
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? customerId = null,Object? shopName = null,Object? balanceDue = null,Object? oldestDueAt = null,Object? ageDays = null,Object? bucket = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? customerId = null,Object? shopName = null,Object? balanceDue = null,Object? oldestDueAt = null,Object? ageDays = null,Object? bucket = null,Object? phone = freezed,}) {
   return _then(_AgingCustomerRow(
 customerId: null == customerId ? _self.customerId : customerId // ignore: cast_nullable_to_non_nullable
 as String,shopName: null == shopName ? _self.shopName : shopName // ignore: cast_nullable_to_non_nullable
@@ -282,7 +284,8 @@ as String,balanceDue: null == balanceDue ? _self.balanceDue : balanceDue // igno
 as int,oldestDueAt: null == oldestDueAt ? _self.oldestDueAt : oldestDueAt // ignore: cast_nullable_to_non_nullable
 as DateTime,ageDays: null == ageDays ? _self.ageDays : ageDays // ignore: cast_nullable_to_non_nullable
 as int,bucket: null == bucket ? _self.bucket : bucket // ignore: cast_nullable_to_non_nullable
-as String,
+as String,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

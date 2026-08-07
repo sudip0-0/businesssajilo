@@ -1463,4 +1463,94 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get hideInactive => 'निष्क्रिय लुकाउनुहोस्';
+
+  @override
+  String get periodLast7Days => 'पछिल्लो ७ दिन';
+
+  @override
+  String get periodLast30Days => 'पछिल्लो ३० दिन';
+
+  @override
+  String get periodThisMonth => 'यो महिना';
+
+  @override
+  String get periodCustom => 'अनुकूल';
+
+  @override
+  String get fromDate => 'देखि';
+
+  @override
+  String get toDate => 'सम्म';
+
+  @override
+  String get netSales => 'खुद बिक्री';
+
+  @override
+  String get billCount => 'बिलहरू';
+
+  @override
+  String get avgBillValue => 'औसत बिल';
+
+  @override
+  String get vsPreviousPeriod => 'अघिल्लो अवधिको तुलनामा';
+
+  @override
+  String get billsInPeriod => 'अवधिको बिलहरू';
+
+  @override
+  String get searchBillsHint => 'बिल नम्बर वा ग्राहक खोज्नुहोस्';
+
+  @override
+  String get phone => 'फोन';
+
+  @override
+  String get oldestDue => 'सबैभन्दा पुरानो बाँकी';
+
+  @override
+  String get customersWithDues => 'बाँकी भएका ग्राहक';
+
+  @override
+  String get avgAgeDays => 'औसत उमेर (दिन)';
+
+  @override
+  String get agingOver60 => '६० दिनभन्दा बढी';
+
+  @override
+  String get allBuckets => 'सबै';
+
+  @override
+  String get searchCustomersHint => 'ग्राहक खोज्नुहोस्';
+
+  @override
+  String get productsTracked => 'सामानहरू';
+
+  @override
+  String get allStock => 'सबै';
+
+  @override
+  String get stockFilterLow => 'कम';
+
+  @override
+  String get stockFilterOut => 'सकिएको';
+
+  @override
+  String get stockFilterIn => 'स्टकमा';
+
+  @override
+  String get searchProductsHint => 'सामान खोज्नुहोस्';
+
+  @override
+  String get cost => 'लागत';
+
+  @override
+  String get valuation => 'मूल्यांकन';
+
+  @override
+  String get noMatchingResults => 'कुनै मिल्दो परिणाम छैन';
+
+  @override
+  String get salesThisWeek => 'यो हप्ता';
+
+  @override
+  String get topProductLabel => 'शीर्ष सामान';
 }

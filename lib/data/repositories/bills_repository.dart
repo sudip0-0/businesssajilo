@@ -28,6 +28,17 @@ final billsRepositoryProvider = Provider<BillsRepository>((ref) {
 abstract class BillsRepository {
   Future<List<Bill>> list({int offset = 0, int? limit});
   Future<List<Bill>> search(String query, {int limit = 50});
+
+  /// Bills in `[from, to)` (UTC instants), newest first.
+  /// Optional [query] matches bill number or customer shop name.
+  Future<List<Bill>> listInRange({
+    required DateTime from,
+    required DateTime to,
+    String? query,
+    int offset = 0,
+    int? limit,
+  });
+
   Future<Bill> get(String id);
   Future<int> todaysSales();
   Future<int> yesterdaysSales();

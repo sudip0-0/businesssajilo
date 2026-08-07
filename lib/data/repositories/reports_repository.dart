@@ -62,6 +62,7 @@ AgingCustomerRow mapAgingCustomerRow(dynamic row) {
     oldestDueAt: DateTime.parse(map['oldest_due_at'] as String),
     ageDays: (map['age_days'] as num?)?.toInt() ?? 0,
     bucket: map['bucket'] as String,
+    phone: map['phone'] as String?,
   );
 }
 

@@ -8,12 +8,14 @@ import '../../data/repositories/payments_repository.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../data/repositories/reports_repository.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/bill.dart';
 import '../../domain/models/dues_aging_report.dart';
 import '../../domain/models/owner_dashboard_stats.dart';
 import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
 import '../../domain/models/top_product_row.dart';
+import 'report_period.dart';
 
 final salesDailyProvider = FutureProvider.autoDispose
     .family<List<SalesPeriodPoint>, ReportRange>((ref, range) {
@@ -37,6 +39,40 @@ final topCustomersProvider = FutureProvider.autoDispose
       return ref
           .watch(reportsRepositoryProvider)
           .topCustomers(from: window.from, to: window.to);
+    });
+
+/// Range-keyed variants for web report pages (preset + custom).
+final salesDailyRangeProvider = FutureProvider.autoDispose
+    .family<List<SalesPeriodPoint>, ReportPeriod>((ref, period) {
+      return ref
+          .watch(reportsRepositoryProvider)
+          .salesDaily(from: period.from, to: period.to);
+    });
+
+final topProductsRangeProvider = FutureProvider.autoDispose
+    .family<List<TopProductRow>, ReportPeriod>((ref, period) {
+      return ref
+          .watch(reportsRepositoryProvider)
+          .topProducts(from: period.from, to: period.to, limit: 10);
+    });
+
+final topCustomersRangeProvider = FutureProvider.autoDispose
+    .family<List<TopCustomerRow>, ReportPeriod>((ref, period) {
+      return ref
+          .watch(reportsRepositoryProvider)
+          .topCustomers(from: period.from, to: period.to, limit: 10);
+    });
+
+final billsInRangeProvider = FutureProvider.autoDispose
+    .family<List<Bill>, BillsRangeQuery>((ref, key) {
+      return ref
+          .watch(billsRepositoryProvider)
+          .listInRange(
+            from: key.period.from,
+            to: key.period.to,
+            query: key.query.isEmpty ? null : key.query,
+            limit: 50,
+          );
     });
 
 final duesAgingProvider = FutureProvider.autoDispose<DuesAgingReport>((ref) {
