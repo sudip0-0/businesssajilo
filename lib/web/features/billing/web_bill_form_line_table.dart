@@ -212,9 +212,24 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
           ),
           const SizedBox(width: _kColGap),
           Expanded(
-            child: Text(
-              widget.line.product.name,
-              style: Theme.of(context).textTheme.bodyMedium,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.line.product.name,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                Text(
+                  '${widget.l10n.availableStock}: '
+                  '${widget.line.product.stockCached}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: widget.line.qty > widget.line.product.stockCached
+                        ? WebPalette.danger
+                        : WebPalette.inkSoft,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: _kColGap),

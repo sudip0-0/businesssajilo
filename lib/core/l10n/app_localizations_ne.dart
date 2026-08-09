@@ -347,15 +347,6 @@ class AppLocalizationsNe extends AppLocalizations {
   String get reasonRequired => 'समायोजनको लागि कारण आवश्यक छ';
 
   @override
-  String get addCategory => 'श्रेणी थप्नुहोस्';
-
-  @override
-  String get editCategory => 'श्रेणी सम्पादन';
-
-  @override
-  String get categories => 'श्रेणीहरू';
-
-  @override
   String get deleteProduct => 'उत्पादन मेटाउनुहोस्';
 
   @override
@@ -385,9 +376,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get qtyChange => 'परिमाण परिवर्तन';
-
-  @override
-  String get allCategories => 'सबै श्रेणी';
 
   @override
   String get noMovements => 'अहिलेसम्म कुनै स्टक चाल छैन';
@@ -846,9 +834,6 @@ class AppLocalizationsNe extends AppLocalizations {
   String get noStaff => 'अहिलेसम्म कुनै कर्मचारी छैन';
 
   @override
-  String get noCategories => 'अहिलेसम्म कुनै श्रेणी छैन';
-
-  @override
   String get selectCustomerForCredit =>
       'उधारो वा आंशिक बिलका लागि ग्राहक छान्नुहोस्';
 
@@ -935,10 +920,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get more => 'थप';
-
-  @override
-  String get confirmDeleteCategory =>
-      'यो श्रेणी मेट्ने? यसका सामानहरू श्रेणीबिना नै रहनेछन्।';
 
   @override
   String get delete => 'मेटाउनुहोस्';
@@ -1559,4 +1540,33 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get topProductLabel => 'शीर्ष सामान';
+
+  @override
+  String get availableStock => 'उपलब्ध';
+
+  @override
+  String get oversellConfirmTitle => 'स्टकभन्दा बढी बिक्री गर्ने?';
+
+  @override
+  String get oversellConfirmBody =>
+      'केही वस्तुहरू स्टकमा भएको भन्दा बढी बिक्री भइरहेका छन्। बिक्री गर्दा स्टक ऋणात्मक हुनेछ।';
+
+  @override
+  String get oversellContinue => 'जसरी भए पनि बिक्री गर्नुहोस्';
+
+  @override
+  String get suggested => 'सुझाव';
+
+  @override
+  String get balance => 'शेष';
+
+  @override
+  String get negativeAdjustTitle => 'स्टक ऋणात्मक हुनेछ?';
+
+  @override
+  String get negativeAdjustBody =>
+      'यो समायोजनले स्टक शून्यभन्दा तल लैजानेछ। जारी राख्ने?';
+
+  @override
+  String get continueAnyway => 'जसरी भए पनि जारी राख्नुहोस्';
 }

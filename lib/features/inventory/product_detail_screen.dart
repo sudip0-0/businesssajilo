@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/money_text.dart';
+import '../../core/ui/paginated_list_state.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
@@ -19,12 +20,7 @@ import '../../core/ui/adaptive_sheet.dart';
 import 'stock_adjust_sheet.dart';
 import 'stock_in_sheet.dart';
 
-final movementListProvider = FutureProvider.autoDispose
-    .family<List<StockMovement>, String>((ref, productId) {
-      return ref.watch(stockRepositoryProvider).listMovements(productId);
-    });
-
-class ProductDetailScreen extends ConsumerWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({
     super.key,
     required this.productId,
@@ -39,19 +35,70 @@ class ProductDetailScreen extends ConsumerWidget {
   final bool embedded;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  PaginatedListState<StockMovement>? _movementsPager;
+  String? _pagerProductId;
+  StockMovementType? _movementTypeFilter;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _initMovementsPager() {
+    final productId = widget.productId;
+    if (_pagerProductId == productId) return;
+    _pagerProductId = productId;
+    _movementsPager = PaginatedListState<StockMovement>(
+      loadPage: (offset, limit) => ref
+          .read(stockRepositoryProvider)
+          .listMovements(productId, offset: offset, limit: limit),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    )..attachScrollController(_scrollController);
+    _movementsPager!.refresh();
+  }
+
+  void _setMovementTypeFilter(StockMovementType? type) {
+    if (_movementTypeFilter == type) return;
+    setState(() => _movementTypeFilter = type);
+    if (type != null) {
+      // Type filters apply over the loaded ledger, so load it fully first.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _loadAllMovementsForFilter(),
+      );
+    }
+  }
+
+  Future<void> _loadAllMovementsForFilter() async {
+    final pager = _movementsPager;
+    if (pager == null) return;
+    while (pager.hasMore && !pager.loading) {
+      await pager.loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final productId = widget.productId;
     final productAsync = ref.watch(productDetailProvider(productId));
-    final movementsAsync = ref.watch(movementListProvider(productId));
 
     return productAsync.when(
-      loading: () => embedded
+      loading: () => widget.embedded
           ? const Center(child: CircularProgressIndicator())
           : Scaffold(
               appBar: AppBar(),
               body: const Center(child: CircularProgressIndicator()),
             ),
-      error: (e, _) => embedded
+      error: (e, _) => widget.embedded
           ? ErrorState(
               message: l10n.loadingFailed,
               onRetry: () => ref.invalidate(productDetailProvider(productId)),
@@ -64,7 +111,11 @@ class ProductDetailScreen extends ConsumerWidget {
               ),
             ),
       data: (product) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _initMovementsPager(),
+        );
         final body = ListView(
+          controller: _scrollController,
           padding: const EdgeInsets.all(16),
           children: [
             Row(
@@ -99,13 +150,13 @@ class ProductDetailScreen extends ConsumerWidget {
               title: Text(l10n.referencePrice),
               trailing: MoneyText(Paisa(product.referencePrice)),
             ),
-            if (canManageStock) ...[
+            if (widget.canManageStock) ...[
               const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
                     child: FilledButton.tonalIcon(
-                      onPressed: () => _stockIn(context, ref, product.id),
+                      onPressed: () => _stockIn(context, product.id),
                       icon: const Icon(Icons.add_box_outlined),
                       label: Text(l10n.stockIn),
                     ),
@@ -113,7 +164,7 @@ class ProductDetailScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _adjust(context, ref, product.id),
+                      onPressed: () => _adjust(context, product.id),
                       icon: const Icon(Icons.tune),
                       label: Text(l10n.stockAdjust),
                     ),
@@ -121,21 +172,21 @@ class ProductDetailScreen extends ConsumerWidget {
                 ],
               ),
             ],
-            if (canEditProduct) ...[
+            if (widget.canEditProduct) ...[
               const SizedBox(height: 12),
               if (!product.isActive) Chip(label: Text(l10n.inactive)),
-              if (embedded) ...[
+              if (widget.embedded) ...[
                 const SizedBox(height: 8),
                 if (product.isActive)
                   OutlinedButton.icon(
                     onPressed: () =>
-                        _deactivate(context, ref, product.id, l10n),
+                        _deactivate(context, product.id, l10n),
                     icon: const Icon(Icons.visibility_off_outlined),
                     label: Text(l10n.deactivateProduct),
                   )
                 else
                   OutlinedButton.icon(
-                    onPressed: () => _activate(context, ref, product.id, l10n),
+                    onPressed: () => _activate(context, product.id, l10n),
                     icon: const Icon(Icons.visibility_outlined),
                     label: Text(l10n.reactivate),
                   ),
@@ -147,26 +198,16 @@ class ProductDetailScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            movementsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Text(l10n.loadingFailed),
-              data: (movements) => movements.isEmpty
-                  ? Text(l10n.noMovements)
-                  : Column(
-                      children: movements
-                          .map((m) => _MovementTile(movement: m))
-                          .toList(),
-                    ),
-            ),
+            _buildMovements(l10n, product.stockCached),
           ],
         );
 
-        if (embedded) return body;
+        if (widget.embedded) return body;
         return Scaffold(
           appBar: AppBar(
             title: Text(product.name),
             actions: [
-              if (canEditProduct)
+              if (widget.canEditProduct)
                 IconButton(
                   icon: const Icon(Icons.edit),
                   tooltip: l10n.editProduct,
@@ -184,7 +225,7 @@ class ProductDetailScreen extends ConsumerWidget {
                     }
                   },
                 ),
-              if (canEditProduct)
+              if (widget.canEditProduct)
                 IconButton(
                   icon: Icon(
                     product.isActive
@@ -195,8 +236,8 @@ class ProductDetailScreen extends ConsumerWidget {
                       ? l10n.deactivateProduct
                       : l10n.reactivate,
                   onPressed: () => product.isActive
-                      ? _deactivate(context, ref, product.id, l10n)
-                      : _activate(context, ref, product.id, l10n),
+                      ? _deactivate(context, product.id, l10n)
+                      : _activate(context, product.id, l10n),
                 ),
             ],
           ),
@@ -206,40 +247,104 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _stockIn(
-    BuildContext context,
-    WidgetRef ref,
-    String productId,
-  ) async {
-    final l10n = AppLocalizations.of(context);
+  Widget _buildMovements(AppLocalizations l10n, int productStock) {
+    final pager = _movementsPager;
+    final chips = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final (type, label) in [
+            (null, l10n.allStock),
+            (StockMovementType.stockIn, l10n.movementTypeStockIn),
+            (StockMovementType.adjust, l10n.movementTypeAdjust),
+            (StockMovementType.dispatch, l10n.movementTypeDispatch),
+            (StockMovementType.return_, l10n.movementTypeReturn),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(label),
+                selected: _movementTypeFilter == type,
+                onSelected: (_) => _setMovementTypeFilter(type),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    if (pager == null || pager.initialLoading) {
+      return Column(
+        children: [
+          chips,
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      );
+    }
+    if (pager.error != null && pager.items.isEmpty) {
+      return Column(children: [chips, Text(l10n.loadingFailed)]);
+    }
+
+    // Running balance: the newest loaded movement's balance-after equals the
+    // current on-hand stock; each older movement subtracts its own delta.
+    var balance = productStock;
+    final rows = <Widget>[];
+    for (final m in pager.items) {
+      if (_movementTypeFilter == null || m.type == _movementTypeFilter) {
+        rows.add(_MovementTile(movement: m, balance: balance));
+      }
+      balance -= m.qtyDelta;
+    }
+
+    if (rows.isEmpty) {
+      return Column(children: [chips, Text(l10n.noMovements)]);
+    }
+    return Column(
+      children: [
+        chips,
+        ...rows,
+        if (pager.hasMore)
+          Center(
+            child: pager.loading
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  )
+                : TextButton(
+                    onPressed: pager.loadMore,
+                    child: Text(l10n.loadMore),
+                  ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _stockIn(BuildContext context, String productId) async {
     final saved = await showAdaptiveSheet<bool>(
       context: context,
-      title: l10n.stockIn,
+      title: AppLocalizations.of(context).stockIn,
       child: StockInSheet(productId: productId),
     );
     if (saved == true) {
       ref.invalidate(productDetailProvider(productId));
-      ref.invalidate(movementListProvider(productId));
+      await _movementsPager?.refresh();
       ref.invalidate(productListProvider);
       ref.invalidate(lowStockCountProvider);
       bumpInventoryRevision(ref);
     }
   }
 
-  Future<void> _adjust(
-    BuildContext context,
-    WidgetRef ref,
-    String productId,
-  ) async {
-    final l10n = AppLocalizations.of(context);
+  Future<void> _adjust(BuildContext context, String productId) async {
     final saved = await showAdaptiveSheet<bool>(
       context: context,
-      title: l10n.stockAdjust,
+      title: AppLocalizations.of(context).stockAdjust,
       child: StockAdjustSheet(productId: productId),
     );
     if (saved == true) {
       ref.invalidate(productDetailProvider(productId));
-      ref.invalidate(movementListProvider(productId));
+      await _movementsPager?.refresh();
       ref.invalidate(productListProvider);
       ref.invalidate(lowStockCountProvider);
       bumpInventoryRevision(ref);
@@ -248,7 +353,6 @@ class ProductDetailScreen extends ConsumerWidget {
 
   Future<void> _deactivate(
     BuildContext context,
-    WidgetRef ref,
     String id,
     AppLocalizations l10n,
   ) async {
@@ -274,12 +378,11 @@ class ProductDetailScreen extends ConsumerWidget {
     ref.invalidate(productDetailProvider(id));
     ref.invalidate(productListProvider);
     bumpInventoryRevision(ref);
-    if (context.mounted && !embedded) Navigator.pop(context, true);
+    if (context.mounted && !widget.embedded) Navigator.pop(context, true);
   }
 
   Future<void> _activate(
     BuildContext context,
-    WidgetRef ref,
     String id,
     AppLocalizations l10n,
   ) async {
@@ -287,7 +390,7 @@ class ProductDetailScreen extends ConsumerWidget {
     ref.invalidate(productDetailProvider(id));
     ref.invalidate(productListProvider);
     bumpInventoryRevision(ref);
-    if (context.mounted && !embedded) {
+    if (context.mounted && !widget.embedded) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.reactivate)));
@@ -296,9 +399,10 @@ class ProductDetailScreen extends ConsumerWidget {
 }
 
 class _MovementTile extends StatelessWidget {
-  const _MovementTile({required this.movement});
+  const _MovementTile({required this.movement, required this.balance});
 
   final StockMovement movement;
+  final int balance;
 
   @override
   Widget build(BuildContext context) {
@@ -326,6 +430,12 @@ class _MovementTile extends StatelessWidget {
           if (movement.createdByName != null) movement.createdByName!,
           when,
         ].where((s) => s.isNotEmpty).join(' · '),
+      ),
+      trailing: Text(
+        '${l10n.balance}: $balance',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

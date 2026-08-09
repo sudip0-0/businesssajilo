@@ -19,7 +19,11 @@ final stockRepositoryProvider = Provider<StockRepository>((ref) {
 });
 
 abstract class StockRepository {
-  Future<List<StockMovement>> listMovements(String productId);
+  Future<List<StockMovement>> listMovements(
+    String productId, {
+    int offset = 0,
+    int limit = 50,
+  });
   Future<StockMovement> stockIn({
     required String productId,
     required int qty,

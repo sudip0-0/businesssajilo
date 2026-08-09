@@ -20,8 +20,8 @@ insert into customers (id, business_id, member_id, shop_name, opening_balance) v
 insert into categories (id, business_id, name) values
   ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Beverages');
 
-insert into products (id, business_id, category_id, name, unit, reference_price, stock_cached) values
-  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 100);
+insert into products (id, business_id, name, unit, reference_price, stock_cached) values
+  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 100);
 
 -- Bill: 10 units @ 5000 with 10000 line discount → line_total 40000.
 insert into bills (id, business_id, customer_id, items_total, discount, grand_total, status, created_by, bill_no)

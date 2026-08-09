@@ -7,7 +7,7 @@ import 'pull/sync_pull_page.dart';
 
 /// Orchestrates remote → local sync pulls (bootstrap + delta).
 ///
-/// Delta ordering: categories/products → bills → payments → customers → stock.
+/// Delta ordering: products → bills → payments → customers → stock.
 /// Customer balances must run after bills/payments (financial timestamps).
 ///
 /// Credit notes: server updates `customer_balances.updated_at`; delta pull on
@@ -87,12 +87,6 @@ class SyncPuller {
     required SyncPullBudget budget,
   }) {
     switch (table) {
-      case 'categories':
-        return _entities.pullCategoriesBootstrap(
-          ts,
-          startOffset: startOffset,
-          budget: budget,
-        );
       case 'products':
         return _entities.pullProductsBootstrap(
           ts,
@@ -131,14 +125,6 @@ class SyncPuller {
   }
 
   Future<void> _pullDelta() async {
-    final catWatermark = await _db.watermark('categories');
-    if (catWatermark != null) {
-      await _entities.pullCategoriesDelta(
-        catWatermark.toIso8601String(),
-        DateTime.now().toUtc(),
-      );
-    }
-
     final prodWatermark = await _db.watermark('products');
     if (prodWatermark != null) {
       await _entities.pullProductsDelta(

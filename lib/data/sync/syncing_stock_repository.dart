@@ -25,11 +25,16 @@ class SyncingStockRepository implements StockRepository {
   static const _uuid = Uuid();
 
   @override
-  Future<List<StockMovement>> listMovements(String productId) async {
+  Future<List<StockMovement>> listMovements(
+    String productId, {
+    int offset = 0,
+    int limit = 50,
+  }) async {
     final rows =
         await (_db.select(_db.localStockMovements)
               ..where((m) => m.productId.equals(productId))
-              ..orderBy([(m) => OrderingTerm.desc(m.createdAt)]))
+              ..orderBy([(m) => OrderingTerm.desc(m.createdAt)])
+              ..limit(limit, offset: offset))
             .get();
     return rows.map(mapLocalMovement).toList();
   }

@@ -9,7 +9,6 @@ part of 'product.dart';
 _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
   id: json['id'] as String,
   businessId: json['business_id'] as String,
-  categoryId: json['category_id'] as String?,
   name: json['name'] as String,
   nameNp: json['name_np'] as String?,
   sku: json['sku'] as String?,
@@ -26,13 +25,11 @@ _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
-  categoryName: json['category_name'] as String?,
 );
 
 Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
   'id': instance.id,
   'business_id': instance.businessId,
-  'category_id': instance.categoryId,
   'name': instance.name,
   'name_np': instance.nameNp,
   'sku': instance.sku,
@@ -45,5 +42,4 @@ Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
   'is_active': instance.isActive,
   'updated_at': instance.updatedAt?.toIso8601String(),
   'created_at': instance.createdAt?.toIso8601String(),
-  'category_name': instance.categoryName,
 };

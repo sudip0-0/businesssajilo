@@ -13,13 +13,18 @@ class SupabaseStockRepository implements StockRepository {
   static const _uuid = Uuid();
 
   @override
-  Future<List<StockMovement>> listMovements(String productId) async {
+  Future<List<StockMovement>> listMovements(
+    String productId, {
+    int offset = 0,
+    int limit = 50,
+  }) async {
     final client = requireSupabaseClient(_client);
     final rows = await client
         .from('stock_movements')
         .select('*, members(display_name)')
         .eq('product_id', productId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
     return (rows as List).map(_mapMovement).toList();
   }
 

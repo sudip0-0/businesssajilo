@@ -7,6 +7,7 @@ import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/submit_action.dart';
 import '../../data/repositories/stock_repository.dart';
 import '../auth/providers/auth_provider.dart';
+import 'providers.dart';
 
 class StockAdjustSheet extends ConsumerStatefulWidget {
   const StockAdjustSheet({super.key, required this.productId});
@@ -40,13 +41,36 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
       );
       return;
     }
+    final delta = _negative ? -_qtyDelta : _qtyDelta;
+    final product = ref.read(productDetailProvider(widget.productId)).value;
+    if (delta < 0 &&
+        product != null &&
+        product.stockCached + delta < 0) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.negativeAdjustTitle),
+          content: Text(l10n.negativeAdjustBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.continueAnyway),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true || !mounted) return;
+    }
     final memberId = ref.read(authProvider).value?.member?.id;
     if (memberId == null) return;
     setState(() => _loading = true);
     await runSubmitAction(
       context,
       action: () async {
-        final delta = _negative ? -_qtyDelta : _qtyDelta;
         await ref
             .read(stockRepositoryProvider)
             .adjust(

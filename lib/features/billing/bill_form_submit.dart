@@ -38,6 +38,43 @@ Future<Bill?> submitBillForm({
     return null;
   }
 
+  final oversell = oversellingLines(draft);
+  if (oversell.isNotEmpty) {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.oversellConfirmTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.oversellConfirmBody),
+            const SizedBox(height: 12),
+            for (final line in oversell)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  '${line.product.name} — ${l10n.qty}: ${line.qty} · '
+                  '${l10n.availableStock}: ${line.product.stockCached}',
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.oversellContinue),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true || !context.mounted) return null;
+  }
+
   BillPaymentResult? paymentResult;
   if (forceStatus == BillStatus.due) {
     paymentResult = duePaymentForDraft(draft);

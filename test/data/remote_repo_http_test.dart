@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:businesssajilo/core/errors/app_failure.dart';
 import 'package:businesssajilo/data/remote/supabase_bills_repository.dart';
-import 'package:businesssajilo/data/remote/supabase_categories_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_credit_notes_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_customers_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_members_repository.dart';
@@ -471,27 +470,6 @@ void main() {
       final rows = await repo.list(limit: 10);
       expect(rows.single.shopName, 'Ram Store');
       expect(rows.single.balanceDue, 1500);
-    });
-  });
-
-  group('SupabaseCategoriesRepository', () {
-    test('list maps category rows', () async {
-      final client = _client(
-        MockClient((request) async {
-          return _json(request, [
-            {
-              'id': 'cat-1',
-              'business_id': 'biz',
-              'name': 'Beverages',
-              'name_np': 'पेय',
-            },
-          ]);
-        }),
-      );
-      final repo = SupabaseCategoriesRepository(client);
-      final rows = await repo.list();
-      expect(rows.single.name, 'Beverages');
-      expect(rows.single.nameNp, 'पेय');
     });
   });
 

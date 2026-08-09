@@ -347,15 +347,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reasonRequired => 'Reason is required for adjustments';
 
   @override
-  String get addCategory => 'Add category';
-
-  @override
-  String get editCategory => 'Edit category';
-
-  @override
-  String get categories => 'Categories';
-
-  @override
   String get deleteProduct => 'Delete product';
 
   @override
@@ -386,9 +377,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qtyChange => 'Quantity change';
-
-  @override
-  String get allCategories => 'All categories';
 
   @override
   String get noMovements => 'No stock movements yet';
@@ -848,9 +836,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noStaff => 'No staff members yet';
 
   @override
-  String get noCategories => 'No categories yet';
-
-  @override
   String get selectCustomerForCredit =>
       'Select a customer for credit or partial bills';
 
@@ -937,10 +922,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get more => 'More';
-
-  @override
-  String get confirmDeleteCategory =>
-      'Delete this category? Products in it will keep working without a category.';
 
   @override
   String get delete => 'Delete';
@@ -1562,4 +1543,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topProductLabel => 'Top product';
+
+  @override
+  String get availableStock => 'Available';
+
+  @override
+  String get oversellConfirmTitle => 'Sell beyond available stock?';
+
+  @override
+  String get oversellConfirmBody =>
+      'Some lines sell more than the quantity on hand. Selling them will take stock negative.';
+
+  @override
+  String get oversellContinue => 'Sell anyway';
+
+  @override
+  String get suggested => 'Suggested';
+
+  @override
+  String get balance => 'Balance';
+
+  @override
+  String get negativeAdjustTitle => 'Stock will go negative?';
+
+  @override
+  String get negativeAdjustBody =>
+      'This adjustment will take stock below zero. Continue?';
+
+  @override
+  String get continueAnyway => 'Continue anyway';
 }

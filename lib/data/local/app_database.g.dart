@@ -1374,416 +1374,6 @@ class DeviceMetaCompanion extends UpdateCompanion<DeviceMetaData> {
   }
 }
 
-class $LocalCategoriesTable extends LocalCategories
-    with TableInfo<$LocalCategoriesTable, LocalCategory> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $LocalCategoriesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _businessIdMeta = const VerificationMeta(
-    'businessId',
-  );
-  @override
-  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
-    'business_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _nameNpMeta = const VerificationMeta('nameNp');
-  @override
-  late final GeneratedColumn<String> nameNp = GeneratedColumn<String>(
-    'name_np',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    businessId,
-    name,
-    nameNp,
-    updatedAt,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'local_categories';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<LocalCategory> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('business_id')) {
-      context.handle(
-        _businessIdMeta,
-        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_businessIdMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('name_np')) {
-      context.handle(
-        _nameNpMeta,
-        nameNp.isAcceptableOrUnknown(data['name_np']!, _nameNpMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  LocalCategory map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return LocalCategory(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      businessId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}business_id'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      nameNp: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name_np'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      ),
-    );
-  }
-
-  @override
-  $LocalCategoriesTable createAlias(String alias) {
-    return $LocalCategoriesTable(attachedDatabase, alias);
-  }
-}
-
-class LocalCategory extends DataClass implements Insertable<LocalCategory> {
-  final String id;
-  final String businessId;
-  final String name;
-  final String? nameNp;
-  final DateTime updatedAt;
-  final DateTime? createdAt;
-  const LocalCategory({
-    required this.id,
-    required this.businessId,
-    required this.name,
-    this.nameNp,
-    required this.updatedAt,
-    this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['business_id'] = Variable<String>(businessId);
-    map['name'] = Variable<String>(name);
-    if (!nullToAbsent || nameNp != null) {
-      map['name_np'] = Variable<String>(nameNp);
-    }
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || createdAt != null) {
-      map['created_at'] = Variable<DateTime>(createdAt);
-    }
-    return map;
-  }
-
-  LocalCategoriesCompanion toCompanion(bool nullToAbsent) {
-    return LocalCategoriesCompanion(
-      id: Value(id),
-      businessId: Value(businessId),
-      name: Value(name),
-      nameNp: nameNp == null && nullToAbsent
-          ? const Value.absent()
-          : Value(nameNp),
-      updatedAt: Value(updatedAt),
-      createdAt: createdAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(createdAt),
-    );
-  }
-
-  factory LocalCategory.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return LocalCategory(
-      id: serializer.fromJson<String>(json['id']),
-      businessId: serializer.fromJson<String>(json['businessId']),
-      name: serializer.fromJson<String>(json['name']),
-      nameNp: serializer.fromJson<String?>(json['nameNp']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'businessId': serializer.toJson<String>(businessId),
-      'name': serializer.toJson<String>(name),
-      'nameNp': serializer.toJson<String?>(nameNp),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'createdAt': serializer.toJson<DateTime?>(createdAt),
-    };
-  }
-
-  LocalCategory copyWith({
-    String? id,
-    String? businessId,
-    String? name,
-    Value<String?> nameNp = const Value.absent(),
-    DateTime? updatedAt,
-    Value<DateTime?> createdAt = const Value.absent(),
-  }) => LocalCategory(
-    id: id ?? this.id,
-    businessId: businessId ?? this.businessId,
-    name: name ?? this.name,
-    nameNp: nameNp.present ? nameNp.value : this.nameNp,
-    updatedAt: updatedAt ?? this.updatedAt,
-    createdAt: createdAt.present ? createdAt.value : this.createdAt,
-  );
-  LocalCategory copyWithCompanion(LocalCategoriesCompanion data) {
-    return LocalCategory(
-      id: data.id.present ? data.id.value : this.id,
-      businessId: data.businessId.present
-          ? data.businessId.value
-          : this.businessId,
-      name: data.name.present ? data.name.value : this.name,
-      nameNp: data.nameNp.present ? data.nameNp.value : this.nameNp,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('LocalCategory(')
-          ..write('id: $id, ')
-          ..write('businessId: $businessId, ')
-          ..write('name: $name, ')
-          ..write('nameNp: $nameNp, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(id, businessId, name, nameNp, updatedAt, createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is LocalCategory &&
-          other.id == this.id &&
-          other.businessId == this.businessId &&
-          other.name == this.name &&
-          other.nameNp == this.nameNp &&
-          other.updatedAt == this.updatedAt &&
-          other.createdAt == this.createdAt);
-}
-
-class LocalCategoriesCompanion extends UpdateCompanion<LocalCategory> {
-  final Value<String> id;
-  final Value<String> businessId;
-  final Value<String> name;
-  final Value<String?> nameNp;
-  final Value<DateTime> updatedAt;
-  final Value<DateTime?> createdAt;
-  final Value<int> rowid;
-  const LocalCategoriesCompanion({
-    this.id = const Value.absent(),
-    this.businessId = const Value.absent(),
-    this.name = const Value.absent(),
-    this.nameNp = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  LocalCategoriesCompanion.insert({
-    required String id,
-    required String businessId,
-    required String name,
-    this.nameNp = const Value.absent(),
-    required DateTime updatedAt,
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       businessId = Value(businessId),
-       name = Value(name),
-       updatedAt = Value(updatedAt);
-  static Insertable<LocalCategory> custom({
-    Expression<String>? id,
-    Expression<String>? businessId,
-    Expression<String>? name,
-    Expression<String>? nameNp,
-    Expression<DateTime>? updatedAt,
-    Expression<DateTime>? createdAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (businessId != null) 'business_id': businessId,
-      if (name != null) 'name': name,
-      if (nameNp != null) 'name_np': nameNp,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (createdAt != null) 'created_at': createdAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  LocalCategoriesCompanion copyWith({
-    Value<String>? id,
-    Value<String>? businessId,
-    Value<String>? name,
-    Value<String?>? nameNp,
-    Value<DateTime>? updatedAt,
-    Value<DateTime?>? createdAt,
-    Value<int>? rowid,
-  }) {
-    return LocalCategoriesCompanion(
-      id: id ?? this.id,
-      businessId: businessId ?? this.businessId,
-      name: name ?? this.name,
-      nameNp: nameNp ?? this.nameNp,
-      updatedAt: updatedAt ?? this.updatedAt,
-      createdAt: createdAt ?? this.createdAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (businessId.present) {
-      map['business_id'] = Variable<String>(businessId.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (nameNp.present) {
-      map['name_np'] = Variable<String>(nameNp.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('LocalCategoriesCompanion(')
-          ..write('id: $id, ')
-          ..write('businessId: $businessId, ')
-          ..write('name: $name, ')
-          ..write('nameNp: $nameNp, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $LocalProductsTable extends LocalProducts
     with TableInfo<$LocalProductsTable, LocalProduct> {
   @override
@@ -1809,17 +1399,6 @@ class $LocalProductsTable extends LocalProducts
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-  );
-  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
-    'categoryId',
-  );
-  @override
-  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
-    'category_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -1931,17 +1510,6 @@ class $LocalProductsTable extends LocalProducts
     ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _categoryNameMeta = const VerificationMeta(
-    'categoryName',
-  );
-  @override
-  late final GeneratedColumn<String> categoryName = GeneratedColumn<String>(
-    'category_name',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -1968,7 +1536,6 @@ class $LocalProductsTable extends LocalProducts
   List<GeneratedColumn> get $columns => [
     id,
     businessId,
-    categoryId,
     name,
     nameNp,
     sku,
@@ -1979,7 +1546,6 @@ class $LocalProductsTable extends LocalProducts
     lowStockThreshold,
     stockCached,
     isActive,
-    categoryName,
     updatedAt,
     createdAt,
   ];
@@ -2007,12 +1573,6 @@ class $LocalProductsTable extends LocalProducts
       );
     } else if (isInserting) {
       context.missing(_businessIdMeta);
-    }
-    if (data.containsKey('category_id')) {
-      context.handle(
-        _categoryIdMeta,
-        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
-      );
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -2087,15 +1647,6 @@ class $LocalProductsTable extends LocalProducts
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
-    if (data.containsKey('category_name')) {
-      context.handle(
-        _categoryNameMeta,
-        categoryName.isAcceptableOrUnknown(
-          data['category_name']!,
-          _categoryNameMeta,
-        ),
-      );
-    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -2127,10 +1678,6 @@ class $LocalProductsTable extends LocalProducts
         DriftSqlType.string,
         data['${effectivePrefix}business_id'],
       )!,
-      categoryId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}category_id'],
-      ),
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
@@ -2171,10 +1718,6 @@ class $LocalProductsTable extends LocalProducts
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
-      categoryName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}category_name'],
-      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -2195,7 +1738,6 @@ class $LocalProductsTable extends LocalProducts
 class LocalProduct extends DataClass implements Insertable<LocalProduct> {
   final String id;
   final String businessId;
-  final String? categoryId;
   final String name;
   final String? nameNp;
   final String? sku;
@@ -2206,13 +1748,11 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
   final int lowStockThreshold;
   final int stockCached;
   final bool isActive;
-  final String? categoryName;
   final DateTime updatedAt;
   final DateTime? createdAt;
   const LocalProduct({
     required this.id,
     required this.businessId,
-    this.categoryId,
     required this.name,
     this.nameNp,
     this.sku,
@@ -2223,7 +1763,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     required this.lowStockThreshold,
     required this.stockCached,
     required this.isActive,
-    this.categoryName,
     required this.updatedAt,
     this.createdAt,
   });
@@ -2232,9 +1771,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['business_id'] = Variable<String>(businessId);
-    if (!nullToAbsent || categoryId != null) {
-      map['category_id'] = Variable<String>(categoryId);
-    }
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || nameNp != null) {
       map['name_np'] = Variable<String>(nameNp);
@@ -2251,9 +1787,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     map['low_stock_threshold'] = Variable<int>(lowStockThreshold);
     map['stock_cached'] = Variable<int>(stockCached);
     map['is_active'] = Variable<bool>(isActive);
-    if (!nullToAbsent || categoryName != null) {
-      map['category_name'] = Variable<String>(categoryName);
-    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(createdAt);
@@ -2265,9 +1798,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     return LocalProductsCompanion(
       id: Value(id),
       businessId: Value(businessId),
-      categoryId: categoryId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(categoryId),
       name: Value(name),
       nameNp: nameNp == null && nullToAbsent
           ? const Value.absent()
@@ -2282,9 +1812,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
       lowStockThreshold: Value(lowStockThreshold),
       stockCached: Value(stockCached),
       isActive: Value(isActive),
-      categoryName: categoryName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(categoryName),
       updatedAt: Value(updatedAt),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
@@ -2300,7 +1827,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     return LocalProduct(
       id: serializer.fromJson<String>(json['id']),
       businessId: serializer.fromJson<String>(json['businessId']),
-      categoryId: serializer.fromJson<String?>(json['categoryId']),
       name: serializer.fromJson<String>(json['name']),
       nameNp: serializer.fromJson<String?>(json['nameNp']),
       sku: serializer.fromJson<String?>(json['sku']),
@@ -2311,7 +1837,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
       lowStockThreshold: serializer.fromJson<int>(json['lowStockThreshold']),
       stockCached: serializer.fromJson<int>(json['stockCached']),
       isActive: serializer.fromJson<bool>(json['isActive']),
-      categoryName: serializer.fromJson<String?>(json['categoryName']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
     );
@@ -2322,7 +1847,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'businessId': serializer.toJson<String>(businessId),
-      'categoryId': serializer.toJson<String?>(categoryId),
       'name': serializer.toJson<String>(name),
       'nameNp': serializer.toJson<String?>(nameNp),
       'sku': serializer.toJson<String?>(sku),
@@ -2333,7 +1857,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
       'lowStockThreshold': serializer.toJson<int>(lowStockThreshold),
       'stockCached': serializer.toJson<int>(stockCached),
       'isActive': serializer.toJson<bool>(isActive),
-      'categoryName': serializer.toJson<String?>(categoryName),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
     };
@@ -2342,7 +1865,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
   LocalProduct copyWith({
     String? id,
     String? businessId,
-    Value<String?> categoryId = const Value.absent(),
     String? name,
     Value<String?> nameNp = const Value.absent(),
     Value<String?> sku = const Value.absent(),
@@ -2353,13 +1875,11 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     int? lowStockThreshold,
     int? stockCached,
     bool? isActive,
-    Value<String?> categoryName = const Value.absent(),
     DateTime? updatedAt,
     Value<DateTime?> createdAt = const Value.absent(),
   }) => LocalProduct(
     id: id ?? this.id,
     businessId: businessId ?? this.businessId,
-    categoryId: categoryId.present ? categoryId.value : this.categoryId,
     name: name ?? this.name,
     nameNp: nameNp.present ? nameNp.value : this.nameNp,
     sku: sku.present ? sku.value : this.sku,
@@ -2370,7 +1890,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
     stockCached: stockCached ?? this.stockCached,
     isActive: isActive ?? this.isActive,
-    categoryName: categoryName.present ? categoryName.value : this.categoryName,
     updatedAt: updatedAt ?? this.updatedAt,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
   );
@@ -2380,9 +1899,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
       businessId: data.businessId.present
           ? data.businessId.value
           : this.businessId,
-      categoryId: data.categoryId.present
-          ? data.categoryId.value
-          : this.categoryId,
       name: data.name.present ? data.name.value : this.name,
       nameNp: data.nameNp.present ? data.nameNp.value : this.nameNp,
       sku: data.sku.present ? data.sku.value : this.sku,
@@ -2399,9 +1915,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
           ? data.stockCached.value
           : this.stockCached,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
-      categoryName: data.categoryName.present
-          ? data.categoryName.value
-          : this.categoryName,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -2412,7 +1925,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     return (StringBuffer('LocalProduct(')
           ..write('id: $id, ')
           ..write('businessId: $businessId, ')
-          ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
           ..write('nameNp: $nameNp, ')
           ..write('sku: $sku, ')
@@ -2423,7 +1935,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
           ..write('lowStockThreshold: $lowStockThreshold, ')
           ..write('stockCached: $stockCached, ')
           ..write('isActive: $isActive, ')
-          ..write('categoryName: $categoryName, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2434,7 +1945,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
   int get hashCode => Object.hash(
     id,
     businessId,
-    categoryId,
     name,
     nameNp,
     sku,
@@ -2445,7 +1955,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
     lowStockThreshold,
     stockCached,
     isActive,
-    categoryName,
     updatedAt,
     createdAt,
   );
@@ -2455,7 +1964,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
       (other is LocalProduct &&
           other.id == this.id &&
           other.businessId == this.businessId &&
-          other.categoryId == this.categoryId &&
           other.name == this.name &&
           other.nameNp == this.nameNp &&
           other.sku == this.sku &&
@@ -2466,7 +1974,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
           other.lowStockThreshold == this.lowStockThreshold &&
           other.stockCached == this.stockCached &&
           other.isActive == this.isActive &&
-          other.categoryName == this.categoryName &&
           other.updatedAt == this.updatedAt &&
           other.createdAt == this.createdAt);
 }
@@ -2474,7 +1981,6 @@ class LocalProduct extends DataClass implements Insertable<LocalProduct> {
 class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
   final Value<String> id;
   final Value<String> businessId;
-  final Value<String?> categoryId;
   final Value<String> name;
   final Value<String?> nameNp;
   final Value<String?> sku;
@@ -2485,14 +1991,12 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
   final Value<int> lowStockThreshold;
   final Value<int> stockCached;
   final Value<bool> isActive;
-  final Value<String?> categoryName;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> createdAt;
   final Value<int> rowid;
   const LocalProductsCompanion({
     this.id = const Value.absent(),
     this.businessId = const Value.absent(),
-    this.categoryId = const Value.absent(),
     this.name = const Value.absent(),
     this.nameNp = const Value.absent(),
     this.sku = const Value.absent(),
@@ -2503,7 +2007,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     this.lowStockThreshold = const Value.absent(),
     this.stockCached = const Value.absent(),
     this.isActive = const Value.absent(),
-    this.categoryName = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2511,7 +2014,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
   LocalProductsCompanion.insert({
     required String id,
     required String businessId,
-    this.categoryId = const Value.absent(),
     required String name,
     this.nameNp = const Value.absent(),
     this.sku = const Value.absent(),
@@ -2522,7 +2024,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     this.lowStockThreshold = const Value.absent(),
     this.stockCached = const Value.absent(),
     this.isActive = const Value.absent(),
-    this.categoryName = const Value.absent(),
     required DateTime updatedAt,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2534,7 +2035,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
   static Insertable<LocalProduct> custom({
     Expression<String>? id,
     Expression<String>? businessId,
-    Expression<String>? categoryId,
     Expression<String>? name,
     Expression<String>? nameNp,
     Expression<String>? sku,
@@ -2545,7 +2045,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     Expression<int>? lowStockThreshold,
     Expression<int>? stockCached,
     Expression<bool>? isActive,
-    Expression<String>? categoryName,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -2553,7 +2052,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (businessId != null) 'business_id': businessId,
-      if (categoryId != null) 'category_id': categoryId,
       if (name != null) 'name': name,
       if (nameNp != null) 'name_np': nameNp,
       if (sku != null) 'sku': sku,
@@ -2564,7 +2062,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
       if (lowStockThreshold != null) 'low_stock_threshold': lowStockThreshold,
       if (stockCached != null) 'stock_cached': stockCached,
       if (isActive != null) 'is_active': isActive,
-      if (categoryName != null) 'category_name': categoryName,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -2574,7 +2071,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
   LocalProductsCompanion copyWith({
     Value<String>? id,
     Value<String>? businessId,
-    Value<String?>? categoryId,
     Value<String>? name,
     Value<String?>? nameNp,
     Value<String?>? sku,
@@ -2585,7 +2081,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     Value<int>? lowStockThreshold,
     Value<int>? stockCached,
     Value<bool>? isActive,
-    Value<String?>? categoryName,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? createdAt,
     Value<int>? rowid,
@@ -2593,7 +2088,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     return LocalProductsCompanion(
       id: id ?? this.id,
       businessId: businessId ?? this.businessId,
-      categoryId: categoryId ?? this.categoryId,
       name: name ?? this.name,
       nameNp: nameNp ?? this.nameNp,
       sku: sku ?? this.sku,
@@ -2604,7 +2098,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       stockCached: stockCached ?? this.stockCached,
       isActive: isActive ?? this.isActive,
-      categoryName: categoryName ?? this.categoryName,
       updatedAt: updatedAt ?? this.updatedAt,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -2619,9 +2112,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     }
     if (businessId.present) {
       map['business_id'] = Variable<String>(businessId.value);
-    }
-    if (categoryId.present) {
-      map['category_id'] = Variable<String>(categoryId.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -2653,9 +2143,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
-    if (categoryName.present) {
-      map['category_name'] = Variable<String>(categoryName.value);
-    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2673,7 +2160,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
     return (StringBuffer('LocalProductsCompanion(')
           ..write('id: $id, ')
           ..write('businessId: $businessId, ')
-          ..write('categoryId: $categoryId, ')
           ..write('name: $name, ')
           ..write('nameNp: $nameNp, ')
           ..write('sku: $sku, ')
@@ -2684,7 +2170,6 @@ class LocalProductsCompanion extends UpdateCompanion<LocalProduct> {
           ..write('lowStockThreshold: $lowStockThreshold, ')
           ..write('stockCached: $stockCached, ')
           ..write('isActive: $isActive, ')
-          ..write('categoryName: $categoryName, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -5966,9 +5451,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncMetaTable syncMeta = $SyncMetaTable(this);
   late final $SyncWatermarksTable syncWatermarks = $SyncWatermarksTable(this);
   late final $DeviceMetaTable deviceMeta = $DeviceMetaTable(this);
-  late final $LocalCategoriesTable localCategories = $LocalCategoriesTable(
-    this,
-  );
   late final $LocalProductsTable localProducts = $LocalProductsTable(this);
   late final $LocalCustomersTable localCustomers = $LocalCustomersTable(this);
   late final $LocalBillsTable localBills = $LocalBillsTable(this);
@@ -5985,7 +5467,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncMeta,
     syncWatermarks,
     deviceMeta,
-    localCategories,
     localProducts,
     localCustomers,
     localBills,
@@ -6763,234 +6244,10 @@ typedef $$DeviceMetaTableProcessedTableManager =
       DeviceMetaData,
       PrefetchHooks Function()
     >;
-typedef $$LocalCategoriesTableCreateCompanionBuilder =
-    LocalCategoriesCompanion Function({
-      required String id,
-      required String businessId,
-      required String name,
-      Value<String?> nameNp,
-      required DateTime updatedAt,
-      Value<DateTime?> createdAt,
-      Value<int> rowid,
-    });
-typedef $$LocalCategoriesTableUpdateCompanionBuilder =
-    LocalCategoriesCompanion Function({
-      Value<String> id,
-      Value<String> businessId,
-      Value<String> name,
-      Value<String?> nameNp,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> createdAt,
-      Value<int> rowid,
-    });
-
-class $$LocalCategoriesTableFilterComposer
-    extends Composer<_$AppDatabase, $LocalCategoriesTable> {
-  $$LocalCategoriesTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get businessId => $composableBuilder(
-    column: $table.businessId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get nameNp => $composableBuilder(
-    column: $table.nameNp,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$LocalCategoriesTableOrderingComposer
-    extends Composer<_$AppDatabase, $LocalCategoriesTable> {
-  $$LocalCategoriesTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get businessId => $composableBuilder(
-    column: $table.businessId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get nameNp => $composableBuilder(
-    column: $table.nameNp,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$LocalCategoriesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $LocalCategoriesTable> {
-  $$LocalCategoriesTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get businessId => $composableBuilder(
-    column: $table.businessId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get nameNp =>
-      $composableBuilder(column: $table.nameNp, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$LocalCategoriesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $LocalCategoriesTable,
-          LocalCategory,
-          $$LocalCategoriesTableFilterComposer,
-          $$LocalCategoriesTableOrderingComposer,
-          $$LocalCategoriesTableAnnotationComposer,
-          $$LocalCategoriesTableCreateCompanionBuilder,
-          $$LocalCategoriesTableUpdateCompanionBuilder,
-          (
-            LocalCategory,
-            BaseReferences<_$AppDatabase, $LocalCategoriesTable, LocalCategory>,
-          ),
-          LocalCategory,
-          PrefetchHooks Function()
-        > {
-  $$LocalCategoriesTableTableManager(
-    _$AppDatabase db,
-    $LocalCategoriesTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$LocalCategoriesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$LocalCategoriesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$LocalCategoriesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> businessId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String?> nameNp = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => LocalCategoriesCompanion(
-                id: id,
-                businessId: businessId,
-                name: name,
-                nameNp: nameNp,
-                updatedAt: updatedAt,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String businessId,
-                required String name,
-                Value<String?> nameNp = const Value.absent(),
-                required DateTime updatedAt,
-                Value<DateTime?> createdAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => LocalCategoriesCompanion.insert(
-                id: id,
-                businessId: businessId,
-                name: name,
-                nameNp: nameNp,
-                updatedAt: updatedAt,
-                createdAt: createdAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$LocalCategoriesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $LocalCategoriesTable,
-      LocalCategory,
-      $$LocalCategoriesTableFilterComposer,
-      $$LocalCategoriesTableOrderingComposer,
-      $$LocalCategoriesTableAnnotationComposer,
-      $$LocalCategoriesTableCreateCompanionBuilder,
-      $$LocalCategoriesTableUpdateCompanionBuilder,
-      (
-        LocalCategory,
-        BaseReferences<_$AppDatabase, $LocalCategoriesTable, LocalCategory>,
-      ),
-      LocalCategory,
-      PrefetchHooks Function()
-    >;
 typedef $$LocalProductsTableCreateCompanionBuilder =
     LocalProductsCompanion Function({
       required String id,
       required String businessId,
-      Value<String?> categoryId,
       required String name,
       Value<String?> nameNp,
       Value<String?> sku,
@@ -7001,7 +6258,6 @@ typedef $$LocalProductsTableCreateCompanionBuilder =
       Value<int> lowStockThreshold,
       Value<int> stockCached,
       Value<bool> isActive,
-      Value<String?> categoryName,
       required DateTime updatedAt,
       Value<DateTime?> createdAt,
       Value<int> rowid,
@@ -7010,7 +6266,6 @@ typedef $$LocalProductsTableUpdateCompanionBuilder =
     LocalProductsCompanion Function({
       Value<String> id,
       Value<String> businessId,
-      Value<String?> categoryId,
       Value<String> name,
       Value<String?> nameNp,
       Value<String?> sku,
@@ -7021,7 +6276,6 @@ typedef $$LocalProductsTableUpdateCompanionBuilder =
       Value<int> lowStockThreshold,
       Value<int> stockCached,
       Value<bool> isActive,
-      Value<String?> categoryName,
       Value<DateTime> updatedAt,
       Value<DateTime?> createdAt,
       Value<int> rowid,
@@ -7043,11 +6297,6 @@ class $$LocalProductsTableFilterComposer
 
   ColumnFilters<String> get businessId => $composableBuilder(
     column: $table.businessId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get categoryId => $composableBuilder(
-    column: $table.categoryId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7101,11 +6350,6 @@ class $$LocalProductsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get categoryName => $composableBuilder(
-    column: $table.categoryName,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
@@ -7133,11 +6377,6 @@ class $$LocalProductsTableOrderingComposer
 
   ColumnOrderings<String> get businessId => $composableBuilder(
     column: $table.businessId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get categoryId => $composableBuilder(
-    column: $table.categoryId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7191,11 +6430,6 @@ class $$LocalProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get categoryName => $composableBuilder(
-    column: $table.categoryName,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -7221,11 +6455,6 @@ class $$LocalProductsTableAnnotationComposer
 
   GeneratedColumn<String> get businessId => $composableBuilder(
     column: $table.businessId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get categoryId => $composableBuilder(
-    column: $table.categoryId,
     builder: (column) => column,
   );
 
@@ -7264,11 +6493,6 @@ class $$LocalProductsTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
-
-  GeneratedColumn<String> get categoryName => $composableBuilder(
-    column: $table.categoryName,
-    builder: (column) => column,
-  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -7310,7 +6534,6 @@ class $$LocalProductsTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> businessId = const Value.absent(),
-                Value<String?> categoryId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> nameNp = const Value.absent(),
                 Value<String?> sku = const Value.absent(),
@@ -7321,14 +6544,12 @@ class $$LocalProductsTableTableManager
                 Value<int> lowStockThreshold = const Value.absent(),
                 Value<int> stockCached = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
-                Value<String?> categoryName = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalProductsCompanion(
                 id: id,
                 businessId: businessId,
-                categoryId: categoryId,
                 name: name,
                 nameNp: nameNp,
                 sku: sku,
@@ -7339,7 +6560,6 @@ class $$LocalProductsTableTableManager
                 lowStockThreshold: lowStockThreshold,
                 stockCached: stockCached,
                 isActive: isActive,
-                categoryName: categoryName,
                 updatedAt: updatedAt,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -7348,7 +6568,6 @@ class $$LocalProductsTableTableManager
               ({
                 required String id,
                 required String businessId,
-                Value<String?> categoryId = const Value.absent(),
                 required String name,
                 Value<String?> nameNp = const Value.absent(),
                 Value<String?> sku = const Value.absent(),
@@ -7359,14 +6578,12 @@ class $$LocalProductsTableTableManager
                 Value<int> lowStockThreshold = const Value.absent(),
                 Value<int> stockCached = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
-                Value<String?> categoryName = const Value.absent(),
                 required DateTime updatedAt,
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalProductsCompanion.insert(
                 id: id,
                 businessId: businessId,
-                categoryId: categoryId,
                 name: name,
                 nameNp: nameNp,
                 sku: sku,
@@ -7377,7 +6594,6 @@ class $$LocalProductsTableTableManager
                 lowStockThreshold: lowStockThreshold,
                 stockCached: stockCached,
                 isActive: isActive,
-                categoryName: categoryName,
                 updatedAt: updatedAt,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -9027,8 +8243,6 @@ class $AppDatabaseManager {
       $$SyncWatermarksTableTableManager(_db, _db.syncWatermarks);
   $$DeviceMetaTableTableManager get deviceMeta =>
       $$DeviceMetaTableTableManager(_db, _db.deviceMeta);
-  $$LocalCategoriesTableTableManager get localCategories =>
-      $$LocalCategoriesTableTableManager(_db, _db.localCategories);
   $$LocalProductsTableTableManager get localProducts =>
       $$LocalProductsTableTableManager(_db, _db.localProducts);
   $$LocalCustomersTableTableManager get localCustomers =>

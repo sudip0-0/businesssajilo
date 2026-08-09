@@ -38,39 +38,6 @@ class SyncPullEntities {
     return result;
   }
 
-  Future<PullPageResult> pullCategoriesBootstrap(
-    DateTime ts, {
-    int startOffset = 0,
-    SyncPullBudget? budget,
-  }) {
-    return _bootstrapPull(
-      entityLabel: 'categories',
-      watermarkKey: 'categories',
-      ts: ts,
-      startOffset: startOffset,
-      budget: budget,
-      buildPage: (from, to) => _client
-          .from('categories')
-          .select()
-          .order('id')
-          .range(from, to),
-      onPage: upsertCategoriesBatch,
-    );
-  }
-
-  Future<void> pullCategoriesDelta(String iso, DateTime ts) async {
-    await _page.pullPaged(
-      buildPage: (from, to) => _client
-          .from('categories')
-          .select()
-          .gt('updated_at', iso)
-          .order('id')
-          .range(from, to),
-      onPage: upsertCategoriesBatch,
-    );
-    await _db.setWatermark('categories', ts);
-  }
-
   Future<PullPageResult> pullProductsBootstrap(
     DateTime ts, {
     int startOffset = 0,
@@ -84,7 +51,7 @@ class SyncPullEntities {
       budget: budget,
       buildPage: (from, to) => _client
           .from('products')
-          .select('*, categories(name)')
+          .select()
           .order('id')
           .range(from, to),
       onPage: upsertProductsBatch,
@@ -95,7 +62,7 @@ class SyncPullEntities {
     await _page.pullPaged(
       buildPage: (from, to) => _client
           .from('products')
-          .select('*, categories(name)')
+          .select()
           .gt('updated_at', iso)
           .order('id')
           .range(from, to),
@@ -236,42 +203,6 @@ class SyncPullEntities {
     await _db.setWatermark('stock_movements', ts);
   }
 
-  Future<void> upsertCategoriesBatch(List<Map<String, dynamic>> rows) async {
-    if (rows.isEmpty) return;
-    final ids = rows.map((r) => r['id'] as String).toList();
-    final existing = await (_db.select(
-      _db.localCategories,
-    )..where((c) => c.id.isIn(ids))).get();
-    final byId = {for (final e in existing) e.id: e};
-
-    final companions = <LocalCategoriesCompanion>[];
-    for (final row in rows) {
-      final updatedAt = DateTime.parse(row['updated_at'] as String);
-      final local = byId[row['id'] as String];
-      if (local != null && !remoteWins(local.updatedAt, updatedAt)) continue;
-      companions.add(
-        LocalCategoriesCompanion.insert(
-          id: row['id'] as String,
-          businessId: row['business_id'] as String,
-          name: row['name'] as String,
-          nameNp: Value(row['name_np'] as String?),
-          updatedAt: updatedAt,
-          createdAt: Value(
-            row['created_at'] == null
-                ? null
-                : DateTime.parse(row['created_at'] as String),
-          ),
-        ),
-      );
-    }
-    if (companions.isEmpty) return;
-    await _db.transaction(() async {
-      for (final c in companions) {
-        await _db.into(_db.localCategories).insertOnConflictUpdate(c);
-      }
-    });
-  }
-
   Future<void> upsertProductsBatch(List<Map<String, dynamic>> rows) async {
     if (rows.isEmpty) return;
     final ids = rows.map((r) => r['id'] as String).toList();
@@ -281,12 +212,7 @@ class SyncPullEntities {
     final byId = {for (final e in existing) e.id: e};
 
     final companions = <LocalProductsCompanion>[];
-    for (final row in rows) {
-      final map = Map<String, dynamic>.from(row);
-      final category = map.remove('categories');
-      if (category is Map) {
-        map['category_name'] = category['name'];
-      }
+    for (final map in rows) {
       final updatedAt = DateTime.parse(map['updated_at'] as String);
       final local = byId[map['id'] as String];
       if (local != null && !remoteWins(local.updatedAt, updatedAt)) continue;
@@ -294,7 +220,6 @@ class SyncPullEntities {
         LocalProductsCompanion.insert(
           id: map['id'] as String,
           businessId: map['business_id'] as String,
-          categoryId: Value(map['category_id'] as String?),
           name: map['name'] as String,
           nameNp: Value(map['name_np'] as String?),
           sku: Value(map['sku'] as String?),
@@ -307,7 +232,6 @@ class SyncPullEntities {
           ),
           stockCached: Value((map['stock_cached'] as num?)?.toInt() ?? 0),
           isActive: Value(map['is_active'] as bool? ?? true),
-          categoryName: Value(map['category_name'] as String?),
           updatedAt: updatedAt,
           createdAt: Value(
             map['created_at'] == null

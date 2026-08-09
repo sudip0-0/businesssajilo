@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,7 +44,10 @@ class WebProductListPage extends ConsumerStatefulWidget {
 }
 
 class _WebProductListPageState extends ConsumerState<WebProductListPage> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+
   String _query = '';
+  Timer? _searchDebounceTimer;
   PaginatedListState<Product>? _pager;
   final _scrollController = ScrollController();
   late final TextEditingController _searchController;
@@ -66,13 +71,27 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     _pager = PaginatedListState<Product>(
       loadPage: (offset, limit) => ref
           .read(productsRepositoryProvider)
-          .list(activeOnly: !_showInactive, offset: offset, limit: limit),
+          .list(
+            activeOnly: !_showInactive,
+            offset: offset,
+            limit: limit,
+            query: _query.trim().isEmpty ? null : _query.trim(),
+          ),
       onChanged: () {
         if (mounted) setState(() {});
       },
     )..attachScrollController(_scrollController);
     _pager!.refresh().then((_) {
       if (mounted) setState(() {});
+    });
+  }
+
+  void _refreshForQuery(String value) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      setState(() => _query = value.trim());
+      _pager?.refresh();
     });
   }
 
@@ -85,6 +104,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -99,16 +119,8 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       if (_searchController.text != q) {
         _searchController.text = q;
       }
+      _pager?.refresh();
     }
-  }
-
-  List<Product> get _filtered {
-    final items = _pager?.items ?? [];
-    return items.where((p) {
-      return _query.isEmpty ||
-          p.name.toLowerCase().contains(_query.toLowerCase()) ||
-          (p.sku?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-    }).toList();
   }
 
   void _openProduct(Product product) {
@@ -155,7 +167,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
               child: WebSearchField(
                 hint: l10n.filterProducts,
                 controller: _searchController,
-                onChanged: (v) => setState(() => _query = v),
+                onChanged: _refreshForQuery,
               ),
             ),
             Expanded(child: _buildListBody(l10n, pager)),
@@ -177,7 +189,6 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     AppLocalizations l10n,
     PaginatedListState<Product>? pager,
   ) {
-    final filtered = _filtered;
     final loading = pager == null || pager.initialLoading;
 
     if (loading) {
@@ -191,7 +202,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
         icon: PhosphorIconsRegular.warning,
       );
     }
-    if (filtered.isEmpty) {
+    if (pager.items.isEmpty) {
       final searching = _query.isNotEmpty;
       return WebEmptyState(
         message: searching ? l10n.noSearchResults : l10n.emptyNoProducts,
@@ -200,10 +211,13 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             ? l10n.clearSearch
             : (widget.canEdit ? l10n.emptyAddFirstProduct : null),
         onAction: searching
-            ? () => setState(() {
-                _query = '';
-                _searchController.clear();
-              })
+            ? () {
+                setState(() {
+                  _query = '';
+                  _searchController.clear();
+                });
+                _pager?.refresh();
+              }
             : (widget.canEdit
                   ? () =>
                         context.push('${_webRolePrefix(context)}/inventory/new')
@@ -218,10 +232,10 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       },
       child: ListView.separated(
         controller: _scrollController,
-        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
+        itemCount: pager.items.length + (pager.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: 0),
         itemBuilder: (context, index) {
-          if (index >= filtered.length) {
+          if (index >= pager.items.length) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
@@ -235,7 +249,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             );
           }
 
-          final product = filtered[index];
+          final product = pager.items[index];
           return _ProductRow(
             product: product,
             selected: product.id == widget.selectedProductId,

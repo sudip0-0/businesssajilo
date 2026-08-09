@@ -9,7 +9,6 @@ declare
   v_biz uuid := 'e2e00000-0000-4000-8000-000000000010';
   v_owner_auth uuid := 'e2e00000-0000-4000-8000-000000000001';
   v_owner_member uuid := 'e2e00000-0000-4000-8000-000000000020';
-  v_category uuid := 'a0000000-0000-4000-8000-000000000001';
   v_product_count int;
   v_i int;
   v_j int;
@@ -43,22 +42,17 @@ begin
     return;
   end if;
 
-  insert into categories (id, business_id, name, name_np)
-  values (v_category, v_biz, 'General', 'सामान्य')
-  on conflict (id) do nothing;
-
   -- 55 products with enough stock for ~220 bills.
   for v_i in 1..55 loop
     v_product := ('a1000000-0000-4000-8000-' || lpad(to_hex(v_i), 12, '0'))::uuid;
     v_rate := 5000 + ((v_i - 1) % 10) * 4500; -- 50..455 NPR in paisa steps
 
     insert into products (
-      id, business_id, category_id, name, sku, unit,
+      id, business_id, name, sku, unit,
       cost_price, reference_price, low_stock_threshold, is_active
     ) values (
       v_product,
       v_biz,
-      v_category,
       'Product ' || lpad(v_i::text, 2, '0'),
       'SKU-' || lpad(v_i::text, 3, '0'),
       'piece',

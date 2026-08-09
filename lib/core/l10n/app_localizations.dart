@@ -764,24 +764,6 @@ abstract class AppLocalizations {
   /// **'Reason is required for adjustments'**
   String get reasonRequired;
 
-  /// No description provided for @addCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Add category'**
-  String get addCategory;
-
-  /// No description provided for @editCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit category'**
-  String get editCategory;
-
-  /// No description provided for @categories.
-  ///
-  /// In en, this message translates to:
-  /// **'Categories'**
-  String get categories;
-
   /// No description provided for @deleteProduct.
   ///
   /// In en, this message translates to:
@@ -841,12 +823,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quantity change'**
   String get qtyChange;
-
-  /// No description provided for @allCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'All categories'**
-  String get allCategories;
 
   /// No description provided for @noMovements.
   ///
@@ -1742,12 +1718,6 @@ abstract class AppLocalizations {
   /// **'No staff members yet'**
   String get noStaff;
 
-  /// No description provided for @noCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'No categories yet'**
-  String get noCategories;
-
   /// No description provided for @selectCustomerForCredit.
   ///
   /// In en, this message translates to:
@@ -1903,12 +1873,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get more;
-
-  /// No description provided for @confirmDeleteCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete this category? Products in it will keep working without a category.'**
-  String get confirmDeleteCategory;
 
   /// No description provided for @delete.
   ///
@@ -3085,6 +3049,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Top product'**
   String get topProductLabel;
+
+  /// No description provided for @availableStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get availableStock;
+
+  /// No description provided for @oversellConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell beyond available stock?'**
+  String get oversellConfirmTitle;
+
+  /// No description provided for @oversellConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Some lines sell more than the quantity on hand. Selling them will take stock negative.'**
+  String get oversellConfirmBody;
+
+  /// No description provided for @oversellContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell anyway'**
+  String get oversellContinue;
+
+  /// No description provided for @suggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get suggested;
+
+  /// No description provided for @balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get balance;
+
+  /// No description provided for @negativeAdjustTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock will go negative?'**
+  String get negativeAdjustTitle;
+
+  /// No description provided for @negativeAdjustBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This adjustment will take stock below zero. Continue?'**
+  String get negativeAdjustBody;
+
+  /// No description provided for @continueAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get continueAnyway;
 }
 
 class _AppLocalizationsDelegate

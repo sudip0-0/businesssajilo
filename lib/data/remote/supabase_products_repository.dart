@@ -24,7 +24,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     String? query,
   }) async {
     final client = requireSupabaseClient(_client);
-    var built = client.from('products').select('*, categories(name)');
+    var built = client.from('products').select();
     if (activeOnly) {
       built = built.eq('is_active', true);
     }
@@ -68,7 +68,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     final client = requireSupabaseClient(_client);
     final row = await client
         .from('products')
-        .select('*, categories(name)')
+        .select()
         .eq('id', id)
         .single();
     return _mapProduct(row);
@@ -79,7 +79,6 @@ class SupabaseProductsRepository implements ProductsRepository {
     required String name,
     String? nameNp,
     String? sku,
-    String? categoryId,
     required String unit,
     int costPrice = 0,
     int referencePrice = 0,
@@ -92,13 +91,12 @@ class SupabaseProductsRepository implements ProductsRepository {
           'name': name,
           'name_np': ?nameNp,
           'sku': ?sku,
-          'category_id': ?categoryId,
           'unit': unit,
           'cost_price': costPrice,
           'reference_price': referencePrice,
           'low_stock_threshold': lowStockThreshold,
         })
-        .select('*, categories(name)')
+        .select()
         .single();
     return _mapProduct(row);
   }
@@ -109,7 +107,6 @@ class SupabaseProductsRepository implements ProductsRepository {
     required String name,
     String? nameNp,
     String? sku,
-    String? categoryId,
     required String unit,
     int costPrice = 0,
     int referencePrice = 0,
@@ -123,7 +120,6 @@ class SupabaseProductsRepository implements ProductsRepository {
           'name': name,
           'name_np': ?nameNp,
           'sku': ?sku,
-          'category_id': ?categoryId,
           'unit': unit,
           'cost_price': costPrice,
           'reference_price': referencePrice,
@@ -131,7 +127,7 @@ class SupabaseProductsRepository implements ProductsRepository {
           'image_url': ?imageUrl,
         })
         .eq('id', id)
-        .select('*, categories(name)')
+        .select()
         .single();
     return _mapProduct(row);
   }
@@ -199,10 +195,6 @@ class SupabaseProductsRepository implements ProductsRepository {
 
   Product _mapProduct(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
-    final category = map.remove('categories');
-    if (category is Map) {
-      map['category_name'] = category['name'];
-    }
     return Product.fromJson(map);
   }
 }

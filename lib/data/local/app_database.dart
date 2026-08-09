@@ -42,22 +42,9 @@ class DeviceMeta extends Table {
   IntColumn get localBillSeq => integer().withDefault(const Constant(0))();
 }
 
-class LocalCategories extends Table {
-  TextColumn get id => text()();
-  TextColumn get businessId => text()();
-  TextColumn get name => text()();
-  TextColumn get nameNp => text().nullable()();
-  DateTimeColumn get updatedAt => dateTime()();
-  DateTimeColumn get createdAt => dateTime().nullable()();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
 class LocalProducts extends Table {
   TextColumn get id => text()();
   TextColumn get businessId => text()();
-  TextColumn get categoryId => text().nullable()();
   TextColumn get name => text()();
   TextColumn get nameNp => text().nullable()();
   TextColumn get sku => text().nullable()();
@@ -68,7 +55,6 @@ class LocalProducts extends Table {
   IntColumn get lowStockThreshold => integer().withDefault(const Constant(0))();
   IntColumn get stockCached => integer().withDefault(const Constant(0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
-  TextColumn get categoryName => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get createdAt => dateTime().nullable()();
 
@@ -166,7 +152,6 @@ class LocalStockMovements extends Table {
     SyncMeta,
     SyncWatermarks,
     DeviceMeta,
-    LocalCategories,
     LocalProducts,
     LocalCustomers,
     LocalBills,
@@ -184,7 +169,7 @@ class AppDatabase extends _$AppDatabase {
       AppDatabase(driftDatabase(name: 'businesssajilo_local'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -192,6 +177,12 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(syncMeta);
         await m.addColumn(syncQueue, syncQueue.nextAttemptAt);
+      }
+      if (from < 3) {
+        // Categories were removed; drop the local table and let
+        // TableMigration drop the product category columns.
+        await m.deleteTable('local_categories');
+        await m.alterTable(TableMigration(localProducts));
       }
     },
   );
@@ -310,7 +301,6 @@ class AppDatabase extends _$AppDatabase {
     await transaction(() async {
       await delete(syncQueue).go();
       await delete(syncWatermarks).go();
-      await delete(localCategories).go();
       await delete(localProducts).go();
       await delete(localCustomers).go();
       await delete(localBills).go();

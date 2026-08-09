@@ -44,7 +44,6 @@ Product mapLocalProduct(LocalProduct row) {
   return Product(
     id: row.id,
     businessId: row.businessId,
-    categoryId: row.categoryId,
     name: row.name,
     nameNp: row.nameNp,
     sku: row.sku,
@@ -55,7 +54,6 @@ Product mapLocalProduct(LocalProduct row) {
     lowStockThreshold: row.lowStockThreshold,
     stockCached: row.stockCached,
     isActive: row.isActive,
-    categoryName: row.categoryName,
     updatedAt: row.updatedAt,
     createdAt: row.createdAt,
   );

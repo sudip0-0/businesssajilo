@@ -139,7 +139,6 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 ? null
                 : _nameNpController.text.trim(),
             sku: sku.isEmpty ? null : sku,
-            categoryId: widget.product!.categoryId,
             unit: _unitController.text.trim(),
             costPrice: cost,
             referencePrice: refPrice,
@@ -153,7 +152,6 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 ? null
                 : _nameNpController.text.trim(),
             sku: sku.isEmpty ? null : sku,
-            categoryId: null,
             unit: _unitController.text.trim(),
             costPrice: cost,
             referencePrice: refPrice,

@@ -13,7 +13,6 @@ const syncMetaBootstrapOffset = 'bootstrap_offset';
 
 /// Ordered remote tables for initial bootstrap (watermark keys).
 const syncBootstrapTables = [
-  'categories',
   'products',
   'customers',
   'bills',

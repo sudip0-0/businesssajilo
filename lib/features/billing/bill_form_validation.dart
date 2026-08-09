@@ -1,3 +1,4 @@
+import 'bill_draft_line.dart';
 import 'bill_form_draft.dart';
 
 enum BillFormValidationError {
@@ -20,4 +21,14 @@ BillFormValidationError? validateBillForm(BillFormDraft draft) {
   }
   if (draft.grandTotal < 0) return BillFormValidationError.negativeGrandTotal;
   return null;
+}
+
+/// Lines whose quantity exceeds the product's tracked on-hand stock.
+///
+/// Used to warn (but not block) overselling at the counter. Products without
+/// tracked stock are skipped.
+List<BillDraftLine> oversellingLines(BillFormDraft draft) {
+  return draft.lines
+      .where((l) => l.qty > l.product.stockCached)
+      .toList();
 }

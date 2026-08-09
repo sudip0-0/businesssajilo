@@ -1,6 +1,6 @@
 -- RLS tests for Phase 2 inventory.
 begin;
-select plan(10);
+select plan(9);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -25,14 +25,11 @@ begin
 end;
 $$;
 
--- Owner creates category and product.
+-- Owner creates product.
 select test_set_auth('22222222-2222-2222-2222-222222222222');
 
-insert into categories (id, business_id, name) values
-  ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Beverages');
-
-insert into products (id, business_id, category_id, name, unit, low_stock_threshold) values
-  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5);
+insert into products (id, business_id, name, unit, low_stock_threshold) values
+  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5);
 
 select is(
   (select count(*)::int from products),
@@ -59,14 +56,6 @@ select is(
   (select stock_cached from products where id = 'b1111111-1111-1111-1111-111111111111'),
   12,
   'warehouse can stock_in'
-);
-
--- Warehouse cannot insert category.
-select throws_ok(
-  $$insert into categories (business_id, name) values ('11111111-1111-1111-1111-111111111111', 'Blocked')$$,
-  '42501',
-  null,
-  'warehouse cannot insert category'
 );
 
 -- Warehouse cannot update product.

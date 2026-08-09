@@ -1,6 +1,6 @@
 -- Phase 21: low_stock_count / list_low_stock / total_dues + notifications index.
 begin;
-select plan(11);
+select plan(10);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Biz A'),
@@ -26,11 +26,11 @@ insert into members (id, business_id, auth_user_id, role, display_name, is_activ
 insert into categories (id, business_id, name) values
   ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Beverages');
 
-insert into products (id, business_id, category_id, name, unit, reference_price, stock_cached, low_stock_threshold, is_active) values
-  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 2, 5, true),
-  ('b2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', null, 'Plenty', 'piece', 1000, 50, 5, true),
-  ('b3333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', null, 'Inactive Low', 'piece', 1000, 0, 5, false),
-  ('b9999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', null, 'Other Biz Low', 'piece', 1000, 1, 5, true);
+insert into products (id, business_id, name, unit, reference_price, stock_cached, low_stock_threshold, is_active) values
+  ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 2, 5, true),
+  ('b2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Plenty', 'piece', 1000, 50, 5, true),
+  ('b3333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'Inactive Low', 'piece', 1000, 0, 5, false),
+  ('b9999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', 'Other Biz Low', 'piece', 1000, 1, 5, true);
 
 insert into customers (id, business_id, member_id, shop_name, opening_balance) values
   ('e1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Shop A', 1500),
@@ -59,17 +59,11 @@ select is(
   'owner low_stock_count is tenant-scoped and active-only'
 );
 
--- 2. list_low_stock returns category_name and respects limit.
+-- 2. list_low_stock returns the low-stock product and respects limit.
 select is(
   (list_low_stock(10)->0->>'name'),
   'Cola',
   'list_low_stock returns the low-stock product'
-);
-
-select is(
-  (list_low_stock(10)->0->>'category_name'),
-  'Beverages',
-  'list_low_stock includes category_name'
 );
 
 select is(

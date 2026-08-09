@@ -17,11 +17,8 @@ insert into members (id, business_id, auth_user_id, role, display_name, is_activ
   ('b1111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'owner', 'Owner B', true),
   ('ca111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'cccccccc-cccc-cccc-cccc-cccccccccc01', 'customer', 'Cust A', true);
 
-insert into categories (id, business_id, name) values
-  ('c1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Beverages');
-
-insert into products (id, business_id, category_id, name, unit, cost_price, reference_price, stock_cached) values
-  ('d1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'c1111111-1111-1111-1111-111111111111', 'Cola', 'piece', 3000, 5000, 10);
+insert into products (id, business_id, name, unit, cost_price, reference_price, stock_cached) values
+  ('d1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 3000, 5000, 10);
 
 insert into customers (id, business_id, member_id, shop_name, opening_balance) values
   ('e1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'ca111111-1111-1111-1111-111111111111', 'Ram Store', 0);

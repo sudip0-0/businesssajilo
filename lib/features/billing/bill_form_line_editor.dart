@@ -75,6 +75,17 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
               ),
             ],
           ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '${l10n.availableStock}: ${line.product.stockCached}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: line.qty > line.product.stockCached
+                    ? BsColors.danger
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
           if (_expanded) ...[
             const SizedBox(height: 8),
             Text(l10n.rate),

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Product {
 
- String get id; String get businessId; String? get categoryId; String get name; String? get nameNp; String? get sku; String get unit; int get costPrice; int get referencePrice; String? get imageUrl; int get lowStockThreshold; int get stockCached; bool get isActive; DateTime? get updatedAt; DateTime? get createdAt; String? get categoryName;
+ String get id; String get businessId; String get name; String? get nameNp; String? get sku; String get unit; int get costPrice; int get referencePrice; String? get imageUrl; int get lowStockThreshold; int get stockCached; bool get isActive; DateTime? get updatedAt; DateTime? get createdAt;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ProductCopyWith<Product> get copyWith => _$ProductCopyWithImpl<Product>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.name, name) || other.name == name)&&(identical(other.nameNp, nameNp) || other.nameNp == nameNp)&&(identical(other.sku, sku) || other.sku == sku)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.costPrice, costPrice) || other.costPrice == costPrice)&&(identical(other.referencePrice, referencePrice) || other.referencePrice == referencePrice)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.lowStockThreshold, lowStockThreshold) || other.lowStockThreshold == lowStockThreshold)&&(identical(other.stockCached, stockCached) || other.stockCached == stockCached)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.name, name) || other.name == name)&&(identical(other.nameNp, nameNp) || other.nameNp == nameNp)&&(identical(other.sku, sku) || other.sku == sku)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.costPrice, costPrice) || other.costPrice == costPrice)&&(identical(other.referencePrice, referencePrice) || other.referencePrice == referencePrice)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.lowStockThreshold, lowStockThreshold) || other.lowStockThreshold == lowStockThreshold)&&(identical(other.stockCached, stockCached) || other.stockCached == stockCached)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,categoryId,name,nameNp,sku,unit,costPrice,referencePrice,imageUrl,lowStockThreshold,stockCached,isActive,updatedAt,createdAt,categoryName);
+int get hashCode => Object.hash(runtimeType,id,businessId,name,nameNp,sku,unit,costPrice,referencePrice,imageUrl,lowStockThreshold,stockCached,isActive,updatedAt,createdAt);
 
 @override
 String toString() {
-  return 'Product(id: $id, businessId: $businessId, categoryId: $categoryId, name: $name, nameNp: $nameNp, sku: $sku, unit: $unit, costPrice: $costPrice, referencePrice: $referencePrice, imageUrl: $imageUrl, lowStockThreshold: $lowStockThreshold, stockCached: $stockCached, isActive: $isActive, updatedAt: $updatedAt, createdAt: $createdAt, categoryName: $categoryName)';
+  return 'Product(id: $id, businessId: $businessId, name: $name, nameNp: $nameNp, sku: $sku, unit: $unit, costPrice: $costPrice, referencePrice: $referencePrice, imageUrl: $imageUrl, lowStockThreshold: $lowStockThreshold, stockCached: $stockCached, isActive: $isActive, updatedAt: $updatedAt, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- String id, String businessId, String? categoryId, String name, String? nameNp, String? sku, String unit, int costPrice, int referencePrice, String? imageUrl, int lowStockThreshold, int stockCached, bool isActive, DateTime? updatedAt, DateTime? createdAt, String? categoryName
+ String id, String businessId, String name, String? nameNp, String? sku, String unit, int costPrice, int referencePrice, String? imageUrl, int lowStockThreshold, int stockCached, bool isActive, DateTime? updatedAt, DateTime? createdAt
 });
 
 
@@ -65,12 +65,11 @@ class _$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? categoryId = freezed,Object? name = null,Object? nameNp = freezed,Object? sku = freezed,Object? unit = null,Object? costPrice = null,Object? referencePrice = null,Object? imageUrl = freezed,Object? lowStockThreshold = null,Object? stockCached = null,Object? isActive = null,Object? updatedAt = freezed,Object? createdAt = freezed,Object? categoryName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? name = null,Object? nameNp = freezed,Object? sku = freezed,Object? unit = null,Object? costPrice = null,Object? referencePrice = null,Object? imageUrl = freezed,Object? lowStockThreshold = null,Object? stockCached = null,Object? isActive = null,Object? updatedAt = freezed,Object? createdAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
-as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as String?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nameNp: freezed == nameNp ? _self.nameNp : nameNp // ignore: cast_nullable_to_non_nullable
 as String?,sku: freezed == sku ? _self.sku : sku // ignore: cast_nullable_to_non_nullable
 as String?,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
@@ -82,8 +81,7 @@ as int,stockCached: null == stockCached ? _self.stockCached : stockCached // ign
 as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
-as String?,
+as DateTime?,
   ));
 }
 
@@ -168,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String? categoryId,  String name,  String? nameNp,  String? sku,  String unit,  int costPrice,  int referencePrice,  String? imageUrl,  int lowStockThreshold,  int stockCached,  bool isActive,  DateTime? updatedAt,  DateTime? createdAt,  String? categoryName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String name,  String? nameNp,  String? sku,  String unit,  int costPrice,  int referencePrice,  String? imageUrl,  int lowStockThreshold,  int stockCached,  bool isActive,  DateTime? updatedAt,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.businessId,_that.categoryId,_that.name,_that.nameNp,_that.sku,_that.unit,_that.costPrice,_that.referencePrice,_that.imageUrl,_that.lowStockThreshold,_that.stockCached,_that.isActive,_that.updatedAt,_that.createdAt,_that.categoryName);case _:
+return $default(_that.id,_that.businessId,_that.name,_that.nameNp,_that.sku,_that.unit,_that.costPrice,_that.referencePrice,_that.imageUrl,_that.lowStockThreshold,_that.stockCached,_that.isActive,_that.updatedAt,_that.createdAt);case _:
   return orElse();
 
 }
@@ -189,10 +187,10 @@ return $default(_that.id,_that.businessId,_that.categoryId,_that.name,_that.name
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String? categoryId,  String name,  String? nameNp,  String? sku,  String unit,  int costPrice,  int referencePrice,  String? imageUrl,  int lowStockThreshold,  int stockCached,  bool isActive,  DateTime? updatedAt,  DateTime? createdAt,  String? categoryName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String name,  String? nameNp,  String? sku,  String unit,  int costPrice,  int referencePrice,  String? imageUrl,  int lowStockThreshold,  int stockCached,  bool isActive,  DateTime? updatedAt,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
-return $default(_that.id,_that.businessId,_that.categoryId,_that.name,_that.nameNp,_that.sku,_that.unit,_that.costPrice,_that.referencePrice,_that.imageUrl,_that.lowStockThreshold,_that.stockCached,_that.isActive,_that.updatedAt,_that.createdAt,_that.categoryName);case _:
+return $default(_that.id,_that.businessId,_that.name,_that.nameNp,_that.sku,_that.unit,_that.costPrice,_that.referencePrice,_that.imageUrl,_that.lowStockThreshold,_that.stockCached,_that.isActive,_that.updatedAt,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +207,10 @@ return $default(_that.id,_that.businessId,_that.categoryId,_that.name,_that.name
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String? categoryId,  String name,  String? nameNp,  String? sku,  String unit,  int costPrice,  int referencePrice,  String? imageUrl,  int lowStockThreshold,  int stockCached,  bool isActive,  DateTime? updatedAt,  DateTime? createdAt,  String? categoryName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String name,  String? nameNp,  String? sku,  String unit,  int costPrice,  int referencePrice,  String? imageUrl,  int lowStockThreshold,  int stockCached,  bool isActive,  DateTime? updatedAt,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.businessId,_that.categoryId,_that.name,_that.nameNp,_that.sku,_that.unit,_that.costPrice,_that.referencePrice,_that.imageUrl,_that.lowStockThreshold,_that.stockCached,_that.isActive,_that.updatedAt,_that.createdAt,_that.categoryName);case _:
+return $default(_that.id,_that.businessId,_that.name,_that.nameNp,_that.sku,_that.unit,_that.costPrice,_that.referencePrice,_that.imageUrl,_that.lowStockThreshold,_that.stockCached,_that.isActive,_that.updatedAt,_that.createdAt);case _:
   return null;
 
 }
@@ -224,12 +222,11 @@ return $default(_that.id,_that.businessId,_that.categoryId,_that.name,_that.name
 @JsonSerializable()
 
 class _Product implements Product {
-  const _Product({required this.id, required this.businessId, this.categoryId, required this.name, this.nameNp, this.sku, this.unit = 'piece', this.costPrice = 0, this.referencePrice = 0, this.imageUrl, this.lowStockThreshold = 0, this.stockCached = 0, this.isActive = true, this.updatedAt, this.createdAt, this.categoryName});
+  const _Product({required this.id, required this.businessId, required this.name, this.nameNp, this.sku, this.unit = 'piece', this.costPrice = 0, this.referencePrice = 0, this.imageUrl, this.lowStockThreshold = 0, this.stockCached = 0, this.isActive = true, this.updatedAt, this.createdAt});
   factory _Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 
 @override final  String id;
 @override final  String businessId;
-@override final  String? categoryId;
 @override final  String name;
 @override final  String? nameNp;
 @override final  String? sku;
@@ -242,7 +239,6 @@ class _Product implements Product {
 @override@JsonKey() final  bool isActive;
 @override final  DateTime? updatedAt;
 @override final  DateTime? createdAt;
-@override final  String? categoryName;
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
@@ -257,16 +253,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.name, name) || other.name == name)&&(identical(other.nameNp, nameNp) || other.nameNp == nameNp)&&(identical(other.sku, sku) || other.sku == sku)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.costPrice, costPrice) || other.costPrice == costPrice)&&(identical(other.referencePrice, referencePrice) || other.referencePrice == referencePrice)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.lowStockThreshold, lowStockThreshold) || other.lowStockThreshold == lowStockThreshold)&&(identical(other.stockCached, stockCached) || other.stockCached == stockCached)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.name, name) || other.name == name)&&(identical(other.nameNp, nameNp) || other.nameNp == nameNp)&&(identical(other.sku, sku) || other.sku == sku)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.costPrice, costPrice) || other.costPrice == costPrice)&&(identical(other.referencePrice, referencePrice) || other.referencePrice == referencePrice)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.lowStockThreshold, lowStockThreshold) || other.lowStockThreshold == lowStockThreshold)&&(identical(other.stockCached, stockCached) || other.stockCached == stockCached)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,categoryId,name,nameNp,sku,unit,costPrice,referencePrice,imageUrl,lowStockThreshold,stockCached,isActive,updatedAt,createdAt,categoryName);
+int get hashCode => Object.hash(runtimeType,id,businessId,name,nameNp,sku,unit,costPrice,referencePrice,imageUrl,lowStockThreshold,stockCached,isActive,updatedAt,createdAt);
 
 @override
 String toString() {
-  return 'Product(id: $id, businessId: $businessId, categoryId: $categoryId, name: $name, nameNp: $nameNp, sku: $sku, unit: $unit, costPrice: $costPrice, referencePrice: $referencePrice, imageUrl: $imageUrl, lowStockThreshold: $lowStockThreshold, stockCached: $stockCached, isActive: $isActive, updatedAt: $updatedAt, createdAt: $createdAt, categoryName: $categoryName)';
+  return 'Product(id: $id, businessId: $businessId, name: $name, nameNp: $nameNp, sku: $sku, unit: $unit, costPrice: $costPrice, referencePrice: $referencePrice, imageUrl: $imageUrl, lowStockThreshold: $lowStockThreshold, stockCached: $stockCached, isActive: $isActive, updatedAt: $updatedAt, createdAt: $createdAt)';
 }
 
 
@@ -277,7 +273,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String businessId, String? categoryId, String name, String? nameNp, String? sku, String unit, int costPrice, int referencePrice, String? imageUrl, int lowStockThreshold, int stockCached, bool isActive, DateTime? updatedAt, DateTime? createdAt, String? categoryName
+ String id, String businessId, String name, String? nameNp, String? sku, String unit, int costPrice, int referencePrice, String? imageUrl, int lowStockThreshold, int stockCached, bool isActive, DateTime? updatedAt, DateTime? createdAt
 });
 
 
@@ -294,12 +290,11 @@ class __$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? categoryId = freezed,Object? name = null,Object? nameNp = freezed,Object? sku = freezed,Object? unit = null,Object? costPrice = null,Object? referencePrice = null,Object? imageUrl = freezed,Object? lowStockThreshold = null,Object? stockCached = null,Object? isActive = null,Object? updatedAt = freezed,Object? createdAt = freezed,Object? categoryName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? name = null,Object? nameNp = freezed,Object? sku = freezed,Object? unit = null,Object? costPrice = null,Object? referencePrice = null,Object? imageUrl = freezed,Object? lowStockThreshold = null,Object? stockCached = null,Object? isActive = null,Object? updatedAt = freezed,Object? createdAt = freezed,}) {
   return _then(_Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
-as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as String?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nameNp: freezed == nameNp ? _self.nameNp : nameNp // ignore: cast_nullable_to_non_nullable
 as String?,sku: freezed == sku ? _self.sku : sku // ignore: cast_nullable_to_non_nullable
 as String?,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
@@ -311,8 +306,7 @@ as int,stockCached: null == stockCached ? _self.stockCached : stockCached // ign
 as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
-as String?,
+as DateTime?,
   ));
 }
 
