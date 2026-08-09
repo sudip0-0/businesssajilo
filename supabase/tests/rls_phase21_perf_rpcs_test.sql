@@ -23,9 +23,6 @@ insert into members (id, business_id, auth_user_id, role, display_name, is_activ
   ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '99999999-9999-9999-9999-999999999999', '66666666-6666-6666-6666-666666666666', 'owner', 'Owner B', true),
   ('ffffffff-ffff-ffff-ffff-ffffffffffff', '11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', 'customer', 'Cust2', true);
 
-insert into categories (id, business_id, name) values
-  ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Beverages');
-
 insert into products (id, business_id, name, unit, reference_price, stock_cached, low_stock_threshold, is_active) values
   ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 2, 5, true),
   ('b2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Plenty', 'piece', 1000, 50, 5, true),

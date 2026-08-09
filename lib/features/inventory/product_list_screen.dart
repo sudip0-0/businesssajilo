@@ -90,11 +90,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   Future<void> _loadAllForFilter() async {
-    final pager = _pager;
-    if (pager == null) return;
-    while (pager.hasMore && !pager.loading) {
-      await pager.loadMore();
-    }
+    await _pager?.loadAll();
   }
 
   Future<void> _setShowInactive(bool value) async {

@@ -52,9 +52,8 @@ There is **no** `lib/application/` use-case layer: feature providers and screens
 businesses(id, name, name_np, address, phone, logo_url, subscription_plan, created_at)
 members(id, business_id, auth_user_id, role, display_name, phone, is_active)
 customers(id, business_id, member_id not null unique, shop_name, contact_name, phone, address, opening_balance)
-categories(id, business_id, name, name_np)
-products(id, business_id, category_id, name, name_np, sku, unit, cost_price,
-         reference_price, image_url, low_stock_threshold, is_active)
+products(id, business_id, name, name_np, sku, unit, cost_price,
+         reference_price, image_url, low_stock_threshold, stock_cached, is_active)
 stock_movements(id, business_id, product_id, type[in|adjust|dispatch], qty_delta,
                 reason, ref_order_id?, created_by, created_at)        -- append-only
 orders(id, business_id, customer_id, status, customer_note, created_at, updated_at)

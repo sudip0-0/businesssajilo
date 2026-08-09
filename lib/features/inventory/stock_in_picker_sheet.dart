@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/error_state.dart';
+import '../../core/ui/paginated_list_state.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/submit_action.dart';
+import '../../data/repositories/products_repository.dart';
 import '../../data/repositories/stock_repository.dart';
 import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
@@ -20,19 +24,69 @@ class StockInPickerSheet extends ConsumerStatefulWidget {
 }
 
 class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+
   final Set<String> _selected = {};
   final Map<String, int> _qtys = {};
+  final Map<String, String> _names = {};
   bool _enteringQty = false;
   bool _loading = false;
+
+  String _query = '';
+  Timer? _searchDebounceTimer;
+  PaginatedListState<Product>? _pager;
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+  }
+
+  @override
+  void dispose() {
+    _searchDebounceTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _initPager() {
+    _pager = PaginatedListState<Product>(
+      loadPage: (offset, limit) => ref
+          .read(productsRepositoryProvider)
+          .list(
+            offset: offset,
+            limit: limit,
+            query: _query.trim().isEmpty ? null : _query.trim(),
+          ),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    )..attachScrollController(_scrollController);
+    _pager!.refresh().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _onQueryChanged(String value) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      setState(() => _query = value.trim());
+      _pager?.refresh();
+    });
+  }
 
   void _toggle(Product product) {
     setState(() {
       if (_selected.contains(product.id)) {
         _selected.remove(product.id);
         _qtys.remove(product.id);
+        _names.remove(product.id);
       } else {
         _selected.add(product.id);
         _qtys[product.id] = 1;
+        _names[product.id] = product.name;
       }
     });
   }
@@ -64,12 +118,12 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final productsAsync = ref.watch(productListProvider(''));
+    final pager = _pager;
 
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.7,
-      builder: (context, scrollController) => Column(
+      builder: (context, _) => Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
@@ -81,35 +135,18 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
           if (_enteringQty)
             _buildQtyPanel(l10n)
           else ...[
-            Expanded(
-              child: productsAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (e, _) => ErrorState(
-                  message: l10n.loadingFailed,
-                  onRetry: () => ref.invalidate(productListProvider),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: l10n.searchProductsHint,
+                  prefixIcon: const Icon(Icons.search),
                 ),
-                data: (products) => ListView.builder(
-                  controller: scrollController,
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    final selected = _selected.contains(product.id);
-                    return CheckboxListTile(
-                      value: selected,
-                      onChanged: (_) => _toggle(product),
-                      title: Text(product.name),
-                      subtitle: Text('${product.stockCached} ${product.unit}'),
-                      secondary: Icon(
-                        selected
-                            ? Icons.check_box
-                            : Icons.check_box_outline_blank,
-                      ),
-                    );
-                  },
-                ),
+                onChanged: _onQueryChanged,
               ),
             ),
+            const SizedBox(height: 8),
+            Expanded(child: _buildProductList(l10n, pager)),
             Padding(
               padding: const EdgeInsets.all(16),
               child: SizedBox(
@@ -126,6 +163,47 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildProductList(
+    AppLocalizations l10n,
+    PaginatedListState<Product>? pager,
+  ) {
+    if (pager == null || pager.initialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (pager.error != null && pager.items.isEmpty) {
+      return ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => pager.refresh(),
+      );
+    }
+    if (pager.items.isEmpty) {
+      return Center(child: Text(l10n.noMatchingResults));
+    }
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: pager.items.length + (pager.hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= pager.items.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        final product = pager.items[index];
+        final selected = _selected.contains(product.id);
+        return CheckboxListTile(
+          value: selected,
+          onChanged: (_) => _toggle(product),
+          title: Text(product.name),
+          subtitle: Text('${product.stockCached} ${product.unit}'),
+          secondary: Icon(
+            selected ? Icons.check_box : Icons.check_box_outline_blank,
+          ),
+        );
+      },
     );
   }
 
@@ -157,14 +235,9 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                productName(productId),
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                            ],
+                          child: Text(
+                            _names[productId] ?? productId,
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
                         ),
                         QtyStepper(
@@ -198,14 +271,5 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
         ],
       ),
     );
-  }
-
-  /// Resolves a product name from the loaded list for the qty panel.
-  String productName(String productId) {
-    final products = ref.read(productListProvider('')).value ?? const [];
-    for (final p in products) {
-      if (p.id == productId) return p.name;
-    }
-    return productId;
   }
 }

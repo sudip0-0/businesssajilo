@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../config/pagination.dart';
@@ -16,6 +18,9 @@ class PaginatedListState<T> {
   bool initialLoading = true;
   Object? error;
 
+  /// Completes when the current [loadMore] finishes (success or failure).
+  Future<void>? _inFlight;
+
   Future<void> refresh() async {
     _offset = 0;
     hasMore = true;
@@ -31,6 +36,8 @@ class PaginatedListState<T> {
     if (loading || !hasMore) return;
     loading = true;
     error = null;
+    final done = Completer<void>();
+    _inFlight = done.future;
     try {
       final page = await loadPage(_offset, kListPageSize);
       items.addAll(page);
@@ -40,7 +47,24 @@ class PaginatedListState<T> {
       error = e;
     } finally {
       loading = false;
+      _inFlight = null;
+      done.complete();
       onChanged?.call();
+    }
+  }
+
+  /// Loads every remaining page. Waits out any in-flight [loadMore] first so
+  /// filter "load all" paths do not exit early while a page is still loading.
+  Future<void> loadAll() async {
+    while (hasMore) {
+      final inFlight = _inFlight;
+      if (inFlight != null) {
+        await inFlight;
+        continue;
+      }
+      if (error != null) return;
+      await loadMore();
+      if (error != null) return;
     }
   }
 

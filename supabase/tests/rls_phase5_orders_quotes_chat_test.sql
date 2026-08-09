@@ -21,9 +21,6 @@ insert into members (id, business_id, auth_user_id, role, display_name, is_activ
 insert into customers (id, business_id, member_id, shop_name, opening_balance) values
   ('e1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Ram Store', 0);
 
-insert into categories (id, business_id, name) values
-  ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Beverages');
-
 insert into products (id, business_id, name, unit, reference_price, stock_cached) values
   ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 100);
 

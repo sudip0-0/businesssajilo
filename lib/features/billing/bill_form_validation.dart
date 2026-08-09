@@ -25,8 +25,7 @@ BillFormValidationError? validateBillForm(BillFormDraft draft) {
 
 /// Lines whose quantity exceeds the product's tracked on-hand stock.
 ///
-/// Used to warn (but not block) overselling at the counter. Products without
-/// tracked stock are skipped.
+/// Used to warn (but not block) overselling at the counter.
 List<BillDraftLine> oversellingLines(BillFormDraft draft) {
   return draft.lines
       .where((l) => l.qty > l.product.stockCached)

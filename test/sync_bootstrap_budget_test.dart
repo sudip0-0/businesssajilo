@@ -34,11 +34,11 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    await db.setMetaValue(syncMetaBootstrapTable, 'categories');
+    await db.setMetaValue(syncMetaBootstrapTable, 'products');
     await db.setMetaValue(syncMetaBootstrapOffset, '500');
 
-    expect(await db.watermark('categories'), isNull);
-    expect(await db.metaValue(syncMetaBootstrapTable), 'categories');
+    expect(await db.watermark('products'), isNull);
+    expect(await db.metaValue(syncMetaBootstrapTable), 'products');
     expect(await db.metaValue(syncMetaBootstrapOffset), '500');
   });
 
@@ -46,10 +46,15 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
 
-    await db.setWatermark('categories', DateTime.utc(2026, 1, 1));
-    expect(await db.watermark('categories'), isNotNull);
+    await db.setWatermark('customers', DateTime.utc(2026, 1, 1));
+    expect(await db.watermark('customers'), isNotNull);
 
     await db.setMetaValue(syncMetaBootstrapTable, 'products');
     expect(await db.watermark('products'), isNull);
+  });
+
+  test('bootstrap table order excludes retired categories entity', () {
+    expect(syncBootstrapTables, isNot(contains('categories')));
+    expect(syncBootstrapTables.first, 'products');
   });
 }

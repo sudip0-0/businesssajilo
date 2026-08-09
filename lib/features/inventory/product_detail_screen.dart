@@ -78,11 +78,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   Future<void> _loadAllMovementsForFilter() async {
-    final pager = _movementsPager;
-    if (pager == null) return;
-    while (pager.hasMore && !pager.loading) {
-      await pager.loadMore();
-    }
+    await _movementsPager?.loadAll();
   }
 
   @override
