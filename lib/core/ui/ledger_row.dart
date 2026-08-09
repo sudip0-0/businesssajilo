@@ -82,6 +82,7 @@ class LedgerRow extends StatelessWidget {
     required this.debit,
     required this.credit,
     required this.runningBalance,
+    this.onTap,
   });
 
   final DateTime date;
@@ -89,6 +90,7 @@ class LedgerRow extends StatelessWidget {
   final Paisa debit;
   final Paisa credit;
   final Paisa runningBalance;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +112,7 @@ class LedgerRow extends StatelessWidget {
     final isCreditBalance = runningBalance.value < 0;
     final netChange = effectiveDebit.value - effectiveCredit.value;
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,5 +186,8 @@ class LedgerRow extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap == null) return row;
+    return InkWell(onTap: onTap, child: row);
   }
 }

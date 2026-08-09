@@ -13,6 +13,7 @@ import '../../core/utils/ledger_balance.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/ledger_entry.dart';
+import '../billing/bill_navigation.dart';
 import '../billing/customer_bill_list_screen.dart';
 import 'providers.dart';
 import 'statement_share_sheet.dart';
@@ -206,8 +207,18 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
           debit: Paisa(entry.debitPaisa),
           credit: Paisa(entry.creditPaisa),
           runningBalance: Paisa(entry.runningBalance),
+          onTap: entry.entryType == 'bill' && entry.refId != null
+              ? () => _openBill(entry.refId!)
+              : null,
         );
       },
     );
+  }
+
+  Future<void> _openBill(String billId) async {
+    final changed = await pushBillDetail(context, ref, billId);
+    if (changed == true && mounted) {
+      await _pager?.refresh();
+    }
   }
 }

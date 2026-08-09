@@ -28,6 +28,7 @@ bool webPathAllowedForRole(String path, Role role) {
   return false;
 }
 
-/// Warehouse must never access billing routes on web.
+/// Warehouse must never access billing routes on web; customers may open
+/// their own bills (RLS-scoped).
 bool webBillingPathAllowed(Role role) =>
-    role == Role.owner || role == Role.sales;
+    role == Role.owner || role == Role.sales || role == Role.customer;

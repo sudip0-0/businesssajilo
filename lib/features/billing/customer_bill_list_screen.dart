@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/bs_date.dart';
 import '../../core/ui/bill_status_chip.dart';
@@ -8,6 +7,7 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/utils/money.dart';
+import 'bill_navigation.dart';
 import 'providers.dart';
 
 class CustomerBillListScreen extends ConsumerWidget {
@@ -58,7 +58,7 @@ class CustomerBillListScreen extends ConsumerWidget {
                   ],
                 ),
                 onTap: () async {
-                  final changed = await context.push<bool>('/bill/${bill.id}');
+                  final changed = await pushBillDetail(context, ref, bill.id);
                   if (changed == true) {
                     ref.invalidate(billListProvider);
                   }

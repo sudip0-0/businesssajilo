@@ -10,6 +10,7 @@ import '../../core/ui/list_skeleton.dart';
 import '../../core/utils/money.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../data/repositories/members_repository.dart';
+import '../billing/bill_navigation.dart';
 import '../staff/reset_member_password_sheet.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
@@ -226,12 +227,18 @@ class CustomerDetailScreen extends ConsumerWidget {
                           '${l10n.entryPayment}${entry.description.isNotEmpty ? ' · ${entry.description}' : ''}',
                         _ => entry.description,
                       };
+                      final billId = entry.entryType == 'bill'
+                          ? entry.refId
+                          : null;
                       return LedgerRow(
                         date: entry.occurredAt,
                         description: description,
                         debit: Paisa(entry.debitPaisa),
                         credit: Paisa(entry.creditPaisa),
                         runningBalance: Paisa(entry.runningBalance),
+                        onTap: billId == null
+                            ? null
+                            : () => _openBill(context, ref, billId),
                       );
                     },
                   );
@@ -339,6 +346,14 @@ class CustomerDetailScreen extends ConsumerWidget {
           : null,
       body: body,
     );
+  }
+
+  Future<void> _openBill(BuildContext context, WidgetRef ref, String billId) async {
+    final changed = await pushBillDetail(context, ref, billId);
+    if (changed == true && context.mounted) {
+      ref.invalidate(customerLedgerProvider(customerId));
+      ref.invalidate(customerDetailProvider(customerId));
+    }
   }
 }
 
