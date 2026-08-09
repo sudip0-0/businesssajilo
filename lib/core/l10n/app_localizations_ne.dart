@@ -399,6 +399,18 @@ class AppLocalizationsNe extends AppLocalizations {
   String get filterProducts => 'उत्पादन खोज्नुहोस्';
 
   @override
+  String get sortBy => 'क्रमबद्ध गर्नुहोस्';
+
+  @override
+  String get sortName => 'नाम';
+
+  @override
+  String get sortQuantity => 'परिमाण';
+
+  @override
+  String get sortPrice => 'मूल्य';
+
+  @override
   String get addCustomer => 'ग्राहक थप्नुहोस्';
 
   @override

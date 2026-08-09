@@ -21,6 +21,8 @@ import 'reorder_low_stock_sheet.dart';
 
 enum _StockFilter { all, low, out, inStock }
 
+enum _SortField { name, quantity, price }
+
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({
     super.key,
@@ -44,6 +46,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   final _scrollController = ScrollController();
   bool _showInactive = false;
   _StockFilter _stockFilter = _StockFilter.all;
+  _SortField _sortField = _SortField.name;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -109,8 +113,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
 
   List<Product> get _filtered {
     final items = _pager?.items ?? [];
-    return switch (_stockFilter) {
-      _StockFilter.all => items,
+    final filtered = switch (_stockFilter) {
+      _StockFilter.all => List<Product>.from(items),
       _StockFilter.low =>
         items.where((p) => stockLevelFor(p) == StockLevel.lowStock).toList(),
       _StockFilter.out =>
@@ -118,6 +122,15 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       _StockFilter.inStock =>
         items.where((p) => stockLevelFor(p) == StockLevel.inStock).toList(),
     };
+    filtered.sort((a, b) {
+      final cmp = switch (_sortField) {
+        _SortField.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        _SortField.quantity => a.stockCached.compareTo(b.stockCached),
+        _SortField.price => a.referencePrice.compareTo(b.referencePrice),
+      };
+      return _sortAscending ? cmp : -cmp;
+    });
+    return filtered;
   }
 
   @override
@@ -164,6 +177,60 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       onSelected: (_) => _setStockFilter(filter),
                     ),
                   ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: PopupMenuButton<_SortField>(
+                    initialValue: _sortField,
+                    tooltip: l10n.sortBy,
+                    icon: Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                    ),
+                    onSelected: (field) {
+                      if (field == _sortField) {
+                        setState(() => _sortAscending = !_sortAscending);
+                      } else {
+                        setState(() => _sortField = field);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _SortField.name,
+                        child: Text(
+                          l10n.sortName,
+                          style: TextStyle(
+                            fontWeight: _sortField == _SortField.name
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _SortField.quantity,
+                        child: Text(
+                          l10n.sortQuantity,
+                          style: TextStyle(
+                            fontWeight: _sortField == _SortField.quantity
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _SortField.price,
+                        child: Text(
+                          l10n.sortPrice,
+                          style: TextStyle(
+                            fontWeight: _sortField == _SortField.price
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

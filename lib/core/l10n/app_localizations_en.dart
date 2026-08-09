@@ -400,6 +400,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterProducts => 'Search products';
 
   @override
+  String get sortBy => 'Sort by';
+
+  @override
+  String get sortName => 'Name';
+
+  @override
+  String get sortQuantity => 'Quantity';
+
+  @override
+  String get sortPrice => 'Price';
+
+  @override
   String get addCustomer => 'Add customer';
 
   @override

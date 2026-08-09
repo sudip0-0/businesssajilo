@@ -43,6 +43,8 @@ class WebProductListPage extends ConsumerStatefulWidget {
   ConsumerState<WebProductListPage> createState() => _WebProductListPageState();
 }
 
+enum _SortField { name, quantity, price }
+
 class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   static const _searchDebounce = Duration(milliseconds: 300);
 
@@ -52,6 +54,8 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   final _scrollController = ScrollController();
   late final TextEditingController _searchController;
   bool _showInactive = false;
+  _SortField _sortField = _SortField.name;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -127,6 +131,60 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     context.go('${_webRolePrefix(context)}/inventory/${product.id}');
   }
 
+  Widget _buildSortControl(AppLocalizations l10n) {
+    return PopupMenuButton<_SortField>(
+      initialValue: _sortField,
+      tooltip: l10n.sortBy,
+      icon: Icon(
+        _sortAscending
+            ? PhosphorIconsRegular.arrowUp
+            : PhosphorIconsRegular.arrowDown,
+      ),
+      onSelected: (field) {
+        if (field == _sortField) {
+          setState(() => _sortAscending = !_sortAscending);
+        } else {
+          setState(() => _sortField = field);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _SortField.name,
+          child: Text(
+            l10n.sortName,
+            style: TextStyle(
+              fontWeight: _sortField == _SortField.name
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: _SortField.quantity,
+          child: Text(
+            l10n.sortQuantity,
+            style: TextStyle(
+              fontWeight: _sortField == _SortField.quantity
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: _SortField.price,
+          child: Text(
+            l10n.sortPrice,
+            style: TextStyle(
+              fontWeight: _sortField == _SortField.price
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -164,10 +222,18 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: WebSearchField(
-                hint: l10n.filterProducts,
-                controller: _searchController,
-                onChanged: _refreshForQuery,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: WebSearchField(
+                      hint: l10n.filterProducts,
+                      controller: _searchController,
+                      onChanged: _refreshForQuery,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildSortControl(l10n),
+                ],
               ),
             ),
             Expanded(child: _buildListBody(l10n, pager)),
@@ -183,6 +249,19 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
               ),
       ),
     );
+  }
+
+  List<Product> _sorted(List<Product> items) {
+    final sorted = List<Product>.from(items);
+    sorted.sort((a, b) {
+      final cmp = switch (_sortField) {
+        _SortField.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        _SortField.quantity => a.stockCached.compareTo(b.stockCached),
+        _SortField.price => a.referencePrice.compareTo(b.referencePrice),
+      };
+      return _sortAscending ? cmp : -cmp;
+    });
+    return sorted;
   }
 
   Widget _buildListBody(
@@ -225,6 +304,8 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       );
     }
 
+    final sorted = _sorted(pager.items);
+
     return RefreshIndicator(
       onRefresh: () async {
         await pager.refresh();
@@ -232,10 +313,10 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       },
       child: ListView.separated(
         controller: _scrollController,
-        itemCount: pager.items.length + (pager.hasMore ? 1 : 0),
+        itemCount: sorted.length + (pager.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: 0),
         itemBuilder: (context, index) {
-          if (index >= pager.items.length) {
+          if (index >= sorted.length) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
@@ -249,7 +330,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             );
           }
 
-          final product = pager.items[index];
+          final product = sorted[index];
           return _ProductRow(
             product: product,
             selected: product.id == widget.selectedProductId,

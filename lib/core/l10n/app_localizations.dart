@@ -866,6 +866,30 @@ abstract class AppLocalizations {
   /// **'Search products'**
   String get filterProducts;
 
+  /// No description provided for @sortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get sortBy;
+
+  /// No description provided for @sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortName;
+
+  /// No description provided for @sortQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get sortQuantity;
+
+  /// No description provided for @sortPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get sortPrice;
+
   /// No description provided for @addCustomer.
   ///
   /// In en, this message translates to:
