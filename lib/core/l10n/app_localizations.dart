@@ -812,6 +812,18 @@ abstract class AppLocalizations {
   /// **'Pick image'**
   String get pickImage;
 
+  /// No description provided for @initialQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial quantity'**
+  String get initialQuantity;
+
+  /// No description provided for @initialQuantityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock on hand when the product is first added'**
+  String get initialQuantityHint;
+
   /// No description provided for @piece.
   ///
   /// In en, this message translates to:

@@ -372,6 +372,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickImage => 'Pick image';
 
   @override
+  String get initialQuantity => 'Initial quantity';
+
+  @override
+  String get initialQuantityHint =>
+      'Stock on hand when the product is first added';
+
+  @override
   String get piece => 'Piece';
 
   @override

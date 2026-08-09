@@ -1,18 +1,15 @@
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
-import '../../core/validation/image_upload.dart';
 import '../../data/repositories/products_repository.dart';
+import '../../data/repositories/stock_repository.dart';
 import '../../domain/models/product.dart';
-import '../../features/auth/providers/auth_provider.dart';
-import 'product_image.dart';
+import '../auth/providers/auth_provider.dart';
 import 'providers.dart';
 
 String generateProductSku() {
@@ -51,8 +48,7 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   late final TextEditingController _costController;
   late final TextEditingController _refController;
   late final TextEditingController _thresholdController;
-  Uint8List? _imageBytes;
-  String? _imageMime;
+  late final TextEditingController _initialQtyController;
   bool _loading = false;
 
   bool get _isEdit => widget.product != null;
@@ -81,6 +77,7 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     _thresholdController = TextEditingController(
       text: p?.lowStockThreshold.toString() ?? '0',
     );
+    _initialQtyController = TextEditingController();
   }
 
   @override
@@ -92,33 +89,8 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     _costController.dispose();
     _refController.dispose();
     _thresholdController.dispose();
+    _initialQtyController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1024,
-    );
-    if (file == null) return;
-    final bytes = await file.readAsBytes();
-    final uploadError = ImageUpload.validate(bytes);
-    if (uploadError != null) {
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      final message = uploadError == ImageUploadError.tooLarge
-          ? l10n.imageTooLarge
-          : l10n.imageInvalidType;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-      return;
-    }
-    setState(() {
-      _imageBytes = bytes;
-      _imageMime = ImageUpload.sniffMime(bytes) ?? 'image/jpeg';
-    });
   }
 
   /// Optional money field: empty is allowed, otherwise must parse to >= 0.
@@ -131,6 +103,18 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
   Future<void> submit() => _submit();
 
+  /// Records the opening stock of a newly created product as a stock-in
+  /// movement so `stock_cached` is maintained by the movement trigger.
+  Future<void> _recordInitialStock(String productId, int qty) async {
+    final memberId = ref.read(authProvider).value?.member?.id;
+    if (memberId == null) return;
+    await ref.read(stockRepositoryProvider).stockIn(
+      productId: productId,
+      qty: qty,
+      createdByMemberId: memberId,
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -141,9 +125,10 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         final cost = parseNpr(_costController.text)?.value ?? 0;
         final refPrice = parseNpr(_refController.text)?.value ?? 0;
         final threshold = int.tryParse(_thresholdController.text) ?? 0;
-        final session = ref.read(authProvider).value;
-        final businessId = session?.member?.businessId;
         final sku = _skuController.text.trim();
+        final initialQty = _isEdit
+            ? 0
+            : int.tryParse(_initialQtyController.text.trim()) ?? 0;
 
         Product saved;
         if (_isEdit) {
@@ -174,27 +159,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             referencePrice: refPrice,
             lowStockThreshold: threshold,
           );
-        }
-
-        if (_imageBytes != null && businessId != null) {
-          final path = await repo.uploadImage(
-            businessId: businessId,
-            productId: saved.id,
-            bytes: _imageBytes!,
-            mimeType: _imageMime ?? 'image/jpeg',
-          );
-          saved = await repo.update(
-            id: saved.id,
-            name: saved.name,
-            nameNp: saved.nameNp,
-            sku: saved.sku,
-            categoryId: saved.categoryId,
-            unit: saved.unit,
-            costPrice: saved.costPrice,
-            referencePrice: saved.referencePrice,
-            lowStockThreshold: saved.lowStockThreshold,
-            imageUrl: path,
-          );
+          if (initialQty > 0) {
+            await _recordInitialStock(saved.id, initialQty);
+          }
         }
 
         bumpInventoryRevision(ref);
@@ -239,20 +206,6 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_imageBytes != null)
-                  Image.memory(_imageBytes!, height: 120, fit: BoxFit.cover)
-                else if (_isEdit)
-                  ProductImage(
-                    storagePath: widget.product!.imageUrl,
-                    size: 120,
-                  ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _pickImage,
-                  icon: const Icon(Icons.image_outlined),
-                  label: Text(l10n.pickImage),
-                ),
-                const SizedBox(height: 16),
                 _fieldRow(
                   twoCol: twoCol,
                   left: TextFormField(
@@ -303,6 +256,23 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                if (!_isEdit) ...[
+                  TextFormField(
+                    controller: _initialQtyController,
+                    decoration: InputDecoration(
+                      labelText: l10n.initialQuantity,
+                      helperText: l10n.initialQuantityHint,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return null;
+                      final n = int.tryParse(v.trim());
+                      if (n == null || n < 0) return l10n.invalidNumber;
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextFormField(
                   controller: _thresholdController,
                   decoration: InputDecoration(

@@ -133,6 +133,8 @@
   "deactivateProductConfirm": "Deactivate this product? It will be hidden from sales.",
   "imageOptional": "Product image (optional)",
   "pickImage": "Pick image",
+  "initialQuantity": "Initial quantity",
+  "initialQuantityHint": "Stock on hand when the product is first added",
   "piece": "Piece",
   "stockAdjust": "Adjust stock",
   "qtyChange": "Quantity change",

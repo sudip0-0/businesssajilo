@@ -133,6 +133,8 @@
   "deactivateProductConfirm": "यो उत्पादन निष्क्रिय गर्ने? बिक्रीबाट लुकाइनेछ।",
   "imageOptional": "उत्पादन तस्बिर (वैकल्पिक)",
   "pickImage": "तस्बिर छान्नुहोस्",
+  "initialQuantity": "प्रारम्भिक परिमाण",
+  "initialQuantityHint": "उत्पादन थप्दा स्टकमा रहेको परिमाण",
   "piece": "पिस",
   "stockAdjust": "स्टक समायोजन",
   "qtyChange": "परिमाण परिवर्तन",

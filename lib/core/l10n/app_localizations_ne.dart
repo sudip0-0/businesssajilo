@@ -372,6 +372,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get pickImage => 'तस्बिर छान्नुहोस्';
 
   @override
+  String get initialQuantity => 'प्रारम्भिक परिमाण';
+
+  @override
+  String get initialQuantityHint => 'उत्पादन थप्दा स्टकमा रहेको परिमाण';
+
+  @override
   String get piece => 'पिस';
 
   @override

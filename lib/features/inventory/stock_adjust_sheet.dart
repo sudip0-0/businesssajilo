@@ -78,13 +78,35 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(value: false, label: Text('+ ${l10n.qtyChange}')),
-                ButtonSegment(value: true, label: Text('- ${l10n.qtyChange}')),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() => _negative = false),
+                    icon: const Icon(Icons.add),
+                    label: Text('+ ${l10n.qtyChange}'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor:
+                          _negative ? BsColors.success : Colors.white,
+                      backgroundColor: _negative ? null : BsColors.success,
+                      side: const BorderSide(color: BsColors.success),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() => _negative = true),
+                    icon: const Icon(Icons.remove),
+                    label: Text('- ${l10n.qtyChange}'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _negative ? Colors.white : BsColors.danger,
+                      backgroundColor: _negative ? BsColors.danger : null,
+                      side: const BorderSide(color: BsColors.danger),
+                    ),
+                  ),
+                ),
               ],
-              selected: {_negative},
-              onSelectionChanged: (s) => setState(() => _negative = s.first),
             ),
             const SizedBox(height: 12),
             Center(

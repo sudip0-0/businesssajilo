@@ -129,7 +129,7 @@ class SyncingStockRepository implements StockRepository {
   Future<int> _projectedStock(String productId, int delta) async {
     final product = await (_db.select(
       _db.localProducts,
-    )..where((p) => p.id.equals(productId))).getSingle();
-    return product.stockCached + delta;
+    )..where((p) => p.id.equals(productId))).getSingleOrNull();
+    return (product?.stockCached ?? 0) + delta;
   }
 }
