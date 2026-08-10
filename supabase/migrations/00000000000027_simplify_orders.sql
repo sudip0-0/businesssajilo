@@ -2,7 +2,7 @@
 -- Retires quote/fulfillment status sync; billing allowed from placed|received.
 
 -- ---------------------------------------------------------------------------
--- 1. Drop status-dependent triggers before remapping
+-- 1. Drop status-dependent triggers and policies before remapping
 -- ---------------------------------------------------------------------------
 
 drop trigger if exists orders_validate_status on orders;
@@ -10,6 +10,12 @@ drop trigger if exists orders_dispatch_stock on orders;
 drop trigger if exists orders_notify_status_changed on orders;
 drop trigger if exists quotes_sent_sync_order on quotes;
 drop trigger if exists quotes_response_sync_order on quotes;
+
+-- Policies that cast/compare status to the old enum block ALTER TYPE.
+drop policy if exists "customer inserts own orders" on orders;
+drop policy if exists "warehouse reads fulfillment orders" on orders;
+drop policy if exists "warehouse updates fulfillment orders" on orders;
+drop policy if exists "customer inserts own order items" on order_items;
 
 -- ---------------------------------------------------------------------------
 -- 2. Remap status column via text, then replace enum
@@ -37,6 +43,26 @@ alter table orders
 
 alter table orders
   alter column status set default 'placed'::order_status;
+
+-- Recreate status-dependent policies for the simplified model.
+create policy "customer inserts own orders" on orders
+  for insert with check (
+    business_id = current_business_id()
+    and current_role_name() = 'customer'
+    and customer_id = own_customer_id()
+    and status = 'placed'
+  );
+
+-- Warehouse no longer participates in order fulfillment.
+create policy "customer inserts own order items" on order_items
+  for insert with check (
+    order_id in (
+      select id from orders
+      where customer_id = own_customer_id()
+        and status = 'placed'
+        and business_id = current_business_id()
+    )
+  );
 
 -- ---------------------------------------------------------------------------
 -- 2. Transitions: placed → received|billed; received → billed
@@ -452,3 +478,63 @@ end;
 $$;
 
 grant execute on function send_quote(uuid, jsonb) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 7. Dashboard pending count = placed only
+-- ---------------------------------------------------------------------------
+
+create or replace function owner_dashboard_stats()
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+  with
+  today as (
+    select (timezone('Asia/Kathmandu', now()))::date as d
+  ),
+  sales as (
+    select
+      coalesce(sum(case when r.sale_date = t.d then r.total_sales else 0 end), 0)::bigint
+        as today_sales,
+      coalesce(sum(case when r.sale_date = (t.d - 1) then r.total_sales else 0 end), 0)::bigint
+        as yesterday_sales
+    from today t
+    left join report_sales_daily r
+      on r.sale_date in (t.d, t.d - 1)
+     and r.business_id = current_business_id()
+  ),
+  dues as (
+    select coalesce(sum(cb.balance_due), 0)::bigint as total_dues
+    from customer_balances cb
+    where cb.business_id = current_business_id()
+      and cb.balance_due > 0
+      and current_role_name() in ('owner', 'sales')
+  ),
+  low_stock as (
+    select count(*)::int as low_stock_count
+    from products p
+    where p.business_id = current_business_id()
+      and p.is_active = true
+      and p.low_stock_threshold > 0
+      and p.stock_cached <= p.low_stock_threshold
+      and current_role_name() in ('owner', 'sales', 'warehouse')
+  ),
+  pending as (
+    select count(*)::int as pending_orders
+    from orders o
+    where o.business_id = current_business_id()
+      and o.status = 'placed'
+      and current_role_name() in ('owner', 'sales')
+  )
+  select jsonb_build_object(
+    'today_sales', (select today_sales from sales),
+    'yesterday_sales', (select yesterday_sales from sales),
+    'total_dues', (select total_dues from dues),
+    'low_stock_count', (select low_stock_count from low_stock),
+    'pending_orders', (select pending_orders from pending)
+  );
+$$;
+
+grant execute on function owner_dashboard_stats() to authenticated;
