@@ -17,6 +17,10 @@ import 'add_customer_sheet.dart';
 import 'customer_detail_screen.dart';
 import 'providers.dart';
 
+enum _CustomerBalanceFilter { all, due, credit, settled }
+
+enum _CustomerSortField { name, balance, date }
+
 class CustomerListScreen extends ConsumerStatefulWidget {
   const CustomerListScreen({
     super.key,
@@ -36,6 +40,9 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   String? _selectedCustomerId;
   PaginatedListState<Customer>? _pager;
   final _scrollController = ScrollController();
+  _CustomerBalanceFilter _filter = _CustomerBalanceFilter.all;
+  _CustomerSortField _sortField = _CustomerSortField.name;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -74,6 +81,38 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     _pager?.refresh();
   }
 
+  void _setFilter(_CustomerBalanceFilter filter) {
+    if (_filter == filter) return;
+    setState(() => _filter = filter);
+    if (filter != _CustomerBalanceFilter.all) {
+      // Balance filters are applied client-side, so make sure the whole
+      // customer list is loaded before showing a filtered view.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _pager?.loadAll());
+    }
+  }
+
+  List<Customer> get _filtered {
+    final items = _pager?.items ?? [];
+    final filtered = switch (_filter) {
+      _CustomerBalanceFilter.all => List<Customer>.from(items),
+      _CustomerBalanceFilter.due =>
+        items.where((c) => c.balanceDue > 0).toList(),
+      _CustomerBalanceFilter.credit =>
+        items.where((c) => c.balanceDue < 0).toList(),
+      _CustomerBalanceFilter.settled =>
+        items.where((c) => c.balanceDue == 0).toList(),
+    };
+    filtered.sort((a, b) {
+      final cmp = switch (_sortField) {
+        _CustomerSortField.name => a.shopName.toLowerCase().compareTo(b.shopName.toLowerCase()),
+        _CustomerSortField.balance => a.balanceDue.compareTo(b.balanceDue),
+        _CustomerSortField.date => (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+      };
+      return _sortAscending ? cmp : -cmp;
+    });
+    return filtered;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -100,6 +139,84 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               prefixIcon: const Icon(Icons.search),
             ),
             onChanged: _onQueryChanged,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final (filter, label) in [
+                  (_CustomerBalanceFilter.all, l10n.allCustomers),
+                  (_CustomerBalanceFilter.due, l10n.customerFilterDues),
+                  (_CustomerBalanceFilter.credit, l10n.creditBalance),
+                  (_CustomerBalanceFilter.settled, l10n.customerFilterSettled),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(label),
+                      selected: _filter == filter,
+                      onSelected: (_) => _setFilter(filter),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: PopupMenuButton<_CustomerSortField>(
+                    initialValue: _sortField,
+                    tooltip: l10n.sortBy,
+                    icon: Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                    ),
+                    onSelected: (field) {
+                      if (field == _sortField) {
+                        setState(() => _sortAscending = !_sortAscending);
+                      } else {
+                        setState(() => _sortField = field);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _CustomerSortField.name,
+                        child: Text(
+                          l10n.sortName,
+                          style: TextStyle(
+                            fontWeight: _sortField == _CustomerSortField.name
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _CustomerSortField.balance,
+                        child: Text(
+                          l10n.balance,
+                          style: TextStyle(
+                            fontWeight: _sortField == _CustomerSortField.balance
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _CustomerSortField.date,
+                        child: Text(
+                          l10n.sortDate,
+                          style: TextStyle(
+                            fontWeight: _sortField == _CustomerSortField.date
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         Expanded(child: _buildListBody(l10n, pager)),
@@ -129,21 +246,28 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     if (pager.error != null && pager.items.isEmpty) {
       return ErrorState(onRetry: () => pager.refresh());
     }
-    final items = pager.items;
+    final items = _filtered;
     if (items.isEmpty) {
       final searching = _query.trim().isNotEmpty;
+      final filtering = _filter != _CustomerBalanceFilter.all;
       return EmptyState(
         icon: Icons.storefront_outlined,
-        message: searching ? l10n.noSearchResults : l10n.noCustomers,
+        message: searching
+            ? l10n.noSearchResults
+            : (filtering ? l10n.noMatchingResults : l10n.noCustomers),
         actionLabel: searching
             ? l10n.clearSearch
-            : (widget.canEdit ? l10n.addCustomer : null),
+            : (filtering
+                ? l10n.allCustomers
+                : (widget.canEdit ? l10n.addCustomer : null)),
         onAction: searching
             ? () {
                 setState(() => _query = '');
                 pager.refresh();
               }
-            : (widget.canEdit ? () => _openAddCustomer(context) : null),
+            : (filtering
+                ? () => _setFilter(_CustomerBalanceFilter.all)
+                : (widget.canEdit ? () => _openAddCustomer(context) : null)),
       );
     }
     return RefreshIndicator(

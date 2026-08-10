@@ -485,6 +485,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterCustomers => 'Search customers';
 
   @override
+  String get allCustomers => 'All customers';
+
+  @override
+  String get customerFilterDues => 'With dues';
+
+  @override
+  String get customerFilterSettled => 'Settled';
+
+  @override
   String get paymentMethodCash => 'Cash';
 
   @override
@@ -534,6 +543,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterBills => 'Search bills';
+
+  @override
+  String get allBills => 'All bills';
+
+  @override
+  String get sortDate => 'Date';
+
+  @override
+  String get sortAmount => 'Amount';
+
+  @override
+  String get sortCustomer => 'Customer';
 
   @override
   String get entryBill => 'Bill';

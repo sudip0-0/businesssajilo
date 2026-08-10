@@ -484,6 +484,15 @@ class AppLocalizationsNe extends AppLocalizations {
   String get filterCustomers => 'ग्राहक खोज्नुहोस्';
 
   @override
+  String get allCustomers => 'सबै ग्राहकहरू';
+
+  @override
+  String get customerFilterDues => 'बाँकी भएका';
+
+  @override
+  String get customerFilterSettled => 'सुल्टाइएको';
+
+  @override
   String get paymentMethodCash => 'नगद';
 
   @override
@@ -533,6 +542,18 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get filterBills => 'बिल खोज्नुहोस्';
+
+  @override
+  String get allBills => 'सबै बिल';
+
+  @override
+  String get sortDate => 'मिति';
+
+  @override
+  String get sortAmount => 'रकम';
+
+  @override
+  String get sortCustomer => 'ग्राहक';
 
   @override
   String get entryBill => 'बिल';

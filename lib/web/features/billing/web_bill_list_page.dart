@@ -10,6 +10,7 @@ import '../../../core/ui/error_state.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
+import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../features/billing/bill_detail_screen.dart';
 import '../../../features/billing/providers.dart';
@@ -36,10 +37,17 @@ class WebBillListPage extends ConsumerStatefulWidget {
   ConsumerState<WebBillListPage> createState() => _WebBillListPageState();
 }
 
+enum _BillStatusFilter { all, paid, partial, due }
+
+enum _BillSortField { date, amount, customer }
+
 class _WebBillListPageState extends ConsumerState<WebBillListPage> {
   PaginatedListState<Bill>? _pager;
   final _scrollController = ScrollController();
   DebouncedListSearchController<Bill>? _search;
+  _BillStatusFilter _statusFilter = _BillStatusFilter.all;
+  _BillSortField _sortField = _BillSortField.date;
+  bool _sortAscending = false;
 
   @override
   void initState() {
@@ -77,8 +85,83 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
 
   void _onQueryChanged(String value) => _search?.onQueryChanged(value);
 
+  List<Bill> _applyFilters(List<Bill> bills) {
+    final filtered = switch (_statusFilter) {
+      _BillStatusFilter.all => List<Bill>.from(bills),
+      _BillStatusFilter.paid =>
+        bills.where((b) => b.status == BillStatus.paid).toList(),
+      _BillStatusFilter.partial =>
+        bills.where((b) => b.status == BillStatus.partial).toList(),
+      _BillStatusFilter.due =>
+        bills.where((b) => b.status == BillStatus.due).toList(),
+    };
+    filtered.sort((a, b) {
+      final cmp = switch (_sortField) {
+        _BillSortField.date => (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        _BillSortField.amount => a.grandTotal.compareTo(b.grandTotal),
+        _BillSortField.customer => (a.customerShopName ?? '').toLowerCase().compareTo((b.customerShopName ?? '').toLowerCase()),
+      };
+      return _sortAscending ? cmp : -cmp;
+    });
+    return filtered;
+  }
+
   void _selectBill(Bill bill) {
     context.go('${_webRolePrefix(context)}/billing/${bill.id}');
+  }
+
+  Widget _buildSortControl(AppLocalizations l10n) {
+    return PopupMenuButton<_BillSortField>(
+      initialValue: _sortField,
+      tooltip: l10n.sortBy,
+      icon: Icon(
+        _sortAscending
+            ? PhosphorIconsRegular.arrowUp
+            : PhosphorIconsRegular.arrowDown,
+      ),
+      onSelected: (field) {
+        if (field == _sortField) {
+          setState(() => _sortAscending = !_sortAscending);
+        } else {
+          setState(() => _sortField = field);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _BillSortField.date,
+          child: Text(
+            l10n.sortDate,
+            style: TextStyle(
+              fontWeight: _sortField == _BillSortField.date
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: _BillSortField.amount,
+          child: Text(
+            l10n.sortAmount,
+            style: TextStyle(
+              fontWeight: _sortField == _BillSortField.amount
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: _BillSortField.customer,
+          child: Text(
+            l10n.sortCustomer,
+            style: TextStyle(
+              fontWeight: _sortField == _BillSortField.customer
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -109,10 +192,43 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: WebSearchField(
                 hint: l10n.filterBills,
                 onChanged: _onQueryChanged,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final (filter, label) in [
+                            (_BillStatusFilter.all, l10n.allBills),
+                            (_BillStatusFilter.paid, l10n.paid),
+                            (_BillStatusFilter.partial, l10n.partial),
+                            (_BillStatusFilter.due, l10n.due),
+                          ])
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: FilterChip(
+                                label: Text(label),
+                                selected: _statusFilter == filter,
+                                onSelected: (_) => setState(
+                                  () => _statusFilter = filter,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _buildSortControl(l10n),
+                ],
               ),
             ),
             Expanded(child: _buildListBody(l10n, pager)),
@@ -140,13 +256,20 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
           onRetry: search.retry,
         );
       }
-      final results = search.results ?? const <Bill>[];
+      final results = _applyFilters(search.results ?? const <Bill>[]);
       if (results.isEmpty) {
+        final filtering = _statusFilter != _BillStatusFilter.all;
         return WebEmptyState(
-          message: l10n.noSearchResults,
+          message: filtering ? l10n.noMatchingResults : l10n.noSearchResults,
           icon: PhosphorIconsRegular.receipt,
-          actionLabel: l10n.clearSearch,
-          onAction: () => _search?.onQueryChanged(''),
+          actionLabel: filtering ? l10n.allBills : l10n.clearSearch,
+          onAction: () {
+            if (filtering) {
+              setState(() => _statusFilter = _BillStatusFilter.all);
+            } else {
+              _search?.onQueryChanged('');
+            }
+          },
         );
       }
       return ListView.separated(
@@ -174,12 +297,16 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
         icon: PhosphorIconsRegular.warning,
       );
     }
-    if (pager.items.isEmpty) {
+    final filtered = _applyFilters(pager.items);
+    if (filtered.isEmpty) {
+      final filtering = _statusFilter != _BillStatusFilter.all;
       return WebEmptyState(
-        message: l10n.noBills,
+        message: filtering ? l10n.noMatchingResults : l10n.noBills,
         icon: PhosphorIconsRegular.receipt,
-        actionLabel: l10n.newBill,
-        onAction: () => context.push('${_webRolePrefix(context)}/billing/new'),
+        actionLabel: filtering ? l10n.allBills : l10n.newBill,
+        onAction: filtering
+            ? () => setState(() => _statusFilter = _BillStatusFilter.all)
+            : () => context.push('${_webRolePrefix(context)}/billing/new'),
       );
     }
 
@@ -187,10 +314,10 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
       onRefresh: () => pager.refresh(),
       child: ListView.separated(
         controller: _scrollController,
-        itemCount: pager.items.length + (pager.hasMore ? 1 : 0),
+        itemCount: filtered.length + (pager.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(height: 0),
         itemBuilder: (context, index) {
-          if (index >= pager.items.length) {
+          if (index >= filtered.length) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
@@ -203,7 +330,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
               ),
             );
           }
-          final bill = pager.items[index];
+          final bill = filtered[index];
           return _BillRow(
             bill: bill,
             selected: widget.selectedBillId == bill.id,

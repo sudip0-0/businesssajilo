@@ -41,10 +41,17 @@ class WebCustomerListPage extends ConsumerStatefulWidget {
       _WebCustomerListPageState();
 }
 
+enum _CustomerBalanceFilter { all, due, credit, settled }
+
+enum _CustomerSortField { name, balance, date }
+
 class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   String _query = '';
   PaginatedListState<Customer>? _pager;
   final _scrollController = ScrollController();
+  _CustomerBalanceFilter _filter = _CustomerBalanceFilter.all;
+  _CustomerSortField _sortField = _CustomerSortField.name;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -83,8 +90,98 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     _pager?.refresh();
   }
 
+  void _setFilter(_CustomerBalanceFilter filter) {
+    if (_filter == filter) return;
+    setState(() => _filter = filter);
+    if (filter != _CustomerBalanceFilter.all) {
+      // Balance filters are applied client-side, so make sure the whole
+      // customer list is loaded before showing a filtered view.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _pager?.loadAll());
+    }
+  }
+
+  List<Customer> get _filtered {
+    final items = _pager?.items ?? [];
+    final filtered = switch (_filter) {
+      _CustomerBalanceFilter.all => List<Customer>.from(items),
+      _CustomerBalanceFilter.due =>
+        items.where((c) => c.balanceDue > 0).toList(),
+      _CustomerBalanceFilter.credit =>
+        items.where((c) => c.balanceDue < 0).toList(),
+      _CustomerBalanceFilter.settled =>
+        items.where((c) => c.balanceDue == 0).toList(),
+    };
+    filtered.sort((a, b) {
+      final cmp = switch (_sortField) {
+        _CustomerSortField.name =>
+          a.shopName.toLowerCase().compareTo(b.shopName.toLowerCase()),
+        _CustomerSortField.balance => a.balanceDue.compareTo(b.balanceDue),
+        _CustomerSortField.date =>
+          (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+          ),
+      };
+      return _sortAscending ? cmp : -cmp;
+    });
+    return filtered;
+  }
+
   void _selectCustomer(Customer customer) {
     context.go('${_webRolePrefix(context)}/customers/${customer.id}');
+  }
+
+  Widget _buildSortControl(AppLocalizations l10n) {
+    return PopupMenuButton<_CustomerSortField>(
+      initialValue: _sortField,
+      tooltip: l10n.sortBy,
+      icon: Icon(
+        _sortAscending
+            ? PhosphorIconsRegular.arrowUp
+            : PhosphorIconsRegular.arrowDown,
+      ),
+      onSelected: (field) {
+        if (field == _sortField) {
+          setState(() => _sortAscending = !_sortAscending);
+        } else {
+          setState(() => _sortField = field);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _CustomerSortField.name,
+          child: Text(
+            l10n.sortName,
+            style: TextStyle(
+              fontWeight: _sortField == _CustomerSortField.name
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: _CustomerSortField.balance,
+          child: Text(
+            l10n.balance,
+            style: TextStyle(
+              fontWeight: _sortField == _CustomerSortField.balance
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: _CustomerSortField.date,
+          child: Text(
+            l10n.sortDate,
+            style: TextStyle(
+              fontWeight: _sortField == _CustomerSortField.date
+                  ? FontWeight.bold
+                  : null,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -117,10 +214,47 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: WebSearchField(
                 hint: l10n.filterCustomers,
                 onChanged: _onQueryChanged,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final (filter, label) in [
+                          (_CustomerBalanceFilter.all, l10n.allCustomers),
+                          (
+                            _CustomerBalanceFilter.due,
+                            l10n.customerFilterDues,
+                          ),
+                          (
+                            _CustomerBalanceFilter.credit,
+                            l10n.creditBalance,
+                          ),
+                          (
+                            _CustomerBalanceFilter.settled,
+                            l10n.customerFilterSettled,
+                          ),
+                        ])
+                          FilterChip(
+                            label: Text(label),
+                            selected: _filter == filter,
+                            onSelected: (_) => _setFilter(filter),
+                          ),
+                      ],
+                    ),
+                  ),
+                  _buildSortControl(l10n),
+                ],
               ),
             ),
             Expanded(child: _buildListBody(l10n, pager)),
@@ -153,23 +287,31 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
         icon: PhosphorIconsRegular.warning,
       );
     }
-    final items = pager.items;
+    final items = _filtered;
     if (items.isEmpty) {
       final searching = _query.isNotEmpty;
+      final filtering = _filter != _CustomerBalanceFilter.all;
       return WebEmptyState(
-        message: searching ? l10n.noSearchResults : l10n.noCustomers,
+        message: searching
+            ? l10n.noSearchResults
+            : (filtering ? l10n.noMatchingResults : l10n.noCustomers),
         icon: PhosphorIconsRegular.storefront,
         actionLabel: searching
             ? l10n.clearSearch
-            : (widget.canEdit ? l10n.addCustomer : null),
+            : (filtering
+                ? l10n.allCustomers
+                : (widget.canEdit ? l10n.addCustomer : null)),
         onAction: searching
             ? () {
                 setState(() => _query = '');
                 pager.refresh();
               }
-            : (widget.canEdit
-                  ? () => context.go('${_webRolePrefix(context)}/customers/new')
-                  : null),
+            : (filtering
+                ? () => _setFilter(_CustomerBalanceFilter.all)
+                : (widget.canEdit
+                    ? () =>
+                        context.go('${_webRolePrefix(context)}/customers/new')
+                    : null)),
       );
     }
 

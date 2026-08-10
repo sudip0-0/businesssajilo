@@ -1034,6 +1034,24 @@ abstract class AppLocalizations {
   /// **'Search customers'**
   String get filterCustomers;
 
+  /// No description provided for @allCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'All customers'**
+  String get allCustomers;
+
+  /// No description provided for @customerFilterDues.
+  ///
+  /// In en, this message translates to:
+  /// **'With dues'**
+  String get customerFilterDues;
+
+  /// No description provided for @customerFilterSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get customerFilterSettled;
+
   /// No description provided for @paymentMethodCash.
   ///
   /// In en, this message translates to:
@@ -1135,6 +1153,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search bills'**
   String get filterBills;
+
+  /// No description provided for @allBills.
+  ///
+  /// In en, this message translates to:
+  /// **'All bills'**
+  String get allBills;
+
+  /// No description provided for @sortDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get sortDate;
+
+  /// No description provided for @sortAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get sortAmount;
+
+  /// No description provided for @sortCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get sortCustomer;
 
   /// No description provided for @entryBill.
   ///

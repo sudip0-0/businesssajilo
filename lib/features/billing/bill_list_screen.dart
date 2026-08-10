@@ -14,6 +14,7 @@ import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/paginated_list_state.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/bills_repository.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import 'bill_detail_screen.dart';
 import 'bill_form_screen.dart';
@@ -26,11 +27,18 @@ class BillListScreen extends ConsumerStatefulWidget {
   ConsumerState<BillListScreen> createState() => _BillListScreenState();
 }
 
+enum _BillStatusFilter { all, paid, partial, due }
+
+enum _BillSortField { date, amount, customer }
+
 class _BillListScreenState extends ConsumerState<BillListScreen> {
   String? _selectedBillId;
   PaginatedListState<Bill>? _pager;
   final _scrollController = ScrollController();
   DebouncedListSearchController<Bill>? _search;
+  _BillStatusFilter _statusFilter = _BillStatusFilter.all;
+  _BillSortField _sortField = _BillSortField.date;
+  bool _sortAscending = false;
 
   @override
   void initState() {
@@ -68,6 +76,27 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
 
   void _onQueryChanged(String value) => _search?.onQueryChanged(value);
 
+  List<Bill> _applyFilters(List<Bill> bills) {
+    final filtered = switch (_statusFilter) {
+      _BillStatusFilter.all => List<Bill>.from(bills),
+      _BillStatusFilter.paid =>
+        bills.where((b) => b.status == BillStatus.paid).toList(),
+      _BillStatusFilter.partial =>
+        bills.where((b) => b.status == BillStatus.partial).toList(),
+      _BillStatusFilter.due =>
+        bills.where((b) => b.status == BillStatus.due).toList(),
+    };
+    filtered.sort((a, b) {
+      final cmp = switch (_sortField) {
+        _BillSortField.date => (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        _BillSortField.amount => a.grandTotal.compareTo(b.grandTotal),
+        _BillSortField.customer => (a.customerShopName ?? '').toLowerCase().compareTo((b.customerShopName ?? '').toLowerCase()),
+      };
+      return _sortAscending ? cmp : -cmp;
+    });
+    return filtered;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -89,6 +118,84 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
               prefixIcon: const Icon(Icons.search),
             ),
             onChanged: _onQueryChanged,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final (filter, label) in [
+                  (_BillStatusFilter.all, l10n.allBills),
+                  (_BillStatusFilter.paid, l10n.paid),
+                  (_BillStatusFilter.partial, l10n.partial),
+                  (_BillStatusFilter.due, l10n.due),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(label),
+                      selected: _statusFilter == filter,
+                      onSelected: (_) => setState(() => _statusFilter = filter),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: PopupMenuButton<_BillSortField>(
+                    initialValue: _sortField,
+                    tooltip: l10n.sortBy,
+                    icon: Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                    ),
+                    onSelected: (field) {
+                      if (field == _sortField) {
+                        setState(() => _sortAscending = !_sortAscending);
+                      } else {
+                        setState(() => _sortField = field);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _BillSortField.date,
+                        child: Text(
+                          l10n.sortDate,
+                          style: TextStyle(
+                            fontWeight: _sortField == _BillSortField.date
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _BillSortField.amount,
+                        child: Text(
+                          l10n.sortAmount,
+                          style: TextStyle(
+                            fontWeight: _sortField == _BillSortField.amount
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: _BillSortField.customer,
+                        child: Text(
+                          l10n.sortCustomer,
+                          style: TextStyle(
+                            fontWeight: _sortField == _BillSortField.customer
+                                ? FontWeight.bold
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         Expanded(child: _buildListBody(l10n, pager)),
@@ -118,13 +225,20 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
           onRetry: search.retry,
         );
       }
-      final results = search.results ?? const <Bill>[];
+      final results = _applyFilters(search.results ?? const <Bill>[]);
       if (results.isEmpty) {
+        final filtering = _statusFilter != _BillStatusFilter.all;
         return EmptyState(
           icon: Icons.receipt_long_outlined,
-          message: l10n.noSearchResults,
-          actionLabel: l10n.clearSearch,
-          onAction: () => _search?.onQueryChanged(''),
+          message: filtering ? l10n.noMatchingResults : l10n.noSearchResults,
+          actionLabel: filtering ? l10n.allBills : l10n.clearSearch,
+          onAction: () {
+            if (filtering) {
+              setState(() => _statusFilter = _BillStatusFilter.all);
+            } else {
+              _search?.onQueryChanged('');
+            }
+          },
         );
       }
       return ListView.separated(
@@ -146,13 +260,16 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     if (pager.error != null && pager.items.isEmpty) {
       return ErrorState(onRetry: () => pager.refresh());
     }
-    final filtered = pager.items;
+    final filtered = _applyFilters(pager.items);
     if (filtered.isEmpty) {
+      final filtering = _statusFilter != _BillStatusFilter.all;
       return EmptyState(
         icon: Icons.receipt_long_outlined,
-        message: l10n.noBills,
-        actionLabel: l10n.newBill,
-        onAction: () => _openForm(context),
+        message: filtering ? l10n.noMatchingResults : l10n.noBills,
+        actionLabel: filtering ? l10n.allBills : l10n.newBill,
+        onAction: filtering
+            ? () => setState(() => _statusFilter = _BillStatusFilter.all)
+            : () => _openForm(context),
       );
     }
     return RefreshIndicator(
