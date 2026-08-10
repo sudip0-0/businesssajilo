@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/submit_action.dart';
 import '../../data/repositories/orders_repository.dart';
@@ -38,9 +39,7 @@ class _CartSheetState extends ConsumerState<CartSheet> {
     final customer = await ref.read(ownCustomerProvider.future);
     if (!mounted) return;
     if (customer == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.accountNotLinked)));
+      showBsSnackBar(context, message: l10n.accountNotLinked);
       return;
     }
 
@@ -55,9 +54,7 @@ class _CartSheetState extends ConsumerState<CartSheet> {
           _qty.remove(id);
         }
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.removedUnavailableItems)));
+      showBsSnackBar(context, message: l10n.removedUnavailableItems);
       if (_qty.isEmpty) return;
     }
 

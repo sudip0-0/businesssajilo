@@ -181,7 +181,15 @@ class _BillLinesHeader extends StatelessWidget {
     );
     return Row(
       children: [
-        Expanded(flex: 4, child: Text(l10n.productName, style: style)),
+        Expanded(
+          flex: 4,
+          child: Text(
+            l10n.productName,
+            style: style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         SizedBox(
           width: 56,
           child: Text(l10n.qty, style: style, textAlign: TextAlign.center),
@@ -222,7 +230,12 @@ class _BillLineRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 4,
-            child: Text(name, style: body),
+            child: Text(
+              name,
+              style: body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           SizedBox(
             width: 56,

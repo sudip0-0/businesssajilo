@@ -53,17 +53,21 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
           subtitle: Text(
             locale.languageCode == 'ne' ? l10n.nepali : l10n.english,
           ),
-          trailing: SegmentedButton<String>(
-            segments: [
-              ButtonSegment(value: 'en', label: Text(l10n.english)),
-              ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
-            ],
-            selected: {locale.languageCode},
-            onSelectionChanged: (selected) {
-              ref
-                  .read(localeProvider.notifier)
-                  .setLocale(Locale(selected.first));
-            },
+          trailing: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: SegmentedButton<String>(
+              segments: [
+                ButtonSegment(value: 'en', label: Text(l10n.english)),
+                ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
+              ],
+              selected: {locale.languageCode},
+              onSelectionChanged: (selected) {
+                ref
+                    .read(localeProvider.notifier)
+                    .setLocale(Locale(selected.first));
+              },
+            ),
           ),
         ),
       ],

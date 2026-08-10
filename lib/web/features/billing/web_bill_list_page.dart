@@ -379,6 +379,8 @@ class _BillRow extends StatelessWidget {
                 children: [
                   Text(
                     bill.billNo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -386,6 +388,8 @@ class _BillRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     customerLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.outline,
                     ),

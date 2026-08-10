@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/ui/inline_form_action.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import 'login_screen.dart';
@@ -43,9 +44,7 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
             .sendPasswordResetEmail(_emailController.text);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.resetEmailSent)));
+          showBsSnackBar(context, message: l10n.resetEmailSent);
         }
       },
       onState: ({required loading, error}) => setState(() {

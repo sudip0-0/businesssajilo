@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
@@ -61,8 +62,10 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
           l10n.amountMustBePositive,
         RecordPaymentValidationError.noCustomer => l10n.selectCustomer,
       };
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: BsColors.danger),
+      showBsSnackBar(
+        context,
+        message: message,
+        backgroundColor: BsColors.danger,
       );
       return;
     }

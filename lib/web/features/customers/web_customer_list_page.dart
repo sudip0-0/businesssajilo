@@ -419,11 +419,17 @@ class _CustomerRow extends StatelessWidget {
                 ],
               ),
             ),
-            Text(
-              due < 0
-                  ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'
-                  : formatNpr(Paisa(due), showPaisa: false),
-              style: amountStyle,
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                due < 0
+                    ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'
+                    : formatNpr(Paisa(due), showPaisa: false),
+                style: amountStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+              ),
             ),
           ],
         ),

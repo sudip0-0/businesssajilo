@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/submit_action.dart';
@@ -78,9 +79,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     if (member == null || _lines.isEmpty) return;
 
     if (_lines.any((l) => !l.discountValid)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.discountExceedsLine)));
+      showBsSnackBar(context, message: l10n.discountExceedsLine);
       return;
     }
 

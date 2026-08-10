@@ -58,8 +58,20 @@ class WebPageHeader extends StatelessWidget {
               breadcrumbs: breadcrumbs,
             ),
           ),
-          if (actions.isNotEmpty)
-            Wrap(spacing: 8, runSpacing: 8, children: actions),
+          if (actions.isNotEmpty) ...[
+            const SizedBox(width: 16),
+            Flexible(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: actions,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -88,7 +100,6 @@ class _TitleBlock extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 7),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 for (var i = 0; i < breadcrumbs.length; i++) ...[
                   if (i > 0)
@@ -103,13 +114,17 @@ class _TitleBlock extends StatelessWidget {
                         ),
                       ),
                     ),
-                  Text(
-                    breadcrumbs[i].toUpperCase(),
-                    style: WebTypography.eyebrow(
-                      color: i == breadcrumbs.length - 1
-                          ? WebPalette.inkSoft
-                          : WebPalette.inkFaint,
-                    ).copyWith(fontSize: 10.5),
+                  Flexible(
+                    child: Text(
+                      breadcrumbs[i].toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: WebTypography.eyebrow(
+                        color: i == breadcrumbs.length - 1
+                            ? WebPalette.inkSoft
+                            : WebPalette.inkFaint,
+                      ).copyWith(fontSize: 10.5),
+                    ),
                   ),
                 ],
               ],
@@ -117,12 +132,16 @@ class _TitleBlock extends StatelessWidget {
           ),
         Text(
           title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.headlineSmall?.copyWith(color: WebPalette.ink),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 5),
           Text(
             subtitle!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: WebPalette.inkSoft,
             ),

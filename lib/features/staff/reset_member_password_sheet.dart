@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/ui/inline_form_action.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/repositories/members_repository.dart';
@@ -140,6 +141,10 @@ Future<void> showResetMemberPasswordSheet(
     child: ResetMemberPasswordSheet(memberId: memberId, memberName: memberName),
   );
   if (done == true) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.passwordResetDone)));
+    showBsSnackBarOn(
+      messenger,
+      context: context,
+      message: l10n.passwordResetDone,
+    );
   }
 }

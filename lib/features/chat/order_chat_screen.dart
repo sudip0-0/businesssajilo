@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/submit_action.dart';
@@ -44,9 +45,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     if (body.isEmpty) return;
     final l10n = AppLocalizations.of(context);
     if (MessageValidator.isBodyTooLong(body)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.messageTooLong)));
+      showBsSnackBar(context, message: l10n.messageTooLong);
       return;
     }
     final member = ref.read(authProvider).value?.member;
@@ -90,9 +89,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
         final message = uploadError == ImageUploadError.tooLarge
             ? l10n.imageTooLarge
             : l10n.imageInvalidType;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        showBsSnackBar(context, message: message);
       }
       return;
     }

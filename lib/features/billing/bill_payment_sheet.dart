@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
@@ -104,8 +105,10 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: BsColors.danger),
+    showBsSnackBar(
+      context,
+      message: message,
+      backgroundColor: BsColors.danger,
     );
   }
 

@@ -123,45 +123,50 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.7,
-      builder: (context, _) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              l10n.stockIn,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          if (_enteringQty)
-            _buildQtyPanel(l10n)
-          else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: l10n.searchProductsHint,
-                  prefixIcon: const Icon(Icons.search),
-                ),
-                onChanged: _onQueryChanged,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(child: _buildProductList(l10n, pager)),
+      builder: (context, _) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _selected.isEmpty
-                      ? null
-                      : () => setState(() => _enteringQty = true),
-                  icon: const Icon(Icons.add_box_outlined),
-                  label: Text('${l10n.stockIn} (${_selected.length})'),
-                ),
+              child: Text(
+                l10n.stockIn,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
+            if (_enteringQty)
+              _buildQtyPanel(l10n)
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: l10n.searchProductsHint,
+                    prefixIcon: const Icon(Icons.search),
+                  ),
+                  onChanged: _onQueryChanged,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(child: _buildProductList(l10n, pager)),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: _selected.isEmpty
+                        ? null
+                        : () => setState(() => _enteringQty = true),
+                    icon: const Icon(Icons.add_box_outlined),
+                    label: Text('${l10n.stockIn} (${_selected.length})'),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

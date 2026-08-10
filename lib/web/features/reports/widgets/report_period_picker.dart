@@ -102,10 +102,14 @@ class ReportPeriodPicker extends StatelessWidget {
           ),
           if (value.preset == ReportPeriodPreset.custom) ...[
             const SizedBox(width: 8),
-            Text(
-              _customRangeLabel(value),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: WebPalette.inkSoft,
+            Flexible(
+              child: Text(
+                _customRangeLabel(value),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: WebPalette.inkSoft,
+                ),
               ),
             ),
           ],

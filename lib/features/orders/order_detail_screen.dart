@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/order_status_timeline.dart';
 import '../../core/ui/status_chip.dart';
@@ -187,9 +188,7 @@ class _ActionButtons extends ConsumerWidget {
     }
 
     if (skipped > 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.removedUnavailableItems)));
+      showBsSnackBar(context, message: l10n.removedUnavailableItems);
     }
     if (quantities.isEmpty) return;
 

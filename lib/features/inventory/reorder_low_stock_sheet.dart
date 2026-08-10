@@ -73,54 +73,66 @@ class _ReorderLowStockSheetState extends ConsumerState<ReorderLowStockSheet> {
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.7,
-      builder: (context, scrollController) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              l10n.reorder,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          Expanded(
-            child: productsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ErrorState(
-                message: l10n.loadingFailed,
-                onRetry: () => ref.invalidate(lowStockProductsProvider),
+      builder: (context, scrollController) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.reorder,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              data: (products) {
-                _ensureQtys(products);
-                return ListView.builder(
-                  controller: scrollController,
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.name,
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                ),
-                                Text(
-                                  '${l10n.availableStock}: '
-                                  '${product.stockCached} · '
-                                  '${l10n.suggested}: '
-                                  '${_suggestedQty(product.stockCached, product.lowStockThreshold)}',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
+            ),
+            Expanded(
+              child: productsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => ErrorState(
+                  message: l10n.loadingFailed,
+                  onRetry: () => ref.invalidate(lowStockProductsProvider),
+                ),
+                data: (products) {
+                  _ensureQtys(products);
+                  return ListView.builder(
+                    controller: scrollController,
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleSmall,
+                                  ),
+                                  Text(
+                                    '${l10n.availableStock}: '
+                                    '${product.stockCached} · '
+                                    '${l10n.suggested}: '
+                                    '${_suggestedQty(product.stockCached, product.lowStockThreshold)}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                           QtyStepper(
                             value: _qtys[product.id] ??
                                 _suggestedQty(
@@ -157,6 +169,7 @@ class _ReorderLowStockSheetState extends ConsumerState<ReorderLowStockSheet> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

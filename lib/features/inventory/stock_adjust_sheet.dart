@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/qty_stepper.dart';
 import '../../core/ui/submit_action.dart';
 import '../../data/repositories/stock_repository.dart';
@@ -33,11 +34,10 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context);
     if (_reasonController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.reasonRequired),
-          backgroundColor: BsColors.danger,
-        ),
+      showBsSnackBar(
+        context,
+        message: l10n.reasonRequired,
+        backgroundColor: BsColors.danger,
       );
       return;
     }

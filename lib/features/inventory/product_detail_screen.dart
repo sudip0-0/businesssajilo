@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/ui/paginated_list_state.dart';
@@ -16,7 +18,6 @@ import '../../domain/models/stock_movement.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'providers.dart';
-import '../../core/ui/adaptive_sheet.dart';
 import 'stock_adjust_sheet.dart';
 import 'stock_in_sheet.dart';
 
@@ -387,9 +388,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     ref.invalidate(productListProvider);
     bumpInventoryRevision(ref);
     if (context.mounted && !widget.embedded) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.reactivate)));
+      showBsSnackBar(context, message: l10n.reactivate);
     }
   }
 }

@@ -218,11 +218,15 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
               children: [
                 Text(
                   widget.line.product.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 Text(
                   '${widget.l10n.availableStock}: '
                   '${widget.line.product.stockCached}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: widget.line.qty > widget.line.product.stockCached
                         ? WebPalette.danger

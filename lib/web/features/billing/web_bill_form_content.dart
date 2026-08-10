@@ -358,18 +358,31 @@ class _CartCard extends StatelessWidget {
       itemBuilder: _productTile,
     );
 
-    final linesContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (lines.isEmpty)
-          _EmptyLinesHint(l10n: l10n)
-        else ...[
-          WebBillItemsTableHeader(l10n: l10n),
-          const SizedBox(height: 8),
-          linesList,
-        ],
-      ],
+    final linesContent = LayoutBuilder(
+      builder: (context, constraints) {
+        const minTableWidth = 720.0;
+        final tableWidth = constraints.maxWidth < minTableWidth
+            ? minTableWidth
+            : constraints.maxWidth;
+        final table = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (lines.isEmpty)
+              _EmptyLinesHint(l10n: l10n)
+            else ...[
+              WebBillItemsTableHeader(l10n: l10n),
+              const SizedBox(height: 8),
+              linesList,
+            ],
+          ],
+        );
+        if (constraints.maxWidth >= minTableWidth) return table;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(width: tableWidth, child: table),
+        );
+      },
     );
 
     return WebBentoTile(

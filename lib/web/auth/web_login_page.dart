@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/layout/bs_breakpoints.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../core/utils/login_identifier.dart';
@@ -203,10 +204,9 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
                               identifier.isNotEmpty &&
                               !identifier.contains('@');
                           if (isPhone) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.forgotPasswordPhoneHint),
-                              ),
+                            showBsSnackBar(
+                              context,
+                              message: l10n.forgotPasswordPhoneHint,
                             );
                             return;
                           }

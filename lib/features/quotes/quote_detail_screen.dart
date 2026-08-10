@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
@@ -78,9 +79,7 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   Future<void> _reject() async {
     final l10n = AppLocalizations.of(context);
     if (_commentController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.rejectComment)));
+      showBsSnackBar(context, message: l10n.rejectComment);
       return;
     }
     setState(() => _loading = true);

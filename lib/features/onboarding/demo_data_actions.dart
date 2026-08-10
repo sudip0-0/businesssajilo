@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/bs_snackbar.dart';
 import 'demo_data_seeder.dart';
 
 /// Confirms with the user, then seeds sample business data when accepted.
@@ -35,14 +36,12 @@ Future<void> confirmAndSeedDemoData({
   try {
     final result = await DemoDataSeeder(ref).seed();
     if (!context.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          result == DemoSeedResult.loaded
-              ? l10n.demoDataLoaded
-              : l10n.demoDataSkipped,
-        ),
-      ),
+    showBsSnackBarOn(
+      messenger,
+      context: context,
+      message: result == DemoSeedResult.loaded
+          ? l10n.demoDataLoaded
+          : l10n.demoDataSkipped,
     );
   } finally {
     if (context.mounted) onSeedingChanged(false);

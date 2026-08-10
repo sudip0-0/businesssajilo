@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/l10n/app_localizations.dart';
@@ -18,12 +20,13 @@ class WebMasterDetail extends StatelessWidget {
   final bool hasSelection;
   final double? listWidth;
 
+  static const double _minDetailWidth = 280;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = context.webTokens;
-    final compact = context.isWebCompact;
-    final paneWidth =
+    final preferredPane =
         listWidth ??
         (context.isWebWide ? tokens.wideListPaneWidth : tokens.listPaneWidth);
 
@@ -32,12 +35,24 @@ class WebMasterDetail extends StatelessWidget {
         final height = constraints.hasBoundedHeight
             ? constraints.maxHeight
             : null;
+        final available = constraints.maxWidth;
+        // Prefer single-pane when the content area can't fit list + usable detail
+        // (accounts for sidebar eating window width on tablet).
+        final useSplit =
+            !context.isWebCompact &&
+            available >= preferredPane + _minDetailWidth;
+        final paneWidth = useSplit
+            ? math.min(
+                preferredPane,
+                math.max(280.0, available - _minDetailWidth),
+              )
+            : preferredPane;
 
-        if (compact) {
+        if (!useSplit) {
           final child = hasSelection && detail != null ? detail! : list;
           if (height == null) return child;
           return SizedBox(
-            width: constraints.maxWidth,
+            width: available,
             height: height,
             child: child,
           );

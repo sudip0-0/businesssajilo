@@ -251,6 +251,7 @@ abstract final class WebTheme {
         actionTextColor: WebPalette.brassBright,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(

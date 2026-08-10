@@ -137,9 +137,18 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(title),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (!widget.ownOnly)
-                    Text(dateStr, style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      dateStr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                 ],
               ),
             ),
@@ -238,16 +247,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
         ),
         detail: selectedId == null
             ? null
-            : Theme(
-                data: Theme.of(context).copyWith(
-                  appBarTheme: const AppBarTheme(
-                    toolbarHeight: 0,
-                    elevation: 0,
-                    scrolledUnderElevation: 0,
-                  ),
-                ),
-                child: OrderDetailScreen(orderId: selectedId),
-              ),
+            : OrderDetailScreen(orderId: selectedId, embedded: true),
       ),
     );
   }

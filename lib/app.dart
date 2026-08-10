@@ -9,6 +9,7 @@ import 'core/notifications/push_service.dart';
 import 'core/router/router_keys.dart';
 import 'core/router/router_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/ui/bs_snackbar.dart';
 import 'web/navigation/web_notification_navigation.dart';
 import 'web/theme/web_theme.dart';
 import 'core/utils/locale_prefs.dart';
@@ -80,9 +81,11 @@ class BusinessSajiloApp extends ConsumerWidget {
       final body = message.notification?.body ?? message.data['body'];
       final text = [title, body].whereType<String>().join(' — ');
       if (text.isEmpty) return;
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text(text)),
-      );
+      final ctx = scaffoldMessengerKey.currentContext;
+      final messenger = scaffoldMessengerKey.currentState;
+      if (ctx != null && messenger != null) {
+        showBsSnackBarOn(messenger, context: ctx, message: text);
+      }
     };
 
     return MaterialApp.router(

@@ -6,6 +6,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/locale_toggle.dart';
 import '../../core/ui/inline_form_action.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/utils/auth_errors.dart';
 import '../../core/utils/login_identifier.dart';
 import '../../core/ui/adaptive_sheet.dart';
@@ -149,10 +150,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               identifier.isNotEmpty &&
                               !identifier.contains('@');
                           if (isPhone) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.forgotPasswordPhoneHint),
-                              ),
+                            showBsSnackBar(
+                              context,
+                              message: l10n.forgotPasswordPhoneHint,
                             );
                             return;
                           }

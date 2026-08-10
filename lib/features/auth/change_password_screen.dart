@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/ui/inline_form_action.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/validation/password_validator.dart';
@@ -106,9 +107,7 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
               : null,
         );
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.passwordChanged)));
+          showBsSnackBar(context, message: l10n.passwordChanged);
           widget.onChanged?.call();
         }
       },

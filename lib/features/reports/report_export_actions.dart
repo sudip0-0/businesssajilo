@@ -6,7 +6,9 @@ import '../../core/errors/app_failure.dart';
 import '../../core/export/export_share_service.dart';
 import '../../core/export/report_csv_export.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';import '../../core/utils/ledger_balance.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
+import '../../core/utils/ledger_balance.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/dues_aging_report.dart';
@@ -28,11 +30,10 @@ Future<void> _shareCsvExport(
     await action();
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppFailure.from(e).message(l10n)),
-        backgroundColor: BsColors.danger,
-      ),
+    showBsSnackBar(
+      context,
+      message: AppFailure.from(e).message(l10n),
+      backgroundColor: BsColors.danger,
     );
   }
 }

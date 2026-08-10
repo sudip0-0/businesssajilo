@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../errors/app_failure.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
+import 'bs_snackbar.dart';
 
 /// Runs a form/sheet submit [action], mapping failures to a danger snackbar.
 ///
@@ -18,19 +19,16 @@ Future<bool> runSubmitAction(
     await action();
     if (!context.mounted) return false;
     if (successMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(successMessage)));
+      showBsSnackBar(context, message: successMessage);
     }
     return true;
   } catch (e) {
     if (!context.mounted) return false;
     final failure = AppFailure.from(e);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(failure.message(l10n)),
-        backgroundColor: BsColors.danger,
-      ),
+    showBsSnackBar(
+      context,
+      message: failure.message(l10n),
+      backgroundColor: BsColors.danger,
     );
     return false;
   }

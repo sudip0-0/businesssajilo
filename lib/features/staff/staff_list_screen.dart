@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/async_body.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/utils/role_label.dart';
 import '../../data/repositories/members_repository.dart';
@@ -157,8 +158,9 @@ class _StaffListScreenState extends ConsumerState<StaffListScreen> {
     await ref.read(membersRepositoryProvider).activateMember(member.id);
     ref.invalidate(staffListProvider);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).reactivate)),
+    showBsSnackBar(
+      context,
+      message: AppLocalizations.of(context).reactivate,
     );
   }
 }

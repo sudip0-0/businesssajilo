@@ -128,26 +128,31 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          l10n.salesSummary,
-                          style: Theme.of(context).textTheme.titleMedium,
+                        Expanded(
+                          child: Text(
+                            l10n.salesSummary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                         ),
-                        const Spacer(),
-                        SegmentedButton<bool>(
-                          segments: [
-                            ButtonSegment(
-                              value: false,
-                              label: Text(l10n.weekly),
-                            ),
-                            ButtonSegment(
-                              value: true,
-                              label: Text(l10n.monthly),
-                            ),
-                          ],
-                          selected: {_monthlyChart},
-                          onSelectionChanged: (s) {
-                            setState(() => _monthlyChart = s.first);
-                          },
+                        Flexible(
+                          child: SegmentedButton<bool>(
+                            segments: [
+                              ButtonSegment(
+                                value: false,
+                                label: Text(l10n.weekly),
+                              ),
+                              ButtonSegment(
+                                value: true,
+                                label: Text(l10n.monthly),
+                              ),
+                            ],
+                            selected: {_monthlyChart},
+                            onSelectionChanged: (s) {
+                              setState(() => _monthlyChart = s.first);
+                            },
+                          ),
                         ),
                         const SizedBox(width: 8),
                         const Icon(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/network/supabase_health_probe.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
@@ -59,9 +60,7 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
         CreditNoteValidationError.qtyExceedsMax => l10n.returnQtyExceeds,
         CreditNoteValidationError.offlineNotAllowed => l10n.returnsOnlineOnly,
       };
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      showBsSnackBar(context, message: message);
       return;
     }
 
@@ -81,17 +80,16 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
         );
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.creditNoteSaved),
-            action: SnackBarAction(
-              label: l10n.shareViaWhatsApp,
-              onPressed: () => exportCreditNoteAsPng(
-                ref,
-                context,
-                note,
-                customerLabel: widget.bill.customerShopName,
-              ),
+        showBsSnackBar(
+          context,
+          message: l10n.creditNoteSaved,
+          action: SnackBarAction(
+            label: l10n.shareViaWhatsApp,
+            onPressed: () => exportCreditNoteAsPng(
+              ref,
+              context,
+              note,
+              customerLabel: widget.bill.customerShopName,
             ),
           ),
         );

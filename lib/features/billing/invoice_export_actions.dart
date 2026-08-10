@@ -7,6 +7,7 @@ import '../../core/invoicing/invoice_document_factory.dart';
 import '../../core/invoicing/invoice_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/credit_note.dart';
 import '../auth/providers/auth_provider.dart';
@@ -88,11 +89,10 @@ Future<void> _runExport(
     await action();
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppFailure.from(e).message(l10n)),
-        backgroundColor: BsColors.danger,
-      ),
+    showBsSnackBar(
+      context,
+      message: AppFailure.from(e).message(l10n),
+      backgroundColor: BsColors.danger,
     );
   }
 }
@@ -109,9 +109,7 @@ Future<void> _exportBill(
   final business = await ref.read(currentBusinessProvider.future);
   if (business == null) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
+      showBsSnackBar(context, message: l10n.actionFailed);
     }
     return;
   }
@@ -165,9 +163,7 @@ Future<void> _exportCreditNote(
   final business = await ref.read(currentBusinessProvider.future);
   if (business == null) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.actionFailed)));
+      showBsSnackBar(context, message: l10n.actionFailed);
     }
     return;
   }
