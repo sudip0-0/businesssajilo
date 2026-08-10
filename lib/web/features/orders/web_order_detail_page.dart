@@ -5,7 +5,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../domain/enums.dart';
-import '../../../features/chat/order_chat_screen.dart';
 import '../../../features/orders/order_detail_screen.dart';
 import '../../../features/orders/providers.dart';
 import '../web_page_scaffold.dart';
@@ -14,12 +13,10 @@ class WebOrderDetailPage extends ConsumerWidget {
   const WebOrderDetailPage({
     super.key,
     required this.orderId,
-    this.initialTab = 0,
     this.ordersListPath = '/owner/orders',
   });
 
   final String orderId;
-  final int initialTab;
   final String ordersListPath;
 
   @override
@@ -31,46 +28,18 @@ class WebOrderDetailPage extends ConsumerWidget {
       orElse: () => null,
     );
 
-    return DefaultTabController(
-      length: 2,
-      initialIndex: initialTab.clamp(0, 1),
-      child: WebPageScaffold(
-        title: l10n.orderDetail,
-        subtitle: subtitle,
-        breadcrumbs: [l10n.orders, orderId.substring(0, 8)],
-        actions: [
-          OutlinedButton.icon(
-            onPressed: () => context.go(ordersListPath),
-            icon: const Icon(PhosphorIconsRegular.arrowLeft),
-            label: Text(l10n.orders),
-          ),
-        ],
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TabBar(
-              tabs: [
-                Tab(
-                  text: l10n.orderDetail,
-                  icon: const Icon(PhosphorIconsRegular.package),
-                ),
-                Tab(
-                  text: l10n.openChat,
-                  icon: const Icon(PhosphorIconsRegular.chatCircle),
-                ),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  OrderDetailScreen(orderId: orderId, embedded: true),
-                  OrderChatScreen(orderId: orderId, embedded: true),
-                ],
-              ),
-            ),
-          ],
+    return WebPageScaffold(
+      title: l10n.orderDetail,
+      subtitle: subtitle,
+      breadcrumbs: [l10n.orders, orderId.substring(0, 8)],
+      actions: [
+        OutlinedButton.icon(
+          onPressed: () => context.go(ordersListPath),
+          icon: const Icon(PhosphorIconsRegular.arrowLeft),
+          label: Text(l10n.orders),
         ),
-      ),
+      ],
+      body: OrderDetailScreen(orderId: orderId, embedded: true),
     );
   }
 }
@@ -79,7 +48,7 @@ class WebOrderDetailPage extends ConsumerWidget {
 String webOrdersListPath(Role? role) => switch (role) {
   Role.owner => '/owner/orders',
   Role.sales => '/sales/orders',
-  Role.warehouse => '/warehouse/orders',
+  Role.warehouse => '/warehouse/stock',
   Role.customer => '/customer/orders',
   null => '/login',
 };

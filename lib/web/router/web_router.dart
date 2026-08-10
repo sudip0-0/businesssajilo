@@ -11,6 +11,7 @@ import '../../features/billing/bill_form_leave_confirm.dart';
 import '../../features/billing/providers.dart';
 import '../auth/web_login_page.dart';
 import '../auth/web_register_page.dart';
+import '../features/billing/web_customer_bill_detail_page.dart';
 import '../features/customers/web_customer_form_page.dart';
 import '../features/customers/web_customer_ledger_page.dart';
 import '../features/customers/web_customer_list_page.dart';
@@ -19,7 +20,6 @@ import '../features/dashboard/web_owner_dashboard_page.dart';
 import '../features/dashboard/web_sales_dashboard_page.dart';
 import '../features/dashboard/web_warehouse_dashboard_page.dart';
 import '../features/notifications/web_notifications_page.dart';
-import '../features/quotes/web_quote_detail_page.dart';
 import '../features/settings/web_settings_page.dart';
 import '../features/staff/web_staff_list_page.dart';
 import '../shell/customer_web_shell.dart';
@@ -39,7 +39,6 @@ import '../features/inventory/web_product_form_page.dart'
 import '../features/inventory/web_product_list_page.dart'
     deferred as product_list;
 import '../features/orders/web_catalog_page.dart' deferred as catalog;
-import '../features/orders/web_fulfillment_page.dart' deferred as fulfillment;
 import '../features/orders/web_order_detail_page.dart' deferred as order_detail;
 import '../features/orders/web_order_list_page.dart' deferred as order_list;
 import '../features/reports/web_dues_aging_page.dart' deferred as dues_aging;
@@ -248,13 +247,10 @@ ShellRoute _ownerRoutes() {
           GoRoute(
             path: ':orderId',
             builder: (_, state) {
-              final tab =
-                  int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
               return DeferredPage(
                 load: order_detail.loadLibrary,
                 builder: () => order_detail.WebOrderDetailPage(
                   orderId: state.pathParameters['orderId']!,
-                  initialTab: tab,
                   ordersListPath: '/owner/orders',
                 ),
               );
@@ -310,12 +306,6 @@ ShellRoute _ownerRoutes() {
         path: '/owner/notifications',
         builder: (_, _) => const WebNotificationsPage(),
       ),
-      GoRoute(
-        path: '/owner/quotes/:quoteId',
-        builder: (_, state) => WebQuoteDetailPage(
-          quoteId: state.pathParameters['quoteId']!,
-        ),
-      ),
     ],
   );
 }
@@ -360,13 +350,10 @@ ShellRoute _salesRoutes() {
           GoRoute(
             path: ':orderId',
             builder: (_, state) {
-              final tab =
-                  int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
               return DeferredPage(
                 load: order_detail.loadLibrary,
                 builder: () => order_detail.WebOrderDetailPage(
                   orderId: state.pathParameters['orderId']!,
-                  initialTab: tab,
                   ordersListPath: '/sales/orders',
                 ),
               );
@@ -433,12 +420,6 @@ ShellRoute _salesRoutes() {
         path: '/sales/notifications',
         builder: (_, _) => const WebNotificationsPage(),
       ),
-      GoRoute(
-        path: '/sales/quotes/:quoteId',
-        builder: (_, state) => WebQuoteDetailPage(
-          quoteId: state.pathParameters['quoteId']!,
-        ),
-      ),
     ],
   );
 }
@@ -464,26 +445,6 @@ ShellRoute _warehouseRoutes() {
               builder: () => product_list.WebProductListPage(
                 selectedProductId: state.pathParameters['productId'],
                 canManageStock: true,
-              ),
-            ),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/warehouse/fulfillment',
-        builder: (_, state) => DeferredPage(
-          load: fulfillment.loadLibrary,
-          builder: () => fulfillment.WebFulfillmentPage(
-            selectedOrderId: state.uri.queryParameters['id'],
-          ),
-        ),
-        routes: [
-          GoRoute(
-            path: ':orderId',
-            builder: (_, state) => DeferredPage(
-              load: fulfillment.loadLibrary,
-              builder: () => fulfillment.WebFulfillmentPage(
-                selectedOrderId: state.pathParameters['orderId'],
               ),
             ),
           ),
@@ -552,12 +513,6 @@ ShellRoute _customerRoutes() {
       GoRoute(
         path: '/customer/notifications',
         builder: (_, _) => const WebNotificationsPage(),
-      ),
-      GoRoute(
-        path: '/customer/quotes/:quoteId',
-        builder: (_, state) => WebQuoteDetailPage(
-          quoteId: state.pathParameters['quoteId']!,
-        ),
       ),
     ],
   );

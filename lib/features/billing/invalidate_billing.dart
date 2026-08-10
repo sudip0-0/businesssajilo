@@ -33,6 +33,10 @@ void invalidateAfterBillSaved(
   }
   if (orderId != null) {
     ref.invalidate(orderDetailProvider(orderId));
+    ref.invalidate(orderQueueProvider);
+    ref.invalidate(staffOrderListProvider);
+    ref.invalidate(ownOrderListProvider);
+    ref.invalidate(pendingOrdersCountProvider);
   }
   if (billId != null) {
     ref.invalidate(billDetailProvider(billId));

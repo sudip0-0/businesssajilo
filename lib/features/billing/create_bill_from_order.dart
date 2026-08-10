@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/bill_totals.dart';
 import '../../data/repositories/bills_repository.dart';
-import '../../data/repositories/quotes_repository.dart';
+import '../../data/repositories/orders_repository.dart';
+import '../../data/repositories/products_repository.dart';
 import '../../domain/models/bill.dart';
-import '../../domain/models/quote.dart';
+import '../../domain/models/order.dart';
+import '../../domain/models/order_item.dart';
 import '../auth/providers/auth_provider.dart';
 import 'bill_payment_result.dart';
 import 'invalidate_billing.dart';
@@ -23,40 +25,87 @@ class BillFromOrderDraft {
   int get grandTotal => itemsTotal - discount;
 
   bool get isEmpty => lines.isEmpty;
+
+  BillFromOrderDraft copyWithLines(List<BillLineInput> lines) {
+    return BillFromOrderDraft(
+      lines: lines,
+      itemsTotal: itemsTotalPaisa(lines.map((l) => l.lineTotal)),
+      discount: discount,
+    );
+  }
 }
 
-/// Maps an accepted [Quote] into bill lines (pure; used by load + tests).
-BillFromOrderDraft billFromOrderDraftFromQuote(Quote quote) {
-  final lines = quote.items
-      .map(
-        (item) => BillLineInput(
-          productId: item.productId,
-          nameSnapshot: item.productName ?? '—',
-          qty: item.qty,
-          rate: item.rate,
-          discount: item.discount,
-          lineTotal: item.lineTotal,
-        ),
-      )
-      .toList();
+/// Maps order items + product reference prices into bill lines (pure).
+BillFromOrderDraft billFromOrderDraftFromItems(
+  List<OrderItem> items, {
+  required Map<String, int> ratesByProductId,
+}) {
+  final lines = items.map((item) {
+    final rate = ratesByProductId[item.productId] ?? 0;
+    final discount = 0;
+    final lineTotal = lineTotalPaisa(
+      qty: item.qty,
+      ratePaisa: rate,
+      discountPaisa: discount,
+    );
+    return BillLineInput(
+      productId: item.productId,
+      nameSnapshot: item.productName ?? '—',
+      qty: item.qty,
+      rate: rate,
+      discount: discount,
+      lineTotal: lineTotal,
+    );
+  }).toList();
   return BillFromOrderDraft(
     lines: lines,
-    // Recompute from line items rather than trusting the stored quote total.
     itemsTotal: itemsTotalPaisa(lines.map((l) => l.lineTotal)),
-    discount: 0,
   );
 }
 
-/// Loads the latest accepted quote for [orderId], or `null` if none.
+BillLineInput billLineWithEdits(
+  BillLineInput line, {
+  int? qty,
+  int? rate,
+  int? discount,
+}) {
+  final nextQty = qty ?? line.qty;
+  final nextRate = rate ?? line.rate;
+  final nextDiscount = discount ?? line.discount;
+  return BillLineInput(
+    productId: line.productId,
+    nameSnapshot: line.nameSnapshot,
+    qty: nextQty,
+    rate: nextRate,
+    discount: nextDiscount,
+    lineTotal: lineTotalPaisa(
+      qty: nextQty,
+      ratePaisa: nextRate,
+      discountPaisa: nextDiscount,
+    ),
+  );
+}
+
+/// Loads order items and product reference prices into a bill draft.
 Future<BillFromOrderDraft?> loadBillFromOrderDraft(
   Ref ref,
   String orderId,
 ) async {
-  final quote = await ref
-      .read(quotesRepositoryProvider)
-      .latestAccepted(orderId);
-  if (quote == null) return null;
-  return billFromOrderDraftFromQuote(quote);
+  final Order order = await ref.read(ordersRepositoryProvider).get(orderId);
+  if (order.items.isEmpty) return null;
+
+  final productsRepo = ref.read(productsRepositoryProvider);
+  final rates = <String, int>{};
+  for (final item in order.items) {
+    if (rates.containsKey(item.productId)) continue;
+    try {
+      final product = await productsRepo.get(item.productId);
+      rates[item.productId] = product.referencePrice;
+    } catch (_) {
+      rates[item.productId] = 0;
+    }
+  }
+  return billFromOrderDraftFromItems(order.items, ratesByProductId: rates);
 }
 
 Future<Bill> saveBillFromOrder(

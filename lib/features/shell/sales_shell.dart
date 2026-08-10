@@ -37,7 +37,6 @@ class _SalesShellState extends ConsumerState<SalesShell> {
     final totalDuesAsync = ref.watch(totalDuesProvider);
     final todaysBillsAsync = ref.watch(todaysBillCountProvider);
     final pendingOrdersAsync = ref.watch(pendingOrdersCountProvider);
-    final quotesAsync = ref.watch(openQuotesCountProvider);
 
     final pages = [
       RoleDashboard(
@@ -46,15 +45,6 @@ class _SalesShellState extends ConsumerState<SalesShell> {
             icon: Icons.shopping_cart,
             label: l10n.pendingOrders,
             value: pendingOrdersAsync.when(
-              data: (c) => '$c',
-              loading: () => '…',
-              error: (_, _) => '—',
-            ),
-          ),
-          DashboardStat(
-            icon: Icons.request_quote,
-            label: l10n.quotes,
-            value: quotesAsync.when(
               data: (c) => '$c',
               loading: () => '…',
               error: (_, _) => '—',

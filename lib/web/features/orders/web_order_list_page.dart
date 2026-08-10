@@ -98,7 +98,6 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     await _pager?.refresh();
     if (!widget.ownOnly) {
       ref.invalidate(pendingOrdersCountProvider);
-      ref.invalidate(openQuotesCountProvider);
     } else {
       ref.invalidate(ownOrderCountProvider);
     }

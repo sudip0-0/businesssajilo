@@ -2,15 +2,22 @@ import 'package:businesssajilo/domain/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('orderTransitions allows placed to quoted', () {
-    expect(orderTransitions[OrderStatus.placed], contains(OrderStatus.quoted));
+  test('orderTransitions allows placed to received and billed', () {
+    expect(
+      orderTransitions[OrderStatus.placed],
+      equals({OrderStatus.received, OrderStatus.billed}),
+    );
   });
 
-  test('orderTransitions allows dispatched to billed only', () {
+  test('orderTransitions allows received to billed only', () {
     expect(
-      orderTransitions[OrderStatus.dispatched],
+      orderTransitions[OrderStatus.received],
       equals({OrderStatus.billed}),
     );
+  });
+
+  test('billed is terminal', () {
+    expect(orderTransitions[OrderStatus.billed], isEmpty);
   });
 
   test('warehouse cannot bill per RolePermissions', () {

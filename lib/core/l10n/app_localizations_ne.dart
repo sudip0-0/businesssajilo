@@ -167,6 +167,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get statusPlaced => 'अर्डर गरियो';
 
   @override
+  String get statusReceived => 'हेर्ियो';
+
+  @override
+  String get statusBilled => 'बिल बन्यो';
+
+  @override
   String get statusQuoted => 'कोटेशन पठाइयो';
 
   @override
@@ -185,13 +191,19 @@ class AppLocalizationsNe extends AppLocalizations {
   String get statusDispatched => 'पठाइयो';
 
   @override
-  String get statusBilled => 'बिल बन्यो';
-
-  @override
   String get statusClosed => 'सकियो';
 
   @override
   String get statusCancelled => 'रद्द भयो';
+
+  @override
+  String get markAsReceived => 'हेरेको चिन्ह लगाउनुहोस्';
+
+  @override
+  String get makeThisBill => 'यो बिल बनाउनुहोस्';
+
+  @override
+  String get noOrderItemsForBill => 'यस अर्डरमा बिल गर्ने वस्तु छैन';
 
   @override
   String get emptyNoProducts => 'अहिलेसम्म कुनै उत्पादन छैन';
@@ -688,6 +700,9 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get notifOrderPlaced => 'नयाँ अर्डर आयो';
+
+  @override
+  String get notifOrderReceived => 'तपाईंको अर्डर हेरियो';
 
   @override
   String get notifQuoteReceived => 'नयाँ कोटेशन प्राप्त';

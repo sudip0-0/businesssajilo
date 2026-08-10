@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
-import '../../features/orders/providers.dart';
 import '../layout/web_app_shell.dart';
 import '../layout/web_sidebar.dart';
 
@@ -15,23 +14,12 @@ class WarehouseWebShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final fulfillmentCount = ref.watch(fulfillmentActiveCountProvider);
 
     final items = [
       WebNavItem(
         label: l10n.stock,
         path: '/warehouse/stock',
         icon: PhosphorIconsRegular.package,
-      ),
-      WebNavItem(
-        label: l10n.fulfillment,
-        path: '/warehouse/fulfillment',
-        icon: PhosphorIconsRegular.truck,
-        badge: fulfillmentCount.when(
-          data: (c) => c > 0 ? '$c' : null,
-          loading: () => null,
-          error: (_, _) => null,
-        ),
       ),
     ];
 

@@ -44,9 +44,7 @@ void main() {
       expect(pathAllowedForRole('/product/x', Role.warehouse), isTrue);
       expect(pathAllowedForRole('/product/x', Role.customer), isFalse);
       expect(pathAllowedForRole('/order/x', Role.sales), isTrue);
-      expect(pathAllowedForRole('/order/x/chat', Role.customer), isTrue);
-      expect(pathAllowedForRole('/quote/x', Role.customer), isTrue);
-      expect(pathAllowedForRole('/quote/x', Role.warehouse), isFalse);
+      expect(pathAllowedForRole('/order/x', Role.customer), isTrue);
     });
   });
 
@@ -65,7 +63,6 @@ void main() {
       );
       expect(session.mustChangePassword, isTrue);
       expect(session.isAuthenticated, isTrue);
-      // Router sends any non-/change-password path to forced reset screen.
       expect(roleHomePath(Role.sales), '/sales');
       expect(pathAllowedForRole('/change-password', Role.sales), isFalse);
     });
@@ -74,13 +71,14 @@ void main() {
   group('resolveNotificationTarget', () {
     test('routes each emitted type to a registered path', () {
       final cases = <(String, Map<String, dynamic>, String?)>[
-        ('chat_message', {'order_id': 'o1'}, '/order/o1/chat'),
-        ('quote_received', {'quote_id': 'q1'}, '/quote/q1'),
+        ('chat_message', {'order_id': 'o1'}, '/order/o1'),
+        ('quote_received', {'order_id': 'o1'}, '/order/o1'),
         ('quote_accepted', {'order_id': 'o1'}, '/order/o1'),
         ('payment_recorded', {'bill_id': 'b1'}, '/bill/b1'),
         ('low_stock', {'product_id': 'p1'}, '/product/p1'),
         ('negative_stock', {'product_id': 'p1'}, '/product/p1'),
         ('order_placed', {'order_id': 'o1'}, '/order/o1'),
+        ('order_received', {'order_id': 'o1'}, '/order/o1'),
         ('order_status', {'order_id': 'o1'}, '/order/o1'),
         ('unknown_type', {}, null),
       ];
@@ -109,13 +107,13 @@ void main() {
       expect(warehouse, isA<NotificationNonNavigable>());
     });
 
-    test('web path mapping preserves quote_id and customer bills', () {
+    test('web path mapping preserves order and customer bills', () {
       expect(
         webPathForNotificationTarget(
           role: Role.owner,
-          mobilePath: '/quote/q1',
+          mobilePath: '/order/o1',
         ),
-        '/owner/quotes/q1',
+        '/owner/orders/o1',
       );
       expect(
         webPathForNotificationTarget(

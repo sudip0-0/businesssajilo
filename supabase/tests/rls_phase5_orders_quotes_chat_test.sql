@@ -1,6 +1,6 @@
--- RLS tests for Phase 5 orders, quotes, chat.
+-- RLS tests for simplified orders (placed → received → billed) + leftover chat RLS.
 begin;
-select plan(9);
+select plan(8);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -60,19 +60,25 @@ select is(
   'customer order is placed'
 );
 
--- Sales sends quote.
+-- Sales marks order received.
 select test_set_auth('33333333-3333-3333-3333-333333333333');
 
-insert into quotes (id, order_id, version, status, total, created_by)
-values ('03111111-1111-1111-1111-111111111111', '01111111-1111-1111-1111-111111111111', 1, 'sent', 25000, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
-
-insert into quote_items (id, quote_id, product_id, qty, rate, discount, line_total)
-values ('04111111-1111-1111-1111-111111111111', '03111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 5, 5000, 0, 25000);
+update orders set status = 'received' where id = '01111111-1111-1111-1111-111111111111';
 
 select is(
   (select status::text from orders where id = '01111111-1111-1111-1111-111111111111'),
-  'quoted',
-  'order moves to quoted after quote sent'
+  'received',
+  'order moves to received after staff ack'
+);
+
+-- Quotes no longer drive order status.
+insert into quotes (id, order_id, version, status, total, created_by)
+values ('03111111-1111-1111-1111-111111111111', '01111111-1111-1111-1111-111111111111', 1, 'sent', 25000, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+
+select is(
+  (select status::text from orders where id = '01111111-1111-1111-1111-111111111111'),
+  'received',
+  'sending a quote does not change order status'
 );
 
 -- Warehouse cannot read quotes.
@@ -84,36 +90,6 @@ select is(
   'warehouse cannot read quotes'
 );
 
--- Customer accepts quote.
-select test_set_auth('55555555-5555-5555-5555-555555555555');
-
-update quotes
-set status = 'accepted', response_comment = 'Looks good'
-where id = '03111111-1111-1111-1111-111111111111';
-
-select is(
-  (select status::text from orders where id = '01111111-1111-1111-1111-111111111111'),
-  'accepted',
-  'order accepted after quote acceptance'
-);
-
--- Sales confirms order.
-select test_set_auth('33333333-3333-3333-3333-333333333333');
-
-update orders set status = 'confirmed' where id = '01111111-1111-1111-1111-111111111111';
-
--- Warehouse packs and dispatches.
-select test_set_auth('44444444-4444-4444-4444-444444444444');
-
-update orders set status = 'packed' where id = '01111111-1111-1111-1111-111111111111';
-update orders set status = 'dispatched' where id = '01111111-1111-1111-1111-111111111111';
-
-select is(
-  (select coalesce(sum(qty_delta), 0)::int from stock_movements where ref_order_id = '01111111-1111-1111-1111-111111111111'),
-  -5,
-  'dispatch creates negative stock movement'
-);
-
 -- Warehouse cannot insert messages.
 select throws_ok(
   $$insert into messages (id, order_id, business_id, sender_member_id, body)
@@ -123,7 +99,7 @@ select throws_ok(
   'warehouse cannot insert messages'
 );
 
--- Customer and sales can chat.
+-- Customer and sales can chat (table retained; UI retired).
 select test_set_auth('55555555-5555-5555-5555-555555555555');
 
 insert into messages (id, order_id, business_id, sender_member_id, body)

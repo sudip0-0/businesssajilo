@@ -194,12 +194,8 @@ select is(
   'previous sent quote is superseded'
 );
 
--- 16. Double-billing an order is blocked (after dispatch flow).
-update quotes set status = 'accepted'
-where order_id = '01111111-1111-1111-1111-111111111111' and version = 2;
-update orders set status = 'confirmed' where id = '01111111-1111-1111-1111-111111111111';
-update orders set status = 'packed' where id = '01111111-1111-1111-1111-111111111111';
-update orders set status = 'dispatched' where id = '01111111-1111-1111-1111-111111111111';
+-- 16. Double-billing an order is blocked (after received).
+update orders set status = 'received' where id = '01111111-1111-1111-1111-111111111111';
 
 select is(
   (create_bill(jsonb_build_object(
@@ -211,7 +207,7 @@ select is(
     ))
   ))->>'created')::boolean,
   true,
-  'create_bill bills a dispatched order'
+  'create_bill bills a received order'
 );
 
 select throws_ok(

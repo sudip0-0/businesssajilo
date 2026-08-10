@@ -4,17 +4,9 @@ import 'package:json_annotation/json_annotation.dart';
 enum Role { owner, sales, warehouse, customer }
 
 enum OrderStatus {
-  draft,
   placed,
-  quoted,
-  accepted,
-  rejected,
-  confirmed,
-  packed,
-  dispatched,
+  received,
   billed,
-  closed,
-  cancelled,
 }
 
 enum QuoteStatus { sent, accepted, rejected, superseded }
@@ -47,23 +39,11 @@ enum StockMovementType {
 }
 
 /// Allowed order state transitions (validated server-side too).
+/// `placed|received → billed` is applied only by `create_bill`, not client updateStatus.
 const Map<OrderStatus, Set<OrderStatus>> orderTransitions = {
-  OrderStatus.draft: {OrderStatus.placed, OrderStatus.cancelled},
-  OrderStatus.placed: {OrderStatus.quoted, OrderStatus.cancelled},
-  OrderStatus.quoted: {
-    OrderStatus.accepted,
-    OrderStatus.rejected,
-    OrderStatus.quoted, // re-quote (new version)
-    OrderStatus.cancelled,
-  },
-  OrderStatus.accepted: {OrderStatus.confirmed, OrderStatus.cancelled},
-  OrderStatus.rejected: {OrderStatus.quoted, OrderStatus.cancelled},
-  OrderStatus.confirmed: {OrderStatus.packed, OrderStatus.cancelled},
-  OrderStatus.packed: {OrderStatus.dispatched},
-  OrderStatus.dispatched: {OrderStatus.billed},
-  OrderStatus.billed: {OrderStatus.closed},
-  OrderStatus.closed: {},
-  OrderStatus.cancelled: {},
+  OrderStatus.placed: {OrderStatus.received, OrderStatus.billed},
+  OrderStatus.received: {OrderStatus.billed},
+  OrderStatus.billed: {},
 };
 
 extension RolePermissions on Role {

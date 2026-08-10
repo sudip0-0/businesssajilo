@@ -33,14 +33,11 @@ NotificationTarget resolveNotificationTarget(
   switch (item.type) {
     case 'chat_message':
       if (ids.orderId == null) return const NotificationNonNavigable();
-      return NotificationNavigate('/order/${ids.orderId}/chat');
+      return NotificationNavigate('/order/${ids.orderId}');
     case 'quote_received':
     case 'quote_accepted':
     case 'quote_rejected':
       if (!canViewQuotes) return const NotificationNonNavigable();
-      if (ids.quoteId != null) {
-        return NotificationNavigate('/quote/${ids.quoteId}');
-      }
       if (ids.orderId != null) {
         return NotificationNavigate('/order/${ids.orderId}');
       }
@@ -56,6 +53,7 @@ NotificationTarget resolveNotificationTarget(
       if (role == Role.customer) return const NotificationNonNavigable();
       return NotificationNavigate('/product/${ids.productId}');
     case 'order_placed':
+    case 'order_received':
     case 'order_status':
       if (ids.orderId == null) return const NotificationNonNavigable();
       return NotificationNavigate('/order/${ids.orderId}');

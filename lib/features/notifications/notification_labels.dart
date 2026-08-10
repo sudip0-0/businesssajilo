@@ -6,6 +6,7 @@ import '../../domain/models/notification_item.dart';
 String notificationTitle(AppLocalizations l10n, NotificationItem item) {
   return switch (item.type) {
     'order_placed' => l10n.notifOrderPlaced,
+    'order_received' => l10n.notifOrderReceived,
     'quote_received' => l10n.notifQuoteReceived,
     'quote_accepted' => l10n.notifQuoteAccepted,
     'quote_rejected' => l10n.notifQuoteRejected,
@@ -20,7 +21,8 @@ String notificationTitle(AppLocalizations l10n, NotificationItem item) {
 
 IconData notificationIcon(String type) {
   return switch (type) {
-    'order_placed' || 'order_status' => Icons.shopping_cart_outlined,
+    'order_placed' || 'order_received' || 'order_status' =>
+      Icons.shopping_cart_outlined,
     'quote_received' ||
     'quote_accepted' ||
     'quote_rejected' => Icons.request_quote_outlined,

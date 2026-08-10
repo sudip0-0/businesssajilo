@@ -11,31 +11,15 @@ class StatusChip extends StatelessWidget {
   final OrderStatus status;
 
   static const _colors = <OrderStatus, Color>{
-    OrderStatus.draft: BsColors.outline,
     OrderStatus.placed: BsColors.info,
-    OrderStatus.quoted: BsColors.accent,
-    OrderStatus.accepted: BsColors.primary,
-    OrderStatus.rejected: BsColors.danger,
-    OrderStatus.confirmed: BsColors.primary,
-    OrderStatus.packed: BsColors.fulfillment,
-    OrderStatus.dispatched: BsColors.fulfillment,
+    OrderStatus.received: BsColors.primary,
     OrderStatus.billed: BsColors.secondary,
-    OrderStatus.closed: BsColors.outline,
-    OrderStatus.cancelled: BsColors.danger,
   };
 
   String _label(AppLocalizations l10n) => switch (status) {
-    OrderStatus.draft => '-',
     OrderStatus.placed => l10n.statusPlaced,
-    OrderStatus.quoted => l10n.statusQuoted,
-    OrderStatus.accepted => l10n.statusAccepted,
-    OrderStatus.rejected => l10n.statusRejected,
-    OrderStatus.confirmed => l10n.statusConfirmed,
-    OrderStatus.packed => l10n.statusPacked,
-    OrderStatus.dispatched => l10n.statusDispatched,
+    OrderStatus.received => l10n.statusReceived,
     OrderStatus.billed => l10n.statusBilled,
-    OrderStatus.closed => l10n.statusClosed,
-    OrderStatus.cancelled => l10n.statusCancelled,
   };
 
   @override

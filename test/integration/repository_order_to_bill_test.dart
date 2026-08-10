@@ -6,7 +6,6 @@ import 'package:businesssajilo/data/remote/supabase_payments_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_products_repository.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
 import 'package:businesssajilo/data/repositories/orders_repository.dart';
-import 'package:businesssajilo/data/repositories/quotes_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/order.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,9 +15,7 @@ import 'package:uuid/uuid.dart';
 import '../support/hardening_gate.dart';
 import 'support/bootstrap.dart';
 
-/// Repository integration (not UI): order → quote → accept → bill against local
-/// Supabase. Classified as remote repository coverage; see
-/// `ui_order_to_bill_flow_test.dart` for the widget-driven path.
+/// Repository integration: order → received → bill against local Supabase.
 void main() {
   late bool supabaseAvailable;
 
@@ -26,7 +23,7 @@ void main() {
     supabaseAvailable = await isSupabaseAvailable();
   });
 
-  test('order → quote → accept → bill via repositories', () async {
+  test('order → received → bill via repositories', () async {
     if (!Env.isConfigured) {
       requireForHardeningGate(
         false,
@@ -103,7 +100,7 @@ void main() {
       email: ownerEmail,
       password: ownerPassword,
     );
-    final quotes = QuotesRepository(client);
+    final ownerOrders = SupabaseOrdersRepository(client);
     final ownerMemberId =
         (await client
                 .from('members')
@@ -111,32 +108,13 @@ void main() {
                 .eq('auth_user_id', client.auth.currentUser!.id)
                 .single())['id']
             as String;
-    final quote = await quotes.sendQuote(
-      orderId: order.id,
-      createdByMemberId: ownerMemberId,
-      total: 1000,
-      lines: [
-        QuoteLineInput(
-          productId: product.id,
-          qty: 2,
-          rate: 500,
-          lineTotal: 1000,
-        ),
-      ],
-    );
-    expect(quote.status, QuoteStatus.sent);
 
-    await client.auth.signInWithPassword(
-      email: customerEmail,
-      password: customerPassword,
+    final received = await ownerOrders.updateStatus(
+      order.id,
+      OrderStatus.received,
     );
-    final accepted = await QuotesRepository(client).accept(quote.id);
-    expect(accepted.status, QuoteStatus.accepted);
+    expect(received.status, OrderStatus.received);
 
-    await client.auth.signInWithPassword(
-      email: ownerEmail,
-      password: ownerPassword,
-    );
     final bills = SupabaseBillsRepository(
       client,
       SupabasePaymentsRepository(client),
@@ -162,6 +140,9 @@ void main() {
     expect(bill.orderId, order.id);
     expect(bill.grandTotal, 1000);
     expect(bill.status, BillStatus.due);
+
+    final billed = await ownerOrders.get(order.id);
+    expect(billed.status, OrderStatus.billed);
   });
 }
 

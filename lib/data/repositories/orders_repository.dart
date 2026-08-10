@@ -66,11 +66,8 @@ abstract class OrdersRepository {
     int? limit,
   });
   Future<List<Order>> listOwn({int offset = 0, int? limit});
-  Future<List<Order>> fulfillmentQueue({int offset = 0, int? limit});
   Future<int> pendingCount();
-  Future<int> openQuotesCount();
   Future<int> ownOrderCount();
-  Future<int> fulfillmentActiveCount();
   Future<Order> get(String id);
   Future<Order> placeOrder({
     required String customerId,

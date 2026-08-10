@@ -23,30 +23,12 @@ final pendingOrdersCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(ordersRepositoryProvider).pendingCount();
 });
 
-final openQuotesCountProvider = FutureProvider.autoDispose<int>((ref) {
-  return ref.watch(ordersRepositoryProvider).openQuotesCount();
-});
-
 final ownOrderCountProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(ordersRepositoryProvider).ownOrderCount();
-});
-
-final fulfillmentActiveCountProvider = FutureProvider.autoDispose<int>((ref) {
-  return ref.watch(ordersRepositoryProvider).fulfillmentActiveCount();
-});
-
-final fulfillmentQueueProvider = FutureProvider.autoDispose<List<Order>>((ref) {
-  return ref.watch(ordersRepositoryProvider).fulfillmentQueue();
 });
 
 final orderQueueProvider = FutureProvider.autoDispose<List<Order>>((ref) async {
   return ref
       .watch(ordersRepositoryProvider)
-      .listForStaff(
-        statuses: [
-          OrderStatus.placed,
-          OrderStatus.quoted,
-          OrderStatus.accepted,
-        ],
-      );
+      .listForStaff(statuses: [OrderStatus.placed]);
 });

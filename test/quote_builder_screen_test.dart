@@ -56,20 +56,10 @@ class _FakeOrders implements OrdersRepository {
   Future<List<Order>> listOwn({int offset = 0, int? limit}) async => const [];
 
   @override
-  Future<List<Order>> fulfillmentQueue({int offset = 0, int? limit}) async =>
-      const [];
-
-  @override
   Future<int> pendingCount() async => 0;
 
   @override
-  Future<int> openQuotesCount() async => 0;
-
-  @override
   Future<int> ownOrderCount() async => 0;
-
-  @override
-  Future<int> fulfillmentActiveCount() async => 0;
 
   @override
   Future<Order> placeOrder({

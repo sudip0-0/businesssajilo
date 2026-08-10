@@ -20,7 +20,6 @@ class WebSalesDashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final pendingOrders = ref.watch(pendingOrdersCountProvider);
-    final quotes = ref.watch(openQuotesCountProvider);
     final todaysBills = ref.watch(todaysBillCountProvider);
     final totalDues = ref.watch(totalDuesProvider);
 
@@ -49,16 +48,6 @@ class WebSalesDashboardPage extends ConsumerWidget {
                   error: (_, _) => '—',
                 ),
                 icon: PhosphorIconsRegular.shoppingCart,
-                onTap: () => context.go('/sales/orders'),
-              ),
-              WebStatTile(
-                label: l10n.quotes,
-                value: quotes.when(
-                  data: (c) => '$c',
-                  loading: () => '…',
-                  error: (_, _) => '—',
-                ),
-                icon: PhosphorIconsRegular.fileText,
                 onTap: () => context.go('/sales/orders'),
               ),
               WebStatTile(

@@ -30,7 +30,7 @@ void main() {
       'id': 'ord-2',
       'business_id': 'biz',
       'customer_id': 'cust-1',
-      'status': 'confirmed',
+      'status': 'received',
       'created_at': '2026-07-01T00:00:00Z',
       'customers': {'shop_name': 'Mart'},
       'order_items': [

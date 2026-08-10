@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/enums.dart';
 import '../l10n/app_localizations.dart';
 
-/// Compact horizontal timeline of the happy-path order flow:
-/// placed → quoted → accepted → confirmed → packed → dispatched → billed.
-/// Done/current/future steps are visually distinct using theme colors.
+/// Compact horizontal timeline: placed → received → billed.
 class OrderStatusTimeline extends StatelessWidget {
   const OrderStatusTimeline({super.key, required this.status});
 
@@ -13,32 +11,19 @@ class OrderStatusTimeline extends StatelessWidget {
 
   static const _steps = [
     OrderStatus.placed,
-    OrderStatus.quoted,
-    OrderStatus.accepted,
-    OrderStatus.confirmed,
-    OrderStatus.packed,
-    OrderStatus.dispatched,
+    OrderStatus.received,
     OrderStatus.billed,
   ];
 
   static String _label(AppLocalizations l10n, OrderStatus s) => switch (s) {
     OrderStatus.placed => l10n.statusPlaced,
-    OrderStatus.quoted => l10n.statusQuoted,
-    OrderStatus.accepted => l10n.statusAccepted,
-    OrderStatus.confirmed => l10n.statusConfirmed,
-    OrderStatus.packed => l10n.statusPacked,
-    OrderStatus.dispatched => l10n.statusDispatched,
+    OrderStatus.received => l10n.statusReceived,
     OrderStatus.billed => l10n.statusBilled,
-    _ => '',
   };
 
   @override
   Widget build(BuildContext context) {
-    // Off-path statuses (rejected/cancelled/closed/draft) don't map cleanly
-    // to a progress index; hide the timeline for those.
-    final currentIndex = _steps.indexOf(
-      status == OrderStatus.closed ? OrderStatus.billed : status,
-    );
+    final currentIndex = _steps.indexOf(status);
     if (currentIndex < 0) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);

@@ -27,12 +27,7 @@ bool pathAllowedForRole(String path, Role role) {
     return role == Role.owner || role == Role.sales || role == Role.warehouse;
   }
   if (path.startsWith('/order/')) {
-    // Chat and order detail are available to all roles that receive those
-    // notification types; warehouse fulfillment uses order screens too.
     return true;
-  }
-  if (path.startsWith('/quote/')) {
-    return role != Role.warehouse;
   }
   return false;
 }

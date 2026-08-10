@@ -64,7 +64,6 @@ class _OrderQueueScreenState extends ConsumerState<OrderQueueScreen> {
   Future<void> _refresh() async {
     await _pager?.refresh();
     ref.invalidate(pendingOrdersCountProvider);
-    ref.invalidate(openQuotesCountProvider);
     if (mounted) setState(() {});
   }
 

@@ -50,46 +50,18 @@ class SupabaseOrdersRepository implements OrdersRepository {
   }
 
   @override
-  Future<List<Order>> fulfillmentQueue({int offset = 0, int? limit}) async {
-    return listForStaff(
-      statuses: [OrderStatus.confirmed, OrderStatus.packed],
-      offset: offset,
-      limit: limit,
-    );
-  }
-
-  @override
   Future<int> pendingCount() async {
-    final client = requireSupabaseClient(_client);
-    return client.from('orders').count(CountOption.exact).inFilter('status', [
-      OrderStatus.placed.name,
-      OrderStatus.quoted.name,
-      OrderStatus.accepted.name,
-    ]);
-  }
-
-  @override
-  Future<int> openQuotesCount() async {
     final client = requireSupabaseClient(_client);
     return client
         .from('orders')
         .count(CountOption.exact)
-        .eq('status', OrderStatus.quoted.name);
+        .eq('status', OrderStatus.placed.name);
   }
 
   @override
   Future<int> ownOrderCount() async {
     final client = requireSupabaseClient(_client);
     return client.from('orders').count(CountOption.exact);
-  }
-
-  @override
-  Future<int> fulfillmentActiveCount() async {
-    final client = requireSupabaseClient(_client);
-    return client.from('orders').count(CountOption.exact).inFilter('status', [
-      OrderStatus.confirmed.name,
-      OrderStatus.packed.name,
-    ]);
   }
 
   @override

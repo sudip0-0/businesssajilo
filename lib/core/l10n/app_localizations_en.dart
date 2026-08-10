@@ -167,6 +167,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusPlaced => 'Placed';
 
   @override
+  String get statusReceived => 'Received';
+
+  @override
+  String get statusBilled => 'Billed';
+
+  @override
   String get statusQuoted => 'Quoted';
 
   @override
@@ -185,13 +191,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusDispatched => 'Dispatched';
 
   @override
-  String get statusBilled => 'Billed';
-
-  @override
   String get statusClosed => 'Closed';
 
   @override
   String get statusCancelled => 'Cancelled';
+
+  @override
+  String get markAsReceived => 'Mark as received';
+
+  @override
+  String get makeThisBill => 'Make this bill';
+
+  @override
+  String get noOrderItemsForBill => 'This order has no items to bill';
 
   @override
   String get emptyNoProducts => 'No products yet';
@@ -689,6 +701,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifOrderPlaced => 'New order placed';
+
+  @override
+  String get notifOrderReceived => 'Your order was seen';
 
   @override
   String get notifQuoteReceived => 'New quote received';

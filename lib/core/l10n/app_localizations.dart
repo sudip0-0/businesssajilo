@@ -410,6 +410,18 @@ abstract class AppLocalizations {
   /// **'Placed'**
   String get statusPlaced;
 
+  /// No description provided for @statusReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get statusReceived;
+
+  /// No description provided for @statusBilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed'**
+  String get statusBilled;
+
   /// No description provided for @statusQuoted.
   ///
   /// In en, this message translates to:
@@ -446,12 +458,6 @@ abstract class AppLocalizations {
   /// **'Dispatched'**
   String get statusDispatched;
 
-  /// No description provided for @statusBilled.
-  ///
-  /// In en, this message translates to:
-  /// **'Billed'**
-  String get statusBilled;
-
   /// No description provided for @statusClosed.
   ///
   /// In en, this message translates to:
@@ -463,6 +469,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get statusCancelled;
+
+  /// No description provided for @markAsReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as received'**
+  String get markAsReceived;
+
+  /// No description provided for @makeThisBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Make this bill'**
+  String get makeThisBill;
+
+  /// No description provided for @noOrderItemsForBill.
+  ///
+  /// In en, this message translates to:
+  /// **'This order has no items to bill'**
+  String get noOrderItemsForBill;
 
   /// No description provided for @emptyNoProducts.
   ///
@@ -1441,6 +1465,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New order placed'**
   String get notifOrderPlaced;
+
+  /// No description provided for @notifOrderReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order was seen'**
+  String get notifOrderReceived;
 
   /// No description provided for @notifQuoteReceived.
   ///

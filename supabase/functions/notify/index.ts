@@ -13,6 +13,7 @@ const corsHeaders = {
 
 const TITLE_BY_TYPE: Record<string, string> = {
   order_placed: "New order placed",
+  order_received: "Your order was seen",
   quote_received: "New quote received",
   quote_accepted: "Quote accepted",
   quote_rejected: "Quote rejected",

@@ -4,34 +4,21 @@ import '../../core/l10n/app_localizations.dart';
 import '../../domain/enums.dart';
 
 /// Staff order list filter buckets.
-enum StaffOrderFilter { needsAction, inProgress, completed, all }
+enum StaffOrderFilter { needsAction, received, billed, all }
 
 extension StaffOrderFilterX on StaffOrderFilter {
   String label(AppLocalizations l10n) => switch (this) {
     StaffOrderFilter.needsAction => l10n.needsAction,
-    StaffOrderFilter.inProgress => l10n.inProgress,
-    StaffOrderFilter.completed => l10n.completed,
+    StaffOrderFilter.received => l10n.statusReceived,
+    StaffOrderFilter.billed => l10n.statusBilled,
     StaffOrderFilter.all => l10n.allOrders,
   };
 
   /// Null means no status filter (all orders).
   List<OrderStatus>? get statuses => switch (this) {
-    StaffOrderFilter.needsAction => [
-      OrderStatus.placed,
-      OrderStatus.quoted,
-      OrderStatus.accepted,
-    ],
-    StaffOrderFilter.inProgress => [
-      OrderStatus.confirmed,
-      OrderStatus.packed,
-      OrderStatus.dispatched,
-    ],
-    StaffOrderFilter.completed => [
-      OrderStatus.billed,
-      OrderStatus.closed,
-      OrderStatus.rejected,
-      OrderStatus.cancelled,
-    ],
+    StaffOrderFilter.needsAction => [OrderStatus.placed],
+    StaffOrderFilter.received => [OrderStatus.received],
+    StaffOrderFilter.billed => [OrderStatus.billed],
     StaffOrderFilter.all => null,
   };
 }
@@ -49,8 +36,6 @@ class StaffOrderFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // Intrinsic height only — avoid scroll views that can confuse parent
-    // Columns that also use Expanded (owner/sales web order list).
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Wrap(

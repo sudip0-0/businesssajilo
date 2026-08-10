@@ -26,7 +26,6 @@ void invalidateOwnerDashboardWidget(WidgetRef ref) =>
 
 void _invalidateSalesDashboardCore(dynamic ref) {
   ref.invalidate(pendingOrdersCountProvider);
-  ref.invalidate(openQuotesCountProvider);
   ref.invalidate(todaysBillCountProvider);
   ref.invalidate(todaysSalesProvider);
   ref.invalidate(totalDuesProvider);
