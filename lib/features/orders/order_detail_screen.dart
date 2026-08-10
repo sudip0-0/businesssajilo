@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/l10n/app_localizations.dart';
@@ -154,6 +156,15 @@ class _ActionButtons extends ConsumerWidget {
         if (canBill && status != OrderStatus.billed)
           FilledButton(
             onPressed: () async {
+              if (kIsWeb) {
+                final segments = GoRouterState.of(context).uri.pathSegments;
+                final prefix = segments.isNotEmpty
+                    ? '/${segments.first}'
+                    : '/owner';
+                await context.push('$prefix/billing/new?orderId=$orderId');
+                _invalidate(ref);
+                return;
+              }
               final saved = await showAdaptiveSheet<bool>(
                 context: context,
                 title: l10n.makeThisBill,

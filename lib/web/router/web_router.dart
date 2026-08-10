@@ -208,9 +208,11 @@ ShellRoute _ownerRoutes() {
           GoRoute(
             path: 'new',
             onExit: _onExitBillForm,
-            builder: (_, _) => DeferredPage(
+            builder: (_, state) => DeferredPage(
               load: bill_form.loadLibrary,
-              builder: () => bill_form.WebBillFormPage(),
+              builder: () => bill_form.WebBillFormPage(
+                orderId: state.uri.queryParameters['orderId'],
+              ),
             ),
           ),
           GoRoute(
@@ -389,9 +391,11 @@ ShellRoute _salesRoutes() {
           GoRoute(
             path: 'new',
             onExit: _onExitBillForm,
-            builder: (_, _) => DeferredPage(
+            builder: (_, state) => DeferredPage(
               load: bill_form.loadLibrary,
-              builder: () => bill_form.WebBillFormPage(),
+              builder: () => bill_form.WebBillFormPage(
+                orderId: state.uri.queryParameters['orderId'],
+              ),
             ),
           ),
           GoRoute(

@@ -22,6 +22,7 @@ Future<Bill?> submitBillForm({
   required BillFormDraft draft,
   BillStatus? forceStatus,
   String? fallbackCustomerId,
+  String? orderId,
   bool exportAfterSave = false,
   VoidCallback? onSaved,
   bool popOnSuccess = false,
@@ -96,6 +97,7 @@ Future<Bill?> submitBillForm({
       draft: draft,
       payment: paymentResult,
       fallbackCustomerId: fallbackCustomerId,
+      orderId: orderId,
     );
 
     if (!context.mounted) return savedBill;

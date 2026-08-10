@@ -24,7 +24,9 @@ String _billingListPath(BuildContext context) {
 }
 
 class WebBillFormPage extends ConsumerStatefulWidget {
-  const WebBillFormPage({super.key});
+  const WebBillFormPage({super.key, this.orderId});
+
+  final String? orderId;
 
   @override
   ConsumerState<WebBillFormPage> createState() => _WebBillFormPageState();
@@ -81,7 +83,11 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
           label: Text(l10n.saveBill),
         ),
       ],
-      body: WebBillFormContent(key: _formKey, onSaved: _onSaved),
+      body: WebBillFormContent(
+        key: _formKey,
+        orderId: widget.orderId,
+        onSaved: _onSaved,
+      ),
     );
   }
 }

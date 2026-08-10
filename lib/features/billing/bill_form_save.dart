@@ -30,33 +30,55 @@ BillPaymentResult duePaymentForDraft(BillFormDraft draft) {
   );
 }
 
-/// Persists a validated bill draft via [BillsRepository.create].
+/// Persists a validated bill draft via [BillsRepository.create]
+/// or [BillsRepository.createFromOrder] when [orderId] is set.
 Future<Bill> saveBillForm(
   Ref ref, {
   required BillFormDraft draft,
   required BillPaymentResult payment,
   String? fallbackCustomerId,
+  String? orderId,
 }) async {
   final memberId = ref.read(authProvider).value?.member?.id;
   if (memberId == null) {
     throw StateError('Not authenticated');
   }
-  final customerId =
-      payment.customerId ?? fallbackCustomerId ?? draft.customerId;
-  final bill = await ref
-      .read(billsRepositoryProvider)
-      .create(
-        createdByMemberId: memberId,
-        customerId: customerId,
-        status: payment.status,
-        itemsTotal: draft.itemsTotal,
-        discount: draft.billDiscount,
-        grandTotal: draft.grandTotal,
-        lines: draft.toLineInputs(),
-        paymentMethod: payment.paymentMethod,
-        paymentRefNote: payment.paymentRefNote,
-        paymentAmount: payment.paymentAmount,
-      );
-  invalidateAfterBillSaved(ref, customerId: customerId);
+  final customerId = orderId != null
+      ? (draft.customerId ?? fallbackCustomerId ?? payment.customerId)
+      : (payment.customerId ?? fallbackCustomerId ?? draft.customerId);
+  final bills = ref.read(billsRepositoryProvider);
+  final Bill bill;
+  if (orderId != null) {
+    if (customerId == null) {
+      throw StateError('Order bill requires a customer');
+    }
+    bill = await bills.createFromOrder(
+      orderId: orderId,
+      customerId: customerId,
+      createdByMemberId: memberId,
+      status: payment.status,
+      itemsTotal: draft.itemsTotal,
+      discount: draft.billDiscount,
+      grandTotal: draft.grandTotal,
+      lines: draft.toLineInputs(),
+      paymentMethod: payment.paymentMethod,
+      paymentRefNote: payment.paymentRefNote,
+      paymentAmount: payment.paymentAmount,
+    );
+  } else {
+    bill = await bills.create(
+      createdByMemberId: memberId,
+      customerId: customerId,
+      status: payment.status,
+      itemsTotal: draft.itemsTotal,
+      discount: draft.billDiscount,
+      grandTotal: draft.grandTotal,
+      lines: draft.toLineInputs(),
+      paymentMethod: payment.paymentMethod,
+      paymentRefNote: payment.paymentRefNote,
+      paymentAmount: payment.paymentAmount,
+    );
+  }
+  invalidateAfterBillSaved(ref, customerId: customerId, orderId: orderId);
   return bill;
 }

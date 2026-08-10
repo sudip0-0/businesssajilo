@@ -5,15 +5,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../core/errors/app_failure.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/layout/bs_breakpoints.dart';
 import '../../../core/testing/integration_keys.dart';
+import '../../../core/ui/bs_snackbar.dart';
 import '../../../core/ui/stock_badge.dart';
 import '../../../core/utils/money.dart';
+import '../../../data/repositories/customers_repository.dart';
+import '../../../data/repositories/orders_repository.dart';
+import '../../../data/repositories/products_repository.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
+import '../../../features/billing/bill_draft_line.dart';
 import '../../../features/billing/bill_form_draft.dart';
 import '../../../features/billing/bill_form_submit.dart';
 import '../../../features/billing/bill_summary.dart';
@@ -31,10 +37,14 @@ import 'web_bill_form_line_table.dart';
 /// Search inputs are debounced and previously loaded results stay visible
 /// while a query is in flight — the page chrome never unmounts, so the search
 /// field never loses focus mid-typing.
+///
+/// When [orderId] is set, the form prefills customer + lines from that order
+/// and saving uses create-from-order (marks the order billed).
 class WebBillFormContent extends ConsumerStatefulWidget {
-  const WebBillFormContent({super.key, this.onSaved});
+  const WebBillFormContent({super.key, this.onSaved, this.orderId});
 
   final VoidCallback? onSaved;
+  final String? orderId;
 
   @override
   ConsumerState<WebBillFormContent> createState() => WebBillFormContentState();
@@ -63,9 +73,71 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   Customer? _selectedCustomer;
   bool _loading = false;
+  bool _orderPrefillLoading = false;
+  bool _customerLocked = false;
 
   /// After adding a product, focus that line's qty field once.
   String? _focusQtyProductId;
+
+  @override
+  void initState() {
+    super.initState();
+    final orderId = widget.orderId;
+    if (orderId != null && orderId.isNotEmpty) {
+      _orderPrefillLoading = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _prefillFromOrder(orderId);
+      });
+    }
+  }
+
+  Future<void> _prefillFromOrder(String orderId) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final order = await ref.read(ordersRepositoryProvider).get(orderId);
+      final customer = await ref
+          .read(customersRepositoryProvider)
+          .get(order.customerId);
+      final productsRepo = ref.read(productsRepositoryProvider);
+      final lines = <BillDraftLine>[];
+      for (final item in order.items) {
+        try {
+          final product = await productsRepo.get(item.productId);
+          lines.add(
+            BillDraftLine(
+              product: product,
+              qty: item.qty,
+              rate: product.referencePrice,
+            ),
+          );
+        } catch (_) {
+          // Skip deleted/missing products; keep remaining lines.
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _selectedCustomer = customer;
+        _draft.customerId = customer.id;
+        _customerLocked = true;
+        _draft.lines
+          ..clear()
+          ..addAll(lines);
+        _orderPrefillLoading = false;
+      });
+      _syncDirtyFlag();
+      if (lines.isEmpty) {
+        showBsSnackBar(context, message: l10n.noBillLines);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _orderPrefillLoading = false);
+      showBsSnackBar(
+        context,
+        message: AppFailure.from(e).message(l10n),
+        backgroundColor: WebPalette.danger,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -142,6 +214,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   }
 
   void _clearCustomer() {
+    if (_customerLocked) return;
     setState(() {
       _selectedCustomer = null;
       _draft.customerId = null;
@@ -170,6 +243,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       draft: _draft,
       forceStatus: forceStatus,
       fallbackCustomerId: _draft.customerId,
+      orderId: widget.orderId,
       exportAfterSave: exportAfterSave,
       onSaved: () {
         ref.read(billFormDirtyProvider.notifier).clear();
@@ -233,6 +307,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               l10n: l10n,
               today: today,
               selectedCustomer: _selectedCustomer,
+              customerLocked: _customerLocked,
               customerController: _customerQueryController,
               customerFocus: _customerSearchFocus,
               customers: customers,
@@ -272,7 +347,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
             );
           },
         ),
-        if (_loading)
+        if (_loading || _orderPrefillLoading)
           const Positioned(
             top: 0,
             left: 0,
@@ -531,6 +606,7 @@ class _CheckoutRail extends StatelessWidget {
     required this.l10n,
     required this.today,
     required this.selectedCustomer,
+    this.customerLocked = false,
     required this.customerController,
     required this.customerFocus,
     required this.customers,
@@ -548,6 +624,7 @@ class _CheckoutRail extends StatelessWidget {
   final AppLocalizations l10n;
   final String today;
   final Customer? selectedCustomer;
+  final bool customerLocked;
   final TextEditingController customerController;
   final FocusNode customerFocus;
   final List<Customer> customers;
@@ -595,7 +672,7 @@ class _CheckoutRail extends StatelessWidget {
               else
                 _SelectedCustomerChip(
                   customer: selectedCustomer!,
-                  onCleared: onCustomerCleared,
+                  onCleared: customerLocked ? null : onCustomerCleared,
                 ),
               const SizedBox(height: 16),
               Row(
@@ -698,11 +775,11 @@ class _CheckoutRail extends StatelessWidget {
 class _SelectedCustomerChip extends StatelessWidget {
   const _SelectedCustomerChip({
     required this.customer,
-    required this.onCleared,
+    this.onCleared,
   });
 
   final Customer customer;
-  final VoidCallback onCleared;
+  final VoidCallback? onCleared;
 
   @override
   Widget build(BuildContext context) {
@@ -747,16 +824,17 @@ class _SelectedCustomerChip extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: l10n.remove,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(
-              PhosphorIconsRegular.x,
-              size: 16,
-              color: WebPalette.inkSoft,
+          if (onCleared != null)
+            IconButton(
+              tooltip: l10n.remove,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(
+                PhosphorIconsRegular.x,
+                size: 16,
+                color: WebPalette.inkSoft,
+              ),
+              onPressed: onCleared,
             ),
-            onPressed: onCleared,
-          ),
         ],
       ),
     );
