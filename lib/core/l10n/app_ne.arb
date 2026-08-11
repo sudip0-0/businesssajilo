@@ -188,6 +188,7 @@
   "entryPayment": "भुक्तानी",
   "billNo": "बिल नं.",
   "walkIn": "वाक-इन",
+  "walkInNameHint": "बिलमा नाम (ऐच्छिक)",
   "lineTotal": "लाइन जम्मा",
   "billDiscount": "बिल छुट",
   "saveBill": "बिल सेभ",

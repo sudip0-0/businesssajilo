@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/bill_customer_label.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/business.dart';
@@ -22,7 +23,7 @@ class InvoiceDocumentFactory {
     return InvoiceDocument.fromBill(
       business: business,
       bill: bill,
-      customerLabel: bill.customerShopName ?? l10n.walkIn,
+      customerLabel: billCustomerLabel(bill, walkInLabel: l10n.walkIn),
       statusLabel: _billStatusLabel(bill.status, l10n),
       locale: locale,
       provisionalNotice: l10n.provisionalBillNotice,

@@ -539,6 +539,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get walkIn => 'Walk-in';
 
   @override
+  String get walkInNameHint => 'Name on bill (optional)';
+
+  @override
   String get lineTotal => 'Line total';
 
   @override

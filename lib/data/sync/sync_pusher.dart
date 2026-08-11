@@ -121,6 +121,13 @@ class SyncPusher {
     final bill = map['bill'] as Map<String, dynamic>?;
     final serverBillNo = bill?['bill_no'] as String?;
     final serverStatus = bill?['status'] as String?;
+    final serverGuest = (bill?['guest_name'] as String?)?.trim();
+    final payloadGuest = (payload['guest_name'] as String?)?.trim();
+    final guestName = (serverGuest != null && serverGuest.isNotEmpty)
+        ? serverGuest
+        : (payloadGuest != null && payloadGuest.isNotEmpty
+              ? payloadGuest
+              : null);
     await (_db.update(_db.localBills)..where((b) => b.id.equals(billId))).write(
       LocalBillsCompanion(
         syncStatus: const Value('synced'),
@@ -129,6 +136,9 @@ class SyncPusher {
             : const Value.absent(),
         status: serverStatus != null
             ? Value(serverStatus)
+            : const Value.absent(),
+        customerShopName: guestName != null
+            ? Value(guestName)
             : const Value.absent(),
       ),
     );

@@ -188,6 +188,7 @@
   "entryPayment": "Payment",
   "billNo": "Bill no.",
   "walkIn": "Walk-in",
+  "walkInNameHint": "Name on bill (optional)",
   "lineTotal": "Line total",
   "billDiscount": "Bill discount",
   "saveBill": "Save bill",

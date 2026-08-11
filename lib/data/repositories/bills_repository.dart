@@ -47,6 +47,7 @@ abstract class BillsRepository {
   Future<Bill> create({
     required String createdByMemberId,
     String? customerId,
+    String? guestName,
     required BillStatus status,
     required int itemsTotal,
     required int discount,

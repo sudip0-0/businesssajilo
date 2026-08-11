@@ -60,6 +60,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   final _productSearchFocus = FocusNode();
   final _customerQueryController = TextEditingController();
   final _customerSearchFocus = FocusNode();
+  final _guestNameController = TextEditingController();
 
   Timer? _productDebounce;
   Timer? _customerDebounce;
@@ -148,16 +149,22 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     _productSearchFocus.dispose();
     _customerQueryController.dispose();
     _customerSearchFocus.dispose();
+    _guestNameController.dispose();
     super.dispose();
   }
 
   void _syncDraftFields() {
     _draft.billDiscountText = _billDiscountController.text;
+    final guest = _guestNameController.text.trim();
+    _draft.guestName = _selectedCustomer == null && guest.isNotEmpty
+        ? guest
+        : null;
   }
 
   bool get _isDirty =>
       _draft.lines.isNotEmpty ||
       _selectedCustomer != null ||
+      _guestNameController.text.trim().isNotEmpty ||
       _draft.billDiscount != 0;
 
   void _syncDirtyFlag() {
@@ -206,6 +213,8 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     setState(() {
       _selectedCustomer = customer;
       _draft.customerId = customer.id;
+      _draft.guestName = null;
+      _guestNameController.clear();
       _customerQuery = '';
       _customerQueryController.clear();
     });
@@ -310,12 +319,17 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               customerLocked: _customerLocked,
               customerController: _customerQueryController,
               customerFocus: _customerSearchFocus,
+              guestNameController: _guestNameController,
               customers: customers,
               customersLoading: customersAsync.isLoading,
               customersFailed: customersAsync.hasError && customers.isEmpty,
               onCustomerQueryChanged: _onCustomerQueryChanged,
               onCustomerSelected: _selectCustomer,
               onCustomerCleared: _clearCustomer,
+              onGuestNameChanged: () {
+                _syncDraftFields();
+                _syncDirtyFlag();
+              },
               itemsTotal: _draft.itemsTotal,
               billDiscountController: _billDiscountController,
               grandTotal: _draft.grandTotal,
@@ -609,12 +623,14 @@ class _CheckoutRail extends StatelessWidget {
     this.customerLocked = false,
     required this.customerController,
     required this.customerFocus,
+    required this.guestNameController,
     required this.customers,
     required this.customersLoading,
     required this.customersFailed,
     required this.onCustomerQueryChanged,
     required this.onCustomerSelected,
     required this.onCustomerCleared,
+    required this.onGuestNameChanged,
     required this.itemsTotal,
     required this.billDiscountController,
     required this.grandTotal,
@@ -627,12 +643,14 @@ class _CheckoutRail extends StatelessWidget {
   final bool customerLocked;
   final TextEditingController customerController;
   final FocusNode customerFocus;
+  final TextEditingController guestNameController;
   final List<Customer> customers;
   final bool customersLoading;
   final bool customersFailed;
   final ValueChanged<String> onCustomerQueryChanged;
   final ValueChanged<Customer> onCustomerSelected;
   final VoidCallback onCustomerCleared;
+  final VoidCallback onGuestNameChanged;
   final int itemsTotal;
   final TextEditingController billDiscountController;
   final int grandTotal;
@@ -654,7 +672,7 @@ class _CheckoutRail extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 12),
-              if (selectedCustomer == null)
+              if (selectedCustomer == null) ...[
                 WebSearchDropdown<Customer>(
                   controller: customerController,
                   focusNode: customerFocus,
@@ -668,8 +686,17 @@ class _CheckoutRail extends StatelessWidget {
                   onQueryChanged: onCustomerQueryChanged,
                   onSelected: onCustomerSelected,
                   itemBuilder: _customerTile,
-                )
-              else
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: guestNameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: l10n.walkInNameHint,
+                  ),
+                  onChanged: (_) => onGuestNameChanged(),
+                ),
+              ] else
                 _SelectedCustomerChip(
                   customer: selectedCustomer!,
                   onCleared: customerLocked ? null : onCustomerCleared,

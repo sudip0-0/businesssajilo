@@ -299,13 +299,22 @@ class SyncPullEntities {
       for (final row in rows) {
         final map = Map<String, dynamic>.from(row);
         final customer = map.remove('customers');
-        final shopName = customer is Map
-            ? customer['shop_name'] as String?
+        final guestName = (map['guest_name'] as String?)?.trim();
+        final joinedShop = customer is Map
+            ? (customer['shop_name'] as String?)?.trim()
             : null;
         final itemsRaw = map.remove('bill_items');
         final billId = map['id'] as String;
 
         final local = byId[billId];
+        // Prefer joined shop name, then bill guest_name, then keep any local
+        // walk-in display name so sync cannot wipe a name already on the bill.
+        final shopName = (joinedShop != null && joinedShop.isNotEmpty)
+            ? joinedShop
+            : (guestName != null && guestName.isNotEmpty)
+            ? guestName
+            : (local?.customerId == null ? local?.customerShopName : null);
+
         if (local != null && local.syncStatus == 'pending') {
           final serverBillNo = map['bill_no'] as String;
           await (_db.update(
@@ -315,6 +324,7 @@ class SyncPullEntities {
               syncStatus: const Value('synced'),
               billNo: Value(serverBillNo),
               status: Value(map['status'] as String),
+              customerShopName: Value(shopName),
             ),
           );
           continue;

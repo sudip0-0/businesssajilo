@@ -171,5 +171,26 @@ void main() {
       );
       expect(result.customerId, isNull);
     });
+
+    test('walk-in keeps trimmed guest name', () {
+      final result = buildBillPaymentResult(
+        status: BillStatus.paid,
+        grandTotal: 1000,
+        walkIn: true,
+        guestName: '  Hari  ',
+      );
+      expect(result.guestName, 'Hari');
+    });
+
+    test('non-walk-in drops guest name', () {
+      final result = buildBillPaymentResult(
+        status: BillStatus.paid,
+        grandTotal: 1000,
+        walkIn: false,
+        customerId: 'c1',
+        guestName: 'Should ignore',
+      );
+      expect(result.guestName, isNull);
+    });
   });
 }

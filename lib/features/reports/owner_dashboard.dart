@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/bs_sales_line_chart.dart';
 import '../../core/ui/bs_stat_tile.dart';
+import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/money.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/utils/report_range.dart';
@@ -439,7 +440,9 @@ class _TransactionsList extends StatelessWidget {
         for (final bill in bills.take(8))
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(bill.customerShopName ?? l10n.walkInCustomer),
+            title: Text(
+              billCustomerLabel(bill, walkInLabel: l10n.walkInCustomer),
+            ),
             subtitle: Text(
               bill.createdAt != null
                   ? timeFmt.format(bill.createdAt!.toLocal())

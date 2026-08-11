@@ -76,7 +76,7 @@ class SupabaseBillsRepository implements BillsRepository {
         .map((r) => (r as Map)['id'] as String)
         .toList();
 
-    final orParts = <String>['bill_no.ilike.%$q%'];
+    final orParts = <String>['bill_no.ilike.%$q%', 'guest_name.ilike.%$q%'];
     if (customerIds.isNotEmpty) {
       orParts.add('customer_id.in.(${customerIds.join(',')})');
     }
@@ -166,6 +166,7 @@ class SupabaseBillsRepository implements BillsRepository {
   Future<Bill> create({
     required String createdByMemberId,
     String? customerId,
+    String? guestName,
     required BillStatus status,
     required int itemsTotal,
     required int discount,
@@ -177,6 +178,7 @@ class SupabaseBillsRepository implements BillsRepository {
   }) {
     return _createViaRpc(
       customerId: customerId,
+      guestName: guestName,
       orderId: null,
       status: status,
       discount: discount,
@@ -218,6 +220,7 @@ class SupabaseBillsRepository implements BillsRepository {
   /// Single transactional + idempotent server-side bill creation.
   Future<Bill> _createViaRpc({
     required String? customerId,
+    String? guestName,
     required String? orderId,
     required BillStatus status,
     required int discount,
@@ -239,12 +242,17 @@ class SupabaseBillsRepository implements BillsRepository {
       }
     }
 
+    final trimmedGuest = guestName?.trim();
     final payload = <String, dynamic>{
       'id': billId,
       'customer_id': customerId,
       'order_id': orderId,
       'discount': discount,
       'status': status.name,
+      if (customerId == null &&
+          trimmedGuest != null &&
+          trimmedGuest.isNotEmpty)
+        'guest_name': trimmedGuest,
       'items': lines
           .map(
             (line) => {
@@ -301,8 +309,15 @@ class SupabaseBillsRepository implements BillsRepository {
   Bill _mapBillRow(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
     final customer = map.remove('customers');
-    if (customer is Map) {
-      map['customer_shop_name'] = customer['shop_name'];
+    final joinedShop = customer is Map
+        ? (customer['shop_name'] as String?)?.trim()
+        : null;
+    final guestName = (map.remove('guest_name') as String?)?.trim();
+    final displayName = (joinedShop != null && joinedShop.isNotEmpty)
+        ? joinedShop
+        : (guestName != null && guestName.isNotEmpty ? guestName : null);
+    if (displayName != null) {
+      map['customer_shop_name'] = displayName;
     }
     final itemsRaw = map.remove('bill_items');
     final bill = Bill.fromJson(map);

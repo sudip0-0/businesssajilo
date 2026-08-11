@@ -86,6 +86,7 @@ Future<Bill?> submitBillForm({
       child: BillPaymentSheet(
         grandTotal: draft.grandTotal,
         initialCustomerId: draft.customerId,
+        initialGuestName: draft.guestName,
       ),
     );
   }

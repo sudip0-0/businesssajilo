@@ -6,11 +6,18 @@ import 'bill_draft_line.dart';
 
 /// Shared bill form draft state used by mobile and web UIs.
 class BillFormDraft {
-  BillFormDraft({this.customerId, this.billDiscountText = ''});
+  BillFormDraft({
+    this.customerId,
+    this.guestName,
+    this.billDiscountText = '',
+  });
 
   final List<BillDraftLine> lines = [];
   String billDiscountText;
   String? customerId;
+
+  /// Optional walk-in name for the bill only (not a customers row).
+  String? guestName;
 
   int get itemsTotal => itemsTotalPaisa(lines.map((l) => l.lineTotal));
 

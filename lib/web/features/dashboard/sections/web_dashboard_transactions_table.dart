@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/l10n/app_localizations.dart';
 import '../../../../core/ui/bill_status_chip.dart';
+import '../../../../core/utils/bill_customer_label.dart';
 import '../../../../core/utils/money.dart';
 import '../../../../domain/enums.dart';
 import '../../../../domain/models/bill.dart';
@@ -98,7 +99,10 @@ class WebDashboardTransactionsTable extends StatelessWidget {
                       _dataCell(
                         onTap: () => context.go('/owner/billing/${bill.id}'),
                         child: Text(
-                          bill.customerShopName ?? l10n.walkInCustomer,
+                          billCustomerLabel(
+                            bill,
+                            walkInLabel: l10n.walkInCustomer,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

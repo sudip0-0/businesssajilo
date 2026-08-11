@@ -136,23 +136,22 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
-                        Flexible(
-                          child: SegmentedButton<bool>(
-                            segments: [
-                              ButtonSegment(
-                                value: false,
-                                label: Text(l10n.weekly),
-                              ),
-                              ButtonSegment(
-                                value: true,
-                                label: Text(l10n.monthly),
-                              ),
-                            ],
-                            selected: {_monthlyChart},
-                            onSelectionChanged: (s) {
-                              setState(() => _monthlyChart = s.first);
-                            },
-                          ),
+                        const SizedBox(width: 12),
+                        SegmentedButton<bool>(
+                          segments: [
+                            ButtonSegment(
+                              value: false,
+                              label: Text(l10n.weekly),
+                            ),
+                            ButtonSegment(
+                              value: true,
+                              label: Text(l10n.monthly),
+                            ),
+                          ],
+                          selected: {_monthlyChart},
+                          onSelectionChanged: (s) {
+                            setState(() => _monthlyChart = s.first);
+                          },
                         ),
                         const SizedBox(width: 8),
                         const Icon(

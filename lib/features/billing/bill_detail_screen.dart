@@ -6,11 +6,13 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/error_state.dart';
+import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../auth/providers/auth_provider.dart';
+import '../customers/providers.dart';
 import 'credit_note_form_screen.dart';
 import 'credit_note_providers.dart';
 import 'invoice_export_actions.dart';
@@ -113,7 +115,22 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(bill.customerShopName ?? l10n.walkIn),
+            Text(
+              l10n.customerName,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              billCustomerLabel(bill, walkInLabel: l10n.walkIn),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (bill.customerId != null)
+              _CustomerContactLine(customerId: bill.customerId!),
+            const SizedBox(height: 8),
             Text(dateStr),
             const SizedBox(height: 8),
             BillStatusChip(bill.status),
@@ -164,6 +181,39 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
         appBar: AppBar(title: Text(l10n.billDetail)),
         body: content,
       ),
+    );
+  }
+}
+
+class _CustomerContactLine extends ConsumerWidget {
+  const _CustomerContactLine({required this.customerId});
+
+  final String customerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final customerAsync = ref.watch(customerDetailProvider(customerId));
+    return customerAsync.maybeWhen(
+      data: (customer) {
+        final parts = [
+          if (customer.contactName != null &&
+              customer.contactName!.trim().isNotEmpty)
+            customer.contactName!.trim(),
+          if (customer.phone != null && customer.phone!.trim().isNotEmpty)
+            customer.phone!.trim(),
+        ];
+        if (parts.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            parts.join(' · '),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }

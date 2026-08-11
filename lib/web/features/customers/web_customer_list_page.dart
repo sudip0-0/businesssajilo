@@ -113,8 +113,9 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     };
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _CustomerSortField.name =>
-          a.shopName.toLowerCase().compareTo(b.shopName.toLowerCase()),
+        _CustomerSortField.name => a.shopName.toLowerCase().compareTo(
+          b.shopName.toLowerCase(),
+        ),
         _CustomerSortField.balance => a.balanceDue.compareTo(b.balanceDue),
         _CustomerSortField.date =>
           (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
@@ -232,14 +233,8 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
                       children: [
                         for (final (filter, label) in [
                           (_CustomerBalanceFilter.all, l10n.allCustomers),
-                          (
-                            _CustomerBalanceFilter.due,
-                            l10n.customerFilterDues,
-                          ),
-                          (
-                            _CustomerBalanceFilter.credit,
-                            l10n.creditBalance,
-                          ),
+                          (_CustomerBalanceFilter.due, l10n.customerFilterDues),
+                          (_CustomerBalanceFilter.credit, l10n.creditBalance),
                           (
                             _CustomerBalanceFilter.settled,
                             l10n.customerFilterSettled,
@@ -299,19 +294,20 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
         actionLabel: searching
             ? l10n.clearSearch
             : (filtering
-                ? l10n.allCustomers
-                : (widget.canEdit ? l10n.addCustomer : null)),
+                  ? l10n.allCustomers
+                  : (widget.canEdit ? l10n.addCustomer : null)),
         onAction: searching
             ? () {
                 setState(() => _query = '');
                 pager.refresh();
               }
             : (filtering
-                ? () => _setFilter(_CustomerBalanceFilter.all)
-                : (widget.canEdit
-                    ? () =>
-                        context.go('${_webRolePrefix(context)}/customers/new')
-                    : null)),
+                  ? () => _setFilter(_CustomerBalanceFilter.all)
+                  : (widget.canEdit
+                        ? () => context.go(
+                            '${_webRolePrefix(context)}/customers/new',
+                          )
+                        : null)),
       );
     }
 
@@ -419,8 +415,9 @@ class _CustomerRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Flexible(
+            const SizedBox(width: 16),
+            SizedBox(
+              width: 128,
               child: Text(
                 due < 0
                     ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'

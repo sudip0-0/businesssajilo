@@ -18,10 +18,12 @@ class BillPaymentSheet extends ConsumerStatefulWidget {
     super.key,
     required this.grandTotal,
     this.initialCustomerId,
+    this.initialGuestName,
   });
 
   final int grandTotal;
   final String? initialCustomerId;
+  final String? initialGuestName;
 
   @override
   ConsumerState<BillPaymentSheet> createState() => _BillPaymentSheetState();
@@ -34,6 +36,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   final _amountController = TextEditingController();
   final _refController = TextEditingController();
   final _customerSearchController = TextEditingController();
+  final _guestNameController = TextEditingController();
   PaymentMethod _method = PaymentMethod.cash;
 
   @override
@@ -41,6 +44,10 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     super.initState();
     _customerId = widget.initialCustomerId;
     _walkIn = widget.initialCustomerId == null;
+    final guest = widget.initialGuestName?.trim();
+    if (_walkIn && guest != null && guest.isNotEmpty) {
+      _guestNameController.text = guest;
+    }
     _amountController.text = formatNpr(
       Paisa(widget.grandTotal),
       showSymbol: false,
@@ -53,6 +60,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     _amountController.dispose();
     _refController.dispose();
     _customerSearchController.dispose();
+    _guestNameController.dispose();
     super.dispose();
   }
 
@@ -83,6 +91,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
         grandTotal: widget.grandTotal,
         walkIn: _walkIn,
         customerId: _customerId,
+        guestName: _guestNameController.text,
         partialAmountPaisa: partialAmount,
         paymentMethod: _method,
         paymentRefNote: refNote.isEmpty ? null : refNote,
@@ -192,9 +201,22 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   if (v) {
                     _customerId = null;
                     _customerSearchController.clear();
+                  } else {
+                    _guestNameController.clear();
                   }
                 }),
               ),
+              if (_walkIn) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _guestNameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: l10n.customerName,
+                    hintText: l10n.walkInNameHint,
+                  ),
+                ),
+              ],
               if (!_walkIn)
                 customersAsync.when(
                   loading: () => const LinearProgressIndicator(),

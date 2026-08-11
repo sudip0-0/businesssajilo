@@ -538,6 +538,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get walkIn => 'वाक-इन';
 
   @override
+  String get walkInNameHint => 'बिलमा नाम (ऐच्छिक)';
+
+  @override
   String get lineTotal => 'लाइन जम्मा';
 
   @override

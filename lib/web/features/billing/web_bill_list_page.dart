@@ -8,6 +8,7 @@ import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/ui/debounced_list_search.dart';
 import '../../../core/ui/error_state.dart';
 import '../../../core/ui/paginated_list_state.dart';
+import '../../../core/utils/bill_customer_label.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
 import '../../../domain/enums.dart';
@@ -356,7 +357,7 @@ class _BillRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final customerLabel = bill.customerShopName ?? l10n.walkIn;
+    final customerLabel = billCustomerLabel(bill, walkInLabel: l10n.walkIn);
 
     return WebHoverableRow(
       selected: selected,

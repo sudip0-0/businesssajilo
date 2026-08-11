@@ -211,6 +211,7 @@ class SyncingBillsRepository implements BillsRepository {
   Future<Bill> create({
     required String createdByMemberId,
     String? customerId,
+    String? guestName,
     required BillStatus status,
     required int itemsTotal,
     required int discount,
@@ -229,6 +230,11 @@ class SyncingBillsRepository implements BillsRepository {
         _db.localCustomers,
       )..where((c) => c.id.equals(customerId))).getSingleOrNull();
       shopName = customer?.shopName;
+    } else {
+      final trimmed = guestName?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) {
+        shopName = trimmed;
+      }
     }
 
     await _db.transaction(() async {
@@ -332,6 +338,7 @@ class SyncingBillsRepository implements BillsRepository {
           'discount': discount,
           'status': status.name,
           'device_prefix': meta.devicePrefix,
+          if (customerId == null && shopName != null) 'guest_name': shopName,
           'items': itemRows,
           'payment': ?paymentPayload,
         },

@@ -53,6 +53,7 @@ BillPaymentResult buildBillPaymentResult({
   required int grandTotal,
   required bool walkIn,
   String? customerId,
+  String? guestName,
   int? partialAmountPaisa,
   PaymentMethod paymentMethod = PaymentMethod.cash,
   String? paymentRefNote,
@@ -70,9 +71,13 @@ BillPaymentResult buildBillPaymentResult({
     BillStatus.due => null,
   };
 
+  final trimmedGuest = guestName?.trim();
   return BillPaymentResult(
     status: resolved,
     customerId: walkIn ? null : customerId,
+    guestName: walkIn && trimmedGuest != null && trimmedGuest.isNotEmpty
+        ? trimmedGuest
+        : null,
     paymentAmount: paymentAmount,
     paymentMethod: paymentMethod,
     paymentRefNote: paymentRefNote,

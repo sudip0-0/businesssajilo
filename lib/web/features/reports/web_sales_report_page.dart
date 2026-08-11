@@ -9,6 +9,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/ui/bs_sales_line_chart.dart';
+import '../../../core/utils/bill_customer_label.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/report_range.dart';
 import '../../../domain/models/bill.dart';
@@ -460,7 +461,9 @@ class _BillsTable extends StatelessWidget {
               ),
             ),
             DataCell(Text(npt)),
-            DataCell(Text(b.customerShopName ?? l10n.walkIn)),
+            DataCell(
+              Text(billCustomerLabel(b, walkInLabel: l10n.walkIn)),
+            ),
             DataCell(BillStatusChip(b.status)),
             DataCell(
               Text(

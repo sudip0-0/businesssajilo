@@ -22,11 +22,21 @@ String billFormValidationMessage(
   };
 }
 
+String? _nonEmpty(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return trimmed;
+}
+
 /// Web "save draft" payment: due status with the draft's customer.
 BillPaymentResult duePaymentForDraft(BillFormDraft draft) {
+  final guest = draft.guestName?.trim();
   return BillPaymentResult(
     status: BillStatus.due,
     customerId: draft.customerId,
+    guestName: draft.customerId == null && guest != null && guest.isNotEmpty
+        ? guest
+        : null,
   );
 }
 
@@ -66,9 +76,15 @@ Future<Bill> saveBillForm(
       paymentAmount: payment.paymentAmount,
     );
   } else {
+    // Prefer payment-sheet value, but keep the form's walk-in name if the
+    // sheet dropped it (web side-panel rebuilds can clear controllers).
+    final guestName = customerId == null
+        ? _nonEmpty(payment.guestName) ?? _nonEmpty(draft.guestName)
+        : null;
     bill = await bills.create(
       createdByMemberId: memberId,
       customerId: customerId,
+      guestName: guestName,
       status: payment.status,
       itemsTotal: draft.itemsTotal,
       discount: draft.billDiscount,

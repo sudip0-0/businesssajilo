@@ -1142,6 +1142,12 @@ abstract class AppLocalizations {
   /// **'Walk-in'**
   String get walkIn;
 
+  /// No description provided for @walkInNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name on bill (optional)'**
+  String get walkInNameHint;
+
   /// No description provided for @lineTotal.
   ///
   /// In en, this message translates to:

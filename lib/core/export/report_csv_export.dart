@@ -1,3 +1,4 @@
+import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/money.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/dues_aging_report.dart';
@@ -100,7 +101,7 @@ List<List<String>> todaysBillsCsvRows(List<Bill> bills) {
   for (final bill in bills) {
     rows.add([
       bill.billNo,
-      bill.customerShopName ?? 'Walk-in',
+      billCustomerLabel(bill, walkInLabel: 'Walk-in'),
       bill.status.name,
       formatNpr(Paisa(bill.grandTotal), showPaisa: false),
       bill.createdAt?.toIso8601String() ?? '',
