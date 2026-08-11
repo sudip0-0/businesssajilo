@@ -17,6 +17,8 @@ import '../../core/utils/money.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
+import '../reports/report_period.dart';
+import 'bill_date_filter_bar.dart';
 import 'bill_detail_screen.dart';
 import 'bill_form_screen.dart';
 import 'providers.dart';
@@ -41,12 +43,15 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   _BillSortField _sortField = _BillSortField.date;
   bool _sortAscending = false;
 
+  /// `null` = all dates; otherwise bills are loaded via [BillsRepository.listInRange].
+  ReportPeriod? _datePeriod;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _search = DebouncedListSearchController<Bill>(
-        search: (query) => ref.read(billsRepositoryProvider).search(query),
+        search: _searchBills,
         onChanged: () {
           if (mounted) setState(() {});
         },
@@ -55,10 +60,35 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     });
   }
 
+  Future<List<Bill>> _searchBills(String query) {
+    final repo = ref.read(billsRepositoryProvider);
+    final period = _datePeriod;
+    if (period == null) return repo.search(query);
+    return repo.listInRange(
+      from: period.from,
+      to: period.to,
+      query: query,
+      limit: 50,
+    );
+  }
+
+  Future<List<Bill>> _loadBillsPage(int offset, int limit) {
+    final repo = ref.read(billsRepositoryProvider);
+    final period = _datePeriod;
+    if (period == null) {
+      return repo.list(offset: offset, limit: limit);
+    }
+    return repo.listInRange(
+      from: period.from,
+      to: period.to,
+      offset: offset,
+      limit: limit,
+    );
+  }
+
   void _initPager() {
     _pager = PaginatedListState<Bill>(
-      loadPage: (offset, limit) =>
-          ref.read(billsRepositoryProvider).list(offset: offset, limit: limit),
+      loadPage: _loadBillsPage,
       onChanged: () {
         if (mounted) setState(() {});
       },
@@ -66,6 +96,28 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     _pager!.refresh().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  void _onDatePeriodChanged(ReportPeriod? period) {
+    setState(() => _datePeriod = period);
+    _pager?.refresh();
+    if (_search?.isActive == true) {
+      _search!.retry();
+    }
+  }
+
+  bool get _isFiltering =>
+      _statusFilter != _BillStatusFilter.all || _datePeriod != null;
+
+  void _clearFilters() {
+    setState(() {
+      _statusFilter = _BillStatusFilter.all;
+      _datePeriod = null;
+    });
+    _pager?.refresh();
+    if (_search?.isActive == true) {
+      _search!.retry();
+    }
   }
 
   @override
@@ -199,6 +251,13 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: BillDateFilterBar(
+            value: _datePeriod,
+            onChanged: _onDatePeriodChanged,
+          ),
+        ),
         Expanded(child: _buildListBody(l10n, pager)),
       ],
     );
@@ -228,14 +287,14 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
       }
       final results = _applyFilters(search.results ?? const <Bill>[]);
       if (results.isEmpty) {
-        final filtering = _statusFilter != _BillStatusFilter.all;
+        final filtering = _isFiltering;
         return EmptyState(
           icon: Icons.receipt_long_outlined,
           message: filtering ? l10n.noMatchingResults : l10n.noSearchResults,
-          actionLabel: filtering ? l10n.allBills : l10n.clearSearch,
+          actionLabel: filtering ? l10n.periodAllDates : l10n.clearSearch,
           onAction: () {
             if (filtering) {
-              setState(() => _statusFilter = _BillStatusFilter.all);
+              _clearFilters();
             } else {
               _search?.onQueryChanged('');
             }
@@ -263,13 +322,13 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     }
     final filtered = _applyFilters(pager.items);
     if (filtered.isEmpty) {
-      final filtering = _statusFilter != _BillStatusFilter.all;
+      final filtering = _isFiltering;
       return EmptyState(
         icon: Icons.receipt_long_outlined,
         message: filtering ? l10n.noMatchingResults : l10n.noBills,
-        actionLabel: filtering ? l10n.allBills : l10n.newBill,
+        actionLabel: filtering ? l10n.periodAllDates : l10n.newBill,
         onAction: filtering
-            ? () => setState(() => _statusFilter = _BillStatusFilter.all)
+            ? _clearFilters
             : () => _openForm(context),
       );
     }

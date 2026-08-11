@@ -3098,6 +3098,12 @@ abstract class AppLocalizations {
   /// **'Custom'**
   String get periodCustom;
 
+  /// No description provided for @periodAllDates.
+  ///
+  /// In en, this message translates to:
+  /// **'All dates'**
+  String get periodAllDates;
+
   /// No description provided for @fromDate.
   ///
   /// In en, this message translates to:

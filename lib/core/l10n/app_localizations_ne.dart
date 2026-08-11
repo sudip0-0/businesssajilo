@@ -1575,6 +1575,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get periodCustom => 'अनुकूल';
 
   @override
+  String get periodAllDates => 'सबै मिति';
+
+  @override
   String get fromDate => 'देखि';
 
   @override

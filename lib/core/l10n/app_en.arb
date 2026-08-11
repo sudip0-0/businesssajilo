@@ -632,6 +632,7 @@
   "periodLast30Days": "Last 30 days",
   "periodThisMonth": "This month",
   "periodCustom": "Custom",
+  "periodAllDates": "All dates",
   "fromDate": "From",
   "toDate": "To",
   "netSales": "Net sales",

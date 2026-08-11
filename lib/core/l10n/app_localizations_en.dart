@@ -1578,6 +1578,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get periodCustom => 'Custom';
 
   @override
+  String get periodAllDates => 'All dates';
+
+  @override
   String get fromDate => 'From';
 
   @override
