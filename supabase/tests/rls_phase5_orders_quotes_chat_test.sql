@@ -1,6 +1,6 @@
 -- RLS tests for simplified orders (placed → received → billed) + leftover chat RLS.
 begin;
-select plan(8);
+select plan(9);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -58,6 +58,12 @@ select is(
   (select status::text from orders where id = '01111111-1111-1111-1111-111111111111'),
   'placed',
   'customer order is placed'
+);
+
+select is(
+  (select product_name from order_items where id = '02111111-1111-1111-1111-111111111111'),
+  'Cola',
+  'order item snapshots product name for customer reads'
 );
 
 -- Sales marks order received.

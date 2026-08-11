@@ -44,7 +44,7 @@ class _WebStatTileState extends State<WebStatTile> {
       child: WebBentoTile(
         onTap: widget.onTap,
         elevated: true,
-        minHeight: 148,
+        minHeight: 160,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

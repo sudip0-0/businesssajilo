@@ -14,6 +14,7 @@ import '../../core/ui/submit_action.dart';
 import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/catalog_product.dart';
 import '../../domain/models/order_item.dart';
 import '../auth/providers/auth_provider.dart';
 import '../billing/bill_from_order_sheet.dart';
@@ -46,6 +47,11 @@ class OrderDetailScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
       ),
       data: (order) {
+        final catalogById = {
+          for (final p
+              in ref.watch(catalogListProvider).value ?? const <CatalogProduct>[])
+            p.id: p,
+        };
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -84,13 +90,18 @@ class OrderDetailScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const Divider(),
-            ...order.items.map(
-              (item) => ListTile(
-                leading: ProductImage(storagePath: item.imageUrl, size: 40),
-                title: Text(item.productName ?? '—'),
-                trailing: Text('${item.qty} ${item.unit ?? ''}'),
-              ),
-            ),
+            ...order.items.map((item) {
+              final catalog = catalogById[item.productId];
+              final name =
+                  item.productName ?? catalog?.name ?? item.productNameNp ?? '—';
+              final unit = item.unit ?? catalog?.unit;
+              final imageUrl = item.imageUrl ?? catalog?.imageUrl;
+              return ListTile(
+                leading: ProductImage(storagePath: imageUrl, size: 40),
+                title: Text(name),
+                trailing: Text('${item.qty}${unit != null ? ' $unit' : ''}'),
+              );
+            }),
             const SizedBox(height: 16),
             _ActionButtons(
               orderId: orderId,

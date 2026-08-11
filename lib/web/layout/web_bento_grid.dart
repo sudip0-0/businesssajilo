@@ -66,13 +66,15 @@ class WebBentoGrid extends StatelessWidget {
             }
 
             if (lastSpansRow && index == children.length - 1) {
-              rowItems.add(Expanded(child: cell));
+              rowItems.add(Expanded(child: SizedBox.expand(child: cell)));
               break;
             }
 
             rowItems.add(
               Expanded(
-                child: index < children.length ? cell : const SizedBox.shrink(),
+                child: index < children.length
+                    ? SizedBox.expand(child: cell)
+                    : const SizedBox.shrink(),
               ),
             );
             if (j < cols - 1 && index + 1 < end) {
@@ -82,7 +84,7 @@ class WebBentoGrid extends StatelessWidget {
 
           rows.add(
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: rowItems,
             ),
           );
@@ -140,6 +142,9 @@ class _WebBentoTileState extends State<WebBentoTile> {
         curve: Curves.easeOutCubic,
         transform: Matrix4.translationValues(0, lifted ? -2 : 0, 0),
         transformAlignment: Alignment.center,
+        width: double.infinity,
+        // alignment expands the tile to the max height when the grid row stretches.
+        alignment: Alignment.topLeft,
         constraints: BoxConstraints(minHeight: widget.minHeight),
         decoration: BoxDecoration(
           color: WebPalette.card,

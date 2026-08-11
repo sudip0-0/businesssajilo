@@ -46,3 +46,6 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 - Quotes are versioned; a re-quote creates a new `quotes` row, old versions stay for history.
 - Customer app shows **no prices** in the catalog — prices appear only inside quotes/bills.
 - Devanagari strings are longer than English — test layouts in Nepali locale.
+
+## After database change or creation
+- perform necessary migrations 

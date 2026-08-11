@@ -27,6 +27,13 @@ class CatalogScreen extends ConsumerStatefulWidget {
 class _CatalogScreenState extends ConsumerState<CatalogScreen> {
   String _query = '';
 
+  int _columnCount(double width) {
+    if (width >= 1100) return 4;
+    if (width >= 820) return 3;
+    if (width >= 560) return 2;
+    return 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -75,50 +82,108 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
                 );
               }
 
-              return RefreshIndicator(
-                onRefresh: () async => ref.invalidate(catalogListProvider),
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filtered.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final product = filtered[index];
-                    final inCart = cart[product.id] ?? 0;
-                    return Card(
-                      child: ListTile(
-                        leading: ProductImage(
-                          storagePath: product.imageUrl,
-                          size: 48,
-                        ),
-                        title: Text(product.name),
-                        subtitle: Text(
-                          '${product.unit}${product.sku != null ? ' · ${product.sku}' : ''}',
-                        ),
-                        trailing: inCart > 0
-                            ? QtyStepper(
-                                value: inCart,
-                                onChanged: (v) => ref
-                                    .read(cartProvider.notifier)
-                                    .setQty(product.id, v),
-                              )
-                            : IconButton(
-                                icon: const Icon(
-                                  Icons.add_shopping_cart_outlined,
-                                ),
-                                onPressed: () => ref
-                                    .read(cartProvider.notifier)
-                                    .addOne(product.id),
-                                tooltip: l10n.addToCart,
-                              ),
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = _columnCount(constraints.maxWidth);
+                  return RefreshIndicator(
+                    onRefresh: () async => ref.invalidate(catalogListProvider),
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: columns >= 3 ? 0.78 : 0.9,
                       ),
-                    );
-                  },
-                ),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final product = filtered[index];
+                        final inCart = cart[product.id] ?? 0;
+                        return _CatalogProductCard(
+                          product: product,
+                          qty: inCart,
+                          addLabel: l10n.addToCart,
+                          onAdd: () => ref
+                              .read(cartProvider.notifier)
+                              .addOne(product.id),
+                          onQtyChanged: (v) => ref
+                              .read(cartProvider.notifier)
+                              .setQty(product.id, v),
+                        );
+                      },
+                    ),
+                  );
+                },
               );
             },
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CatalogProductCard extends StatelessWidget {
+  const _CatalogProductCard({
+    required this.product,
+    required this.qty,
+    required this.addLabel,
+    required this.onAdd,
+    required this.onQtyChanged,
+  });
+
+  final CatalogProduct product;
+  final int qty;
+  final String addLabel;
+  final VoidCallback onAdd;
+  final ValueChanged<int> onQtyChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Center(
+                child: ProductImage(storagePath: product.imageUrl, size: 72),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              product.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${product.unit}${product.sku != null ? ' · ${product.sku}' : ''}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: qty > 0
+                  ? QtyStepper(value: qty, onChanged: onQtyChanged)
+                  : IconButton.filledTonal(
+                      onPressed: onAdd,
+                      icon: const Icon(Icons.add_shopping_cart_outlined),
+                      tooltip: addLabel,
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

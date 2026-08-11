@@ -43,10 +43,14 @@ Order mapOrderRow(dynamic row) {
       final itemMap = Map<String, dynamic>.from(raw as Map);
       final product = itemMap.remove('products');
       if (product is Map) {
-        itemMap['product_name'] = product['name'];
-        itemMap['product_name_np'] = product['name_np'];
-        itemMap['unit'] = product['unit'];
-        itemMap['image_url'] = product['image_url'];
+        // Prefer joined product fields; keep snapshotted columns as fallback
+        // (customers cannot SELECT products via RLS).
+        itemMap['product_name'] =
+            product['name'] ?? itemMap['product_name'];
+        itemMap['product_name_np'] =
+            product['name_np'] ?? itemMap['product_name_np'];
+        itemMap['unit'] = product['unit'] ?? itemMap['unit'];
+        itemMap['image_url'] = product['image_url'] ?? itemMap['image_url'];
       }
       // Light list select only returns item ids — fill required fields.
       itemMap.putIfAbsent('order_id', () => order.id);

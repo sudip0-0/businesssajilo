@@ -64,82 +64,66 @@ class WebCustomerDashboardPage extends ConsumerWidget {
               WebBentoTile(
                 minHeight: 160,
                 onTap: () => context.go('/customer/catalog'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      PhosphorIconsRegular.storefront,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.catalog,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.filterProducts,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ],
+                child: _CustomerShortcutContent(
+                  icon: PhosphorIconsRegular.storefront,
+                  title: l10n.catalog,
+                  subtitle: l10n.filterProducts,
                 ),
               ),
               WebBentoTile(
                 minHeight: 160,
                 onTap: () => context.go('/customer/orders'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      PhosphorIconsRegular.package,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.myOrders,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.orderItems,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ],
+                child: _CustomerShortcutContent(
+                  icon: PhosphorIconsRegular.package,
+                  title: l10n.myOrders,
+                  subtitle: l10n.orderItems,
                 ),
               ),
               WebBentoTile(
                 minHeight: 160,
                 onTap: () => context.go('/customer/dues'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      PhosphorIconsRegular.receipt,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.myDues,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.ledger,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ],
+                child: _CustomerShortcutContent(
+                  icon: PhosphorIconsRegular.receipt,
+                  title: l10n.myDues,
+                  subtitle: l10n.ledger,
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CustomerShortcutContent extends StatelessWidget {
+  const _CustomerShortcutContent({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: theme.colorScheme.primary),
+        const Spacer(),
+        Text(title, style: theme.textTheme.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.outline,
+          ),
+        ),
+      ],
     );
   }
 }
