@@ -14,6 +14,7 @@ import '../../core/utils/money.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../data/repositories/stock_repository.dart';
 import '../../domain/enums.dart';
+import '../../domain/models/product.dart';
 import '../../domain/models/stock_movement.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
@@ -28,12 +29,16 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
     required this.canManageStock,
     required this.canEditProduct,
     this.embedded = false,
+    this.onEditProduct,
   });
 
   final String productId;
   final bool canManageStock;
   final bool canEditProduct;
   final bool embedded;
+
+  /// When set (e.g. web master-detail), used instead of pushing [ProductFormScreen].
+  final ValueChanged<Product>? onEditProduct;
 
   @override
   ConsumerState<ProductDetailScreen> createState() =>
@@ -174,6 +179,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               if (!product.isActive) Chip(label: Text(l10n.inactive)),
               if (widget.embedded) ...[
                 const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: () => _editProduct(context, product),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(l10n.editProduct),
+                ),
+                const SizedBox(height: 8),
                 if (product.isActive)
                   OutlinedButton.icon(
                     onPressed: () =>
@@ -208,19 +219,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 IconButton(
                   icon: const Icon(Icons.edit),
                   tooltip: l10n.editProduct,
-                  onPressed: () async {
-                    final saved = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProductFormScreen(product: product),
-                      ),
-                    );
-                    if (saved == true) {
-                      ref.invalidate(productDetailProvider(productId));
-                      ref.invalidate(productListProvider);
-                      if (context.mounted) Navigator.pop(context, true);
-                    }
-                  },
+                  onPressed: () => _editProduct(context, product),
                 ),
               if (widget.canEditProduct)
                 IconButton(
@@ -316,6 +315,29 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
       ],
     );
+  }
+
+  Future<void> _editProduct(BuildContext context, Product product) async {
+    final onEdit = widget.onEditProduct;
+    if (onEdit != null) {
+      onEdit(product);
+      return;
+    }
+
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductFormScreen(product: product),
+      ),
+    );
+    if (saved == true) {
+      ref.invalidate(productDetailProvider(widget.productId));
+      ref.invalidate(productListProvider);
+      bumpInventoryRevision(ref);
+      if (context.mounted && !widget.embedded) {
+        Navigator.pop(context, true);
+      }
+    }
   }
 
   Future<void> _stockIn(BuildContext context, String productId) async {

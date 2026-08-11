@@ -257,6 +257,7 @@
   "sortCustomer": "Customer",
   "entryBill": "Bill",
   "billDetail": "Bill detail",
+  "billCreatedBy": "Created by",
   "selectPaymentStatus": "Payment status",
   "amountPaid": "Amount paid",
   "customerOptional": "Customer (optional)",

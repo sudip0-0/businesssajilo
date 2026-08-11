@@ -1316,6 +1316,12 @@ abstract class AppLocalizations {
   /// **'Bill detail'**
   String get billDetail;
 
+  /// No description provided for @billCreatedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Created by'**
+  String get billCreatedBy;
+
   /// No description provided for @selectPaymentStatus.
   ///
   /// In en, this message translates to:

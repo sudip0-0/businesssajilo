@@ -82,26 +82,63 @@ class SyncPullEntities {
       ts: ts,
       startOffset: startOffset,
       budget: budget,
-      buildPage: (from, to) => _client
-          .from('customer_balances')
-          .select()
-          .order('customer_id')
-          .range(from, to),
+      buildPage: (from, to) => _pullCustomerPage(from, to),
       onPage: upsertCustomerBalancesBatch,
     );
   }
 
   Future<void> pullCustomerBalancesDelta(String iso, DateTime ts) async {
     await _page.pullPaged(
-      buildPage: (from, to) => _client
+      buildPage: (from, to) => _pullCustomerDeltaPage(from, to, iso),
+      onPage: upsertCustomerBalancesBatch,
+    );
+    await _db.setWatermark('customers', ts);
+  }
+
+  /// Owner/sales use balances; warehouse falls back to directory (no balances).
+  Future<dynamic> _pullCustomerPage(int from, int to) async {
+    try {
+      return await _client
+          .from('customer_balances')
+          .select()
+          .order('customer_id')
+          .range(from, to);
+    } on PostgrestException {
+      final rows = await _client
+          .from('customer_directory')
+          .select()
+          .order('customer_id')
+          .range(from, to);
+      return _directoryRowsAsBalanceShape(rows as List);
+    }
+  }
+
+  Future<dynamic> _pullCustomerDeltaPage(int from, int to, String iso) async {
+    try {
+      return await _client
           .from('customer_balances')
           .select()
           .gt('updated_at', iso)
           .order('customer_id')
-          .range(from, to),
-      onPage: upsertCustomerBalancesBatch,
-    );
-    await _db.setWatermark('customers', ts);
+          .range(from, to);
+    } on PostgrestException {
+      final rows = await _client
+          .from('customer_directory')
+          .select()
+          .gt('updated_at', iso)
+          .order('customer_id')
+          .range(from, to);
+      return _directoryRowsAsBalanceShape(rows as List);
+    }
+  }
+
+  List<Map<String, dynamic>> _directoryRowsAsBalanceShape(List rows) {
+    return rows.map((row) {
+      final map = Map<String, dynamic>.from(row as Map);
+      map['opening_balance'] = 0;
+      map['balance_due'] = 0;
+      return map;
+    }).toList();
   }
 
   Future<PullPageResult> pullBillsBootstrap(
@@ -117,7 +154,9 @@ class SyncPullEntities {
       budget: budget,
       buildPage: (from, to) => _client
           .from('bills')
-          .select('*, customers(shop_name), bill_items(*)')
+          .select(
+            '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)',
+          )
           .order('created_at', ascending: false)
           .range(from, to),
       onPage: upsertRemoteBillsBatch,
@@ -128,7 +167,9 @@ class SyncPullEntities {
     await _page.pullPaged(
       buildPage: (from, to) => _client
           .from('bills')
-          .select('*, customers(shop_name), bill_items(*)')
+          .select(
+            '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)',
+          )
           .gte('updated_at', iso)
           .order('created_at', ascending: false)
           .range(from, to),

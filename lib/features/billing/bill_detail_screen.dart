@@ -9,6 +9,7 @@ import '../../core/ui/error_state.dart';
 import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
+import '../../core/utils/role_label.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../auth/providers/auth_provider.dart';
@@ -34,6 +35,27 @@ class BillDetailScreen extends ConsumerStatefulWidget {
 
 class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
   var _changed = false;
+
+  String _formatBillCreator(AppLocalizations l10n, Bill bill) {
+    final name = bill.createdByName?.trim();
+    final roleRaw = bill.createdByRole?.trim();
+    Role? role;
+    if (roleRaw != null && roleRaw.isNotEmpty) {
+      for (final value in Role.values) {
+        if (value.name == roleRaw) {
+          role = value;
+          break;
+        }
+      }
+    }
+    final roleText = role == null ? null : roleLabel(l10n, role);
+    if (name != null && name.isNotEmpty && roleText != null) {
+      return '$name · $roleText';
+    }
+    return name?.isNotEmpty == true
+        ? name!
+        : (roleText ?? bill.createdBy);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +154,22 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
               _CustomerContactLine(customerId: bill.customerId!),
             const SizedBox(height: 8),
             Text(dateStr),
+            if (bill.createdByName != null || bill.createdByRole != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.billCreatedBy,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _formatBillCreator(l10n, bill),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             BillStatusChip(bill.status),
             const SizedBox(height: 16),

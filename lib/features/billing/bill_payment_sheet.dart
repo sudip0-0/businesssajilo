@@ -8,6 +8,7 @@ import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
+import '../auth/providers/auth_provider.dart';
 import '../customers/providers.dart';
 import 'validate_bill_payment.dart';
 
@@ -50,6 +51,8 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     super.initState();
     _customerId = widget.initialCustomerId;
     _walkIn = widget.initialCustomerId == null;
+    // Warehouse (no payment recording) defaults customer bills to due.
+    _status = _walkIn ? BillStatus.paid : BillStatus.due;
     final guest = widget.initialGuestName?.trim();
     if (_walkIn && guest != null && guest.isNotEmpty) {
       _guestNameController.text = guest;
@@ -195,6 +198,10 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
       }
     }
 
+    final canRecordPayments =
+        ref.watch(authProvider).value?.member?.role.canRecordPayments ??
+        false;
+
     return Material(
       child: Padding(
         padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
@@ -217,11 +224,16 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               const SizedBox(height: 8),
               SegmentedButton<BillStatus>(
                 segments: [
-                  ButtonSegment(value: BillStatus.paid, label: Text(l10n.paid)),
-                  ButtonSegment(
-                    value: BillStatus.partial,
-                    label: Text(l10n.partial),
-                  ),
+                  if (canRecordPayments || _walkIn)
+                    ButtonSegment(
+                      value: BillStatus.paid,
+                      label: Text(l10n.paid),
+                    ),
+                  if (canRecordPayments)
+                    ButtonSegment(
+                      value: BillStatus.partial,
+                      label: Text(l10n.partial),
+                    ),
                   ButtonSegment(value: BillStatus.due, label: Text(l10n.due)),
                 ],
                 selected: {_status},
@@ -249,8 +261,10 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                     _customerId = null;
                     _selectedShopName = null;
                     _customerSearchController.clear();
+                    if (!canRecordPayments) _status = BillStatus.paid;
                   } else {
                     _guestNameController.clear();
+                    if (!canRecordPayments) _status = BillStatus.due;
                     final initial = widget.initialCustomerId;
                     final name = widget.initialCustomerName?.trim();
                     if (initial != null) {

@@ -28,7 +28,16 @@ class CachedCustomersRepository implements CustomersRepository {
     int offset = 0,
     int? limit,
     String? query,
+    bool includeBalances = true,
   }) async {
+    if (!includeBalances) {
+      return _remote.list(
+        offset: offset,
+        limit: limit,
+        query: query,
+        includeBalances: false,
+      );
+    }
     final q = query?.trim();
     if (q != null && q.isNotEmpty) {
       final pattern = '%${q.toLowerCase()}%';
@@ -76,7 +85,10 @@ class CachedCustomersRepository implements CustomersRepository {
   }
 
   @override
-  Future<Customer> get(String id) async {
+  Future<Customer> get(String id, {bool includeBalances = true}) async {
+    if (!includeBalances) {
+      return _remote.get(id, includeBalances: false);
+    }
     final row = await (_db.select(
       _db.localCustomers,
     )..where((c) => c.id.equals(id))).getSingle();

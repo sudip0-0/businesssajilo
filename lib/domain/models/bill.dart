@@ -20,6 +20,8 @@ abstract class Bill with _$Bill {
     @Default(0) int grandTotal,
     required BillStatus status,
     required String createdBy,
+    String? createdByName,
+    String? createdByRole,
     DateTime? createdAt,
     String? customerShopName,
     @Default([]) List<BillItem> items,

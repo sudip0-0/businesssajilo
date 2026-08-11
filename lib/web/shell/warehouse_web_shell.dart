@@ -21,6 +21,11 @@ class WarehouseWebShell extends ConsumerWidget {
         path: '/warehouse/stock',
         icon: PhosphorIconsRegular.package,
       ),
+      WebNavItem(
+        label: l10n.billing,
+        path: '/warehouse/billing',
+        icon: PhosphorIconsRegular.receipt,
+      ),
     ];
 
     return WebAppShell(navItems: items, child: child);

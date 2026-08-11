@@ -26,8 +26,8 @@ void main() {
       expect(webBillingPathAllowed(Role.customer), isTrue);
     });
 
-    test('warehouse is blocked from billing routes', () {
-      expect(webBillingPathAllowed(Role.warehouse), isFalse);
+    test('warehouse may access billing routes', () {
+      expect(webBillingPathAllowed(Role.warehouse), isTrue);
     });
   });
 }

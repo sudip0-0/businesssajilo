@@ -19,6 +19,7 @@ import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/billing/bill_draft_line.dart';
 import '../../../features/billing/bill_form_draft.dart';
 import '../../../features/billing/bill_form_submit.dart';
@@ -339,6 +340,10 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                 setState(() {});
                 _syncDirtyFlag();
               },
+              showCustomerBalance:
+                  ref.watch(authProvider).value?.member?.role
+                      .canViewCustomerBalance ??
+                  false,
             );
 
             if (wide) {
@@ -636,6 +641,7 @@ class _CheckoutRail extends StatelessWidget {
     required this.billDiscountController,
     required this.grandTotal,
     required this.onDiscountChanged,
+    this.showCustomerBalance = true,
   });
 
   final AppLocalizations l10n;
@@ -656,6 +662,7 @@ class _CheckoutRail extends StatelessWidget {
   final TextEditingController billDiscountController;
   final int grandTotal;
   final VoidCallback onDiscountChanged;
+  final bool showCustomerBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -784,7 +791,7 @@ class _CheckoutRail extends StatelessWidget {
               ],
             ),
           ),
-          if (customer.balanceDue > 0) ...[
+          if (showCustomerBalance && customer.balanceDue > 0) ...[
             const SizedBox(width: 8),
             Text(
               formatNpr(Paisa(customer.balanceDue), showPaisa: false),

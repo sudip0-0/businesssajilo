@@ -20,8 +20,7 @@ bool pathAllowedForRole(String path, Role role) {
   // Role-agnostic detail deep links (push notification tap-through).
   if (path.startsWith('/bill/')) {
     // Customers may open their own bills; RLS enforces ownership.
-    // Warehouse never bills.
-    return role.canBill || role == Role.customer;
+    return role.canCreateBills || role == Role.customer;
   }
   if (path.startsWith('/product/')) {
     return role == Role.owner || role == Role.sales || role == Role.warehouse;

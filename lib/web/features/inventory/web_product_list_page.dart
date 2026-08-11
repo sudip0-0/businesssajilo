@@ -263,6 +263,9 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                 canEditProduct: widget.canEdit,
                 canManageStock: widget.canManageStock,
                 embedded: true,
+                onEditProduct: (product) => context.push(
+                  '${_inventoryListBase(context)}/${product.id}/edit',
+                ),
               ),
       ),
     );

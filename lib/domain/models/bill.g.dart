@@ -18,6 +18,8 @@ _Bill _$BillFromJson(Map<String, dynamic> json) => _Bill(
   grandTotal: (json['grand_total'] as num?)?.toInt() ?? 0,
   status: $enumDecode(_$BillStatusEnumMap, json['status']),
   createdBy: json['created_by'] as String,
+  createdByName: json['created_by_name'] as String?,
+  createdByRole: json['created_by_role'] as String?,
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
@@ -42,6 +44,8 @@ Map<String, dynamic> _$BillToJson(_Bill instance) => <String, dynamic>{
   'grand_total': instance.grandTotal,
   'status': _$BillStatusEnumMap[instance.status]!,
   'created_by': instance.createdBy,
+  'created_by_name': instance.createdByName,
+  'created_by_role': instance.createdByRole,
   'created_at': instance.createdAt?.toIso8601String(),
   'customer_shop_name': instance.customerShopName,
   'items': instance.items.map((e) => e.toJson()).toList(),

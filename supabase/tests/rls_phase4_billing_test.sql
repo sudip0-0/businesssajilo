@@ -1,6 +1,6 @@
 -- RLS tests for Phase 4 billing.
 begin;
-select plan(10);
+select plan(11);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -90,13 +90,13 @@ select is(
   'balance due reflects bill minus payment'
 );
 
--- Warehouse cannot read or insert bills.
+-- Warehouse can read bills but cannot direct-insert (RPC-only) or see balances.
 select test_set_auth('44444444-4444-4444-4444-444444444444');
 
-select is(
+select isnt(
   (select count(*)::int from bills),
   0,
-  'warehouse cannot read bills'
+  'warehouse can read bills'
 );
 
 select throws_ok(
@@ -105,6 +105,12 @@ select throws_ok(
   '42501',
   null,
   'warehouse cannot insert bills'
+);
+
+select is(
+  (select count(*)::int from customer_balances),
+  0,
+  'warehouse cannot read customer_balances'
 );
 
 -- Owner also cannot direct-insert bills (RPC-only).

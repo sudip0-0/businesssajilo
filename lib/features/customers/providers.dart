@@ -4,9 +4,11 @@ import '../../core/config/pagination.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../data/repositories/payments_repository.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../../domain/models/member.dart';
+import '../auth/providers/auth_provider.dart';
 
 /// Bumped after customer writes so paginated customer lists can refresh.
 final customersRevisionProvider = NotifierProvider<CustomersRevision, int>(
@@ -30,13 +32,18 @@ void bumpCustomersRevisionFromRef(Ref ref) {
 }
 
 /// Capped customer list for pickers / autocomplete. Pass [query] for search.
+/// Warehouse (and anyone without [RolePermissions.canViewCustomerBalance])
+/// loads the directory without balances.
 final customerListProvider = FutureProvider.autoDispose
     .family<List<Customer>, String>((ref, query) {
+      final role = ref.watch(authProvider).value?.member?.role;
+      final includeBalances = role?.canViewCustomerBalance ?? false;
       return ref
           .watch(customersRepositoryProvider)
           .list(
             limit: kPickerPageSize,
             query: query.trim().isEmpty ? null : query,
+            includeBalances: includeBalances,
           );
     });
 
@@ -48,7 +55,11 @@ final recentCustomersProvider = FutureProvider.autoDispose<List<Customer>>((
 
 final customerDetailProvider = FutureProvider.autoDispose
     .family<Customer, String>((ref, id) {
-      return ref.watch(customersRepositoryProvider).get(id);
+      final role = ref.watch(authProvider).value?.member?.role;
+      final includeBalances = role?.canViewCustomerBalance ?? false;
+      return ref
+          .watch(customersRepositoryProvider)
+          .get(id, includeBalances: includeBalances);
     });
 
 final customerLedgerProvider = FutureProvider.autoDispose

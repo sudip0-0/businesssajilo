@@ -634,6 +634,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get billDetail => 'बिल विवरण';
 
   @override
+  String get billCreatedBy => 'बनाउने व्यक्ति';
+
+  @override
   String get selectPaymentStatus => 'भुक्तानी स्थिति';
 
   @override

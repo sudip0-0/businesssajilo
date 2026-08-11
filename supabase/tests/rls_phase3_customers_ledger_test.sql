@@ -1,6 +1,6 @@
 -- RLS tests for Phase 3 customers & ledger.
 begin;
-select plan(11);
+select plan(12);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -89,13 +89,19 @@ select is(
   'sales cannot update customer'
 );
 
--- Warehouse cannot read customers.
+-- Warehouse can read customers (for billing picker) but not balances.
 select test_set_auth('44444444-4444-4444-4444-444444444444');
 
-select is(
+select isnt(
   (select count(*)::int from customers),
   0,
-  'warehouse cannot read customers'
+  'warehouse can read customers for billing'
+);
+
+select is(
+  (select count(*)::int from customer_balances),
+  0,
+  'warehouse cannot read customer_balances'
 );
 
 -- Warehouse cannot insert payments.

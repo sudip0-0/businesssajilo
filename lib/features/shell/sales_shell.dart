@@ -12,7 +12,9 @@ import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../customers/record_payment_sheet.dart';
+import '../inventory/product_form_screen.dart';
 import '../inventory/product_list_screen.dart';
+import '../inventory/providers.dart';
 import '../notifications/notification_bell_action.dart';
 import '../sync/sync_badge_action.dart';
 import '../orders/order_queue_screen.dart';
@@ -70,7 +72,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
           ),
         ],
       ),
-      const ProductListScreen(canEdit: false, canManageStock: false),
+      const ProductListScreen(canEdit: true, canManageStock: false),
       const OrderQueueScreen(),
       const CustomerListScreen(canEdit: false, canRecordPayments: true),
       const BillListScreen(),
@@ -126,6 +128,23 @@ class _SalesShellState extends ConsumerState<SalesShell> {
       ],
       body: pages[_index],
       floatingActionButton: switch (_index) {
+        1 => FloatingActionButton.extended(
+          backgroundColor: BsColors.secondary,
+          foregroundColor: BsColors.onSecondary,
+          onPressed: () async {
+            final saved = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(builder: (_) => const ProductFormScreen()),
+            );
+            if (saved == true) {
+              ref.invalidate(productListProvider);
+              ref.invalidate(lowStockCountProvider);
+              bumpInventoryRevision(ref);
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: Text(l10n.addProduct),
+        ),
         3 => FloatingActionButton.extended(
           onPressed: () async {
             await showAdaptiveSheet<bool>(

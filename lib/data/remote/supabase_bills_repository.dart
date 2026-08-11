@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+﻿import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/utils/bill_search_match.dart';
@@ -10,6 +10,11 @@ import '../repositories/bills_repository.dart';
 import '../repositories/payments_repository.dart';
 import 'supabase_provider.dart';
 
+const _billSelect =
+    '*, customers(shop_name), members!bills_created_by_fkey(display_name, role)';
+const _billSelectWithItems =
+    '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)';
+
 class SupabaseBillsRepository implements BillsRepository {
   SupabaseBillsRepository(this._client, PaymentsRepository payments);
 
@@ -20,7 +25,7 @@ class SupabaseBillsRepository implements BillsRepository {
     final client = requireSupabaseClient(_client);
     var query = client
         .from('bills')
-        .select('*, customers(shop_name)')
+        .select(_billSelect)
         .order('created_at', ascending: false);
     if (limit != null) {
       query = query.range(offset, offset + limit - 1);
@@ -56,14 +61,14 @@ class SupabaseBillsRepository implements BillsRepository {
     const candidateLimit = 100;
     final filteredRows = await client
         .from('bills')
-        .select('*, customers(shop_name)')
+        .select(_billSelect)
         .or(orParts.join(','))
         .order('created_at', ascending: false)
         .limit(candidateLimit);
     // Recent window so free-text dates can still match.
     final recentRows = await client
         .from('bills')
-        .select('*, customers(shop_name)')
+        .select(_billSelect)
         .order('created_at', ascending: false)
         .limit(candidateLimit);
 
@@ -100,7 +105,7 @@ class SupabaseBillsRepository implements BillsRepository {
     if (q == null || q.isEmpty) {
       var request = client
           .from('bills')
-          .select('*, customers(shop_name)')
+          .select(_billSelect)
           .gte('created_at', fromIso)
           .lt('created_at', toIso)
           .order('created_at', ascending: false);
@@ -127,7 +132,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
     var request = client
         .from('bills')
-        .select('*, customers(shop_name)')
+        .select(_billSelect)
         .gte('created_at', fromIso)
         .lt('created_at', toIso)
         .or(orParts.join(','))
@@ -144,7 +149,7 @@ class SupabaseBillsRepository implements BillsRepository {
     final client = requireSupabaseClient(_client);
     final row = await client
         .from('bills')
-        .select('*, customers(shop_name), bill_items(*)')
+        .select(_billSelectWithItems)
         .eq('id', id)
         .single();
     return _mapBillRow(row);
@@ -152,7 +157,7 @@ class SupabaseBillsRepository implements BillsRepository {
 
   @override
   Future<int> todaysSales() async {
-    // Net of credit notes — same source as report_sales_daily.
+    // Net of credit notes â€” same source as report_sales_daily.
     final client = requireSupabaseClient(_client);
     final day = nptDateString(nptDayStartUtc());
     final rows = await client
@@ -199,7 +204,7 @@ class SupabaseBillsRepository implements BillsRepository {
     final start = nptDayStartUtc();
     final rows = await client
         .from('bills')
-        .select('*, customers(shop_name)')
+        .select(_billSelect)
         .gte('created_at', start.toIso8601String())
         .order('created_at', ascending: false)
         .limit(limit);
@@ -353,6 +358,7 @@ class SupabaseBillsRepository implements BillsRepository {
   Bill _mapBillRow(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);
     final customer = map.remove('customers');
+    final member = map.remove('members');
     final joinedShop = customer is Map
         ? (customer['shop_name'] as String?)?.trim()
         : null;
@@ -362,6 +368,16 @@ class SupabaseBillsRepository implements BillsRepository {
         : (guestName != null && guestName.isNotEmpty ? guestName : null);
     if (displayName != null) {
       map['customer_shop_name'] = displayName;
+    }
+    if (member is Map) {
+      final name = (member['display_name'] as String?)?.trim();
+      if (name != null && name.isNotEmpty) {
+        map['created_by_name'] = name;
+      }
+      final role = member['role']?.toString();
+      if (role != null && role.isNotEmpty) {
+        map['created_by_role'] = role;
+      }
     }
     final itemsRaw = map.remove('bill_items');
     final bill = Bill.fromJson(map);
@@ -376,3 +392,4 @@ class SupabaseBillsRepository implements BillsRepository {
     return bill;
   }
 }
+

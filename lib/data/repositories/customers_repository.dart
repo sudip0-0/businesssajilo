@@ -21,11 +21,16 @@ final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
 });
 
 abstract class CustomersRepository {
-  Future<List<Customer>> list({int offset = 0, int? limit, String? query});
+  Future<List<Customer>> list({
+    int offset = 0,
+    int? limit,
+    String? query,
+    bool includeBalances = true,
+  });
 
   /// Most recently created customers, capped for dashboards.
   Future<List<Customer>> listRecent({int limit = 2});
-  Future<Customer> get(String id);
+  Future<Customer> get(String id, {bool includeBalances = true});
   Future<Customer?> getOwnProfile();
 
   /// Returns ledger entries sorted ascending by occurred_at. When [limit] is

@@ -40,7 +40,7 @@ void main() {
     test('deep links respect role families', () {
       expect(pathAllowedForRole('/notifications', Role.owner), isTrue);
       expect(pathAllowedForRole('/bill/x', Role.customer), isTrue);
-      expect(pathAllowedForRole('/bill/x', Role.warehouse), isFalse);
+      expect(pathAllowedForRole('/bill/x', Role.warehouse), isTrue);
       expect(pathAllowedForRole('/product/x', Role.warehouse), isTrue);
       expect(pathAllowedForRole('/product/x', Role.customer), isFalse);
       expect(pathAllowedForRole('/order/x', Role.sales), isTrue);
@@ -94,7 +94,7 @@ void main() {
       }
     });
 
-    test('customer can open payment bills; warehouse cannot', () {
+    test('customer and warehouse can open payment bills', () {
       final item = _item('payment_recorded', {'bill_id': 'b1'});
       final customer = resolveNotificationTarget(item, role: Role.customer);
       expect(customer, isA<NotificationNavigate>());
@@ -104,7 +104,11 @@ void main() {
       );
 
       final warehouse = resolveNotificationTarget(item, role: Role.warehouse);
-      expect(warehouse, isA<NotificationNonNavigable>());
+      expect(warehouse, isA<NotificationNavigate>());
+      expect(
+        (warehouse as NotificationNavigate).path,
+        '/bill/b1',
+      );
     });
 
     test('web path mapping preserves order and customer bills', () {
@@ -121,6 +125,40 @@ void main() {
           mobilePath: '/bill/b1',
         ),
         '/customer/billing/b1',
+      );
+    });
+
+    test('web product paths match role inventory routes', () {
+      expect(
+        webPathForNotificationTarget(
+          role: Role.owner,
+          mobilePath: '/product/p1',
+        ),
+        '/owner/inventory/p1',
+      );
+      expect(
+        webPathForNotificationTarget(
+          role: Role.sales,
+          mobilePath: '/product/p1',
+        ),
+        '/sales/stock/p1',
+      );
+      expect(
+        webPathForNotificationTarget(
+          role: Role.warehouse,
+          mobilePath: '/product/p1',
+        ),
+        '/warehouse/stock/p1',
+      );
+    });
+
+    test('web order paths are omitted for warehouse (no orders route)', () {
+      expect(
+        webPathForNotificationTarget(
+          role: Role.warehouse,
+          mobilePath: '/order/o1',
+        ),
+        isNull,
       );
     });
   });

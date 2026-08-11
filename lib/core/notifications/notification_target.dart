@@ -25,9 +25,9 @@ NotificationTarget resolveNotificationTarget(
   Role? role,
 }) {
   final ids = NotificationPayloadIds.fromItem(item);
-  // Staff billers + customers (own bills via RLS). Warehouse never.
+  // Staff who can create bills + customers (own bills via RLS).
   final canViewBills =
-      role == null || role.canBill || role == Role.customer;
+      role == null || role.canCreateBills || role == Role.customer;
   final canViewQuotes = role == null || role != Role.warehouse;
 
   switch (item.type) {
@@ -76,30 +76,38 @@ String? webPathForNotificationTarget({
 
   if (mobilePath.startsWith('/bill/')) {
     final id = mobilePath.substring('/bill/'.length);
-    if (role == Role.customer || role.canBill) {
+    if (role == Role.customer || role.canCreateBills) {
       return '$base/billing/$id';
     }
     return null;
   }
   if (mobilePath.startsWith('/product/')) {
     final id = mobilePath.substring('/product/'.length);
-    final inventoryPath =
-        role == Role.warehouse ? '$base/stock' : '$base/inventory';
+    // Owner: /owner/inventory; sales + warehouse: /{role}/stock.
+    final inventoryPath = switch (role) {
+      Role.owner => '$base/inventory',
+      Role.sales || Role.warehouse => '$base/stock',
+      Role.customer => null,
+    };
+    if (inventoryPath == null) return null;
     return '$inventoryPath/$id';
   }
   if (mobilePath.startsWith('/order/') && mobilePath.endsWith('/chat')) {
+    // Warehouse has no orders routes on web.
+    if (role == Role.warehouse) return null;
     final orderId = mobilePath
         .substring('/order/'.length)
         .replaceAll('/chat', '');
     return '$base/orders/$orderId?tab=1';
   }
   if (mobilePath.startsWith('/order/')) {
+    if (role == Role.warehouse) return null;
     final id = mobilePath.substring('/order/'.length);
     return '$base/orders/$id';
   }
   if (mobilePath.startsWith('/quote/')) {
-    final id = mobilePath.substring('/quote/'.length);
-    return '$base/quotes/$id';
+    // No dedicated /quotes routes on web; quote notifs resolve to /order/.
+    return null;
   }
   if (mobilePath == '/notifications') {
     return '$base/notifications';

@@ -635,6 +635,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get billDetail => 'Bill detail';
 
   @override
+  String get billCreatedBy => 'Created by';
+
+  @override
   String get selectPaymentStatus => 'Payment status';
 
   @override

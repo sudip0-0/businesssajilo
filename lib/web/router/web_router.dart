@@ -353,17 +353,40 @@ ShellRoute _salesRoutes() {
           load: product_list.loadLibrary,
           builder: () => product_list.WebProductListPage(
             selectedProductId: state.uri.queryParameters['id'],
+            canEdit: true,
           ),
         ),
         routes: [
+          GoRoute(
+            path: 'new',
+            builder: (_, _) => DeferredPage(
+              load: product_form.loadLibrary,
+              builder: () => product_form.WebProductFormPage(
+                inventoryListPath: '/sales/stock',
+              ),
+            ),
+          ),
           GoRoute(
             path: ':productId',
             builder: (_, state) => DeferredPage(
               load: product_list.loadLibrary,
               builder: () => product_list.WebProductListPage(
                 selectedProductId: state.pathParameters['productId'],
+                canEdit: true,
               ),
             ),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (_, state) => DeferredPage(
+                  load: product_form.loadLibrary,
+                  builder: () => product_form.WebProductFormPage(
+                    productId: state.pathParameters['productId'],
+                    inventoryListPath: '/sales/stock',
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -476,6 +499,36 @@ ShellRoute _warehouseRoutes() {
               builder: () => product_list.WebProductListPage(
                 selectedProductId: state.pathParameters['productId'],
                 canManageStock: true,
+              ),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/warehouse/billing',
+        builder: (_, state) => DeferredPage(
+          load: bill_list.loadLibrary,
+          builder: () => bill_list.WebBillListPage(
+            selectedBillId: state.uri.queryParameters['id'],
+          ),
+        ),
+        routes: [
+          GoRoute(
+            path: 'new',
+            onExit: _onExitBillForm,
+            builder: (_, state) => DeferredPage(
+              load: bill_form.loadLibrary,
+              builder: () => bill_form.WebBillFormPage(
+                orderId: state.uri.queryParameters['orderId'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: ':billId',
+            builder: (_, state) => DeferredPage(
+              load: bill_list.loadLibrary,
+              builder: () => bill_list.WebBillListPage(
+                selectedBillId: state.pathParameters['billId'],
               ),
             ),
           ),

@@ -18,8 +18,12 @@ class SupabaseCustomersRepository implements CustomersRepository {
     int offset = 0,
     int? limit,
     String? query,
+    bool includeBalances = true,
   }) async {
     final client = requireSupabaseClient(_client);
+    if (!includeBalances) {
+      return _listDirectory(offset: offset, limit: limit, query: query);
+    }
     var filter = client.from('customer_balances').select();
     final q = query?.trim();
     if (q != null && q.isNotEmpty) {
@@ -37,6 +41,28 @@ class SupabaseCustomersRepository implements CustomersRepository {
     return (rows as List).map(_mapBalanceRow).toList();
   }
 
+  Future<List<Customer>> _listDirectory({
+    int offset = 0,
+    int? limit,
+    String? query,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    var filter = client.from('customer_directory').select();
+    final q = query?.trim();
+    if (q != null && q.isNotEmpty) {
+      final pattern = '%${q.replaceAll(',', '')}%';
+      filter = filter.or(
+        'shop_name.ilike.$pattern,contact_name.ilike.$pattern,phone.ilike.$pattern',
+      );
+    }
+    var built = filter.order('shop_name', ascending: true);
+    if (limit != null) {
+      built = built.range(offset, offset + limit - 1);
+    }
+    final rows = await built;
+    return (rows as List).map(_mapDirectoryRow).toList();
+  }
+
   @override
   Future<List<Customer>> listRecent({int limit = 2}) async {
     final client = requireSupabaseClient(_client);
@@ -49,8 +75,16 @@ class SupabaseCustomersRepository implements CustomersRepository {
   }
 
   @override
-  Future<Customer> get(String id) async {
+  Future<Customer> get(String id, {bool includeBalances = true}) async {
     final client = requireSupabaseClient(_client);
+    if (!includeBalances) {
+      final row = await client
+          .from('customer_directory')
+          .select()
+          .eq('customer_id', id)
+          .single();
+      return _mapDirectoryRow(row);
+    }
     final row = await client.from('customers').select().eq('id', id).single();
     final customer = _mapCustomerRow(row);
     final balanceRow = await client
@@ -186,6 +220,24 @@ class SupabaseCustomersRepository implements CustomersRepository {
       address: map['address'] as String?,
       openingBalance: (map['opening_balance'] as num?)?.toInt() ?? 0,
       balanceDue: (map['balance_due'] as num?)?.toInt() ?? 0,
+      createdAt: map['created_at'] == null
+          ? null
+          : DateTime.parse(map['created_at'] as String),
+    );
+  }
+
+  Customer _mapDirectoryRow(dynamic row) {
+    final map = Map<String, dynamic>.from(row as Map);
+    return Customer(
+      id: map['customer_id'] as String,
+      businessId: map['business_id'] as String,
+      memberId: map['member_id'] as String? ?? '',
+      shopName: map['shop_name'] as String,
+      contactName: map['contact_name'] as String?,
+      phone: map['phone'] as String?,
+      address: map['address'] as String?,
+      openingBalance: 0,
+      balanceDue: 0,
       createdAt: map['created_at'] == null
           ? null
           : DateTime.parse(map['created_at'] as String),

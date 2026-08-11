@@ -47,12 +47,22 @@ const Map<OrderStatus, Set<OrderStatus>> orderTransitions = {
 };
 
 extension RolePermissions on Role {
+  /// Full billing ops: returns/credit notes and payment-adjacent bill actions.
   bool get canBill => this == Role.owner || this == Role.sales;
+
+  /// Create and view bills (includes warehouse; payments/returns stay [canBill]).
+  bool get canCreateBills =>
+      this == Role.owner || this == Role.sales || this == Role.warehouse;
+
+  /// Customer ledger / balance_due / dues (warehouse must never see this).
+  bool get canViewCustomerBalance =>
+      this == Role.owner || this == Role.sales;
+
   bool get canManageStock => this == Role.owner || this == Role.warehouse;
   bool get canQuote => this == Role.owner || this == Role.sales;
   bool get canRecordPayments => this == Role.owner || this == Role.sales;
   bool get canManageMembers => this == Role.owner;
   bool get canManageCustomers => this == Role.owner;
-  bool get canManageProducts => this == Role.owner;
+  bool get canManageProducts => this == Role.owner || this == Role.sales;
   bool get isStaff => this != Role.customer;
 }

@@ -257,6 +257,7 @@
   "sortCustomer": "ग्राहक",
   "entryBill": "बिल",
   "billDetail": "बिल विवरण",
+  "billCreatedBy": "बनाउने व्यक्ति",
   "selectPaymentStatus": "भुक्तानी स्थिति",
   "amountPaid": "भुक्तानी रकम",
   "customerOptional": "ग्राहक (वैकल्पिक)",
