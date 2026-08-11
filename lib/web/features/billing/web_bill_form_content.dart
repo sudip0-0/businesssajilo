@@ -252,6 +252,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       draft: _draft,
       forceStatus: forceStatus,
       fallbackCustomerId: _draft.customerId,
+      initialCustomerName: _selectedCustomer?.shopName,
       orderId: widget.orderId,
       exportAfterSave: exportAfterSave,
       onSaved: () {

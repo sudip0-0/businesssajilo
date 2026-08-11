@@ -18,11 +18,16 @@ class BillPaymentSheet extends ConsumerStatefulWidget {
     super.key,
     required this.grandTotal,
     this.initialCustomerId,
+    this.initialCustomerName,
     this.initialGuestName,
   });
 
   final int grandTotal;
   final String? initialCustomerId;
+
+  /// Display name for [initialCustomerId] (e.g. from order prefill).
+  /// When omitted, the sheet loads the customer by id.
+  final String? initialCustomerName;
   final String? initialGuestName;
 
   @override
@@ -33,6 +38,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   BillStatus _status = BillStatus.paid;
   bool _walkIn = false;
   String? _customerId;
+  String? _selectedShopName;
   final _amountController = TextEditingController();
   final _refController = TextEditingController();
   final _customerSearchController = TextEditingController();
@@ -48,11 +54,37 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     if (_walkIn && guest != null && guest.isNotEmpty) {
       _guestNameController.text = guest;
     }
+    final name = widget.initialCustomerName?.trim();
+    if (_customerId != null && name != null && name.isNotEmpty) {
+      _selectedShopName = name;
+      _customerSearchController.text = name;
+    }
     _amountController.text = formatNpr(
       Paisa(widget.grandTotal),
       showSymbol: false,
       showPaisa: false,
     );
+  }
+
+  void _selectCustomer(Customer customer) {
+    setState(() {
+      _customerId = customer.id;
+      _selectedShopName = customer.shopName;
+      _customerSearchController.text = customer.shopName;
+    });
+  }
+
+  void _applyCustomerLabel(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    if (_selectedShopName == trimmed &&
+        _customerSearchController.text == trimmed) {
+      return;
+    }
+    setState(() {
+      _selectedShopName = trimmed;
+      _customerSearchController.text = trimmed;
+    });
   }
 
   @override
@@ -135,18 +167,33 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    final searchQuery = _customerSearchController.text.trim();
-    final customersAsync = ref.watch(customerListProvider(searchQuery));
+    // Search list by typed query, but keep the selected name visible even when
+    // that customer is outside the first page of an empty query.
+    final listQuery =
+        _customerId != null &&
+            _selectedShopName != null &&
+            _customerSearchController.text.trim().toLowerCase() ==
+                _selectedShopName!.toLowerCase()
+        ? ''
+        : _customerSearchController.text.trim();
+    final customersAsync = ref.watch(customerListProvider(listQuery));
 
-    // Prefill search label once customers load.
-    customersAsync.whenData((customers) {
-      if (_customerId != null && _customerSearchController.text.isEmpty) {
-        final match = customers.where((c) => c.id == _customerId).firstOrNull;
-        if (match != null) {
-          _customerSearchController.text = match.shopName;
-        }
+    final initialId = widget.initialCustomerId;
+    if (!_walkIn &&
+        initialId != null &&
+        _customerId == initialId &&
+        _selectedShopName == null) {
+      ref.listen(customerDetailProvider(initialId), (prev, next) {
+        final customer = next.value;
+        if (customer != null) _applyCustomerLabel(customer.shopName);
+      });
+      final cached = ref.watch(customerDetailProvider(initialId)).value;
+      if (cached != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _applyCustomerLabel(cached.shopName);
+        });
       }
-    });
+    }
 
     return Material(
       child: Padding(
@@ -200,9 +247,19 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   _walkIn = v;
                   if (v) {
                     _customerId = null;
+                    _selectedShopName = null;
                     _customerSearchController.clear();
                   } else {
                     _guestNameController.clear();
+                    final initial = widget.initialCustomerId;
+                    final name = widget.initialCustomerName?.trim();
+                    if (initial != null) {
+                      _customerId = initial;
+                      if (name != null && name.isNotEmpty) {
+                        _selectedShopName = name;
+                        _customerSearchController.text = name;
+                      }
+                    }
                   }
                 }),
               ),
@@ -219,28 +276,32 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               ],
               if (!_walkIn)
                 customersAsync.when(
-                  loading: () => const LinearProgressIndicator(),
+                  loading: () => _selectedShopName != null
+                      ? TextField(
+                          controller: _customerSearchController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: l10n.selectCustomer,
+                            prefixIcon: const Icon(Icons.search),
+                          ),
+                        )
+                      : const LinearProgressIndicator(),
                   error: (e, _) => Text(l10n.loadingFailed),
                   data: (customers) => Autocomplete<Customer>(
+                    key: ValueKey(
+                      'bill-customer-${_customerId ?? 'none'}-'
+                      '${_selectedShopName ?? ''}',
+                    ),
+                    initialValue: TextEditingValue(
+                      text: _customerSearchController.text,
+                    ),
                     displayStringForOption: (c) => c.shopName,
                     optionsBuilder: (textEditingValue) {
-                      // Provider already searched; keep a light client filter
-                      // for the Autocomplete keystroke before rebuild.
                       return _filterCustomers(customers, textEditingValue.text);
                     },
-                    onSelected: (c) {
-                      setState(() {
-                        _customerId = c.id;
-                        _customerSearchController.text = c.shopName;
-                      });
-                    },
+                    onSelected: _selectCustomer,
                     fieldViewBuilder:
                         (context, controller, focusNode, onFieldSubmitted) {
-                          // Keep external controller in sync for prefill.
-                          if (controller.text.isEmpty &&
-                              _customerSearchController.text.isNotEmpty) {
-                            controller.text = _customerSearchController.text;
-                          }
                           return TextField(
                             controller: controller,
                             focusNode: focusNode,
@@ -252,16 +313,11 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                             onChanged: (v) {
                               setState(() {
                                 _customerSearchController.text = v;
-                                // Clear selection if user edits away from match.
-                                if (_customerId != null) {
-                                  final selected = customers
-                                      .where((c) => c.id == _customerId)
-                                      .firstOrNull;
-                                  if (selected == null ||
-                                      selected.shopName.toLowerCase() !=
-                                          v.trim().toLowerCase()) {
-                                    _customerId = null;
-                                  }
+                                if (_customerId != null &&
+                                    (_selectedShopName ?? '').toLowerCase() !=
+                                        v.trim().toLowerCase()) {
+                                  _customerId = null;
+                                  _selectedShopName = null;
                                 }
                               });
                             },

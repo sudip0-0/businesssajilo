@@ -82,7 +82,10 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
     final payment = await showAdaptiveSheet<BillPaymentResult>(
       context: context,
       title: l10n.saveBill,
-      child: BillPaymentSheet(grandTotal: draft.grandTotal),
+      child: BillPaymentSheet(
+        grandTotal: draft.grandTotal,
+        initialCustomerId: widget.customerId,
+      ),
     );
     if (payment == null) return;
     if (!mounted) return;

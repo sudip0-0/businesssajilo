@@ -22,6 +22,7 @@ Future<Bill?> submitBillForm({
   required BillFormDraft draft,
   BillStatus? forceStatus,
   String? fallbackCustomerId,
+  String? initialCustomerName,
   String? orderId,
   bool exportAfterSave = false,
   VoidCallback? onSaved,
@@ -86,6 +87,7 @@ Future<Bill?> submitBillForm({
       child: BillPaymentSheet(
         grandTotal: draft.grandTotal,
         initialCustomerId: draft.customerId,
+        initialCustomerName: initialCustomerName,
         initialGuestName: draft.guestName,
       ),
     );
