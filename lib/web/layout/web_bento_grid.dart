@@ -66,15 +66,13 @@ class WebBentoGrid extends StatelessWidget {
             }
 
             if (lastSpansRow && index == children.length - 1) {
-              rowItems.add(Expanded(child: SizedBox.expand(child: cell)));
+              rowItems.add(Expanded(child: cell));
               break;
             }
 
             rowItems.add(
               Expanded(
-                child: index < children.length
-                    ? SizedBox.expand(child: cell)
-                    : const SizedBox.shrink(),
+                child: index < children.length ? cell : const SizedBox.shrink(),
               ),
             );
             if (j < cols - 1 && index + 1 < end) {
@@ -84,7 +82,7 @@ class WebBentoGrid extends StatelessWidget {
 
           rows.add(
             Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: rowItems,
             ),
           );
@@ -109,6 +107,7 @@ class WebBentoTile extends StatefulWidget {
     super.key,
     required this.child,
     this.minHeight = 140,
+    this.height,
     this.onTap,
     this.padding = const EdgeInsets.all(20),
     this.elevated = false,
@@ -116,6 +115,9 @@ class WebBentoTile extends StatefulWidget {
 
   final Widget child;
   final double minHeight;
+
+  /// When set, the tile uses a fixed height so siblings in a row match size.
+  final double? height;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry padding;
   final bool elevated;
@@ -143,9 +145,10 @@ class _WebBentoTileState extends State<WebBentoTile> {
         transform: Matrix4.translationValues(0, lifted ? -2 : 0, 0),
         transformAlignment: Alignment.center,
         width: double.infinity,
-        // alignment expands the tile to the max height when the grid row stretches.
-        alignment: Alignment.topLeft,
-        constraints: BoxConstraints(minHeight: widget.minHeight),
+        height: widget.height,
+        constraints: widget.height == null
+            ? BoxConstraints(minHeight: widget.minHeight)
+            : null,
         decoration: BoxDecoration(
           color: WebPalette.card,
           borderRadius: BorderRadius.circular(tokens.cardRadius),

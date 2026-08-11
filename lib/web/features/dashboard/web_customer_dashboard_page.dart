@@ -62,7 +62,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                 onTap: () => context.go('/customer/dues'),
               ),
               WebBentoTile(
-                minHeight: 160,
+                height: 188,
                 onTap: () => context.go('/customer/catalog'),
                 child: _CustomerShortcutContent(
                   icon: PhosphorIconsRegular.storefront,
@@ -71,7 +71,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                 ),
               ),
               WebBentoTile(
-                minHeight: 160,
+                height: 188,
                 onTap: () => context.go('/customer/orders'),
                 child: _CustomerShortcutContent(
                   icon: PhosphorIconsRegular.package,
@@ -80,7 +80,7 @@ class WebCustomerDashboardPage extends ConsumerWidget {
                 ),
               ),
               WebBentoTile(
-                minHeight: 160,
+                height: 188,
                 onTap: () => context.go('/customer/dues'),
                 child: _CustomerShortcutContent(
                   icon: PhosphorIconsRegular.receipt,
@@ -114,7 +114,7 @@ class _CustomerShortcutContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: theme.colorScheme.primary),
-        const Spacer(),
+        const SizedBox(height: 16),
         Text(title, style: theme.textTheme.titleMedium),
         const SizedBox(height: 4),
         Text(
