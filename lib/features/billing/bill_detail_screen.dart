@@ -52,9 +52,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
     if (name != null && name.isNotEmpty && roleText != null) {
       return '$name · $roleText';
     }
-    return name?.isNotEmpty == true
-        ? name!
-        : (roleText ?? bill.createdBy);
+    return name?.isNotEmpty == true ? name! : (roleText ?? bill.createdBy);
   }
 
   @override
@@ -78,132 +76,33 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                 locale: Localizations.localeOf(context),
               )
             : '—';
+        final creator =
+            (bill.createdByName != null || bill.createdByRole != null)
+            ? _formatBillCreator(l10n, bill)
+            : null;
 
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.icon(
-                  onPressed: () => exportBillAsPng(ref, context, bill),
-                  icon: const Icon(Icons.share_outlined, size: 18),
-                  label: Text(l10n.shareViaWhatsApp),
-                ),
-                if (canReturn && bill.customerId != null)
-                  _ReturnItemsButton(
-                    bill: bill,
-                    embedded: widget.embedded,
-                    onChanged: () => setState(() => _changed = true),
-                  ),
-                PopupMenuButton<String>(
-                  tooltip: l10n.export,
-                  icon: const Icon(Icons.more_horiz),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'print':
-                        exportBillPrint(ref, context, bill);
-                      case 'pdf':
-                        exportBillPdfDownload(ref, context, bill);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'print',
-                      child: Text(l10n.printInvoice),
-                    ),
-                    PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    bill.billNo,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                if (bill.pendingSync)
-                  Tooltip(
-                    message: l10n.provisionalBillNo,
-                    child: const Icon(Icons.schedule, color: BsColors.accent),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.customerName,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
+        return ColoredBox(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            children: [
+              _BillActions(
+                bill: bill,
+                canReturn: canReturn,
+                embedded: widget.embedded,
+                onChanged: () => setState(() => _changed = true),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              billCustomerLabel(bill, walkInLabel: l10n.walkIn),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 16),
+              _BillSummaryCard(
+                l10n: l10n,
+                bill: bill,
+                dateStr: dateStr,
+                creator: creator,
               ),
-            ),
-            if (bill.customerId != null)
-              _CustomerContactLine(customerId: bill.customerId!),
-            const SizedBox(height: 8),
-            Text(dateStr),
-            if (bill.createdByName != null || bill.createdByRole != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.billCreatedBy,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _formatBillCreator(l10n, bill),
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              const SizedBox(height: 16),
+              _BillLinesCard(l10n: l10n, bill: bill),
             ],
-            const SizedBox(height: 8),
-            BillStatusChip(bill.status),
-            const SizedBox(height: 16),
-            Text(
-              l10n.billLines,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            _BillLinesHeader(l10n: l10n),
-            const Divider(height: 16),
-            ...bill.items.map(
-              (item) => _BillLineRow(
-                name: item.nameSnapshot,
-                qty: '${item.qty}',
-                rate: formatNpr(Paisa(item.rate), showPaisa: false),
-                amount: formatNpr(Paisa(item.lineTotal), showPaisa: false),
-              ),
-            ),
-            const Divider(height: 16),
-            _SummaryRow(
-              label: l10n.total,
-              value: formatNpr(Paisa(bill.itemsTotal), showPaisa: false),
-            ),
-            if (bill.discount > 0)
-              _SummaryRow(
-                label: l10n.billDiscount,
-                value: '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
-              ),
-            _SummaryRow(
-              label: l10n.grandTotal,
-              value: formatNpr(Paisa(bill.grandTotal), showPaisa: false),
-              bold: true,
-            ),
-          ],
+          ),
         );
       },
     );
@@ -223,6 +122,525 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
   }
 }
 
+class _BillCard extends StatelessWidget {
+  const _BillCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(BsRadii.xl),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.onSurface.withValues(alpha: 0.05),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _BillActions extends ConsumerWidget {
+  const _BillActions({
+    required this.bill,
+    required this.canReturn,
+    required this.embedded,
+    required this.onChanged,
+  });
+
+  final Bill bill;
+  final bool canReturn;
+  final bool embedded;
+  final VoidCallback onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        FilledButton.icon(
+          onPressed: () => exportBillAsPng(ref, context, bill),
+          icon: const Icon(Icons.chat_outlined, size: 18),
+          label: Text(l10n.shareViaWhatsApp),
+        ),
+        if (canReturn && bill.customerId != null)
+          _ReturnItemsButton(
+            bill: bill,
+            embedded: embedded,
+            onChanged: onChanged,
+          ),
+        Material(
+          color: scheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BsRadii.lg),
+            side: BorderSide(color: scheme.outlineVariant),
+          ),
+          child: PopupMenuButton<String>(
+            tooltip: l10n.export,
+            padding: EdgeInsets.zero,
+            icon: Icon(Icons.more_horiz, color: scheme.onSurface),
+            onSelected: (value) {
+              switch (value) {
+                case 'print':
+                  exportBillPrint(ref, context, bill);
+                case 'pdf':
+                  exportBillPdfDownload(ref, context, bill);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'print',
+                child: Text(l10n.printInvoice),
+              ),
+              PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BillSummaryCard extends StatelessWidget {
+  const _BillSummaryCard({
+    required this.l10n,
+    required this.bill,
+    required this.dateStr,
+    required this.creator,
+  });
+
+  final AppLocalizations l10n;
+  final Bill bill;
+  final String dateStr;
+  final String? creator;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final iconWash = scheme.primary.withValues(alpha: 0.08);
+    final iconColor = scheme.primary;
+
+    return _BillCard(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 520;
+            final left = _SummaryLeft(
+              l10n: l10n,
+              bill: bill,
+              creator: creator,
+              iconWash: iconWash,
+              iconColor: iconColor,
+            );
+            final right = _SummaryRight(
+              l10n: l10n,
+              bill: bill,
+              dateStr: dateStr,
+              iconWash: iconWash,
+              iconColor: iconColor,
+              alignEnd: wide,
+            );
+
+            if (!wide) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  left,
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 16),
+                  right,
+                ],
+              );
+            }
+
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(flex: 3, child: left),
+                  Container(
+                    width: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    color: scheme.outlineVariant,
+                  ),
+                  Expanded(flex: 2, child: right),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryLeft extends StatelessWidget {
+  const _SummaryLeft({
+    required this.l10n,
+    required this.bill,
+    required this.creator,
+    required this.iconWash,
+    required this.iconColor,
+  });
+
+  final AppLocalizations l10n;
+  final Bill bill;
+  final String? creator;
+  final Color iconWash;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _IconBadge(
+              icon: Icons.description_outlined,
+              wash: iconWash,
+              color: iconColor,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      bill.billNo,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (bill.pendingSync) ...[
+                    const SizedBox(width: 8),
+                    Tooltip(
+                      message: l10n.provisionalBillNo,
+                      child: Icon(
+                        Icons.schedule,
+                        color: scheme.accentColor,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          l10n.customerName,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          billCustomerLabel(bill, walkInLabel: l10n.walkIn),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurface,
+          ),
+        ),
+        if (bill.customerId != null)
+          _CustomerContactLine(customerId: bill.customerId!),
+        if (creator != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            l10n.billCreatedBy,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            creator!,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _SummaryRight extends StatelessWidget {
+  const _SummaryRight({
+    required this.l10n,
+    required this.bill,
+    required this.dateStr,
+    required this.iconWash,
+    required this.iconColor,
+    required this.alignEnd,
+  });
+
+  final AppLocalizations l10n;
+  final Bill bill;
+  final String dateStr;
+  final Color iconWash;
+  final Color iconColor;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        BillStatusChip(bill.status),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _IconBadge(
+              icon: Icons.calendar_today_outlined,
+              wash: iconWash,
+              color: iconColor,
+              size: 32,
+              iconSize: 16,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              l10n.billDate,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          dateStr,
+          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: scheme.onSurface,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  const _IconBadge({
+    required this.icon,
+    required this.wash,
+    required this.color,
+    this.size = 40,
+    this.iconSize = 20,
+  });
+
+  final IconData icon;
+  final Color wash;
+  final Color color;
+  final double size;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: wash, shape: BoxShape.circle),
+      child: Icon(icon, size: iconSize, color: color),
+    );
+  }
+}
+
+class _BillLinesCard extends StatelessWidget {
+  const _BillLinesCard({required this.l10n, required this.bill});
+
+  final AppLocalizations l10n;
+  final Bill bill;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return _BillCard(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.table_rows_outlined,
+                  size: 18,
+                  color: scheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.billLines,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(BsRadii.lg),
+              child: Column(
+                children: [
+                  ColoredBox(
+                    color: scheme.surfaceContainerLow,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: _BillLinesHeader(l10n: l10n),
+                    ),
+                  ),
+                  if (bill.items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text(
+                        l10n.noBillLines,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  else
+                    for (var i = 0; i < bill.items.length; i++) ...[
+                      if (i > 0)
+                        Divider(height: 1, color: scheme.outlineVariant),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        child: _BillLineRow(
+                          name: bill.items[i].nameSnapshot,
+                          qty: '${bill.items[i].qty}',
+                          rate: formatNpr(
+                            Paisa(bill.items[i].rate),
+                            showPaisa: false,
+                          ),
+                          amount: formatNpr(
+                            Paisa(bill.items[i].lineTotal),
+                            showPaisa: false,
+                          ),
+                        ),
+                      ),
+                    ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 220, maxWidth: 280),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _TotalRow(
+                      label: l10n.total,
+                      value: formatNpr(
+                        Paisa(bill.itemsTotal),
+                        showPaisa: false,
+                      ),
+                    ),
+                    if (bill.discount > 0) ...[
+                      const SizedBox(height: 8),
+                      _TotalRow(
+                        label: l10n.billDiscount,
+                        value:
+                            '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Text(
+                          l10n.grandTotal,
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.successColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(BsRadii.full),
+                          ),
+                          child: Text(
+                            formatNpr(
+                              Paisa(bill.grandTotal),
+                              showPaisa: false,
+                            ),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: scheme.successColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TotalRow extends StatelessWidget {
+  const _TotalRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodyMedium;
+    return Row(
+      children: [
+        Text(label, style: style),
+        const Spacer(),
+        Text(value, style: style?.copyWith(fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+}
+
 class _CustomerContactLine extends ConsumerWidget {
   const _CustomerContactLine({required this.customerId});
 
@@ -233,21 +651,41 @@ class _CustomerContactLine extends ConsumerWidget {
     final customerAsync = ref.watch(customerDetailProvider(customerId));
     return customerAsync.maybeWhen(
       data: (customer) {
-        final parts = [
-          if (customer.contactName != null &&
-              customer.contactName!.trim().isNotEmpty)
-            customer.contactName!.trim(),
-          if (customer.phone != null && customer.phone!.trim().isNotEmpty)
-            customer.phone!.trim(),
-        ];
-        if (parts.isEmpty) return const SizedBox.shrink();
+        final phone = customer.phone?.trim();
+        final contact = customer.contactName?.trim();
+        if ((phone == null || phone.isEmpty) &&
+            (contact == null || contact.isEmpty)) {
+          return const SizedBox.shrink();
+        }
         return Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Text(
-            parts.join(' · '),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              if (phone != null && phone.isNotEmpty) ...[
+                Icon(
+                  Icons.phone_outlined,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    phone,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ] else if (contact != null && contact.isNotEmpty)
+                Flexible(
+                  child: Text(
+                    contact,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },
@@ -265,7 +703,7 @@ class _BillLinesHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelSmall?.copyWith(
       color: Theme.of(context).colorScheme.onSurfaceVariant,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
     );
     return Row(
       children: [
@@ -311,38 +749,35 @@ class _BillLineRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final body = Theme.of(context).textTheme.bodyMedium;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 4,
-            child: Text(
-              name,
-              style: body,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 4,
+          child: Text(
+            name,
+            style: body,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(
-            width: 56,
-            child: Text(qty, style: body, textAlign: TextAlign.center),
+        ),
+        SizedBox(
+          width: 56,
+          child: Text(qty, style: body, textAlign: TextAlign.center),
+        ),
+        SizedBox(
+          width: 96,
+          child: Text(rate, style: body, textAlign: TextAlign.end),
+        ),
+        SizedBox(
+          width: 104,
+          child: Text(
+            amount,
+            style: body?.copyWith(fontWeight: FontWeight.w600),
+            textAlign: TextAlign.end,
           ),
-          SizedBox(
-            width: 96,
-            child: Text(rate, style: body, textAlign: TextAlign.end),
-          ),
-          SizedBox(
-            width: 104,
-            child: Text(
-              amount,
-              style: body?.copyWith(fontWeight: FontWeight.w600),
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -401,41 +836,18 @@ class _ReturnItemsButton extends ConsumerWidget {
               onChanged?.call();
             }
           },
-          icon: const Icon(Icons.undo_outlined, size: 18),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          icon: const Icon(Icons.keyboard_return_rounded, size: 18),
           label: Text(l10n.returnItems),
         );
       },
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-    this.bold = false,
-  });
-
-  final String label;
-  final String value;
-  final bool bold;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = bold
-        ? Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
-        : Theme.of(context).textTheme.bodyLarge;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: style),
-          Text(value, style: style),
-        ],
-      ),
     );
   }
 }

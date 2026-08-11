@@ -35,9 +35,9 @@ import 'web_bill_form_line_table.dart';
 /// POS-style bill form for web: product search + cart on the left, a sticky
 /// checkout rail (customer, totals) on the right on wide screens.
 ///
-/// Search inputs are debounced and previously loaded results stay visible
-/// while a query is in flight — the page chrome never unmounts, so the search
-/// field never loses focus mid-typing.
+/// Search inputs are debounced. Cached results are only shown when they still
+/// match the typed query — otherwise the dropdown shows a loading state so the
+/// empty-query catalog never flashes for a non-matching keystroke like "Z".
 ///
 /// When [orderId] is set, the form prefills customer + lines from that order
 /// and saving uses create-from-order (marks the order billed).
@@ -69,9 +69,13 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   String _customerQuery = '';
 
   /// Last successfully loaded lists — kept on screen while the next query is
-  /// in flight so the UI never flashes a loading state mid-typing.
+  /// in flight so the UI never flashes a loading state mid-typing. Only reused
+  /// when [_lastProductsQuery] / [_lastCustomersQuery] still matches what the
+  /// user has typed (avoids flashing the empty-query catalog for "Z").
   List<Product> _lastProducts = const [];
   List<Customer> _lastCustomers = const [];
+  String _lastProductsQuery = '';
+  String _lastCustomersQuery = '';
 
   Customer? _selectedCustomer;
   bool _loading = false;
@@ -179,6 +183,8 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   void _onProductQueryChanged(String raw) {
     _productDebounce?.cancel();
     final query = raw.trim().toLowerCase();
+    // Rebuild immediately so stale catalog rows are dropped before debounce.
+    setState(() {});
     if (query == _productQuery) return;
     _productDebounce = Timer(_searchDebounce, () {
       if (mounted) setState(() => _productQuery = query);
@@ -188,6 +194,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   void _onCustomerQueryChanged(String raw) {
     _customerDebounce?.cancel();
     final query = raw.trim().toLowerCase();
+    setState(() {});
     if (query == _customerQuery) return;
     _customerDebounce = Timer(_searchDebounce, () {
       if (mounted) setState(() => _customerQuery = query);
@@ -270,18 +277,42 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   Widget build(BuildContext context) {
     ref.listen(productListProvider(_productQuery), (_, next) {
       final value = next.value;
-      if (value != null) setState(() => _lastProducts = value);
+      if (value != null) {
+        setState(() {
+          _lastProducts = value;
+          _lastProductsQuery = _productQuery;
+        });
+      }
     });
     ref.listen(customerListProvider(_customerQuery), (_, next) {
       final value = next.value;
-      if (value != null) setState(() => _lastCustomers = value);
+      if (value != null) {
+        setState(() {
+          _lastCustomers = value;
+          _lastCustomersQuery = _customerQuery;
+        });
+      }
     });
 
     final l10n = AppLocalizations.of(context);
     final productsAsync = ref.watch(productListProvider(_productQuery));
     final customersAsync = ref.watch(customerListProvider(_customerQuery));
-    final products = productsAsync.value ?? _lastProducts;
-    final customers = customersAsync.value ?? _lastCustomers;
+    final liveProductQuery = _productQueryController.text.trim().toLowerCase();
+    final liveCustomerQuery = _customerQueryController.text.trim().toLowerCase();
+    final products = liveProductQuery == _lastProductsQuery
+        ? (productsAsync.value ?? _lastProducts)
+        : const <Product>[];
+    final customers = liveCustomerQuery == _lastCustomersQuery
+        ? (customersAsync.value ?? _lastCustomers)
+        : const <Customer>[];
+    final productsLoading =
+        (liveProductQuery.isNotEmpty &&
+            liveProductQuery != _lastProductsQuery) ||
+        (liveProductQuery == _productQuery && productsAsync.isLoading);
+    final customersLoading =
+        (liveCustomerQuery.isNotEmpty &&
+            liveCustomerQuery != _lastCustomersQuery) ||
+        (liveCustomerQuery == _customerQuery && customersAsync.isLoading);
     final today = DateFormat.yMMMd().format(DateTime.now());
 
     return Stack(
@@ -296,7 +327,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               productController: _productQueryController,
               productFocus: _productSearchFocus,
               products: products,
-              productsLoading: productsAsync.isLoading,
+              productsLoading: productsLoading,
               productsFailed: productsAsync.hasError && products.isEmpty,
               onProductQueryChanged: _onProductQueryChanged,
               onProductSelected: _addProduct,
@@ -323,7 +354,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               customerFocus: _customerSearchFocus,
               guestNameController: _guestNameController,
               customers: customers,
-              customersLoading: customersAsync.isLoading,
+              customersLoading: customersLoading,
               customersFailed: customersAsync.hasError && customers.isEmpty,
               onCustomerQueryChanged: _onCustomerQueryChanged,
               onCustomerSelected: _selectCustomer,

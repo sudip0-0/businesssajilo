@@ -37,8 +37,10 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   String _query = '';
 
   /// Last loaded products stay on screen while the next query is in flight,
-  /// so the search field is never unmounted mid-typing.
+  /// so the search field is never unmounted mid-typing. Only reused when
+  /// [_lastProductsQuery] still matches the typed text.
   List<Product> _lastProducts = const [];
+  String _lastProductsQuery = '';
   bool _productsLoadedOnce = false;
   bool _loading = false;
 
@@ -61,6 +63,8 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   void _onQueryChanged(String raw) {
     _searchDebounceTimer?.cancel();
     final query = raw.trim();
+    // Rebuild immediately so the picker drops stale catalog rows.
+    setState(() {});
     if (query == _query) return;
     _searchDebounceTimer = Timer(_searchDebounce, () {
       if (mounted) setState(() => _query = query);
@@ -96,6 +100,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       if (value != null) {
         setState(() {
           _lastProducts = value;
+          _lastProductsQuery = _query;
           _productsLoadedOnce = true;
         });
       }
@@ -103,10 +108,17 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
     final l10n = AppLocalizations.of(context);
     final productsAsync = ref.watch(productListProvider(_query));
-    final products = productsAsync.value ?? _lastProducts;
+    final liveQuery = _searchController.text.trim();
+    final products = liveQuery == _lastProductsQuery
+        ? (productsAsync.value ?? _lastProducts)
+        : const <Product>[];
     final firstLoad = productsAsync.isLoading && !_productsLoadedOnce;
     final loadFailed = productsAsync.hasError && !_productsLoadedOnce;
-    final refreshing = productsAsync.isLoading && _productsLoadedOnce;
+    final refreshing =
+        (liveQuery.isNotEmpty && liveQuery != _lastProductsQuery) ||
+        (liveQuery == _query &&
+            productsAsync.isLoading &&
+            _productsLoadedOnce);
 
     final Widget body;
     if (firstLoad) {

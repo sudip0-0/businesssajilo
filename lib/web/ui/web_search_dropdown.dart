@@ -41,8 +41,9 @@ class WebSearchDropdown<T> extends StatefulWidget {
   final FocusNode focusNode;
   final String hint;
 
-  /// Latest items to show. May be stale while [loading] is true — the dropdown
-  /// keeps showing them with a thin progress strip instead of a spinner.
+  /// Latest items to show. While [loading] is true the dropdown may still show
+  /// matching prior results with a thin progress strip; when the query text
+  /// changes it hides prior rows until the parent updates [items]/[loading].
   final List<T> items;
 
   /// Builds one suggestion row. Must be [kWebSearchDropdownTileHeight] tall so
@@ -91,6 +92,11 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
   /// must not reopen the list over the newly added row. Cleared on the next
   /// focus-gain once the suppress has been honored, or when the user types.
   bool _suppressOpenOnFocus = false;
+
+  /// True after the user types until the parent rebuilds with items/loading for
+  /// that query. Prevents a one-frame flash of the previous query's results
+  /// (e.g. empty-query catalog) before debounce/fetch catches up.
+  bool _awaitingItemsRefresh = false;
 
   /// Width of the field, captured from this widget's own [LayoutBuilder]
   /// constraints during build. Reading a render box's size from the overlay
@@ -215,7 +221,7 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    final items = widget.items;
+    final items = _awaitingItemsRefresh ? <T>[] : widget.items;
 
     if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
         event.logicalKey == LogicalKeyboardKey.arrowUp) {
@@ -267,6 +273,7 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
   }
 
   void _handleSubmitted(String _) {
+    if (_awaitingItemsRefresh) return;
     if (_isOpen &&
         widget.items.isNotEmpty &&
         _highlighted < widget.items.length) {
@@ -280,6 +287,11 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
     if (widget.focusNode != oldWidget.focusNode) {
       oldWidget.focusNode.removeListener(_handleFocusChange);
       widget.focusNode.addListener(_handleFocusChange);
+    }
+    if (_awaitingItemsRefresh &&
+        (!identical(widget.items, oldWidget.items) ||
+            widget.loading != oldWidget.loading)) {
+      _awaitingItemsRefresh = false;
     }
     // Items/loading changed while open — repaint the floating list.
     if (_isOpen) {
@@ -309,9 +321,13 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
               focusNode: widget.focusNode,
               textInputAction: widget.textInputAction ?? TextInputAction.done,
               onChanged: (value) {
-                widget.onQueryChanged(value);
                 final hasQuery = value.trim().isNotEmpty;
+                // Hide previous-query rows immediately; parent debounce/fetch
+                // will clear [_awaitingItemsRefresh] via didUpdateWidget.
+                _awaitingItemsRefresh = hasQuery;
+                widget.onQueryChanged(value);
                 if (!hasQuery) {
+                  _awaitingItemsRefresh = false;
                   // With openOnFocus: false (product search), don't keep a
                   // full catalog list open after the query is cleared.
                   if (!widget.openOnFocus) _close();
@@ -335,14 +351,16 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
 
   Widget _buildOverlay(BuildContext context) {
     final tokens = context.webTokens;
-    final items = widget.items;
+    final awaiting = _awaitingItemsRefresh;
+    final items = awaiting ? <T>[] : widget.items;
+    final loading = awaiting || widget.loading;
 
     Widget content;
     if (items.isNotEmpty) {
       content = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (widget.loading) const LinearProgressIndicator(minHeight: 2),
+          if (loading) const LinearProgressIndicator(minHeight: 2),
           Flexible(
             child: ListView.builder(
               controller: _scrollController,
@@ -375,7 +393,7 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
           ),
         ],
       );
-    } else if (widget.loading) {
+    } else if (loading) {
       content = const _DropdownMessage(
         child: SizedBox(
           height: 18,

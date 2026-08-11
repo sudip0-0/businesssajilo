@@ -11,7 +11,9 @@ import '../inventory/product_image.dart';
 ///
 /// The text field's controller and focus node are hoisted by the parent and
 /// the list keeps showing the last loaded products while a query is in
-/// flight, so typing never unmounts the field or steals its focus.
+/// flight, so typing never unmounts the field or steals its focus. The parent
+/// must clear [products] when the typed query no longer matches the loaded
+/// results so stale catalog rows do not flash before "no matches".
 class BillFormProductPicker extends StatelessWidget {
   const BillFormProductPicker({
     super.key,
@@ -58,10 +60,16 @@ class BillFormProductPicker extends StatelessWidget {
         Expanded(
           child: products.isEmpty
               ? Center(
-                  child: Text(
-                    l10n.noSearchResults,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  child: refreshing
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          l10n.noSearchResults,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                 )
               : ListView.separated(
                   itemCount: products.length,
