@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/bill_search_match.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -146,14 +147,52 @@ class SyncingBillsRepository implements BillsRepository {
   Future<List<Bill>> search(String query, {int limit = 50}) async {
     final q = query.trim();
     if (q.isEmpty) return list(limit: limit);
+
     final pattern = '%$q%';
-    final bills =
-        await (_db.select(_db.localBills)
-              ..where((b) => b.billNo.like(pattern))
-              ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
-              ..limit(limit))
-            .get();
-    return _attachItems(bills);
+    final amountPaisa = billSearchAmountPaisa(q);
+    const candidateLimit = 200;
+
+    final textQuery = _db.select(_db.localBills)
+      ..where((b) {
+        final textMatch =
+            b.billNo.like(pattern) |
+            (b.customerShopName.isNotNull() & b.customerShopName.like(pattern));
+        if (amountPaisa != null) {
+          return textMatch | b.grandTotal.equals(amountPaisa);
+        }
+        return textMatch;
+      })
+      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
+      ..limit(candidateLimit);
+
+    // Recent window so free-text dates (e.g. "11 Aug") can match without SQL.
+    final recentQuery = _db.select(_db.localBills)
+      ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
+      ..limit(candidateLimit);
+
+    final textHits = await textQuery.get();
+    final recent = await recentQuery.get();
+    final byId = <String, LocalBill>{
+      for (final bill in textHits) bill.id: bill,
+      for (final bill in recent) bill.id: bill,
+    };
+    final candidates = byId.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    final matched = <LocalBill>[];
+    for (final row in candidates) {
+      if (billMatchesSearchFields(
+        billNo: row.billNo,
+        customerShopName: row.customerShopName,
+        grandTotal: row.grandTotal,
+        createdAt: row.createdAt,
+        query: q,
+      )) {
+        matched.add(row);
+        if (matched.length >= limit) break;
+      }
+    }
+    return _attachItems(matched);
   }
 
   /// Reports always prefer remote (same as customer ledger). Falls back to

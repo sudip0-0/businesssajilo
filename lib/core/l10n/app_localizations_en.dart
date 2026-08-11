@@ -557,7 +557,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noBills => 'No bills yet';
 
   @override
-  String get filterBills => 'Search bills';
+  String get filterBills => 'Search name, amount, date, or bill no.';
 
   @override
   String get allBills => 'All bills';

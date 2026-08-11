@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/bill_search_match.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -31,13 +32,56 @@ class SupabaseBillsRepository implements BillsRepository {
   @override
   Future<List<Bill>> search(String query, {int limit = 50}) async {
     final client = requireSupabaseClient(_client);
-    final rows = await client
+    final q = query.trim();
+    if (q.isEmpty) return list(limit: limit);
+
+    final amountPaisa = billSearchAmountPaisa(q);
+    final customers = await client
+        .from('customers')
+        .select('id')
+        .ilike('shop_name', '%$q%')
+        .limit(100);
+    final customerIds = (customers as List)
+        .map((r) => (r as Map)['id'] as String)
+        .toList();
+
+    final orParts = <String>['bill_no.ilike.%$q%', 'guest_name.ilike.%$q%'];
+    if (customerIds.isNotEmpty) {
+      orParts.add('customer_id.in.(${customerIds.join(',')})');
+    }
+    if (amountPaisa != null) {
+      orParts.add('grand_total.eq.$amountPaisa');
+    }
+
+    const candidateLimit = 100;
+    final filteredRows = await client
         .from('bills')
         .select('*, customers(shop_name)')
-        .ilike('bill_no', '%$query%')
+        .or(orParts.join(','))
         .order('created_at', ascending: false)
-        .limit(limit);
-    return (rows as List).map(_mapBillRow).toList();
+        .limit(candidateLimit);
+    // Recent window so free-text dates can still match.
+    final recentRows = await client
+        .from('bills')
+        .select('*, customers(shop_name)')
+        .order('created_at', ascending: false)
+        .limit(candidateLimit);
+
+    final byId = <String, Bill>{};
+    for (final row in [...filteredRows as List, ...recentRows as List]) {
+      final bill = _mapBillRow(row);
+      byId.putIfAbsent(bill.id, () => bill);
+    }
+    final matched = byId.values
+        .where((bill) => billMatchesSearch(bill, query: q))
+        .toList();
+    matched.sort((a, b) {
+      final aAt = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bAt = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bAt.compareTo(aAt);
+    });
+    if (matched.length <= limit) return matched;
+    return matched.sublist(0, limit);
   }
 
   @override

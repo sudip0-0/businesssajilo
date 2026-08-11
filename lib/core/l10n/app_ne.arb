@@ -194,7 +194,7 @@
   "saveBill": "बिल सेभ",
   "billSaved": "बिल सेभ भयो",
   "noBills": "अहिलेसम्म कुनै बिल छैन",
-  "filterBills": "बिल खोज्नुहोस्",
+  "filterBills": "नाम, रकम, मिति वा बिल नं. खोज्नुहोस्",
   "allBills": "सबै बिल",
   "sortDate": "मिति",
   "sortAmount": "रकम",

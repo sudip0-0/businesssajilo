@@ -130,6 +130,31 @@ void main() {
     expect(hits.single.items, hasLength(2));
   });
 
+  test('bill search matches customer name and amount', () async {
+    final now = DateTime.utc(2026, 8, 11, 10);
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'named',
+            businessId: 'biz',
+            billNo: 'BS-9',
+            status: 'paid',
+            createdBy: 'member',
+            grandTotal: const Value(92500),
+            customerShopName: const Value('umesh rai'),
+            createdAt: Value(now),
+          ),
+        );
+    final repo = billsRepo();
+
+    final byName = await repo.search('umesh', limit: 10);
+    expect(byName.map((b) => b.billNo), contains('BS-9'));
+
+    final byAmount = await repo.search('925', limit: 10);
+    expect(byAmount.map((b) => b.billNo), contains('BS-9'));
+  });
+
   test('product list paginates in SQL order by name', () async {
     final now = DateTime.utc(2026, 1, 1);
     for (final name in ['Zebra', 'Apple', 'Mango', 'Banana']) {

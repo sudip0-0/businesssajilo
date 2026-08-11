@@ -194,7 +194,7 @@
   "saveBill": "Save bill",
   "billSaved": "Bill saved",
   "noBills": "No bills yet",
-  "filterBills": "Search bills",
+  "filterBills": "Search name, amount, date, or bill no.",
   "allBills": "All bills",
   "sortDate": "Date",
   "sortAmount": "Amount",

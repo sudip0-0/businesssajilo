@@ -1181,7 +1181,7 @@ abstract class AppLocalizations {
   /// No description provided for @filterBills.
   ///
   /// In en, this message translates to:
-  /// **'Search bills'**
+  /// **'Search name, amount, date, or bill no.'**
   String get filterBills;
 
   /// No description provided for @allBills.

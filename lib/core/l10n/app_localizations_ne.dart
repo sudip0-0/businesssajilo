@@ -556,7 +556,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get noBills => 'अहिलेसम्म कुनै बिल छैन';
 
   @override
-  String get filterBills => 'बिल खोज्नुहोस्';
+  String get filterBills => 'नाम, रकम, मिति वा बिल नं. खोज्नुहोस्';
 
   @override
   String get allBills => 'सबै बिल';
