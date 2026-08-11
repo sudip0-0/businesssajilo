@@ -56,7 +56,14 @@ final webRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     redirect: (context, state) {
       final auth = ref.read(authProvider);
-      final path = state.matchedLocation;
+      // Prefer full URI path so bare role roots like `/owner` redirect even
+      // when no GoRoute matches (matchedLocation can be empty then).
+      final rawPath = state.uri.path.isNotEmpty
+          ? state.uri.path
+          : state.matchedLocation;
+      final path = rawPath.length > 1 && rawPath.endsWith('/')
+          ? rawPath.substring(0, rawPath.length - 1)
+          : rawPath;
       final isAuthRoute = path == '/login' || path == '/register';
 
       if (auth.isLoading) return null;
@@ -79,6 +86,9 @@ final webRouterProvider = Provider<GoRouter>((ref) {
 
       if (isAuthRoute || path == '/') return home;
       if (!webPathAllowedForRole(path, role)) return home;
+
+      final roleRootHome = webRoleRootRedirect(path);
+      if (roleRootHome != null) return roleRootHome;
 
       // Warehouse cannot access billing routes.
       if (path.contains('/billing') && !webBillingPathAllowed(role)) {
@@ -104,6 +114,23 @@ final webRouterProvider = Provider<GoRouter>((ref) {
           if (role == null) return '/login';
           return '${webRoleBasePath(role)}/notifications';
         },
+      ),
+      // Bare role roots → home (also handled in [redirect] for safety).
+      GoRoute(
+        path: '/owner',
+        redirect: (_, _) => '/owner/dashboard',
+      ),
+      GoRoute(
+        path: '/sales',
+        redirect: (_, _) => '/sales/dashboard',
+      ),
+      GoRoute(
+        path: '/warehouse',
+        redirect: (_, _) => '/warehouse/stock',
+      ),
+      GoRoute(
+        path: '/customer',
+        redirect: (_, _) => '/customer/dashboard',
       ),
       _ownerRoutes(),
       _salesRoutes(),

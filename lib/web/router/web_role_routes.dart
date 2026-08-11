@@ -17,6 +17,20 @@ String webRoleHomePath(Role? role) => switch (role) {
   null => '/login',
 };
 
+/// Redirect bare role roots (`/owner`, `/customer`, …) to that role's home.
+String? webRoleRootRedirect(String path) {
+  final normalized = path.length > 1 && path.endsWith('/')
+      ? path.substring(0, path.length - 1)
+      : path;
+  return switch (normalized) {
+    '/owner' => '/owner/dashboard',
+    '/sales' => '/sales/dashboard',
+    '/warehouse' => '/warehouse/stock',
+    '/customer' => '/customer/dashboard',
+    _ => null,
+  };
+}
+
 bool webPathAllowedForRole(String path, Role role) {
   if (path.startsWith('/owner')) return role == Role.owner;
   if (path.startsWith('/sales')) return role == Role.sales;
