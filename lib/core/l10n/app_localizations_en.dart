@@ -314,6 +314,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addProduct => 'Add product';
 
   @override
+  String get importFromExcel => 'Import from Excel';
+
+  @override
+  String get downloadSampleExcel => 'Download sample Excel';
+
+  @override
+  String get importExcelHint =>
+      'Download the sample file, fill in your products (prices in NPR), then upload the Excel file.';
+
+  @override
+  String get chooseExcelFile => 'Choose Excel file';
+
+  @override
+  String importSuccess(int count) {
+    return 'Imported $count products';
+  }
+
+  @override
+  String importPartial(int imported, int total, int failed) {
+    return 'Imported $imported of $total. $failed failed.';
+  }
+
+  @override
+  String get importNoRows => 'No product rows found in the file';
+
+  @override
+  String get importInvalidFile => 'Could not read this Excel file';
+
+  @override
+  String get importMissingHeader => 'File must include a name column header';
+
+  @override
+  String importRowError(int row, String error) {
+    return 'Row $row: $error';
+  }
+
+  @override
+  String get importMissingName => 'Product name is required';
+
+  @override
+  String get importInvalidCost => 'Invalid cost price';
+
+  @override
+  String get importInvalidPrice => 'Invalid reference price';
+
+  @override
+  String get importInvalidQty => 'Invalid number';
+
+  @override
+  String get importCreateFailed => 'Could not create product';
+
+  @override
+  String importingRow(int current, int total) {
+    return 'Importing $current of $total…';
+  }
+
+  @override
   String get editProduct => 'Edit product';
 
   @override

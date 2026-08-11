@@ -698,6 +698,102 @@ abstract class AppLocalizations {
   /// **'Add product'**
   String get addProduct;
 
+  /// No description provided for @importFromExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Excel'**
+  String get importFromExcel;
+
+  /// No description provided for @downloadSampleExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Download sample Excel'**
+  String get downloadSampleExcel;
+
+  /// No description provided for @importExcelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the sample file, fill in your products (prices in NPR), then upload the Excel file.'**
+  String get importExcelHint;
+
+  /// No description provided for @chooseExcelFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Excel file'**
+  String get chooseExcelFile;
+
+  /// No description provided for @importSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} products'**
+  String importSuccess(int count);
+
+  /// No description provided for @importPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {imported} of {total}. {failed} failed.'**
+  String importPartial(int imported, int total, int failed);
+
+  /// No description provided for @importNoRows.
+  ///
+  /// In en, this message translates to:
+  /// **'No product rows found in the file'**
+  String get importNoRows;
+
+  /// No description provided for @importInvalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read this Excel file'**
+  String get importInvalidFile;
+
+  /// No description provided for @importMissingHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'File must include a name column header'**
+  String get importMissingHeader;
+
+  /// No description provided for @importRowError.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {row}: {error}'**
+  String importRowError(int row, String error);
+
+  /// No description provided for @importMissingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product name is required'**
+  String get importMissingName;
+
+  /// No description provided for @importInvalidCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid cost price'**
+  String get importInvalidCost;
+
+  /// No description provided for @importInvalidPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid reference price'**
+  String get importInvalidPrice;
+
+  /// No description provided for @importInvalidQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid number'**
+  String get importInvalidQty;
+
+  /// No description provided for @importCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create product'**
+  String get importCreateFailed;
+
+  /// No description provided for @importingRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing {current} of {total}…'**
+  String importingRow(int current, int total);
+
   /// No description provided for @editProduct.
   ///
   /// In en, this message translates to:

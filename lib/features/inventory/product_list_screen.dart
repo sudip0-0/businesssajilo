@@ -16,6 +16,7 @@ import '../../data/repositories/products_repository.dart';
 import '../../domain/models/product.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
+import 'product_import_sheet.dart';
 import 'providers.dart';
 import 'reorder_low_stock_sheet.dart';
 
@@ -231,6 +232,20 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                     ],
                   ),
                 ),
+                if (widget.canEdit)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: IconButton(
+                      tooltip: l10n.importFromExcel,
+                      onPressed: () async {
+                        final imported = await showProductImportSheet(context);
+                        if (imported == true && mounted) {
+                          await _pager?.refresh();
+                        }
+                      },
+                      icon: const Icon(Icons.upload_file_outlined),
+                    ),
+                  ),
               ],
             ),
           ),

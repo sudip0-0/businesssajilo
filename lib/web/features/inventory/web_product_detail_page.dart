@@ -61,7 +61,7 @@ class WebProductDetailPage extends ConsumerWidget {
 
 String webInventoryListPath(Role? role) => switch (role) {
   Role.owner => '/owner/inventory',
-  Role.sales => '/sales/inventory',
+  Role.sales => '/sales/stock',
   Role.warehouse => '/warehouse/stock',
   Role.customer => '/customer/catalog',
   null => '/login',

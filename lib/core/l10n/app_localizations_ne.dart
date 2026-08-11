@@ -314,6 +314,63 @@ class AppLocalizationsNe extends AppLocalizations {
   String get addProduct => 'उत्पादन थप्नुहोस्';
 
   @override
+  String get importFromExcel => 'Excel बाट आयात';
+
+  @override
+  String get downloadSampleExcel => 'नमूना Excel डाउनलोड';
+
+  @override
+  String get importExcelHint =>
+      'नमूना फाइल डाउनलोड गरी उत्पादनहरू भर्नुहोस् (मूल्य NPR मा), अनि Excel फाइल अपलोड गर्नुहोस्।';
+
+  @override
+  String get chooseExcelFile => 'Excel फाइल छान्नुहोस्';
+
+  @override
+  String importSuccess(int count) {
+    return '$count उत्पादन आयात भयो';
+  }
+
+  @override
+  String importPartial(int imported, int total, int failed) {
+    return '$total मध्ये $imported आयात भयो। $failed असफल।';
+  }
+
+  @override
+  String get importNoRows => 'फाइलमा कुनै उत्पादन पंक्ति भेटिएन';
+
+  @override
+  String get importInvalidFile => 'यो Excel फाइल पढ्न सकिएन';
+
+  @override
+  String get importMissingHeader => 'फाइलमा name स्तम्भ हेडर हुनुपर्छ';
+
+  @override
+  String importRowError(int row, String error) {
+    return 'पंक्ति $row: $error';
+  }
+
+  @override
+  String get importMissingName => 'उत्पादनको नाम आवश्यक छ';
+
+  @override
+  String get importInvalidCost => 'अमान्य लागत मूल्य';
+
+  @override
+  String get importInvalidPrice => 'अमान्य सन्दर्भ मूल्य';
+
+  @override
+  String get importInvalidQty => 'अमान्य संख्या';
+
+  @override
+  String get importCreateFailed => 'उत्पादन सिर्जना गर्न सकिएन';
+
+  @override
+  String importingRow(int current, int total) {
+    return '$total मध्ये $current आयात हुँदै…';
+  }
+
+  @override
   String get editProduct => 'उत्पादन सम्पादन';
 
   @override

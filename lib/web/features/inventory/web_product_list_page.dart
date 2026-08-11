@@ -12,6 +12,7 @@ import '../../../core/utils/money.dart';
 import '../../../data/repositories/products_repository.dart';
 import '../../../domain/models/product.dart';
 import '../../../features/inventory/product_detail_screen.dart';
+import '../../../features/inventory/product_import_sheet.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_master_detail.dart';
 import '../../theme/web_palette.dart';
@@ -21,8 +22,13 @@ import '../../ui/web_search_field.dart';
 import '../../ui/web_skeleton.dart';
 import '../web_page_scaffold.dart';
 
-String _webRolePrefix(BuildContext context) {
+/// Base path for the product list under the current role shell.
+/// Owner: `/owner/inventory`; sales/warehouse: `/sales/stock`, `/warehouse/stock`.
+String _inventoryListBase(BuildContext context) {
   final segments = GoRouterState.of(context).uri.pathSegments;
+  if (segments.length >= 2) {
+    return '/${segments[0]}/${segments[1]}';
+  }
   if (segments.isEmpty) return '';
   return '/${segments.first}';
 }
@@ -128,7 +134,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   }
 
   void _openProduct(Product product) {
-    context.go('${_webRolePrefix(context)}/inventory/${product.id}');
+    context.go('${_inventoryListBase(context)}/${product.id}');
   }
 
   Widget _buildSortControl(AppLocalizations l10n) {
@@ -207,9 +213,20 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             onSelected: _setShowInactive,
           ),
           const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final imported = await showProductImportSheet(context);
+              if (imported == true && mounted) {
+                await _pager?.refresh();
+              }
+            },
+            icon: const Icon(PhosphorIconsRegular.uploadSimple),
+            label: Text(l10n.importFromExcel),
+          ),
+          const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () =>
-                context.push('${_webRolePrefix(context)}/inventory/new'),
+                context.push('${_inventoryListBase(context)}/new'),
             icon: const Icon(PhosphorIconsRegular.plus),
             label: Text(l10n.addProduct),
           ),
@@ -298,8 +315,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                 _pager?.refresh();
               }
             : (widget.canEdit
-                  ? () =>
-                        context.push('${_webRolePrefix(context)}/inventory/new')
+                  ? () => context.push('${_inventoryListBase(context)}/new')
                   : null),
       );
     }
@@ -369,7 +385,7 @@ class _ProductRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               PhosphorIconsRegular.package,
               color: WebPalette.navy,
               size: 20,

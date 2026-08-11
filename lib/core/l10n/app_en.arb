@@ -114,6 +114,62 @@
   "fulfillment": "Fulfillment",
   "stock": "Stock",
   "addProduct": "Add product",
+  "importFromExcel": "Import from Excel",
+  "downloadSampleExcel": "Download sample Excel",
+  "importExcelHint": "Download the sample file, fill in your products (prices in NPR), then upload the Excel file.",
+  "chooseExcelFile": "Choose Excel file",
+  "importSuccess": "Imported {count} products",
+  "@importSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importPartial": "Imported {imported} of {total}. {failed} failed.",
+  "@importPartial": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "importNoRows": "No product rows found in the file",
+  "importInvalidFile": "Could not read this Excel file",
+  "importMissingHeader": "File must include a name column header",
+  "importRowError": "Row {row}: {error}",
+  "@importRowError": {
+    "placeholders": {
+      "row": {
+        "type": "int"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importMissingName": "Product name is required",
+  "importInvalidCost": "Invalid cost price",
+  "importInvalidPrice": "Invalid reference price",
+  "importInvalidQty": "Invalid number",
+  "importCreateFailed": "Could not create product",
+  "importingRow": "Importing {current} of {total}…",
+  "@importingRow": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "editProduct": "Edit product",
   "productName": "Product name",
   "productNameNp": "Product name (Nepali)",

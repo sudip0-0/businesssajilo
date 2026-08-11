@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'csv_writer.dart';
@@ -18,8 +17,22 @@ class ExportShareService {
   }) async {
     final csv = _csvWriter.build(rows);
     final bytes = Uint8List.fromList(_csvWriter.encodeUtf8(csv));
+    await shareBytes(
+      filename: filename,
+      bytes: bytes,
+      mimeType: 'text/csv',
+      subject: subject,
+    );
+  }
+
+  Future<void> shareBytes({
+    required String filename,
+    required Uint8List bytes,
+    required String mimeType,
+    String? subject,
+  }) async {
     await Share.shareXFiles([
-      XFile.fromData(bytes, name: filename, mimeType: 'text/csv'),
+      XFile.fromData(bytes, name: filename, mimeType: mimeType),
     ], subject: subject);
   }
 }
