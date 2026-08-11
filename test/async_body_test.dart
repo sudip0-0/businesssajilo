@@ -32,4 +32,21 @@ void main() {
     );
     expect(find.text('count 2'), findsOneWidget);
   });
+
+  testWidgets('AsyncBody keeps data while reloading', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AsyncBody<List<int>>(
+            value: const AsyncLoading<List<int>>().copyWithPrevious(
+              const AsyncData([1, 2]),
+            ),
+            data: (d) => Text('count ${d.length}'),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('count 2'), findsOneWidget);
+    expect(find.byType(ListSkeleton), findsNothing);
+  });
 }

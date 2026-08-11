@@ -28,8 +28,7 @@ class WebTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final unreadAsync = ref.watch(unreadNotificationCountProvider);
-    final unread = unreadAsync.value ?? 0;
+    final unread = ref.watch(unreadNotificationCountProvider);
     final badgeLabel = formatUnreadBadge(unread);
     final tokens = context.webTokens;
     final auth = ref.watch(authProvider).value;

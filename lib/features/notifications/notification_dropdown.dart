@@ -108,7 +108,8 @@ class NotificationDropdownPanel extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () async {
-                  await ref.read(notificationsRepositoryProvider).markAllRead();
+                  await ref.markAllNotificationsRead();
+                  if (context.mounted) Navigator.of(context).pop();
                 },
                 child: Text(l10n.markAllRead),
               ),

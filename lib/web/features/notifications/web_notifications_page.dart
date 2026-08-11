@@ -29,9 +29,7 @@ class WebNotificationsPage extends ConsumerWidget {
       breadcrumbs: [l10n.notifications],
       actions: [
         TextButton(
-          onPressed: () async {
-            await ref.read(notificationsRepositoryProvider).markAllRead();
-          },
+          onPressed: () => ref.markAllNotificationsRead(),
           child: Text(l10n.markAllRead),
         ),
       ],

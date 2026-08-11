@@ -23,7 +23,11 @@ class AsyncBody<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Keep prior data visible while a provider reloads (invalidate / refresh)
+    // so lists don't flash skeleton on every realtime resubscribe.
     return value.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       loading: () => useSkeleton
           ? ListSkeleton(rowCount: skeletonRows)
           : const Center(child: CircularProgressIndicator()),
