@@ -5,7 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/adaptive_sheet.dart';
 
-/// Asks the user to pick A4 or A2 before printing / downloading a bill PDF.
+/// Asks the user to pick A4 or A5 before printing / downloading a bill PDF.
 Future<InvoicePaperSize?> showInvoicePaperSizePicker(
   BuildContext context, {
   required String title,
@@ -19,8 +19,8 @@ Future<InvoicePaperSize?> showInvoicePaperSizePicker(
       chooseLabel: l10n.choosePaperSize,
       a4Label: l10n.paperSizeA4,
       a4Desc: l10n.paperSizeA4Desc,
-      a2Label: l10n.paperSizeA2,
-      a2Desc: l10n.paperSizeA2Desc,
+      a5Label: l10n.paperSizeA5,
+      a5Desc: l10n.paperSizeA5Desc,
       cancelLabel: l10n.cancel,
     ),
   );
@@ -32,8 +32,8 @@ class _PaperSizePickerBody extends StatelessWidget {
     required this.chooseLabel,
     required this.a4Label,
     required this.a4Desc,
-    required this.a2Label,
-    required this.a2Desc,
+    required this.a5Label,
+    required this.a5Desc,
     required this.cancelLabel,
   });
 
@@ -41,8 +41,8 @@ class _PaperSizePickerBody extends StatelessWidget {
   final String chooseLabel;
   final String a4Label;
   final String a4Desc;
-  final String a2Label;
-  final String a2Desc;
+  final String a5Label;
+  final String a5Desc;
   final String cancelLabel;
 
   @override
@@ -77,10 +77,10 @@ class _PaperSizePickerBody extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _SizeOption(
-              label: a2Label,
-              description: a2Desc,
-              icon: Icons.crop_landscape_outlined,
-              onTap: () => Navigator.of(context).pop(InvoicePaperSize.a2),
+              label: a5Label,
+              description: a5Desc,
+              icon: Icons.note_outlined,
+              onTap: () => Navigator.of(context).pop(InvoicePaperSize.a5),
             ),
             const SizedBox(height: 8),
             TextButton(

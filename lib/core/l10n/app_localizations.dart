@@ -2582,17 +2582,17 @@ abstract class AppLocalizations {
   /// **'Standard page — good for most printers'**
   String get paperSizeA4Desc;
 
-  /// No description provided for @paperSizeA2.
+  /// No description provided for @paperSizeA5.
   ///
   /// In en, this message translates to:
-  /// **'A2'**
-  String get paperSizeA2;
+  /// **'A5'**
+  String get paperSizeA5;
 
-  /// No description provided for @paperSizeA2Desc.
+  /// No description provided for @paperSizeA5Desc.
   ///
   /// In en, this message translates to:
-  /// **'Large page — easier to read from a distance'**
-  String get paperSizeA2Desc;
+  /// **'Half page — compact bills and small printers'**
+  String get paperSizeA5Desc;
 
   /// No description provided for @invoiceDate.
   ///

@@ -10,7 +10,7 @@ import 'invoice_paper_size.dart';
 import 'pdf_fonts.dart';
 import 'pdf_text_table.dart';
 
-/// Builds simple, readable bill / credit-note PDFs (A4 or A2).
+/// Builds simple, readable bill / credit-note PDFs (A4 or A5).
 class InvoicePdfBuilder {
   const InvoicePdfBuilder();
 

@@ -1301,10 +1301,10 @@ class AppLocalizationsNe extends AppLocalizations {
   String get paperSizeA4Desc => 'सामान्य साइज — अधिकांश प्रिन्टरका लागि';
 
   @override
-  String get paperSizeA2 => 'A2';
+  String get paperSizeA5 => 'A5';
 
   @override
-  String get paperSizeA2Desc => 'ठूलो साइज — टाढाबाट पढ्न सजिलो';
+  String get paperSizeA5Desc => 'आधा पेज — सानो बिल र साना प्रिन्टरका लागि';
 
   @override
   String get invoiceDate => 'मिति';

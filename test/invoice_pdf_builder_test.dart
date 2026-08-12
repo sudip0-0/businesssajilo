@@ -73,10 +73,10 @@ void main() {
     expect(bytes.length, greaterThan(100));
   });
 
-  test('InvoicePdfBuilder produces non-empty A2 bytes', () async {
+  test('InvoicePdfBuilder produces non-empty A5 bytes', () async {
     final bytes = await const InvoicePdfBuilder().build(
       _sampleDoc(),
-      paperSize: InvoicePaperSize.a2,
+      paperSize: InvoicePaperSize.a5,
     );
     expect(bytes, isNotEmpty);
     expect(bytes.length, greaterThan(100));

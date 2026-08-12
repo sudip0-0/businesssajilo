@@ -1304,10 +1304,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paperSizeA4Desc => 'Standard page — good for most printers';
 
   @override
-  String get paperSizeA2 => 'A2';
+  String get paperSizeA5 => 'A5';
 
   @override
-  String get paperSizeA2Desc => 'Large page — easier to read from a distance';
+  String get paperSizeA5Desc => 'Half page — compact bills and small printers';
 
   @override
   String get invoiceDate => 'Date';
