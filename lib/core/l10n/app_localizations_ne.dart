@@ -1292,6 +1292,33 @@ class AppLocalizationsNe extends AppLocalizations {
   String get printInvoice => 'बिल प्रिन्ट';
 
   @override
+  String get choosePaperSize => 'कागजको साइज छान्नुहोस्';
+
+  @override
+  String get paperSizeA4 => 'A4';
+
+  @override
+  String get paperSizeA4Desc => 'सामान्य साइज — अधिकांश प्रिन्टरका लागि';
+
+  @override
+  String get paperSizeA2 => 'A2';
+
+  @override
+  String get paperSizeA2Desc => 'ठूलो साइज — टाढाबाट पढ्न सजिलो';
+
+  @override
+  String get invoiceDate => 'मिति';
+
+  @override
+  String get invoiceCustomer => 'ग्राहक';
+
+  @override
+  String get invoiceAmount => 'रकम';
+
+  @override
+  String get invoiceTitle => 'बिल';
+
+  @override
   String get returnItems => 'सामान फिर्ता';
 
   @override

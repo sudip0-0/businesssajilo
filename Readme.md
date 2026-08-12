@@ -46,7 +46,7 @@ supabase db reset
 
 # Copy keys from `supabase status` into .env.local (see .env.example)
 .\scripts\run_dev.ps1          # Windows
-# flutter run --dart-define=SUPABASE_URL=http://127.0.0.1:54321 --dart-define=SUPABASE_ANON_KEY=<publishable-key>
+# flutter run --dart-define=SUPABASE_URL=http://127.0.0.1:55021 --dart-define=SUPABASE_ANON_KEY=<publishable-key>
 
 flutter analyze && flutter test
 supabase test db               # RLS policy tests
@@ -61,7 +61,7 @@ supabase test db               # RLS policy tests
 
 ```bash
 flutter run \
-  --dart-define=SUPABASE_URL=http://127.0.0.1:54321 \
+  --dart-define=SUPABASE_URL=http://127.0.0.1:55021 \
   --dart-define=SUPABASE_ANON_KEY=<publishable-key>
 ```
 

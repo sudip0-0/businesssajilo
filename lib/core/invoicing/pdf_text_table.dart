@@ -1,3 +1,4 @@
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// Builds a [pw.Table] from header labels and row data.
@@ -38,7 +39,11 @@ pw.Table buildPdfTextTable({
 
   return pw.Table(
     columnWidths: columnWidths,
-    border: pw.TableBorder.all(width: 0.3),
+    border: pw.TableBorder(
+      horizontalInside: const pw.BorderSide(width: 0.4, color: PdfColors.grey400),
+      bottom: const pw.BorderSide(width: 0.6, color: PdfColors.grey600),
+      top: const pw.BorderSide(width: 0.6, color: PdfColors.grey600),
+    ),
     children: rows,
   );
 }

@@ -9,10 +9,34 @@ import '../../domain/models/business.dart';
 import '../../domain/models/credit_note.dart';
 import 'invoice_document.dart';
 import 'invoice_export_service.dart';
+import 'invoice_labels.dart';
 
 /// Builds [InvoiceDocument] instances with localized labels.
 class InvoiceDocumentFactory {
   const InvoiceDocumentFactory();
+
+  InvoiceLabels labelsFrom(
+    AppLocalizations l10n, {
+    InvoiceDocumentKind kind = InvoiceDocumentKind.bill,
+  }) {
+    return InvoiceLabels(
+      title: switch (kind) {
+        InvoiceDocumentKind.bill => l10n.invoiceTitle,
+        InvoiceDocumentKind.creditNote => l10n.creditNote.toUpperCase(),
+      },
+      billNo: l10n.billNo,
+      date: l10n.invoiceDate,
+      customer: l10n.invoiceCustomer,
+      item: l10n.productName,
+      qty: l10n.qty,
+      rate: l10n.rate,
+      amount: l10n.invoiceAmount,
+      subtotal: l10n.subtotal,
+      discount: l10n.discount,
+      grandTotal: l10n.grandTotal,
+      sn: l10n.sn,
+    );
+  }
 
   InvoiceDocument fromBill({
     required Business business,
@@ -26,6 +50,7 @@ class InvoiceDocumentFactory {
       customerLabel: billCustomerLabel(bill, walkInLabel: l10n.walkIn),
       statusLabel: _billStatusLabel(bill.status, l10n),
       locale: locale,
+      labels: labelsFrom(l10n),
       provisionalNotice: l10n.provisionalBillNotice,
       thankYou: l10n.invoiceThankYou,
     );
@@ -60,6 +85,7 @@ class InvoiceDocumentFactory {
       discount: note.discount,
       grandTotal: note.grandTotal,
       locale: locale,
+      labels: labelsFrom(l10n, kind: InvoiceDocumentKind.creditNote),
       footerNote: l10n.invoiceThankYou,
     );
   }

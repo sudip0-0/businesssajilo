@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models/bill.dart';
 import '../../domain/models/business.dart';
+import 'invoice_labels.dart';
 
 /// Kind of printable/shareable commercial document.
 enum InvoiceDocumentKind { bill, creditNote }
@@ -19,6 +20,7 @@ class InvoiceDocument {
     required this.discount,
     required this.grandTotal,
     required this.locale,
+    required this.labels,
     this.kind = InvoiceDocumentKind.bill,
     this.pendingSync = false,
     this.provisionalNotice,
@@ -31,6 +33,7 @@ class InvoiceDocument {
     required String customerLabel,
     required String statusLabel,
     required Locale locale,
+    required InvoiceLabels labels,
     String? provisionalNotice,
     String? thankYou,
   }) {
@@ -55,6 +58,7 @@ class InvoiceDocument {
       discount: bill.discount,
       grandTotal: bill.grandTotal,
       locale: locale,
+      labels: labels,
       pendingSync: bill.pendingSync,
       provisionalNotice: bill.pendingSync ? provisionalNotice : null,
       footerNote: thankYou,
@@ -72,14 +76,12 @@ class InvoiceDocument {
   final int discount;
   final int grandTotal;
   final Locale locale;
+  final InvoiceLabels labels;
   final bool pendingSync;
   final String? provisionalNotice;
   final String? footerNote;
 
-  String get titleLabel => switch (kind) {
-    InvoiceDocumentKind.bill => 'INVOICE',
-    InvoiceDocumentKind.creditNote => 'CREDIT NOTE',
-  };
+  String get titleLabel => labels.title;
 
   String get businessDisplayName {
     if (locale.languageCode == 'ne' &&

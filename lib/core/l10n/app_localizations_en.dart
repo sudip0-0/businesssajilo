@@ -1295,6 +1295,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get printInvoice => 'Print bill';
 
   @override
+  String get choosePaperSize => 'Choose paper size';
+
+  @override
+  String get paperSizeA4 => 'A4';
+
+  @override
+  String get paperSizeA4Desc => 'Standard page — good for most printers';
+
+  @override
+  String get paperSizeA2 => 'A2';
+
+  @override
+  String get paperSizeA2Desc => 'Large page — easier to read from a distance';
+
+  @override
+  String get invoiceDate => 'Date';
+
+  @override
+  String get invoiceCustomer => 'Customer';
+
+  @override
+  String get invoiceAmount => 'Amount';
+
+  @override
+  String get invoiceTitle => 'INVOICE';
+
+  @override
   String get returnItems => 'Return items';
 
   @override

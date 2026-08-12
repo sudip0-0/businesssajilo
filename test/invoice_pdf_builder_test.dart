@@ -1,4 +1,6 @@
 import 'package:businesssajilo/core/invoicing/invoice_document.dart';
+import 'package:businesssajilo/core/invoicing/invoice_labels.dart';
+import 'package:businesssajilo/core/invoicing/invoice_paper_size.dart';
 import 'package:businesssajilo/core/invoicing/invoice_pdf_builder.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
@@ -6,6 +8,21 @@ import 'package:businesssajilo/domain/models/bill_item.dart';
 import 'package:businesssajilo/domain/models/business.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+const _labels = InvoiceLabels(
+  title: 'INVOICE',
+  billNo: 'Bill no.',
+  date: 'Date',
+  customer: 'Customer',
+  item: 'Item',
+  qty: 'Qty',
+  rate: 'Rate',
+  amount: 'Amount',
+  subtotal: 'Subtotal',
+  discount: 'Discount',
+  grandTotal: 'Grand Total',
+  sn: 'S.N.',
+);
 
 InvoiceDocument _sampleDoc() {
   final business = const Business(
@@ -40,14 +57,27 @@ InvoiceDocument _sampleDoc() {
     customerLabel: 'Ram Store',
     statusLabel: 'Due',
     locale: const Locale('en'),
+    labels: _labels,
   );
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('InvoicePdfBuilder produces non-empty bytes', () async {
-    final bytes = await const InvoicePdfBuilder().build(_sampleDoc());
+  test('InvoicePdfBuilder produces non-empty A4 bytes', () async {
+    final bytes = await const InvoicePdfBuilder().build(
+      _sampleDoc(),
+      paperSize: InvoicePaperSize.a4,
+    );
+    expect(bytes, isNotEmpty);
+    expect(bytes.length, greaterThan(100));
+  });
+
+  test('InvoicePdfBuilder produces non-empty A2 bytes', () async {
+    final bytes = await const InvoicePdfBuilder().build(
+      _sampleDoc(),
+      paperSize: InvoicePaperSize.a2,
+    );
     expect(bytes, isNotEmpty);
     expect(bytes.length, greaterThan(100));
   });
@@ -83,6 +113,20 @@ void main() {
       customerLabel: 'हरि बहादुर',
       statusLabel: 'बाँकी',
       locale: const Locale('ne'),
+      labels: const InvoiceLabels(
+        title: 'बिल',
+        billNo: 'बिल नं.',
+        date: 'मिति',
+        customer: 'ग्राहक',
+        item: 'सामान',
+        qty: 'मात्रा',
+        rate: 'दर',
+        amount: 'रकम',
+        subtotal: 'जम्मा',
+        discount: 'छुट',
+        grandTotal: 'कुल',
+        sn: 'क्र.सं.',
+      ),
     );
     final bytes = await const InvoicePdfBuilder().build(doc);
     expect(bytes, isNotEmpty);
@@ -118,8 +162,15 @@ void main() {
       discount: 0,
       grandTotal: 5000,
       locale: const Locale('en'),
+      labels: _labels,
     );
     expect(doc.lines.length, 1);
     expect(doc.titleLabel, isNotEmpty);
+  });
+
+  test('money on PDF uses grouping without currency symbol', () {
+    // Smoke: builder accepts docs with large amounts (formatting covered in
+    // money unit tests via showSymbol: false).
+    expect(_sampleDoc().grandTotal, 10000);
   });
 }

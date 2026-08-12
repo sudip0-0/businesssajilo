@@ -11,6 +11,7 @@ import '../../core/ui/bs_snackbar.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/credit_note.dart';
 import '../auth/providers/auth_provider.dart';
+import 'invoice_paper_size_picker.dart';
 
 /// Loads business profile and shares/prints a bill document.
 Future<void> exportBillAsPng(
@@ -36,10 +37,18 @@ Future<void> exportBillPrint(
   BuildContext context,
   Bill bill,
 ) async {
+  if (!context.mounted) return;
+  final l10n = AppLocalizations.of(context);
+  final paperSize = await showInvoicePaperSizePicker(
+    context,
+    title: l10n.printInvoice,
+  );
+  if (paperSize == null || !context.mounted) return;
+
   await _runExport(
     context,
     () => _exportBill(ref, context, bill, (service, doc, _) async {
-      await service.printPdf(doc);
+      await service.printPdf(doc, paperSize: paperSize);
     }),
   );
 }
@@ -49,10 +58,18 @@ Future<void> exportBillPdfDownload(
   BuildContext context,
   Bill bill,
 ) async {
+  if (!context.mounted) return;
+  final l10n = AppLocalizations.of(context);
+  final paperSize = await showInvoicePaperSizePicker(
+    context,
+    title: l10n.downloadPdf,
+  );
+  if (paperSize == null || !context.mounted) return;
+
   await _runExport(
     context,
     () => _exportBill(ref, context, bill, (service, doc, _) async {
-      await service.downloadPdf(doc);
+      await service.downloadPdf(doc, paperSize: paperSize);
     }),
   );
 }

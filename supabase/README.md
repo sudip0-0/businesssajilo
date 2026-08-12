@@ -13,9 +13,9 @@ supabase functions serve  # hot-reload Edge Functions (optional)
 supabase stop           # tear down containers
 ```
 
-- **Studio:** http://127.0.0.1:54323
-- **API:** http://127.0.0.1:54321
-- **DB:** `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+- **Studio:** http://127.0.0.1:55023
+- **API:** http://127.0.0.1:55021
+- **DB:** `postgresql://postgres:postgres@127.0.0.1:55022/postgres`
 
 Copy `.env.example` → `.env.local` and fill keys from `supabase status`.
 

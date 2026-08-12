@@ -2564,6 +2564,60 @@ abstract class AppLocalizations {
   /// **'Print bill'**
   String get printInvoice;
 
+  /// No description provided for @choosePaperSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose paper size'**
+  String get choosePaperSize;
+
+  /// No description provided for @paperSizeA4.
+  ///
+  /// In en, this message translates to:
+  /// **'A4'**
+  String get paperSizeA4;
+
+  /// No description provided for @paperSizeA4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard page — good for most printers'**
+  String get paperSizeA4Desc;
+
+  /// No description provided for @paperSizeA2.
+  ///
+  /// In en, this message translates to:
+  /// **'A2'**
+  String get paperSizeA2;
+
+  /// No description provided for @paperSizeA2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Large page — easier to read from a distance'**
+  String get paperSizeA2Desc;
+
+  /// No description provided for @invoiceDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get invoiceDate;
+
+  /// No description provided for @invoiceCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get invoiceCustomer;
+
+  /// No description provided for @invoiceAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get invoiceAmount;
+
+  /// No description provided for @invoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'INVOICE'**
+  String get invoiceTitle;
+
   /// No description provided for @returnItems.
   ///
   /// In en, this message translates to:

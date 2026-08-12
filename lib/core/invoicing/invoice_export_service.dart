@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
+
 import 'invoice_document.dart';
 import 'invoice_image_builder.dart';
+import 'invoice_paper_size.dart';
 import 'invoice_pdf_builder.dart';
 
 /// Print, download, and share invoices as PDF or PNG.
@@ -16,19 +18,31 @@ class InvoiceExportService {
   final InvoicePdfBuilder _pdfBuilder;
   final InvoiceImageBuilder _imageBuilder;
 
-  Future<Uint8List> buildPdfBytes(InvoiceDocument doc) =>
-      _pdfBuilder.build(doc);
+  Future<Uint8List> buildPdfBytes(
+    InvoiceDocument doc, {
+    InvoicePaperSize paperSize = InvoicePaperSize.a4,
+  }) => _pdfBuilder.build(doc, paperSize: paperSize);
 
   Future<Uint8List> buildPngBytes(InvoiceDocument doc) =>
       _imageBuilder.buildPng(doc);
 
-  Future<void> printPdf(InvoiceDocument doc) async {
-    final bytes = await _pdfBuilder.build(doc);
-    await Printing.layoutPdf(onLayout: (_) async => bytes);
+  Future<void> printPdf(
+    InvoiceDocument doc, {
+    InvoicePaperSize paperSize = InvoicePaperSize.a4,
+  }) async {
+    final bytes = await _pdfBuilder.build(doc, paperSize: paperSize);
+    await Printing.layoutPdf(
+      onLayout: (_) async => bytes,
+      format: paperSize.pageFormat,
+    );
   }
 
-  Future<void> sharePdf(InvoiceDocument doc, {String? subject}) async {
-    final bytes = await _pdfBuilder.build(doc);
+  Future<void> sharePdf(
+    InvoiceDocument doc, {
+    InvoicePaperSize paperSize = InvoicePaperSize.a4,
+    String? subject,
+  }) async {
+    final bytes = await _pdfBuilder.build(doc, paperSize: paperSize);
     await Share.shareXFiles([
       XFile.fromData(
         bytes,
@@ -57,8 +71,11 @@ class InvoiceExportService {
     );
   }
 
-  Future<void> downloadPdf(InvoiceDocument doc) async {
-    final bytes = await _pdfBuilder.build(doc);
+  Future<void> downloadPdf(
+    InvoiceDocument doc, {
+    InvoicePaperSize paperSize = InvoicePaperSize.a4,
+  }) async {
+    final bytes = await _pdfBuilder.build(doc, paperSize: paperSize);
     if (kIsWeb) {
       await Printing.sharePdf(
         bytes: bytes,
@@ -66,7 +83,7 @@ class InvoiceExportService {
       );
       return;
     }
-    await sharePdf(doc);
+    await sharePdf(doc, paperSize: paperSize);
   }
 
   String _safeName(String documentNo) =>
