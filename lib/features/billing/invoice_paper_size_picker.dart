@@ -5,10 +5,15 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/adaptive_sheet.dart';
 
-/// Asks the user to pick A4 or A5 before printing / downloading a bill PDF.
+/// Asks the user to pick A4 or A5 before printing / downloading / copying.
+///
+/// When [onSelected] is set, it runs before the sheet closes (used to start
+/// clipboard writes inside the tap gesture). The sheet stays open until it
+/// completes, then pops with the chosen size.
 Future<InvoicePaperSize?> showInvoicePaperSizePicker(
   BuildContext context, {
   required String title,
+  Future<void> Function(InvoicePaperSize size)? onSelected,
 }) {
   final l10n = AppLocalizations.of(context);
   return showAdaptiveSheet<InvoicePaperSize>(
@@ -22,11 +27,12 @@ Future<InvoicePaperSize?> showInvoicePaperSizePicker(
       a5Label: l10n.paperSizeA5,
       a5Desc: l10n.paperSizeA5Desc,
       cancelLabel: l10n.cancel,
+      onSelected: onSelected,
     ),
   );
 }
 
-class _PaperSizePickerBody extends StatelessWidget {
+class _PaperSizePickerBody extends StatefulWidget {
   const _PaperSizePickerBody({
     required this.title,
     required this.chooseLabel,
@@ -35,6 +41,7 @@ class _PaperSizePickerBody extends StatelessWidget {
     required this.a5Label,
     required this.a5Desc,
     required this.cancelLabel,
+    this.onSelected,
   });
 
   final String title;
@@ -44,6 +51,32 @@ class _PaperSizePickerBody extends StatelessWidget {
   final String a5Label;
   final String a5Desc;
   final String cancelLabel;
+  final Future<void> Function(InvoicePaperSize size)? onSelected;
+
+  @override
+  State<_PaperSizePickerBody> createState() => _PaperSizePickerBodyState();
+}
+
+class _PaperSizePickerBodyState extends State<_PaperSizePickerBody> {
+  InvoicePaperSize? _busySize;
+
+  bool get _busy => _busySize != null;
+
+  Future<void> _choose(InvoicePaperSize size) async {
+    if (_busy) return;
+    final onSelected = widget.onSelected;
+    if (onSelected == null) {
+      Navigator.of(context).pop(size);
+      return;
+    }
+    setState(() => _busySize = size);
+    try {
+      await onSelected(size);
+      if (mounted) Navigator.of(context).pop(size);
+    } catch (_) {
+      if (mounted) setState(() => _busySize = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,36 +89,40 @@ class _PaperSizePickerBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              chooseLabel,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              widget.chooseLabel,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(
-              title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              widget.title,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             _SizeOption(
-              label: a4Label,
-              description: a4Desc,
+              label: widget.a4Label,
+              description: widget.a4Desc,
               icon: Icons.description_outlined,
-              onTap: () => Navigator.of(context).pop(InvoicePaperSize.a4),
+              busy: _busySize == InvoicePaperSize.a4,
+              enabled: !_busy,
+              onTap: () => _choose(InvoicePaperSize.a4),
             ),
             const SizedBox(height: 10),
             _SizeOption(
-              label: a5Label,
-              description: a5Desc,
+              label: widget.a5Label,
+              description: widget.a5Desc,
               icon: Icons.note_outlined,
-              onTap: () => Navigator.of(context).pop(InvoicePaperSize.a5),
+              busy: _busySize == InvoicePaperSize.a5,
+              enabled: !_busy,
+              onTap: () => _choose(InvoicePaperSize.a5),
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(cancelLabel),
+              onPressed: _busy ? null : () => Navigator.of(context).pop(),
+              child: Text(widget.cancelLabel),
             ),
           ],
         ),
@@ -100,12 +137,16 @@ class _SizeOption extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.onTap,
+    this.busy = false,
+    this.enabled = true,
   });
 
   final String label;
   final String description;
   final IconData icon;
   final VoidCallback onTap;
+  final bool busy;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +159,7 @@ class _SizeOption extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(BsRadii.lg),
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
@@ -145,7 +186,14 @@ class _SizeOption extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              if (busy)
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
             ],
           ),
         ),

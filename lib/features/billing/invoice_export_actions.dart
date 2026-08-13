@@ -8,6 +8,7 @@ import '../../core/invoicing/invoice_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
+import '../../data/repositories/customers_repository.dart';
 import '../../data/repositories/payments_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -76,6 +77,43 @@ Future<void> exportBillPdfDownload(
   );
 }
 
+Future<void> exportBillCopyImage(
+  WidgetRef ref,
+  BuildContext context,
+  Bill bill,
+) async {
+  if (!context.mounted) return;
+  final l10n = AppLocalizations.of(context);
+  final service = ref.read(invoiceExportServiceProvider);
+  final paperSize = await showInvoicePaperSizePicker(
+    context,
+    title: l10n.copyBillAsImage,
+    onSelected: (size) async {
+      try {
+        await service.copyPng(() async {
+          final doc = await _loadBillDocument(ref, context, bill);
+          if (doc == null) {
+            throw const AppFailure.unknown();
+          }
+          return doc;
+        }, paperSize: size);
+      } catch (e) {
+        if (context.mounted) {
+          showBsSnackBar(
+            context,
+            message: AppFailure.from(e).message(l10n),
+            backgroundColor: BsColors.danger,
+          );
+        }
+        rethrow;
+      }
+    },
+  );
+  if (paperSize != null && context.mounted) {
+    showBsSnackBar(context, message: l10n.billImageCopied);
+  }
+}
+
 Future<void> exportBillAfterSave(
   WidgetRef ref,
   BuildContext context,
@@ -124,31 +162,58 @@ Future<void> _exportBill(
 ) async {
   if (!context.mounted) return;
   final l10n = AppLocalizations.of(context);
-  final locale = Localizations.localeOf(context);
-  final business = await ref.read(currentBusinessProvider.future);
-  if (business == null) {
+  final doc = await _loadBillDocument(ref, context, bill);
+  if (doc == null) {
     if (context.mounted) {
       showBsSnackBar(context, message: l10n.actionFailed);
     }
     return;
   }
+  final service = ref.read(invoiceExportServiceProvider);
+  await action(service, doc, l10n);
+}
+
+Future<InvoiceDocument?> _loadBillDocument(
+  WidgetRef ref,
+  BuildContext context,
+  Bill bill,
+) async {
+  if (!context.mounted) return null;
+  final l10n = AppLocalizations.of(context);
+  final locale = Localizations.localeOf(context);
+  final business = await ref.read(currentBusinessProvider.future);
+  if (business == null) return null;
 
   final factory = ref.read(invoiceDocumentFactoryProvider);
-  final service = ref.read(invoiceExportServiceProvider);
   int? amountReceived;
   if (bill.status == BillStatus.partial) {
     amountReceived = await ref
         .read(paymentsRepositoryProvider)
         .totalReceivedForBill(bill.id);
   }
-  final doc = factory.fromBill(
+  String? customerAddress;
+  final customerId = bill.customerId;
+  if (customerId != null) {
+    try {
+      final customer = await ref
+          .read(customersRepositoryProvider)
+          .get(customerId);
+      final address = customer.address?.trim();
+      if (address != null && address.isNotEmpty) {
+        customerAddress = address;
+      }
+    } catch (_) {
+      // Missing customer (walk-in / stale id) — leave address blank.
+    }
+  }
+  return factory.fromBill(
     business: business,
     bill: bill,
     l10n: l10n,
     locale: locale,
     amountReceived: amountReceived,
+    customerAddress: customerAddress,
   );
-  await action(service, doc, l10n);
 }
 
 Future<void> exportCreditNoteAsPng(

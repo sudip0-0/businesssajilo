@@ -115,7 +115,7 @@ class InvoicePdfBuilder {
       _invoiceMeta(doc, dateStr, fs),
       pw.SizedBox(height: fs.gap * 0.7),
       _underlinedField(doc.labels.name, doc.customerLabel, fs),
-      _underlinedField(doc.labels.address, '', fs),
+      _underlinedField(doc.labels.address, doc.customerAddress ?? '', fs),
       if (doc.provisionalNotice != null) ...[
         pw.SizedBox(height: fs.gap * 0.4),
         pw.Text(

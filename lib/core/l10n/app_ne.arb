@@ -490,6 +490,8 @@
   "shareViaWhatsApp": "WhatsApp मार्फत पठाउनुहोस्",
   "downloadPdf": "PDF डाउनलोड",
   "printInvoice": "बिल प्रिन्ट",
+  "copyBillAsImage": "बिल इमेज कपी गर्नुहोस्",
+  "billImageCopied": "बिलको इमेज कपी भयो",
   "choosePaperSize": "कागजको साइज छान्नुहोस्",
   "paperSizeA4": "A4",
   "paperSizeA4Desc": "सामान्य साइज — अधिकांश प्रिन्टरका लागि",

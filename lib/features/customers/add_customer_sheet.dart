@@ -51,6 +51,7 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
   final _contactNameController = TextEditingController();
   final _districtController = TextEditingController();
   final _panController = TextEditingController();
+  final _addressController = TextEditingController();
   final _openingBalanceController = TextEditingController(text: '0');
   String? _city;
   bool _loading = false;
@@ -68,17 +69,18 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
     _contactNameController.dispose();
     _districtController.dispose();
     _panController.dispose();
+    _addressController.dispose();
     _openingBalanceController.dispose();
     super.dispose();
   }
 
-  String? _buildAddress() {
+  String? _composedAddress() {
+    final typed = _addressController.text.trim();
+    if (typed.isNotEmpty) return typed;
     final parts = <String>[
       ?_city,
       if (_districtController.text.trim().isNotEmpty)
         _districtController.text.trim(),
-      if (_panController.text.trim().isNotEmpty)
-        'PAN: ${_panController.text.trim()}',
     ];
     return parts.isEmpty ? null : parts.join(', ');
   }
@@ -99,22 +101,24 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
             ? _passwordController.text
             : _autoPassword();
 
-        await ref.read(customersRepositoryProvider).createWithCredentials(
-          email: _emailController.text.trim().isEmpty
-              ? null
-              : _emailController.text.trim().toLowerCase(),
-          password: password,
-          displayName: displayName,
-          shopName: shop,
-          contactName: contact.isEmpty ? null : contact,
-          phone: _phoneController.text.trim().isEmpty
-              ? null
-              : '+977${_phoneController.text.trim()}',
-          address: _buildAddress(),
-          openingBalance:
-              parseNpr(_openingBalanceController.text)?.value ?? 0,
-          portalEnabled: _enablePortal,
-        );
+        await ref
+            .read(customersRepositoryProvider)
+            .createWithCredentials(
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim().toLowerCase(),
+              password: password,
+              displayName: displayName,
+              shopName: shop,
+              contactName: contact.isEmpty ? null : contact,
+              phone: _phoneController.text.trim().isEmpty
+                  ? null
+                  : '+977${_phoneController.text.trim()}',
+              address: _composedAddress(),
+              openingBalance:
+                  parseNpr(_openingBalanceController.text)?.value ?? 0,
+              portalEnabled: _enablePortal,
+            );
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop(true);
         }
@@ -159,6 +163,12 @@ class _AddCustomerSheetState extends ConsumerState<AddCustomerSheet> {
                 keyboardType: TextInputType.phone,
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? l10n.fieldRequired : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(labelText: l10n.address),
+                textCapitalization: TextCapitalization.sentences,
               ),
               const SizedBox(height: 12),
               TextFormField(

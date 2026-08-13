@@ -39,6 +39,7 @@ InvoiceDocument _sampleDoc({
   BillStatus status = BillStatus.due,
   String statusLabel = 'Due',
   int? amountReceived,
+  String? customerAddress,
 }) {
   final itemsTotal = 10000;
   final business = const Business(
@@ -76,6 +77,7 @@ InvoiceDocument _sampleDoc({
     locale: const Locale('en'),
     labels: _labels,
     amountReceived: amountReceived,
+    customerAddress: customerAddress,
   );
 }
 
@@ -208,7 +210,7 @@ void main() {
   });
 
   test(
-    'InvoiceImageBuilder produces PNG bytes',
+    'InvoiceImageBuilder rasterizes the selected paper size',
     () async {
       // Printing.raster uses a platform channel; PNG encode is covered by
       // test/pdf_raster_isolate_test.dart. Full raster covered in integration.
@@ -251,6 +253,11 @@ void main() {
     );
     expect(doc.showPartialReceived, isTrue);
     expect(doc.remainingDue, 6000);
+  });
+
+  test('invoice document carries customer address', () {
+    final doc = _sampleDoc(customerAddress: 'Bharatpur-10, Chitwan');
+    expect(doc.customerAddress, 'Bharatpur-10, Chitwan');
   });
 
   test('print amounts use grouping without currency symbol or paisa', () {

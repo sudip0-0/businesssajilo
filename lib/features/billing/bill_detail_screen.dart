@@ -204,12 +204,18 @@ class _BillActions extends ConsumerWidget {
               switch (value) {
                 case 'print':
                   exportBillPrint(ref, context, bill);
+                case 'copyImage':
+                  exportBillCopyImage(ref, context, bill);
                 case 'pdf':
                   exportBillPdfDownload(ref, context, bill);
               }
             },
             itemBuilder: (context) => [
               PopupMenuItem(value: 'print', child: Text(l10n.printInvoice)),
+              PopupMenuItem(
+                value: 'copyImage',
+                child: Text(l10n.copyBillAsImage),
+              ),
               PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
             ],
           ),
@@ -662,38 +668,40 @@ class _CustomerContactLine extends ConsumerWidget {
       data: (customer) {
         final phone = customer.phone?.trim();
         final contact = customer.contactName?.trim();
+        final address = customer.address?.trim();
         if ((phone == null || phone.isEmpty) &&
-            (contact == null || contact.isEmpty)) {
+            (contact == null || contact.isEmpty) &&
+            (address == null || address.isEmpty)) {
           return const SizedBox.shrink();
         }
+        final muted = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        );
         return Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (phone != null && phone.isNotEmpty) ...[
-                Icon(
-                  Icons.phone_outlined,
-                  size: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    phone,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              if (phone != null && phone.isNotEmpty)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.phone_outlined,
+                      size: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                ),
-              ] else if (contact != null && contact.isNotEmpty)
-                Flexible(
-                  child: Text(
-                    contact,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
+                    const SizedBox(width: 6),
+                    Flexible(child: Text(phone, style: muted)),
+                  ],
+                )
+              else if (contact != null && contact.isNotEmpty)
+                Text(contact, style: muted),
+              if (address != null && address.isNotEmpty) ...[
+                if ((phone != null && phone.isNotEmpty) ||
+                    (contact != null && contact.isNotEmpty))
+                  const SizedBox(height: 4),
+                Text(address, style: muted),
+              ],
             ],
           ),
         );

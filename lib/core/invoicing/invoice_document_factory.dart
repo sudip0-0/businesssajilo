@@ -51,6 +51,7 @@ class InvoiceDocumentFactory {
     required AppLocalizations l10n,
     required Locale locale,
     int? amountReceived,
+    String? customerAddress,
   }) {
     return InvoiceDocument.fromBill(
       business: business,
@@ -62,6 +63,7 @@ class InvoiceDocumentFactory {
       provisionalNotice: l10n.provisionalBillNotice,
       thankYou: l10n.invoiceThankYou,
       amountReceived: amountReceived,
+      customerAddress: customerAddress,
     );
   }
 

@@ -2570,6 +2570,18 @@ abstract class AppLocalizations {
   /// **'Print bill'**
   String get printInvoice;
 
+  /// No description provided for @copyBillAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy bill as image'**
+  String get copyBillAsImage;
+
+  /// No description provided for @billImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill image copied'**
+  String get billImageCopied;
+
   /// No description provided for @choosePaperSize.
   ///
   /// In en, this message translates to:

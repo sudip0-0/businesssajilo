@@ -1299,6 +1299,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get printInvoice => 'Print bill';
 
   @override
+  String get copyBillAsImage => 'Copy bill as image';
+
+  @override
+  String get billImageCopied => 'Bill image copied';
+
+  @override
   String get choosePaperSize => 'Choose paper size';
 
   @override

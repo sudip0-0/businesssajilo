@@ -530,6 +530,8 @@
   "shareViaWhatsApp": "Share via WhatsApp",
   "downloadPdf": "Download PDF",
   "printInvoice": "Print bill",
+  "copyBillAsImage": "Copy bill as image",
+  "billImageCopied": "Bill image copied",
   "choosePaperSize": "Choose paper size",
   "paperSizeA4": "A4",
   "paperSizeA4Desc": "Standard page — good for most printers",

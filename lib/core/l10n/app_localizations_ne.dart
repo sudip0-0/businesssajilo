@@ -1296,6 +1296,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get printInvoice => 'बिल प्रिन्ट';
 
   @override
+  String get copyBillAsImage => 'बिल इमेज कपी गर्नुहोस्';
+
+  @override
+  String get billImageCopied => 'बिलको इमेज कपी भयो';
+
+  @override
   String get choosePaperSize => 'कागजको साइज छान्नुहोस्';
 
   @override

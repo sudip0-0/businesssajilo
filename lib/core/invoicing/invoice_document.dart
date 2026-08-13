@@ -27,6 +27,7 @@ class InvoiceDocument {
     this.provisionalNotice,
     this.footerNote,
     this.amountReceived,
+    this.customerAddress,
   });
 
   factory InvoiceDocument.fromBill({
@@ -39,6 +40,7 @@ class InvoiceDocument {
     String? provisionalNotice,
     String? thankYou,
     int? amountReceived,
+    String? customerAddress,
   }) {
     return InvoiceDocument(
       business: business,
@@ -66,6 +68,7 @@ class InvoiceDocument {
       provisionalNotice: bill.pendingSync ? provisionalNotice : null,
       footerNote: thankYou,
       amountReceived: amountReceived,
+      customerAddress: customerAddress,
     );
   }
 
@@ -87,6 +90,9 @@ class InvoiceDocument {
 
   /// Paisa received against this bill. Set for partial bills.
   final int? amountReceived;
+
+  /// Customer address for the invoice Address line.
+  final String? customerAddress;
 
   bool get showPartialReceived => amountReceived != null;
 

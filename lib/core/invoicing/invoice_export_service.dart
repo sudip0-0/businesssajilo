@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../export/clipboard_image.dart';
 import 'invoice_document.dart';
 import 'invoice_image_builder.dart';
 import 'invoice_paper_size.dart';
@@ -23,8 +24,26 @@ class InvoiceExportService {
     InvoicePaperSize paperSize = InvoicePaperSize.a4,
   }) => _pdfBuilder.build(doc, paperSize: paperSize);
 
-  Future<Uint8List> buildPngBytes(InvoiceDocument doc) =>
-      _imageBuilder.buildPng(doc);
+  Future<Uint8List> buildPngBytes(
+    InvoiceDocument doc, {
+    InvoicePaperSize paperSize = InvoicePaperSize.a4,
+  }) => _imageBuilder.buildPng(doc, paperSize: paperSize);
+
+  /// Rasterizes the invoice PDF at [paperSize] and copies the PNG.
+  ///
+  /// [loadDocument] may be async; on web the clipboard write starts
+  /// immediately so it still counts as a user gesture.
+  Future<void> copyPng(
+    Future<InvoiceDocument> Function() loadDocument, {
+    required InvoicePaperSize paperSize,
+  }) {
+    return copyPngToClipboard(
+      Future(() async {
+        final doc = await loadDocument();
+        return _imageBuilder.buildPng(doc, paperSize: paperSize);
+      }),
+    );
+  }
 
   Future<void> printPdf(
     InvoiceDocument doc, {
