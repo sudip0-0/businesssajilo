@@ -103,7 +103,6 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                 bill: bill,
                 dateStr: dateStr,
                 creator: creator,
-                amountReceived: amountReceived,
               ),
               const SizedBox(height: 16),
               _BillLinesCard(
@@ -226,14 +225,12 @@ class _BillSummaryCard extends StatelessWidget {
     required this.bill,
     required this.dateStr,
     required this.creator,
-    this.amountReceived,
   });
 
   final AppLocalizations l10n;
   final Bill bill;
   final String dateStr;
   final String? creator;
-  final int? amountReceived;
 
   @override
   Widget build(BuildContext context) {
@@ -261,7 +258,6 @@ class _BillSummaryCard extends StatelessWidget {
               iconWash: iconWash,
               iconColor: iconColor,
               alignEnd: wide,
-              amountReceived: amountReceived,
             );
 
             if (!wide) {
@@ -404,7 +400,6 @@ class _SummaryRight extends StatelessWidget {
     required this.iconWash,
     required this.iconColor,
     required this.alignEnd,
-    this.amountReceived,
   });
 
   final AppLocalizations l10n;
@@ -413,61 +408,17 @@ class _SummaryRight extends StatelessWidget {
   final Color iconWash;
   final Color iconColor;
   final bool alignEnd;
-  final int? amountReceived;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final received = amountReceived;
     return Column(
       crossAxisAlignment: alignEnd
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
         BillStatusChip(bill.status),
-        if (received != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            l10n.amountPaid,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            formatNpr(Paisa(received), showPaisa: false),
-            textAlign: alignEnd ? TextAlign.end : TextAlign.start,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: scheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            l10n.remainingDue,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            formatNpr(
-              Paisa(
-                remainingDuePaisa(
-                  grandTotal: bill.grandTotal,
-                  amountReceived: received,
-                ),
-              ),
-              showPaisa: false,
-            ),
-            textAlign: alignEnd ? TextAlign.end : TextAlign.start,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: scheme.onSurface,
-            ),
-          ),
-        ],
         const SizedBox(height: 20),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -642,33 +593,12 @@ class _BillLinesCard extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Text(
-                          l10n.grandTotal,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: scheme.successColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(BsRadii.full),
-                          ),
-                          child: Text(
-                            formatNpr(Paisa(bill.grandTotal), showPaisa: false),
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: scheme.successColor,
-                            ),
-                          ),
-                        ),
-                      ],
+                    _TotalRow(
+                      label: l10n.grandTotal,
+                      value: formatNpr(
+                        Paisa(bill.grandTotal),
+                        showPaisa: false,
+                      ),
                     ),
                     if (received != null) ...[
                       const SizedBox(height: 8),
