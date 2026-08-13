@@ -9,6 +9,7 @@ import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/bs_success_button.dart';
 import '../../core/ui/error_state.dart';
 import '../../data/repositories/bills_repository.dart';
+import '../../data/repositories/products_repository.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
 import '../inventory/providers.dart';
@@ -17,6 +18,7 @@ import 'bill_form_line_editor.dart';
 import 'bill_form_product_picker.dart';
 import 'bill_form_submit.dart';
 import 'bill_summary.dart';
+import 'copy_last_bill.dart';
 
 class BillFormScreen extends ConsumerStatefulWidget {
   const BillFormScreen({super.key, this.embedded = false, this.onSaved});
@@ -60,21 +62,32 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
   Future<void> _copyLastBill() async {
     final l10n = AppLocalizations.of(context);
-    final bills = await ref.read(billsRepositoryProvider).list(limit: 1);
-    if (bills.isEmpty) {
-      if (mounted) {
+    setState(() => _loading = true);
+    try {
+      final bill = await fetchLatestBillWithItems(
+        ref.read(billsRepositoryProvider),
+      );
+      if (!mounted) return;
+      if (bill == null) {
         showBsSnackBar(context, message: l10n.noBillsToCopy);
+        return;
       }
-      return;
+      final catalog = await productsForBillItems(
+        products: ref.read(productsRepositoryProvider),
+        bill: bill,
+      );
+      if (!mounted) return;
+      setState(() {
+        _draft.loadFromBill(bill, catalog);
+        _billDiscountController.text = _draft.billDiscountText;
+        _showCart = _draft.lines.isNotEmpty;
+      });
+      if (_draft.lines.isEmpty) {
+        showBsSnackBar(context, message: l10n.noBillLines);
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-    var catalog = _lastProducts;
-    if (catalog.isEmpty) {
-      catalog = await ref.read(productListProvider('').future);
-    }
-    setState(() {
-      _draft.loadFromBill(bills.first, catalog);
-      _showCart = _draft.lines.isNotEmpty;
-    });
   }
 
   void _syncDiscountText() {

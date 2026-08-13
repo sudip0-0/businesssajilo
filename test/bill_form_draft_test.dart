@@ -1,3 +1,6 @@
+import 'package:businesssajilo/domain/enums.dart';
+import 'package:businesssajilo/domain/models/bill.dart';
+import 'package:businesssajilo/domain/models/bill_item.dart';
 import 'package:businesssajilo/domain/models/product.dart';
 import 'package:businesssajilo/features/billing/bill_form_draft.dart';
 import 'package:businesssajilo/features/billing/bill_form_validation.dart';
@@ -69,5 +72,56 @@ void main() {
     draft.addProduct(_product(id: 'p1', name: 'Rice'));
     draft.updateQty(0, 0);
     expect(draft.lines.single.qty, 1);
+  });
+
+  test('loadFromBill copies lines even when catalog is empty', () {
+    final draft = BillFormDraft();
+    draft.addProduct(_product(id: 'old', name: 'Stale'));
+    final bill = Bill(
+      id: 'b1',
+      businessId: 'biz',
+      customerId: 'c1',
+      billNo: 'BS-0001',
+      createdBy: 'm1',
+      status: BillStatus.due,
+      discount: 500,
+      items: const [
+        BillItem(
+          id: 'i1',
+          billId: 'b1',
+          productId: 'p1',
+          nameSnapshot: 'Rice',
+          qty: 2,
+          rate: 12000,
+          discount: 100,
+          lineTotal: 23900,
+        ),
+      ],
+    );
+    draft.loadFromBill(bill, const []);
+    expect(draft.lines, hasLength(1));
+    expect(draft.lines.single.product.id, 'p1');
+    expect(draft.lines.single.product.name, 'Rice');
+    expect(draft.lines.single.qty, 2);
+    expect(draft.lines.single.rate, 12000);
+    expect(draft.lines.single.discount, 100);
+    expect(draft.customerId, 'c1');
+    expect(draft.billDiscount, 500);
+  });
+
+  test('loadFromBill with no items leaves the cart empty', () {
+    final draft = BillFormDraft();
+    draft.addProduct(_product(id: 'p1', name: 'Rice'));
+    draft.loadFromBill(
+      const Bill(
+        id: 'b1',
+        businessId: 'biz',
+        billNo: 'BS-0001',
+        createdBy: 'm1',
+        status: BillStatus.due,
+      ),
+      [_product(id: 'p1', name: 'Rice')],
+    );
+    expect(draft.lines, isEmpty);
   });
 }

@@ -29,8 +29,17 @@ class BillFormDraft {
     lines.clear();
     final byId = {for (final product in catalog) product.id: product};
     for (final item in bill.items) {
-      final product = byId[item.productId];
-      if (product == null) continue;
+      if (item.productId.isEmpty) continue;
+      final product =
+          byId[item.productId] ??
+          Product(
+            id: item.productId,
+            businessId: bill.businessId,
+            name: item.nameSnapshot,
+            unit: 'piece',
+            referencePrice: item.rate,
+            isActive: false,
+          );
       lines.add(
         BillDraftLine(
           product: product,
@@ -40,6 +49,9 @@ class BillFormDraft {
         ),
       );
     }
+    customerId = bill.customerId;
+    guestName = bill.customerId == null ? bill.customerShopName : null;
+    billDiscountText = formatNpr(Paisa(bill.discount), showSymbol: false);
   }
 
   /// Merges [product] into an existing line or appends a new one.

@@ -25,6 +25,7 @@ import '../../../features/billing/bill_draft_line.dart';
 import '../../../features/billing/bill_form_draft.dart';
 import '../../../features/billing/bill_form_submit.dart';
 import '../../../features/billing/bill_summary.dart';
+import '../../../features/billing/copy_last_bill.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
@@ -184,21 +185,46 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   Future<void> copyLastBill() async {
     if (_customerLocked) return;
     final l10n = AppLocalizations.of(context);
-    final bills = await ref.read(billsRepositoryProvider).list(limit: 1);
-    if (!mounted) return;
-    if (bills.isEmpty) {
-      showBsSnackBar(context, message: l10n.noBillsToCopy);
-      return;
+    setState(() => _loading = true);
+    try {
+      final bill = await fetchLatestBillWithItems(
+        ref.read(billsRepositoryProvider),
+      );
+      if (!mounted) return;
+      if (bill == null) {
+        showBsSnackBar(context, message: l10n.noBillsToCopy);
+        return;
+      }
+      final catalog = await productsForBillItems(
+        products: ref.read(productsRepositoryProvider),
+        bill: bill,
+      );
+      Customer? customer;
+      if (bill.customerId != null) {
+        try {
+          customer = await ref
+              .read(customersRepositoryProvider)
+              .get(bill.customerId!);
+        } catch (_) {}
+      }
+      if (!mounted) return;
+      setState(() {
+        _draft.loadFromBill(bill, catalog);
+        _billDiscountController.text = _draft.billDiscountText;
+        _selectedCustomer = customer;
+        _guestNameController.text = customer == null
+            ? (_draft.guestName ?? '')
+            : '';
+        _customerQuery = '';
+        _customerQueryController.clear();
+      });
+      _syncDirtyFlag();
+      if (_draft.lines.isEmpty) {
+        showBsSnackBar(context, message: l10n.noBillLines);
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-    var catalog = _lastProducts;
-    if (catalog.isEmpty) {
-      catalog = await ref.read(productListProvider('').future);
-    }
-    if (!mounted) return;
-    setState(() {
-      _draft.loadFromBill(bills.first, catalog);
-    });
-    _syncDirtyFlag();
   }
 
   void _onProductQueryChanged(String raw) {
