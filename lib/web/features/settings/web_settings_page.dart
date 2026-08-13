@@ -7,6 +7,9 @@ import '../../../app.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../features/onboarding/demo_data_actions.dart';
 import '../../../features/settings/account_section.dart';
+import '../../../features/settings/business_profile_section.dart';
+import '../../../features/settings/notification_prefs_section.dart';
+import '../../../features/settings/subscription_plan_tile.dart';
 import '../../theme/web_tokens.dart';
 import '../web_page_scaffold.dart';
 
@@ -83,6 +86,9 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
           subtitle: _seeding ? const LinearProgressIndicator() : null,
           onTap: _seeding ? null : _loadDemoData,
         ),
+        const BusinessProfileSection(),
+        const NotificationPrefsSection(),
+        const SubscriptionPlanTile(),
         ListTile(
           leading: const Icon(PhosphorIconsRegular.info),
           title: Text(l10n.aboutApp),
@@ -95,22 +101,28 @@ class _WebSettingsPageState extends ConsumerState<WebSettingsPage> {
     return WebPageScaffold(
       title: l10n.settings,
       breadcrumbs: [l10n.settings],
-      body: wide
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: appearanceColumn),
-                const SizedBox(width: 24),
-                Expanded(child: dataColumn),
-              ],
-            )
-          : ListView(
-              children: [
-                appearanceColumn,
-                const SizedBox(height: 24),
-                dataColumn,
-              ],
-            ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: wide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: appearanceColumn),
+                  const SizedBox(width: 24),
+                  Expanded(child: dataColumn),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  appearanceColumn,
+                  const SizedBox(height: 24),
+                  dataColumn,
+                ],
+              ),
+      ),
     );
   }
 }
@@ -132,6 +144,7 @@ class _SettingsColumn extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(

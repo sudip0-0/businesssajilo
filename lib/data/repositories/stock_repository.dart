@@ -28,6 +28,7 @@ abstract class StockRepository {
     required String productId,
     required int qty,
     required String createdByMemberId,
+    String? reason,
   });
   Future<StockMovement> adjust({
     required String productId,

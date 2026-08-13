@@ -16,9 +16,11 @@ import '../inventory/product_list_screen.dart';
 import '../inventory/providers.dart';
 import '../orders/order_queue_screen.dart';
 import '../notifications/notification_bell_action.dart';
+import '../onboarding/first_run_tour.dart';
 import '../reports/owner_dashboard.dart';
 import '../reports/providers.dart';
 import '../reports/reports_hub_screen.dart';
+import '../search/global_search_sheet.dart';
 import '../settings/settings_screen.dart';
 import '../sync/sync_badge_action.dart';
 import '../staff/add_member_sheet.dart';
@@ -33,6 +35,14 @@ class OwnerShell extends ConsumerStatefulWidget {
 
 class _OwnerShellState extends ConsumerState<OwnerShell> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) maybeShowFirstRunTour(context);
+    });
+  }
 
   // Mobile bottom nav: Dashboard, Inventory, Customers, Billing, More.
   static const _mobilePageIndexes = [0, 1, 2, 3];
@@ -175,7 +185,15 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       }),
       destinations: wide ? destinations : mobileDestinations,
       titles: wide ? titles : mobileTitles,
-      actions: const [SyncBadgeAction(), NotificationBellAction()],
+      actions: [
+        IconButton(
+          tooltip: l10n.globalSearch,
+          onPressed: () => showGlobalSearch(context, ref),
+          icon: const Icon(Icons.search),
+        ),
+        const SyncBadgeAction(),
+        const NotificationBellAction(),
+      ],
       body: body,
       floatingActionButton: switch (_index) {
         1 => FloatingActionButton.extended(

@@ -19,6 +19,13 @@ class StockInSheet extends ConsumerStatefulWidget {
 class _StockInSheetState extends ConsumerState<StockInSheet> {
   int _qty = 1;
   bool _loading = false;
+  final _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     final memberId = ref.read(authProvider).value?.member?.id;
@@ -33,6 +40,9 @@ class _StockInSheetState extends ConsumerState<StockInSheet> {
               productId: widget.productId,
               qty: _qty,
               createdByMemberId: memberId,
+              reason: _reasonController.text.trim().isEmpty
+                  ? null
+                  : _reasonController.text.trim(),
             );
         if (mounted) Navigator.pop(context, true);
       },
@@ -62,6 +72,11 @@ class _StockInSheetState extends ConsumerState<StockInSheet> {
                 min: 1,
                 onChanged: (v) => setState(() => _qty = v),
               ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _reasonController,
+              decoration: InputDecoration(labelText: l10n.supplierOrNote),
             ),
             const SizedBox(height: 24),
             FilledButton(

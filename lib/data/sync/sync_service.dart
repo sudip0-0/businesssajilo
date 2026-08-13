@@ -8,6 +8,7 @@ import '../../core/logging/app_log.dart';
 import '../../core/logging/sentry_scope.dart';
 import '../../core/network/supabase_health_probe.dart';
 import '../local/app_database.dart';
+import 'sync_constants.dart';
 import 'sync_helpers.dart';
 import 'sync_puller.dart';
 import 'sync_pusher.dart';
@@ -45,7 +46,10 @@ class SyncService {
     _connectivitySub ??= _connectivity.onConnectivityChanged.listen((_) {
       unawaited(syncNow());
     });
-    AppLog.info('sync_init', extras: {'deviceIdPrefix': deviceId.substring(0, 8)});
+    AppLog.info(
+      'sync_init',
+      extras: {'deviceIdPrefix': deviceId.substring(0, 8)},
+    );
     try {
       await syncNow(initial: true);
     } catch (e, st) {
@@ -102,6 +106,10 @@ class SyncService {
         }
       } while (_coalesce.shouldRepeat);
       await _db.pruneSyncedQueue();
+      await _db.setMetaValue(
+        syncMetaLastSuccessAt,
+        DateTime.now().toUtc().toIso8601String(),
+      );
     } finally {
       final duration = DateTime.now().toUtc().difference(started);
       final pendingEnd = await _db.pendingCount();

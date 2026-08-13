@@ -523,7 +523,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get allocateToAccount => 'खाता भुक्तानी';
 
   @override
-  String get allocateToBill => 'बिलमा जोड्नुहोस्';
+  String get allocateToBill => 'कुनै एक बिल';
 
   @override
   String get ledgerDate => 'मिति';
@@ -1177,7 +1177,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get smeManagement => 'SME व्यवस्थापन';
 
   @override
-  String get globalSearchHint => 'सामान, अर्डर, बिल खोज्नुहोस्...';
+  String get globalSearchHint =>
+      'सामान, ग्राहक र बिल खोज्न कम्तीमा २ अक्षर लेख्नुहोस्.';
 
   @override
   String get export => 'निर्यात';
@@ -1710,4 +1711,96 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get continueAnyway => 'जसरी भए पनि जारी राख्नुहोस्';
+
+  @override
+  String get businessProfile => 'व्यवसाय प्रोफाइल';
+
+  @override
+  String get businessProfileHint => 'तपाईंले सेयर गर्ने बिलमा देखिन्छ।';
+
+  @override
+  String get tourStepProductTitle => 'सामान थप्नुहोस्';
+
+  @override
+  String get tourStepProductBody =>
+      'बेच्ने एउटा सामानबाट सुरु गर्नुहोस् — नाम, एकाइ र सन्दर्भ दर।';
+
+  @override
+  String get tourStepCustomerTitle => 'ग्राहक थप्नुहोस्';
+
+  @override
+  String get tourStepCustomerBody =>
+      'खुद्रा पसलको लगइन बनाउनुहोस् वा काउन्टरमा वाक-इन बिल काट्नुहोस्।';
+
+  @override
+  String get tourStepBillTitle => 'बिल बनाउनुहोस्';
+
+  @override
+  String get tourStepBillBody =>
+      'वाक-इन बिल छिटो हुन्छ। कोटेशन स्वीकार भएपछि अर्डर पनि त्यस्तै बिल हुन्छ।';
+
+  @override
+  String get tourStepPaymentTitle => 'भुक्तानी रेकर्ड गर्नुहोस्';
+
+  @override
+  String get tourStepPaymentBody =>
+      'नगद, चेक, वालेट वा बैंक संकलन गरी उधारो खाता सफा राख्नुहोस्।';
+
+  @override
+  String get skip => 'छोड्नुहोस्';
+
+  @override
+  String get next => 'अर्को';
+
+  @override
+  String get done => 'भयो';
+
+  @override
+  String get globalSearch => 'खोज्नुहोस्';
+
+  @override
+  String get paymentAllocation => 'भुक्तानी लागू गर्ने';
+
+  @override
+  String get allocateOldestFirst => 'पुरानो बाँकी बिल पहिले';
+
+  @override
+  String get selectBill => 'बिल छान्नुहोस्';
+
+  @override
+  String quoteExpiresOn(String date) {
+    return 'म्याद $date';
+  }
+
+  @override
+  String get muteChatNotifications => 'अर्डर च्याट सूचना बन्द';
+
+  @override
+  String get muteDuesReminders => 'बाँकी रकम रिमाइन्डर बन्द';
+
+  @override
+  String get muteLowStockAlerts => 'कम स्टक सूचना बन्द';
+
+  @override
+  String get subscriptionPlan => 'योजना';
+
+  @override
+  String get supplierOrNote => 'सप्लायर / नोट (ऐच्छिक)';
+
+  @override
+  String get copyLastBill => 'पछिल्लो बिल कपी';
+
+  @override
+  String get noBillsToCopy => 'कपी गर्ने अघिल्लो बिल छैन';
+
+  @override
+  String lastSyncAt(String when) {
+    return 'पछिल्लो सिंक $when';
+  }
+
+  @override
+  String get notifQuoteStale => 'कोटेशनको म्याद सकियो';
+
+  @override
+  String get notifDuesReminder => 'बाँकी रकम रिमाइन्डर';
 }

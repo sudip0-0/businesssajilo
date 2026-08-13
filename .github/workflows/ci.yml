@@ -20,6 +20,7 @@ jobs:
       - run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter analyze
       - run: flutter test
+      - run: node --check scripts/e2e_web.mjs
 
   supabase-db:
     runs-on: ubuntu-latest

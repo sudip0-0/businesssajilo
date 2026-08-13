@@ -66,11 +66,7 @@ class SupabaseProductsRepository implements ProductsRepository {
   @override
   Future<Product> get(String id) async {
     final client = requireSupabaseClient(_client);
-    final row = await client
-        .from('products')
-        .select()
-        .eq('id', id)
-        .single();
+    final row = await client.from('products').select().eq('id', id).single();
     return _mapProduct(row);
   }
 
@@ -151,7 +147,8 @@ class SupabaseProductsRepository implements ProductsRepository {
     required Uint8List bytes,
     required String mimeType,
   }) async {
-    final uploadError = ImageUpload.validate(bytes);
+    final compressed = ImageUpload.compressForUpload(bytes);
+    final uploadError = ImageUpload.validate(compressed);
     if (uploadError != null) {
       throw AppFailure.validation(
         detail: uploadError == ImageUploadError.tooLarge
@@ -159,7 +156,7 @@ class SupabaseProductsRepository implements ProductsRepository {
             : 'invalid image type',
       );
     }
-    final sniffed = ImageUpload.sniffMime(bytes)!;
+    final sniffed = ImageUpload.sniffMime(compressed)!;
     final client = requireSupabaseClient(_client);
     final ext = ImageUpload.extensionForMime(sniffed);
     final path = '$businessId/$productId.$ext';
@@ -167,7 +164,7 @@ class SupabaseProductsRepository implements ProductsRepository {
         .from(_bucket)
         .uploadBinary(
           path,
-          bytes,
+          compressed,
           fileOptions: FileOptions(contentType: sniffed, upsert: true),
         );
     return path;

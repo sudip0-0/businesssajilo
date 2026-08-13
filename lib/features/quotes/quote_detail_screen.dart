@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/feature_flags.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/submit_action.dart';
+import '../../core/utils/bs_date.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/quotes_repository.dart';
 import '../../domain/enums.dart';
@@ -129,6 +131,16 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
                 l10n.quoteVersion(quote.version),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
+              if (quote.status == QuoteStatus.sent && quote.createdAt != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    l10n.quoteExpiresOn(
+                      BsDate.both(quoteExpiresAt(quote.createdAt!)),
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
               const Divider(),
               ...quote.items.map(
                 (item) => ListTile(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -60,33 +61,57 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
       setWebBeforeUnloadGuard(dirty);
     });
 
-    return WebPageScaffold(
-      title: l10n.createNewBill,
-      subtitle: l10n.createBillSubtitle,
-      breadcrumbs: [l10n.billing, l10n.createNewBill],
-      actions: [
-        OutlinedButton(
-          key: IntegrationKeys.billFormCancel,
-          onPressed: () => context.go(backPath),
-          child: Text(l10n.cancel),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+          _formKey.currentState?.saveBill();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+          _formKey.currentState?.saveBill();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyL, control: true): () {
+          _formKey.currentState?.focusProductSearch();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyL, meta: true): () {
+          _formKey.currentState?.focusProductSearch();
+        },
+      },
+      child: Focus(
+        autofocus: true,
+        child: WebPageScaffold(
+          title: l10n.createNewBill,
+          subtitle: l10n.createBillSubtitle,
+          breadcrumbs: [l10n.billing, l10n.createNewBill],
+          actions: [
+            OutlinedButton(
+              key: IntegrationKeys.billFormCancel,
+              onPressed: () => context.go(backPath),
+              child: Text(l10n.cancel),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () => _formKey.currentState?.copyLastBill(),
+              child: Text(l10n.copyLastBill),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              key: IntegrationKeys.billFormSaveDraft,
+              onPressed: () => _formKey.currentState?.saveDraft(),
+              child: Text(l10n.saveAsDraft),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.icon(
+              onPressed: () => _formKey.currentState?.saveBill(),
+              icon: const Icon(PhosphorIconsRegular.floppyDisk, size: 18),
+              label: Text(l10n.saveBill),
+            ),
+          ],
+          body: WebBillFormContent(
+            key: _formKey,
+            orderId: widget.orderId,
+            onSaved: _onSaved,
+          ),
         ),
-        const SizedBox(width: 8),
-        OutlinedButton(
-          key: IntegrationKeys.billFormSaveDraft,
-          onPressed: () => _formKey.currentState?.saveDraft(),
-          child: Text(l10n.saveAsDraft),
-        ),
-        const SizedBox(width: 8),
-        FilledButton.icon(
-          onPressed: () => _formKey.currentState?.saveBill(),
-          icon: const Icon(PhosphorIconsRegular.floppyDisk, size: 18),
-          label: Text(l10n.saveBill),
-        ),
-      ],
-      body: WebBillFormContent(
-        key: _formKey,
-        orderId: widget.orderId,
-        onSaved: _onSaved,
       ),
     );
   }

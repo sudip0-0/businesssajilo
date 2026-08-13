@@ -22,6 +22,8 @@ const TITLE_BY_TYPE: Record<string, string> = {
   payment_recorded: "Payment recorded",
   low_stock: "Low stock alert",
   negative_stock: "Negative stock alert",
+  quote_stale: "Quote expired",
+  dues_reminder: "Outstanding dues reminder",
 };
 
 Deno.serve(async (req) => {

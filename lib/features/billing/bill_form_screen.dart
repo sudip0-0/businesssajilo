@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/bs_success_button.dart';
 import '../../core/ui/error_state.dart';
+import '../../data/repositories/bills_repository.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
 import '../inventory/providers.dart';
@@ -54,6 +56,25 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _copyLastBill() async {
+    final l10n = AppLocalizations.of(context);
+    final bills = await ref.read(billsRepositoryProvider).list(limit: 1);
+    if (bills.isEmpty) {
+      if (mounted) {
+        showBsSnackBar(context, message: l10n.noBillsToCopy);
+      }
+      return;
+    }
+    var catalog = _lastProducts;
+    if (catalog.isEmpty) {
+      catalog = await ref.read(productListProvider('').future);
+    }
+    setState(() {
+      _draft.loadFromBill(bills.first, catalog);
+      _showCart = _draft.lines.isNotEmpty;
+    });
   }
 
   void _syncDiscountText() {
@@ -116,9 +137,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     final loadFailed = productsAsync.hasError && !_productsLoadedOnce;
     final refreshing =
         (liveQuery.isNotEmpty && liveQuery != _lastProductsQuery) ||
-        (liveQuery == _query &&
-            productsAsync.isLoading &&
-            _productsLoadedOnce);
+        (liveQuery == _query && productsAsync.isLoading && _productsLoadedOnce);
 
     final Widget body;
     if (firstLoad) {
@@ -137,6 +156,10 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       appBar: AppBar(
         title: Text(l10n.createNewBill),
         actions: [
+          TextButton(
+            onPressed: _loading ? null : _copyLastBill,
+            child: Text(l10n.copyLastBill),
+          ),
           TextButton(
             onPressed: _loading ? null : () => Navigator.pop(context),
             child: Text(l10n.cancel),

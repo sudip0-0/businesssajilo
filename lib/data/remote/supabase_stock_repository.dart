@@ -33,11 +33,13 @@ class SupabaseStockRepository implements StockRepository {
     required String productId,
     required int qty,
     required String createdByMemberId,
+    String? reason,
   }) async {
     return _insert(
       productId: productId,
       type: StockMovementType.stockIn,
       qtyDelta: qty,
+      reason: reason,
       createdByMemberId: createdByMemberId,
     );
   }

@@ -6,15 +6,18 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/layout/bs_breakpoints.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/error_state.dart';
+import '../../../data/repositories/quotes_repository.dart';
 import '../../../domain/enums.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
+import '../../../features/onboarding/first_run_tour.dart';
 import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../../features/reports/providers.dart';
 import '../../../features/reports/report_export_actions.dart';
 import '../../../core/testing/integration_keys.dart';
+import '../../../features/search/global_search_sheet.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../theme/web_palette.dart';
 import '../../theme/web_typography.dart';
@@ -24,6 +27,7 @@ import 'sections/web_dashboard_kpi_grid.dart';
 import 'sections/web_dashboard_recent_activity.dart';
 import 'sections/web_dashboard_sales_chart.dart';
 import 'sections/web_dashboard_transactions_table.dart';
+
 class WebOwnerDashboardPage extends ConsumerStatefulWidget {
   const WebOwnerDashboardPage({super.key});
 
@@ -35,9 +39,22 @@ class WebOwnerDashboardPage extends ConsumerStatefulWidget {
 class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
   bool _weeklyChart = true;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await maybeShowFirstRunTour(context);
+      try {
+        await ref.read(quotesRepositoryProvider).processOperationalNudges();
+      } catch (_) {}
+    });
+  }
+
   Future<void> _refresh() async {
     invalidateOwnerDashboardWidget(ref);
   }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -56,6 +73,11 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
       title: l10n.namasteGreeting(name),
       subtitle: l10n.dashboardTodaySummary,
       actions: [
+        IconButton(
+          tooltip: l10n.globalSearch,
+          onPressed: () => showGlobalSearch(context, ref),
+          icon: const Icon(PhosphorIconsRegular.magnifyingGlass),
+        ),
         OutlinedButton(
           key: IntegrationKeys.dashboardAddProduct,
           onPressed: () => context.push('/owner/inventory/new'),
@@ -138,7 +160,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                                 lowStockAlerts: lowStockAlerts,
                                 recentCustomers: recentCustomers,
                                 onRetry: _refresh,
-                              ),                            ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -198,7 +221,8 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                       error: (_, _) => ErrorState(
                         message: l10n.loadingFailed,
                         onRetry: () => ref.invalidate(todaysBillsProvider),
-                      ),                    ),
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.center,

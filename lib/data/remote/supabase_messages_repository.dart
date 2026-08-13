@@ -69,7 +69,8 @@ class SupabaseMessagesRepository implements MessagesRepository {
     required Uint8List bytes,
     required String fileName,
   }) async {
-    final uploadError = ImageUpload.validate(bytes);
+    final compressed = ImageUpload.compressForUpload(bytes);
+    final uploadError = ImageUpload.validate(compressed);
     if (uploadError != null) {
       throw AppFailure.validation(
         detail: uploadError == ImageUploadError.tooLarge
@@ -77,14 +78,14 @@ class SupabaseMessagesRepository implements MessagesRepository {
             : 'invalid image type',
       );
     }
-    final mime = ImageUpload.sniffMime(bytes)!;
+    final mime = ImageUpload.sniffMime(compressed)!;
     final client = requireSupabaseClient(_client);
     final path = '$businessId/$orderId/${const Uuid().v4()}_$fileName';
     await client.storage
         .from(_bucket)
         .uploadBinary(
           path,
-          bytes,
+          compressed,
           fileOptions: FileOptions(contentType: mime),
         );
 

@@ -23,4 +23,29 @@ class BusinessesRepository {
     if (row == null) return null;
     return Business.fromJson(Map<String, dynamic>.from(row as Map));
   }
+
+  Future<Business> update({
+    required String id,
+    required String name,
+    String? nameNp,
+    String? address,
+    String? phone,
+  }) async {
+    final client = _client;
+    if (client == null) {
+      throw StateError('Supabase is not configured');
+    }
+    final row = await client
+        .from('businesses')
+        .update({
+          'name': name.trim(),
+          'name_np': nameNp,
+          'address': address,
+          'phone': phone,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+    return Business.fromJson(Map<String, dynamic>.from(row as Map));
+  }
 }

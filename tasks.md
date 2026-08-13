@@ -72,7 +72,7 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 
 ## Phase 9 — Polish & Release
 - ✅ Nepali translation pass on all strings; BS date verification
-- ⚠️ Empty states, error states, skeleton loaders on most list screens (dashboards still use compact `…`/`—`; further polish backlog)
+- ✅ Empty states, error states, skeleton loaders on most list screens; dashboards use progress indicators instead of `…` and retry on error
 - ✅ Performance pass (web CanvasKit, list virtualization, image caching)
 - ✅ Security review: RLS audit, rate limits, storage rules
 - ✅ Play Store + App Store listing **copy drafted** (`docs/release/`); store submission / screenshots still manual
@@ -100,13 +100,22 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Repository integration order→bill reclassified; UI integration stub with `HARDENING_GATE` skip/fail semantics
 - ✅ Deno unit tests for Edge Function `validation.ts`
 - ✅ `scripts/local_hardening_gate.ps1` + `docs/LOCAL_TESTING.md`
-- ⚠️ Repair compile errors in `dashboard_scoped_queries_test.dart` and `offline_query_scale_test.dart`
+- ✅ Repair compile errors in `dashboard_scoped_queries_test.dart` and `offline_query_scale_test.dart`
 - ⚠️ Full UI pump through quote builder → bill form (stub only today)
+
+## Phase 13 — v1.2 QoL (2026-08)
+- ✅ Bill-level / oldest-first payment allocation (`record_payment` + payment sheet)
+- ✅ Last-quoted-rate memory on quote builder
+- ✅ Quote expiry (7 days) + stale-quote / dues reminder nudges
+- ✅ Business profile editor (name/address/phone on invoices)
+- ✅ First-run tour, global search, copy-last-bill, notification mutes
+- ✅ Image compression before upload; independent sync push batching
+- ✅ Web FCM service worker (fill `web/firebase-config.js` for production)
+- ✅ Sentry + Firebase dart-defines on release builds; `scripts/run_dev.sh`
+- ⚠️ Remaining client folds are UI totals of RPC rows (not extra round-trips). Drift encryption at rest is deferred (see `docs/SECURITY.md`).
 
 ## Backlog (post-launch, see product.md roadmap)
 - Customer self-edit of own profile (PRD matrix deferred from v1)
-- Bill-level payment allocation (oldest-first auto-allocation; accurate aging) · quote expiry + stale-order nudges · dues reminders (push) · last-quoted-rate memory per customer
-- Server-side report aggregation (Postgres RPCs) · client image compression before upload
-- Thermal printing · price tiers · supplier purchases · multi-warehouse · unit conversions · batch/expiry
+- Thermal printing · price tiers · supplier purchases ledger · multi-warehouse · unit conversions · batch/expiry
 - Payment gateways (eSewa/Khalti) · SMS reminders · subscriptions/feature gating · VAT mode
-- Production crash reporting (Sentry / Crashlytics) — deferred
+- Production crash reporting: code path shipped (`SENTRY_DSN`); set the GitHub secret before treating it as live

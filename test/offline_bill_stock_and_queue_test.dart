@@ -27,6 +27,7 @@ class _FakePaymentsRepository implements PaymentsRepository {
     required PaymentMethod method,
     String? refNote,
     String? billId,
+    String? allocate,
     required String receivedByMemberId,
     bool enqueueRemote = true,
   }) {

@@ -23,11 +23,13 @@ dev only — several of them are intentionally loose.
   recent re-authentication
 - [ ] Confirm business deletion requires password re-auth (Phase 19
   `delete-account` edge function)
+- [ ] Configure prod SMTP so password-reset emails deliver (`site_url` +
+  redirect URLs). Phone-login staff cannot self-reset by email — owners
+  reset them from the Staff screen.
 
 ## Observability
 
-- [ ] Set `SENTRY_DSN` as a GitHub Actions secret and pass it via
-  `--dart-define=SENTRY_DSN=...` in the release workflow
+- [ ] Set `SENTRY_DSN` as a GitHub Actions secret (already passed via `--dart-define` in `release.yml`)
 - [ ] Verify a test exception appears in the Sentry project after a
   release build
 
@@ -55,3 +57,5 @@ and the rollback policy in `supabase/README.md`). Manual fallback:
 - [ ] `supabase functions deploy` for `create-member`,
   `register-business`, `reset-member-password`, `delete-account`,
   `notify`
+- [ ] Copy `web/firebase-config.example.js` → `web/firebase-config.js` with production Firebase web keys
+- [ ] Set Firebase dart-define GitHub secrets used by `release.yml` (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_VAPID_KEY`)

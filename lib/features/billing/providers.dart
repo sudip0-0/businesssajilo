@@ -76,3 +76,9 @@ final salesTrendProvider = FutureProvider.autoDispose<double?>((ref) async {
   if (yesterday == 0) return today > 0 ? 100.0 : null;
   return ((today - yesterday) / yesterday) * 100;
 });
+
+final openBillsForCustomerProvider = FutureProvider.autoDispose
+    .family<List<Bill>, String>((ref, customerId) {
+      if (customerId.isEmpty) return Future.value(const []);
+      return ref.watch(billsRepositoryProvider).listOpenForCustomer(customerId);
+    });

@@ -12,6 +12,7 @@ import '../../domain/enums.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/notifications/notification_dropdown.dart';
 import '../../features/notifications/providers.dart';
+import '../../features/search/global_search_sheet.dart';
 import '../../features/settings/account_section.dart';
 import '../../features/shell/logout_action.dart';
 import '../navigation/web_notification_navigation.dart';
@@ -57,6 +58,15 @@ class WebTopBar extends ConsumerWidget {
               ),
             ),
           const Spacer(),
+          if (isOwner || role == Role.sales)
+            IconButton(
+              tooltip: l10n.globalSearch,
+              onPressed: () => showGlobalSearch(context, ref),
+              icon: const Icon(
+                PhosphorIconsRegular.magnifyingGlass,
+                color: WebPalette.navy,
+              ),
+            ),
           const LocaleToggle(compact: true),
           const SizedBox(width: 4),
           Builder(
@@ -73,8 +83,11 @@ class WebTopBar extends ConsumerWidget {
                     child: IconButton(
                       tooltip: l10n.notifications,
                       onPressed: () {
-                        final memberRole =
-                            ref.read(authProvider).value?.member?.role;
+                        final memberRole = ref
+                            .read(authProvider)
+                            .value
+                            ?.member
+                            ?.role;
                         showNotificationDropdown(
                           buttonContext: buttonContext,
                           onOpenItem: (navContext, item) {

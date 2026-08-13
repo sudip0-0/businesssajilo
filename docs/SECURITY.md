@@ -3,7 +3,7 @@
 ## Row Level Security (RLS)
 
 - All tenant tables use `FORCE ROW LEVEL SECURITY` with `current_business_id()` and `current_role_name()` helpers.
-- pgTAP suite in `supabase/tests/` (15 files): phases 1–8, phase 10 hardening, phase 11 credit notes, phase 12 launch hardening, phase 13 business logic, phase 15 dues-aging RPC, plus `rls_cross_tenant_test.sql` and `rls_storage_test.sql`.
+- pgTAP suite in `supabase/tests/` (including v1.2 QoL in `rls_phase33_qol_v12_test.sql`).
 - Run locally: `supabase test db`
 
 ## Storage
@@ -48,13 +48,13 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 
 ## Observability
 
-- Production crash reporting (Sentry / Crashlytics) is **deferred** — see backlog in `tasks.md`.
-- Local diagnosis uses `debugPrint` for sync/auth/push failures.
+- Production crash reporting uses `sentry_flutter` when `SENTRY_DSN` is passed via `--dart-define` (wired in `.github/workflows/release.yml`). Set the GitHub Actions secret before a production tag.
+- Local diagnosis uses `AppLog` (debug + Sentry breadcrumbs when DSN is set).
 
 ## Push (web)
 
-- Mobile FCM works when Firebase dart-defines are configured.
-- Web uses stub `web/firebase-messaging-sw.js` until a real Firebase web config is deployed; do not treat web push as production-ready until that stub is replaced.
+- Mobile FCM works when Firebase dart-defines are configured (also passed in `release.yml`).
+- Web uses `web/firebase-messaging-sw.js` plus `web/firebase-config.js`. Copy `web/firebase-config.example.js` and fill the Firebase web app keys before treating web push as production-ready.
 
 ## Production checklist
 
@@ -65,4 +65,11 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 - [ ] Configure prod SMTP so password-reset emails deliver (site_url + redirect URLs)
 - [ ] Review storage bucket policies after any migration
 - [ ] Run full `supabase test db` before each release
-- [ ] Replace web FCM stub with generated Firebase messaging service worker when enabling web push
+- [ ] Replace `web/firebase-config.js` placeholders with the generated Firebase web app config when enabling web push
+
+## Local data
+
+- Staff offline cache (Drift) is not encrypted at rest. Treat the device as
+  staff-trusted; full-disk encryption on the phone is the current mitigation.
+  SQLCipher / Drift encryption is a post-launch follow-up if stolen-device
+  risk shows up in pilots.

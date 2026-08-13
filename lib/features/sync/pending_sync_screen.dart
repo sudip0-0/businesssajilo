@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/utils/bs_date.dart';
 import '../../core/utils/sync_labels.dart';
 import '../../data/local/app_database.dart';
 import '../../data/sync/sync_providers.dart';
@@ -70,6 +71,15 @@ class PendingSyncScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (status?.lastSuccessAt != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.lastSyncAt(
+                                BsDate.both(status!.lastSuccessAt!),
+                              ),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                           FilledButton.icon(
                             onPressed: () async {
                               await bundle.sync.syncNow();

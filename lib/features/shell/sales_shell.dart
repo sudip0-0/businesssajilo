@@ -16,6 +16,7 @@ import '../inventory/product_form_screen.dart';
 import '../inventory/product_list_screen.dart';
 import '../inventory/providers.dart';
 import '../notifications/notification_bell_action.dart';
+import '../search/global_search_sheet.dart';
 import '../sync/sync_badge_action.dart';
 import '../orders/order_queue_screen.dart';
 import '../orders/providers.dart';
@@ -120,11 +121,16 @@ class _SalesShellState extends ConsumerState<SalesShell> {
           tooltip: l10n.billing,
         ),
       ],
-      actions: const [
-        SyncBadgeAction(),
-        NotificationBellAction(),
-        AccountAction(),
-        LogoutAction(),
+      actions: [
+        IconButton(
+          tooltip: l10n.globalSearch,
+          onPressed: () => showGlobalSearch(context, ref),
+          icon: const Icon(Icons.search),
+        ),
+        const SyncBadgeAction(),
+        const NotificationBellAction(),
+        const AccountAction(),
+        const LogoutAction(),
       ],
       body: pages[_index],
       floatingActionButton: switch (_index) {

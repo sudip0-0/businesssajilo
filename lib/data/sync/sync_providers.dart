@@ -9,6 +9,7 @@ import '../../domain/models/session_state.dart';
 import '../local/app_database.dart';
 import 'sync_bundle_registry.dart';
 import 'sync_config.dart';
+import 'sync_constants.dart';
 import 'sync_models.dart';
 import 'sync_service.dart';
 
@@ -57,12 +58,14 @@ class SyncStatus {
     this.pendingCount = 0,
     this.failedCount = 0,
     this.bootstrapIncomplete = false,
+    this.lastSuccessAt,
   });
 
   final SyncState state;
   final int pendingCount;
   final int failedCount;
   final bool bootstrapIncomplete;
+  final DateTime? lastSuccessAt;
 }
 
 /// Reactive sync status: re-evaluates on queue changes (drift `.watch()`)
@@ -88,6 +91,10 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
         : pending > 0
         ? SyncState.pending
         : SyncState.synced;
+    final lastRaw = await bundle.db.metaValue(syncMetaLastSuccessAt);
+    final lastSuccessAt = lastRaw == null || lastRaw.isEmpty
+        ? null
+        : DateTime.tryParse(lastRaw);
     if (controller.isClosed) return;
     controller.add(
       SyncStatus(
@@ -95,6 +102,7 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
         pendingCount: pending,
         failedCount: failed,
         bootstrapIncomplete: incomplete,
+        lastSuccessAt: lastSuccessAt,
       ),
     );
   }
@@ -141,12 +149,7 @@ Future<void> bootstrapSyncForSession({
   await sync.init(deviceId);
 
   SyncBundleRegistry.instance.replace(
-    SyncBundle(
-      db: db,
-      sync: sync,
-      businessId: businessId,
-      memberId: memberId,
-    ),
+    SyncBundle(db: db, sync: sync, businessId: businessId, memberId: memberId),
   );
 }
 

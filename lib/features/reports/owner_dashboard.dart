@@ -12,6 +12,7 @@ import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/money.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/utils/report_range.dart';
+import '../../data/repositories/quotes_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
@@ -37,6 +38,16 @@ class OwnerDashboard extends ConsumerStatefulWidget {
 
 class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
   bool _weeklyChart = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await ref.read(quotesRepositoryProvider).processOperationalNudges();
+      } catch (_) {}
+    });
+  }
 
   Future<void> _refresh() async {
     invalidateOwnerDashboardWidget(ref);
@@ -88,9 +99,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.todaysSales,
+                loading: stats.isLoading,
                 value: stats.when(
                   data: (d) => formatDashboardKpiAmount(l10n, d.todaySales),
-                  loading: () => '…',
+                  loading: () => '',
                   error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.payments_outlined,
@@ -118,9 +130,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.totalDues,
+                loading: stats.isLoading,
                 value: stats.when(
                   data: (d) => formatDashboardKpiAmount(l10n, d.totalDues),
-                  loading: () => '…',
+                  loading: () => '',
                   error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.account_balance_wallet_outlined,
@@ -132,9 +145,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.lowStock,
+                loading: stats.isLoading,
                 value: stats.when(
                   data: (d) => formatDashboardKpiCount(l10n, d.lowStockCount),
-                  loading: () => '…',
+                  loading: () => '',
                   error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.inventory_2_outlined,
@@ -155,9 +169,10 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               BsStatTile(
                 compact: !wide,
                 label: l10n.pendingOrders,
+                loading: stats.isLoading,
                 value: stats.when(
                   data: (d) => formatDashboardKpiCount(l10n, d.pendingOrders),
-                  loading: () => '…',
+                  loading: () => '',
                   error: (_, _) => l10n.loadingFailed,
                 ),
                 icon: Icons.shopping_cart_outlined,

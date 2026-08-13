@@ -12,6 +12,7 @@ import '../../../core/testing/integration_keys.dart';
 import '../../../core/ui/bs_snackbar.dart';
 import '../../../core/ui/stock_badge.dart';
 import '../../../core/utils/money.dart';
+import '../../../data/repositories/bills_repository.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../data/repositories/orders_repository.dart';
 import '../../../data/repositories/products_repository.dart';
@@ -176,8 +177,28 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     ref.read(billFormDirtyProvider.notifier).setDirty(_isDirty);
   }
 
-  void _focusProductSearch() {
+  void focusProductSearch() {
     _productSearchFocus.requestFocus();
+  }
+
+  Future<void> copyLastBill() async {
+    if (_customerLocked) return;
+    final l10n = AppLocalizations.of(context);
+    final bills = await ref.read(billsRepositoryProvider).list(limit: 1);
+    if (!mounted) return;
+    if (bills.isEmpty) {
+      showBsSnackBar(context, message: l10n.noBillsToCopy);
+      return;
+    }
+    var catalog = _lastProducts;
+    if (catalog.isEmpty) {
+      catalog = await ref.read(productListProvider('').future);
+    }
+    if (!mounted) return;
+    setState(() {
+      _draft.loadFromBill(bills.first, catalog);
+    });
+    _syncDirtyFlag();
   }
 
   void _onProductQueryChanged(String raw) {
@@ -227,7 +248,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       _customerQueryController.clear();
     });
     _syncDirtyFlag();
-    _focusProductSearch();
+    focusProductSearch();
   }
 
   void _clearCustomer() {
@@ -298,7 +319,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     final productsAsync = ref.watch(productListProvider(_productQuery));
     final customersAsync = ref.watch(customerListProvider(_customerQuery));
     final liveProductQuery = _productQueryController.text.trim().toLowerCase();
-    final liveCustomerQuery = _customerQueryController.text.trim().toLowerCase();
+    final liveCustomerQuery = _customerQueryController.text
+        .trim()
+        .toLowerCase();
     final products = liveProductQuery == _lastProductsQuery
         ? (productsAsync.value ?? _lastProducts)
         : const <Product>[];
@@ -331,7 +354,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
               productsFailed: productsAsync.hasError && products.isEmpty,
               onProductQueryChanged: _onProductQueryChanged,
               onProductSelected: _addProduct,
-              onFocusProductSearch: _focusProductSearch,
+              onFocusProductSearch: focusProductSearch,
               focusQtyProductId: _focusQtyProductId,
               onQtyFocusHandled: _clearQtyFocusRequest,
               onLineChanged: () {
@@ -372,7 +395,11 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                 _syncDirtyFlag();
               },
               showCustomerBalance:
-                  ref.watch(authProvider).value?.member?.role
+                  ref
+                      .watch(authProvider)
+                      .value
+                      ?.member
+                      ?.role
                       .canViewCustomerBalance ??
                   false,
             );
@@ -730,9 +757,7 @@ class _CheckoutRail extends StatelessWidget {
                 TextField(
                   controller: guestNameController,
                   textCapitalization: TextCapitalization.words,
-                  decoration: InputDecoration(
-                    labelText: l10n.walkInNameHint,
-                  ),
+                  decoration: InputDecoration(labelText: l10n.walkInNameHint),
                   onChanged: (_) => onGuestNameChanged(),
                 ),
               ] else
@@ -839,10 +864,7 @@ class _CheckoutRail extends StatelessWidget {
 }
 
 class _SelectedCustomerChip extends StatelessWidget {
-  const _SelectedCustomerChip({
-    required this.customer,
-    this.onCleared,
-  });
+  const _SelectedCustomerChip({required this.customer, this.onCleared});
 
   final Customer customer;
   final VoidCallback? onCleared;

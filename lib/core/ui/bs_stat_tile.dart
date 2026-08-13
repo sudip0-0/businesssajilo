@@ -16,6 +16,7 @@ class BsStatTile extends StatelessWidget {
     this.trend,
     this.trendLabel,
     this.compact = false,
+    this.loading = false,
   });
 
   final String label;
@@ -26,6 +27,7 @@ class BsStatTile extends StatelessWidget {
   final BsTrendDirection? trend;
   final String? trendLabel;
   final bool compact;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -80,14 +82,21 @@ class BsStatTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                value,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  color: BsColors.textCharcoal,
+              if (loading)
+                const SizedBox(
+                  height: 22,
+                  width: 72,
+                  child: LinearProgressIndicator(),
+                )
+              else
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: BsColors.textCharcoal,
+                  ),
                 ),
-              ),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
                 Text(

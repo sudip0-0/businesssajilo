@@ -9,31 +9,32 @@ class SupabaseNotificationsRepository implements NotificationsRepository {
 
   final SupabaseClient? _client;
 
-  static const _listCap = 100;
+  static const _streamCap = 50;
 
   @override
-  Future<List<NotificationItem>> list() async {
+  Future<List<NotificationItem>> list({int offset = 0, int limit = 30}) async {
     final client = requireSupabaseClient(_client);
     final rows = await client
         .from('notifications')
         .select()
         .order('created_at', ascending: false)
-        .limit(_listCap);
+        .range(offset, offset + limit - 1);
     return (rows as List)
         .map((row) => NotificationItem.fromJson(row as Map<String, dynamic>))
         .toList();
   }
 
   @override
-  Stream<List<NotificationItem>> watch() {
+  Stream<List<NotificationItem>> watch({int limit = 50}) {
     final client = requireSupabaseClient(_client);
+    final cap = limit < _streamCap ? limit : _streamCap;
     return client
         .from('notifications')
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false)
         .map(
           (rows) => rows
-              .take(_listCap)
+              .take(cap)
               .map((row) => NotificationItem.fromJson(row))
               .toList(),
         );

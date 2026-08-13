@@ -8,6 +8,8 @@ import '../local/app_database.dart';
 import 'sync_backoff.dart';
 import 'sync_helpers.dart';
 
+const _independentBatchSize = 4;
+
 class SyncPusher {
   SyncPusher({required AppDatabase db, required SupabaseClient client})
     : _db = db,
@@ -23,26 +25,15 @@ class SyncPusher {
     final syncedIds = <String>{};
     final now = DateTime.now().toUtc();
     var uploadedCount = 0;
+    final independent = <SyncQueueData>[];
 
-    for (final item in queue) {
-      // Exponential backoff: skip until the item's backoff window elapsed.
-      if (item.nextAttemptAt != null && item.nextAttemptAt!.isAfter(now)) {
-        continue;
-      }
-
-      if (item.dependsOnId != null &&
-          !syncedIds.contains(item.dependsOnId) &&
-          blockedIds.contains(item.dependsOnId)) {
-        continue;
-      }
-
+    Future<int> process(SyncQueueData item) async {
       try {
         final payload = jsonDecode(item.payloadJson) as Map<String, dynamic>;
         switch (item.entityType) {
           case 'bill':
             await _pushBill(item.entityId, payload);
           case 'bill_items':
-            // Legacy queue entries — reject; bills carry items via create_bill.
             throw StateError('legacy bill_items queue entry rejected');
           case 'payment':
             await _pushPayment(payload);
@@ -56,7 +47,7 @@ class SyncPusher {
             .write(const SyncQueueCompanion(status: Value('synced')));
         syncedIds.add(item.entityId);
         blockedIds.remove(item.entityId);
-        uploadedCount++;
+        return 1;
       } catch (e, st) {
         final attempts = item.attempts + 1;
         final terminal = attempts >= syncMaxAttempts;
@@ -88,20 +79,47 @@ class SyncPusher {
             },
           );
         } else {
-          AppLog.warn(
-            'Sync queue item retry scheduled',
-            e,
-            st,
-            {
-              'entityType': item.entityType,
-              'entityId': item.entityId,
-              'attempts': attempts,
-              'nextAttemptInSec': backoffForAttempts(attempts).inSeconds,
-            },
-          );
+          AppLog.warn('Sync queue item retry scheduled', e, st, {
+            'entityType': item.entityType,
+            'entityId': item.entityId,
+            'attempts': attempts,
+            'nextAttemptInSec': backoffForAttempts(attempts).inSeconds,
+          });
         }
+        return 0;
       }
     }
+
+    for (final item in queue) {
+      if (item.nextAttemptAt != null && item.nextAttemptAt!.isAfter(now)) {
+        continue;
+      }
+      if (item.dependsOnId != null &&
+          !syncedIds.contains(item.dependsOnId) &&
+          blockedIds.contains(item.dependsOnId)) {
+        continue;
+      }
+      final canBatch =
+          item.dependsOnId == null &&
+          (item.entityType == 'stock_movement' || item.entityType == 'payment');
+      if (canBatch) {
+        independent.add(item);
+      } else {
+        uploadedCount += await process(item);
+      }
+    }
+
+    for (var i = 0; i < independent.length; i += _independentBatchSize) {
+      final end = i + _independentBatchSize < independent.length
+          ? i + _independentBatchSize
+          : independent.length;
+      final chunk = independent.sublist(i, end);
+      final results = await Future.wait(chunk.map(process));
+      for (final n in results) {
+        uploadedCount += n;
+      }
+    }
+
     return uploadedCount;
   }
 

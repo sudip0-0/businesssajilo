@@ -197,6 +197,7 @@ class AccountSettingsTiles extends ConsumerWidget {
     final isOwner = role == Role.owner;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         const Divider(height: 1),
         ListTile(

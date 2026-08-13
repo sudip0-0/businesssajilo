@@ -15,19 +15,24 @@ String notificationTitle(AppLocalizations l10n, NotificationItem item) {
     'payment_recorded' => l10n.notifPaymentRecorded,
     'low_stock' => l10n.notifLowStock,
     'negative_stock' => l10n.notifNegativeStock,
+    'quote_stale' => l10n.notifQuoteStale,
+    'dues_reminder' => l10n.notifDuesReminder,
     _ => l10n.notifications,
   };
 }
 
 IconData notificationIcon(String type) {
   return switch (type) {
-    'order_placed' || 'order_received' || 'order_status' =>
-      Icons.shopping_cart_outlined,
+    'order_placed' ||
+    'order_received' ||
+    'order_status' => Icons.shopping_cart_outlined,
     'quote_received' ||
     'quote_accepted' ||
     'quote_rejected' => Icons.request_quote_outlined,
     'chat_message' => Icons.chat_bubble_outline,
     'payment_recorded' => Icons.payments_outlined,
+    'dues_reminder' => Icons.account_balance_wallet_outlined,
+    'quote_stale' => Icons.schedule_outlined,
     'low_stock' || 'negative_stock' => Icons.inventory_2_outlined,
     _ => Icons.notifications_outlined,
   };

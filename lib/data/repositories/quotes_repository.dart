@@ -72,9 +72,27 @@ class QuotesRepository {
     return quotes.where((q) => q.status == QuoteStatus.accepted).firstOrNull;
   }
 
+  Future<int?> lastQuotedRate({
+    required String customerId,
+    required String productId,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    final result = await client.rpc<dynamic>(
+      'last_quoted_rate',
+      params: {'p_customer_id': customerId, 'p_product_id': productId},
+    );
+    return (result as num?)?.toInt();
+  }
+
+  Future<int> processOperationalNudges() async {
+    final client = requireSupabaseClient(_client);
+    final result = await client.rpc<dynamic>('process_operational_nudges');
+    return (result as num?)?.toInt() ?? 0;
+  }
+
   /// Sends a quote via the transactional `send_quote` RPC. The server
-  /// validates line math, supersedes previous 'sent' quotes, and moves the
-  /// order to 'quoted'.
+  /// validates line math, supersedes previous 'sent' quotes, and stamps
+  /// `expires_at` (7 days). Order status stays `placed` or `received`.
   Future<Quote> sendQuote({
     required String orderId,
     required String createdByMemberId,

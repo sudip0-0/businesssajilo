@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/feature_flags.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
@@ -114,12 +115,25 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
 
   Future<void> _initLines(List<OrderItem> items) async {
     final productsRepo = ref.read(productsRepositoryProvider);
+    final quotesRepo = ref.read(quotesRepositoryProvider);
+    final order = ref.read(orderDetailProvider(widget.orderId)).value;
+    final customerId = order?.customerId;
     for (final item in items) {
       var rate = 0;
       var rateLoadFailed = false;
       try {
         final product = await productsRepo.get(item.productId);
-        rate = product.referencePrice;
+        int? lastQuoted;
+        if (customerId != null) {
+          lastQuoted = await quotesRepo.lastQuotedRate(
+            customerId: customerId,
+            productId: item.productId,
+          );
+        }
+        rate = resolveQuoteRate(
+          lastQuotedPaisa: lastQuoted,
+          referencePaisa: product.referencePrice,
+        );
       } catch (_) {
         rateLoadFailed = true;
       }

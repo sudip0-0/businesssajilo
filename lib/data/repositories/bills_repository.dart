@@ -29,6 +29,9 @@ abstract class BillsRepository {
   Future<List<Bill>> list({int offset = 0, int? limit});
   Future<List<Bill>> search(String query, {int limit = 50});
 
+  /// Due / partial bills for a customer, oldest first (payment allocation).
+  Future<List<Bill>> listOpenForCustomer(String customerId);
+
   /// Bills in `[from, to)` (UTC instants), newest first.
   /// Optional [query] matches bill number or customer shop name.
   Future<List<Bill>> listInRange({

@@ -524,7 +524,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allocateToAccount => 'Account payment';
 
   @override
-  String get allocateToBill => 'Allocate to bill';
+  String get allocateToBill => 'A specific bill';
 
   @override
   String get ledgerDate => 'Date';
@@ -1180,7 +1180,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smeManagement => 'SME Management';
 
   @override
-  String get globalSearchHint => 'Search products, orders, bills...';
+  String get globalSearchHint =>
+      'Type at least 2 characters to search products, customers, and bills.';
 
   @override
   String get export => 'Export';
@@ -1713,4 +1714,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueAnyway => 'Continue anyway';
+
+  @override
+  String get businessProfile => 'Business profile';
+
+  @override
+  String get businessProfileHint => 'Shown on invoices you share.';
+
+  @override
+  String get tourStepProductTitle => 'Add a product';
+
+  @override
+  String get tourStepProductBody =>
+      'Start with one item you sell — name, unit, and a reference rate.';
+
+  @override
+  String get tourStepCustomerTitle => 'Add a customer';
+
+  @override
+  String get tourStepCustomerBody =>
+      'Create a retailer login so they can order, or bill walk-in customers at the counter.';
+
+  @override
+  String get tourStepBillTitle => 'Create a bill';
+
+  @override
+  String get tourStepBillBody =>
+      'Walk-in billing takes seconds. Quote-first orders work the same way once accepted.';
+
+  @override
+  String get tourStepPaymentTitle => 'Record a payment';
+
+  @override
+  String get tourStepPaymentBody =>
+      'Collect cash, cheque, wallet or bank and keep the udharo ledger honest.';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get globalSearch => 'Search';
+
+  @override
+  String get paymentAllocation => 'Apply payment to';
+
+  @override
+  String get allocateOldestFirst => 'Oldest unpaid bills first';
+
+  @override
+  String get selectBill => 'Select bill';
+
+  @override
+  String quoteExpiresOn(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get muteChatNotifications => 'Mute order chat notifications';
+
+  @override
+  String get muteDuesReminders => 'Mute dues reminders';
+
+  @override
+  String get muteLowStockAlerts => 'Mute low-stock alerts';
+
+  @override
+  String get subscriptionPlan => 'Plan';
+
+  @override
+  String get supplierOrNote => 'Supplier / note (optional)';
+
+  @override
+  String get copyLastBill => 'Copy last bill';
+
+  @override
+  String get noBillsToCopy => 'No previous bill to copy';
+
+  @override
+  String lastSyncAt(String when) {
+    return 'Last synced $when';
+  }
+
+  @override
+  String get notifQuoteStale => 'A quote has expired';
+
+  @override
+  String get notifDuesReminder => 'Outstanding dues reminder';
 }

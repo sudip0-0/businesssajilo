@@ -38,6 +38,7 @@ class SupabasePaymentsRepository implements PaymentsRepository {
     required PaymentMethod method,
     String? refNote,
     String? billId,
+    String? allocate,
     required String receivedByMemberId,
     bool enqueueRemote = true,
   }) async {
@@ -53,6 +54,7 @@ class SupabasePaymentsRepository implements PaymentsRepository {
           'amount': amount,
           'method': method.name,
           'ref_note': ?refNote,
+          'allocate': ?allocate,
           'received_by': receivedByMemberId,
         },
       },

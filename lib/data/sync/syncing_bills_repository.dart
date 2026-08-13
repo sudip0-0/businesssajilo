@@ -144,6 +144,20 @@ class SyncingBillsRepository implements BillsRepository {
   }
 
   @override
+  Future<List<Bill>> listOpenForCustomer(String customerId) async {
+    final rows =
+        await (_db.select(_db.localBills)
+              ..where(
+                (b) =>
+                    b.customerId.equals(customerId) &
+                    b.status.isIn(['due', 'partial']),
+              )
+              ..orderBy([(b) => OrderingTerm.asc(b.createdAt)]))
+            .get();
+    return _attachItems(rows);
+  }
+
+  @override
   Future<List<Bill>> search(String query, {int limit = 50}) async {
     final q = query.trim();
     if (q.isEmpty) return list(limit: limit);
@@ -208,10 +222,7 @@ class SyncingBillsRepository implements BillsRepository {
     final client = _client;
     if (client != null) {
       try {
-        return await SupabaseBillsRepository(
-          client,
-          _payments,
-        ).listInRange(
+        return await SupabaseBillsRepository(client, _payments).listInRange(
           from: from,
           to: to,
           query: query,
@@ -234,8 +245,7 @@ class SyncingBillsRepository implements BillsRepository {
             b.createdAt.isSmallerThanValue(toUtc);
         if (pattern == null) return inRange;
         final shopMatch =
-            b.customerShopName.isNotNull() &
-            b.customerShopName.like(pattern);
+            b.customerShopName.isNotNull() & b.customerShopName.like(pattern);
         return inRange & (b.billNo.like(pattern) | shopMatch);
       })
       ..orderBy([(b) => OrderingTerm.desc(b.createdAt)]);

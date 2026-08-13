@@ -81,7 +81,7 @@ class _OrderChatScreenState extends ConsumerState<OrderChatScreen> {
     );
     if (file == null) return;
 
-    final bytes = await file.readAsBytes();
+    final bytes = ImageUpload.compressForUpload(await file.readAsBytes());
     final uploadError = ImageUpload.validate(bytes);
     if (uploadError != null) {
       if (mounted) {

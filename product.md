@@ -29,10 +29,10 @@ BusinessSajilo is a multi-tenant SaaS platform for small-to-medium dealers and d
 | Manage business settings, staff users | ✅ | ❌ | ❌ | ❌ |
 | Create customer credentials | ✅ | ❌ | ❌ | ❌ |
 | Add/edit customers (profile data) | ✅ | ❌ | ❌ | ❌ (owner-managed in v1; self-edit deferred) |
-| Create/edit products & categories | ✅ | ❌ | ❌ | ❌ |
+| Create/edit products | ✅ | ✅ | ❌ | ❌ |
 | Stock-in, adjustments, stock counts | ✅ | ❌ | ✅ | ❌ |
 | View stock levels | ✅ | ✅ | ✅ | ❌ |
-| Create bills/invoices | ✅ | ✅ | ❌ | ❌ |
+| Create bills/invoices | ✅ | ✅ | ✅ | ❌ |
 | Respond to orders / send quotes | ✅ | ✅ | ❌ | ❌ |
 | Record payments | ✅ | ✅ | ❌ | ❌ |
 | View customer ledger / dues | ✅ | ✅ | ❌ | own ledger |
@@ -40,7 +40,7 @@ BusinessSajilo is a multi-tenant SaaS platform for small-to-medium dealers and d
 | Order-thread chat | ✅ | ✅ | ❌ | ✅ |
 | Reports & dashboard | ✅ | limited | ❌ | ❌ |
 
-Hard rule: **Warehouse Manager can never create or view bills.** Enforced at the database (RLS) level, not just UI.
+Hard rule: **Warehouse Manager may create and view bills but must never see customer balances, payments, or the ledger.** Enforced at the database (RLS) level, not just UI.
 
 ## 5. Core Flows
 
@@ -50,10 +50,9 @@ Hard rule: **Warehouse Manager can never create or view bills.** Enforced at the
 2. Customer places an order (items + quantities + note).
 3. Sales/Owner receives notification, reviews, and sends a **Quote** (per-item rates, discounts, total).
 4. Customer **accepts** or **rejects** (with comment) the quote. Counter-discussion happens in the order's chat thread.
-5. On acceptance, order moves to **Confirmed**. Warehouse sees it for fulfillment (packed → dispatched).
-6. Sales/Owner generates the **Bill** from the confirmed order. Payment recorded as full, partial (credit), or due.
+5. On acceptance, sales/owner (or warehouse) generates the **Bill** from the order. Payment recorded as full, partial (credit), or due.
 
-Order states: `draft → placed → quoted → accepted | rejected → confirmed → packed → dispatched → billed → closed | cancelled`
+Order states (shipped): `placed → received → billed`. Quote discussion happens while the order is `placed` or `received`; `create_bill` moves it to `billed`.
 
 ### 5.2 Billing (non-VAT)
 
@@ -66,14 +65,14 @@ Order states: `draft → placed → quoted → accepted | rejected → confirmed
 ### 5.3 Credit / Udharo & Ledger
 
 - Every customer has a running ledger: bills (debit), payments (credit).
-- **Account-level** payment recording in v1 (optional `bill_id` exists in schema; UI does not allocate to a specific bill). Bill-level / oldest-first allocation is v1.2.
+- **Account-level** payment recording plus **bill-level / oldest-first allocation** (v1.2). Optional `bill_id` on payments; oldest-first splits a payment across open bills.
 - Payment methods recorded manually: cash, cheque, eSewa/Khalti/bank ref (no gateway integration in v1).
 - Outstanding dues visible to staff and to the customer in their own app.
 - Dues aging report for the owner.
 
 ### 5.4 Inventory (v1 scope)
 
-- Products: name (EN/NP), SKU, category, unit, cost price, selling reference price, image, low-stock threshold.
+- Products: name (EN/NP), SKU, unit, cost price, selling reference price, image, low-stock threshold. Categories were removed.
 - Stock-in (purchases simplified as stock-in entries), manual adjustments with reason, automatic deduction on dispatch.
 - Low-stock alerts via push.
 - Out of scope v1: multi-warehouse, batches/expiry, unit conversions (carton↔piece) — see roadmap.
@@ -128,9 +127,9 @@ Free during launch. Schema includes `businesses.subscription_plan` so feature-ga
 Already shipped from the original v1.1 scope: PDF/image invoices, sales returns (credit notes), report CSV export.
 
 1. **Launch hardening (pre-release)** — password reset, phone-number login, account deletion (store compliance), reorder from past order, shareable customer statement shipped in app; registration captcha / prod Auth hardening remain dashboard ops (see `docs/SECURITY.md`). See tasks.md Phase 11.
-2. **v1.2** — Bill-level payment allocation, quote expiry + stale-order nudges, dues reminders (push), last-quoted-rate memory; thermal print only if pilot users ask.
-3. **v1.3** — Price tiers per customer, supplier purchases + supplier ledger, multi-warehouse, unit conversions, batch/expiry.
-4. **v2** — Payment gateways, SMS reminders (Sparrow SMS), subscriptions/feature gating, sales-person performance & route planning, VAT billing mode.
+2. **v1.2** — Bill-level payment allocation, last-quoted-rate memory, quote expiry + stale-order nudges, dues reminders (push), first-run tour, business profile on invoices. Thermal print only if pilot users ask.
+3. **v1.3** — Price tiers per customer, supplier purchases + supplier ledger (stock-in now accepts an optional supplier/note), multi-warehouse, unit conversions, batch/expiry.
+4. **v2** — Payment gateways, SMS reminders (Sparrow SMS), subscriptions/feature gating (plan is displayed; gating UI still off), sales-person performance & route planning, VAT billing mode as an opt-in (not default).
 
 ## 13. Success Metrics
 

@@ -37,6 +37,15 @@ lib/web     → features, core, data, domain
 - Initial bootstrap is resumable: page/duration budgets persist `bootstrap_table` + `bootstrap_offset` in `syncMeta`; table watermarks advance only after that table completes.
 - Credit notes (online-only) update `customer_balances.updated_at` on the server; the customers delta pull in `SyncPuller` upserts revised `balance_due` into Drift.
 - Local verification: `test/sync_strategy_test.dart` covers watermark deferral, bootstrap resume offsets, bill-before-payment ordering, legacy queue rejection.
+- Independent `payment` and `stock_movement` queue items may be pushed in parallel batches of 4; bills stay sequential.
+
+## Dual UI
+
+New billing and payment work belongs in `lib/features/` (`BillFormDraft`, `PaymentAllocation`, `recordCustomerPayment`) with thin `lib/web/` views. Do not copy those flows into `lib/web/features/` as a second source of truth.
+
+## Reports
+
+Dashboard KPIs, dues aging, and `total_dues` use RPCs. Client-side folds of already-fetched report rows (chart totals, stock valuation sums) are UI-only — do not add extra list-then-sum round trips.
 
 ## Local hardening gate
 

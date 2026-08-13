@@ -10,6 +10,7 @@ const syncBootstrapMaxDuration = Duration(seconds: 30);
 /// [syncMeta] keys for resumable bootstrap progress.
 const syncMetaBootstrapTable = 'bootstrap_table';
 const syncMetaBootstrapOffset = 'bootstrap_offset';
+const syncMetaLastSuccessAt = 'last_success_at';
 
 /// Ordered remote tables for initial bootstrap (watermark keys).
 const syncBootstrapTables = [

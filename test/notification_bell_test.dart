@@ -17,11 +17,12 @@ class _FakeNotificationsRepository implements NotificationsRepository {
   final _controller = StreamController<List<NotificationItem>>.broadcast();
 
   @override
-  Future<List<NotificationItem>> list() async => _items;
+  Future<List<NotificationItem>> list({int offset = 0, int limit = 30}) async =>
+      _items.skip(offset).take(limit).toList();
 
   @override
-  Stream<List<NotificationItem>> watch() async* {
-    yield _items;
+  Stream<List<NotificationItem>> watch({int limit = 50}) async* {
+    yield _items.take(limit).toList();
     yield* _controller.stream;
   }
 
@@ -132,9 +133,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          notificationsRepositoryProvider.overrideWithValue(repo),
-        ],
+        overrides: [notificationsRepositoryProvider.overrideWithValue(repo)],
         child: const MaterialApp(
           localizationsDelegates: _l10nDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

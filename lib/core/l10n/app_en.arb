@@ -471,7 +471,7 @@
   "reorderSoon": "Reorder Soon",
   "viewAllHistory": "View All Transaction History",
   "smeManagement": "SME Management",
-  "globalSearchHint": "Search products, orders, bills...",
+  "globalSearchHint": "Type at least 2 characters to search products, customers, and bills.",
   "export": "Export",
   "filter": "Filter",
   "weekly": "Weekly",
@@ -676,5 +676,44 @@
   "balance": "Balance",
   "negativeAdjustTitle": "Stock will go negative?",
   "negativeAdjustBody": "This adjustment will take stock below zero. Continue?",
-  "continueAnyway": "Continue anyway"
+  "continueAnyway": "Continue anyway",
+  "businessProfile": "Business profile",
+  "businessProfileHint": "Shown on invoices you share.",
+  "tourStepProductTitle": "Add a product",
+  "tourStepProductBody": "Start with one item you sell — name, unit, and a reference rate.",
+  "tourStepCustomerTitle": "Add a customer",
+  "tourStepCustomerBody": "Create a retailer login so they can order, or bill walk-in customers at the counter.",
+  "tourStepBillTitle": "Create a bill",
+  "tourStepBillBody": "Walk-in billing takes seconds. Quote-first orders work the same way once accepted.",
+  "tourStepPaymentTitle": "Record a payment",
+  "tourStepPaymentBody": "Collect cash, cheque, wallet or bank and keep the udharo ledger honest.",
+  "skip": "Skip",
+  "next": "Next",
+  "done": "Done",
+  "globalSearch": "Search",
+  "paymentAllocation": "Apply payment to",
+  "allocateOldestFirst": "Oldest unpaid bills first",
+  "allocateToBill": "A specific bill",
+  "selectBill": "Select bill",
+  "quoteExpiresOn": "Expires {date}",
+  "@quoteExpiresOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "muteChatNotifications": "Mute order chat notifications",
+  "muteDuesReminders": "Mute dues reminders",
+  "muteLowStockAlerts": "Mute low-stock alerts",
+  "subscriptionPlan": "Plan",
+  "supplierOrNote": "Supplier / note (optional)",
+  "copyLastBill": "Copy last bill",
+  "noBillsToCopy": "No previous bill to copy",
+  "lastSyncAt": "Last synced {when}",
+  "@lastSyncAt": {
+    "placeholders": {
+      "when": { "type": "String" }
+    }
+  },
+  "notifQuoteStale": "A quote has expired",
+  "notifDuesReminder": "Outstanding dues reminder"
 }

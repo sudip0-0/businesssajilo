@@ -1097,7 +1097,7 @@ abstract class AppLocalizations {
   /// No description provided for @allocateToBill.
   ///
   /// In en, this message translates to:
-  /// **'Allocate to bill'**
+  /// **'A specific bill'**
   String get allocateToBill;
 
   /// No description provided for @ledgerDate.
@@ -2357,7 +2357,7 @@ abstract class AppLocalizations {
   /// No description provided for @globalSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search products, orders, bills...'**
+  /// **'Type at least 2 characters to search products, customers, and bills.'**
   String get globalSearchHint;
 
   /// No description provided for @export.
@@ -3367,6 +3367,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue anyway'**
   String get continueAnyway;
+
+  /// No description provided for @businessProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Business profile'**
+  String get businessProfile;
+
+  /// No description provided for @businessProfileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on invoices you share.'**
+  String get businessProfileHint;
+
+  /// No description provided for @tourStepProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a product'**
+  String get tourStepProductTitle;
+
+  /// No description provided for @tourStepProductBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with one item you sell — name, unit, and a reference rate.'**
+  String get tourStepProductBody;
+
+  /// No description provided for @tourStepCustomerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a customer'**
+  String get tourStepCustomerTitle;
+
+  /// No description provided for @tourStepCustomerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a retailer login so they can order, or bill walk-in customers at the counter.'**
+  String get tourStepCustomerBody;
+
+  /// No description provided for @tourStepBillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a bill'**
+  String get tourStepBillTitle;
+
+  /// No description provided for @tourStepBillBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in billing takes seconds. Quote-first orders work the same way once accepted.'**
+  String get tourStepBillBody;
+
+  /// No description provided for @tourStepPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a payment'**
+  String get tourStepPaymentTitle;
+
+  /// No description provided for @tourStepPaymentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect cash, cheque, wallet or bank and keep the udharo ledger honest.'**
+  String get tourStepPaymentBody;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @globalSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get globalSearch;
+
+  /// No description provided for @paymentAllocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply payment to'**
+  String get paymentAllocation;
+
+  /// No description provided for @allocateOldestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest unpaid bills first'**
+  String get allocateOldestFirst;
+
+  /// No description provided for @selectBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Select bill'**
+  String get selectBill;
+
+  /// No description provided for @quoteExpiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String quoteExpiresOn(String date);
+
+  /// No description provided for @muteChatNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute order chat notifications'**
+  String get muteChatNotifications;
+
+  /// No description provided for @muteDuesReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute dues reminders'**
+  String get muteDuesReminders;
+
+  /// No description provided for @muteLowStockAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute low-stock alerts'**
+  String get muteLowStockAlerts;
+
+  /// No description provided for @subscriptionPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan'**
+  String get subscriptionPlan;
+
+  /// No description provided for @supplierOrNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier / note (optional)'**
+  String get supplierOrNote;
+
+  /// No description provided for @copyLastBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy last bill'**
+  String get copyLastBill;
+
+  /// No description provided for @noBillsToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous bill to copy'**
+  String get noBillsToCopy;
+
+  /// No description provided for @lastSyncAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {when}'**
+  String lastSyncAt(String when);
+
+  /// No description provided for @notifQuoteStale.
+  ///
+  /// In en, this message translates to:
+  /// **'A quote has expired'**
+  String get notifQuoteStale;
+
+  /// No description provided for @notifDuesReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding dues reminder'**
+  String get notifDuesReminder;
 }
 
 class _AppLocalizationsDelegate

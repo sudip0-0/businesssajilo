@@ -9,6 +9,8 @@ import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
 import '../billing/invalidate_billing.dart';
+import '../billing/payment_allocation.dart';
+import '../billing/providers.dart';
 import '../billing/record_customer_payment.dart';
 import 'providers.dart';
 
@@ -32,7 +34,9 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
   final _amountController = TextEditingController();
   final _refController = TextEditingController();
   PaymentMethod _method = PaymentMethod.cash;
+  PaymentAllocateMode _allocation = PaymentAllocateMode.account;
   String? _selectedCustomerId;
+  String? _billId;
   bool _loading = false;
 
   @override
@@ -83,6 +87,7 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
           amountPaisa: amount!.value,
           method: _method,
           refNote: refNote.isEmpty ? null : refNote,
+          allocation: PaymentAllocation(mode: _allocation, billId: _billId),
         );
         if (mounted) Navigator.pop(context, true);
       },
@@ -140,7 +145,10 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                           ),
                         )
                         .toList(),
-                    onChanged: (v) => setState(() => _selectedCustomerId = v),
+                    onChanged: (v) => setState(() {
+                      _selectedCustomerId = v;
+                      _billId = null;
+                    }),
                   ),
                 ),
               if (balanceDue != null) ...[
@@ -152,6 +160,53 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
               ],
               const SizedBox(height: 12),
               Text(l10n.allocateToAccount),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<PaymentAllocateMode>(
+                decoration: InputDecoration(labelText: l10n.paymentAllocation),
+                initialValue: _allocation,
+                items: [
+                  DropdownMenuItem(
+                    value: PaymentAllocateMode.account,
+                    child: Text(l10n.allocateToAccount),
+                  ),
+                  DropdownMenuItem(
+                    value: PaymentAllocateMode.oldestFirst,
+                    child: Text(l10n.allocateOldestFirst),
+                  ),
+                  DropdownMenuItem(
+                    value: PaymentAllocateMode.bill,
+                    child: Text(l10n.allocateToBill),
+                  ),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _allocation = v);
+                },
+              ),
+              if (_allocation == PaymentAllocateMode.bill &&
+                  _selectedCustomerId != null) ...[
+                const SizedBox(height: 12),
+                ref
+                    .watch(openBillsForCustomerProvider(_selectedCustomerId!))
+                    .when(
+                      loading: () => const LinearProgressIndicator(),
+                      error: (_, _) => Text(l10n.loadingFailed),
+                      data: (bills) => DropdownButtonFormField<String>(
+                        decoration: InputDecoration(labelText: l10n.selectBill),
+                        initialValue: _billId,
+                        items: bills
+                            .map(
+                              (b) => DropdownMenuItem(
+                                value: b.id,
+                                child: Text(
+                                  '${b.billNo} · ${formatNpr(Paisa(b.grandTotal), showPaisa: false)}',
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => _billId = v),
+                      ),
+                    ),
+              ],
               const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,

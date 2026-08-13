@@ -43,6 +43,8 @@ $env:HARDENING_GATE = "1"
 
 Integration tests expect seeded E2E owner (`e2e-owner@test.com` / `password123`) after `supabase db reset`.
 
+macOS / Linux: `scripts/run_dev.sh` (same dart-defines as `run_dev.ps1`).
+
 ## Bulk demo data (E2E owner)
 
 `supabase db reset` also loads [`supabase/seeds/e2e_bulk_demo.sql`](../supabase/seeds/e2e_bulk_demo.sql): **55 products**, **55 customers**, **220 bills** for the E2E business. The script is idempotent (skips when ≥50 products already exist).
@@ -81,6 +83,5 @@ select
 
 ## Known gaps (honest)
 
-- Two widget test files currently fail to compile (`dashboard_scoped_queries_test.dart`, `offline_query_scale_test.dart`) — repair before treating the gate as fully green.
 - UI order→quote→bill flow is documented but not fully pumped through screens yet (`ui_order_to_bill_flow_test.dart`).
 - Deno is not installed by default on Windows; install from [deno.land](https://deno.land) for Edge Function unit tests locally.

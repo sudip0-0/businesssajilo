@@ -1,4 +1,4 @@
-﻿import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/utils/bill_search_match.dart';
@@ -31,6 +31,18 @@ class SupabaseBillsRepository implements BillsRepository {
       query = query.range(offset, offset + limit - 1);
     }
     final rows = await query;
+    return (rows as List).map(_mapBillRow).toList();
+  }
+
+  @override
+  Future<List<Bill>> listOpenForCustomer(String customerId) async {
+    final client = requireSupabaseClient(_client);
+    final rows = await client
+        .from('bills')
+        .select(_billSelect)
+        .eq('customer_id', customerId)
+        .inFilter('status', ['due', 'partial'])
+        .order('created_at', ascending: true);
     return (rows as List).map(_mapBillRow).toList();
   }
 
@@ -298,9 +310,7 @@ class SupabaseBillsRepository implements BillsRepository {
       'order_id': orderId,
       'discount': discount,
       'status': status.name,
-      if (customerId == null &&
-          trimmedGuest != null &&
-          trimmedGuest.isNotEmpty)
+      if (customerId == null && trimmedGuest != null && trimmedGuest.isNotEmpty)
         'guest_name': trimmedGuest,
       'items': lines
           .map(
@@ -392,4 +402,3 @@ class SupabaseBillsRepository implements BillsRepository {
     return bill;
   }
 }
-

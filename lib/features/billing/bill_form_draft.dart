@@ -1,16 +1,13 @@
 import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/bills_repository.dart';
+import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
 import 'bill_draft_line.dart';
 
 /// Shared bill form draft state used by mobile and web UIs.
 class BillFormDraft {
-  BillFormDraft({
-    this.customerId,
-    this.guestName,
-    this.billDiscountText = '',
-  });
+  BillFormDraft({this.customerId, this.guestName, this.billDiscountText = ''});
 
   final List<BillDraftLine> lines = [];
   String billDiscountText;
@@ -27,6 +24,23 @@ class BillFormDraft {
       grandTotalPaisa(itemsTotal: itemsTotal, billDiscountPaisa: billDiscount);
 
   int get taxableAmount => itemsTotal - billDiscount;
+
+  void loadFromBill(Bill bill, Iterable<Product> catalog) {
+    lines.clear();
+    final byId = {for (final product in catalog) product.id: product};
+    for (final item in bill.items) {
+      final product = byId[item.productId];
+      if (product == null) continue;
+      lines.add(
+        BillDraftLine(
+          product: product,
+          qty: item.qty,
+          rate: item.rate,
+          discount: item.discount,
+        ),
+      );
+    }
+  }
 
   /// Merges [product] into an existing line or appends a new one.
   void addProduct(Product product) {

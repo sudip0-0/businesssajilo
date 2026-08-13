@@ -27,7 +27,7 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 - **DB changes:** only via migration files in `supabase/migrations/` (Supabase CLI). Every new table ships with RLS policies + policy tests in the same migration/PR. After writing a migration, **always** apply it to local Supabase in the same turn (`supabase migration up --local`) — see “After database change or creation”.
 - **Money:** integer paisa or `NUMERIC` in DB; format with `MoneyText`/money formatter (Nepali grouping). Never use doubles for currency math.
 - **Dates:** store UTC timestamps; display via BS/AD utils in `core/`.
-- **Order state machine:** transitions only through the defined pipeline (product.md §5.1); validate transitions server-side (trigger or Edge Function).
+- **Order state machine:** `placed → received → billed`. `placed|received → billed` is applied only by `create_bill`.
 
 ## Workflow
 

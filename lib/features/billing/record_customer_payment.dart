@@ -5,6 +5,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/payment.dart';
 import '../auth/providers/auth_provider.dart';
 import 'invalidate_billing.dart';
+import 'payment_allocation.dart';
 
 enum RecordPaymentValidationError {
   amountRequired,
@@ -28,6 +29,9 @@ Future<Payment> recordCustomerPayment(
   required int amountPaisa,
   required PaymentMethod method,
   String? refNote,
+  PaymentAllocation allocation = const PaymentAllocation(
+    mode: PaymentAllocateMode.account,
+  ),
 }) async {
   final memberId = ref.read(authProvider).value?.member?.id;
   if (memberId == null) {
@@ -40,6 +44,8 @@ Future<Payment> recordCustomerPayment(
         amount: amountPaisa,
         method: method,
         refNote: refNote,
+        billId: allocation.rpcBillId,
+        allocate: allocation.rpcAllocate,
         receivedByMemberId: memberId,
       );
   invalidateAfterCustomerPayment(ref, customerId: customerId);

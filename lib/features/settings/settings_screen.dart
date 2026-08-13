@@ -8,6 +8,9 @@ import '../auth/providers/auth_provider.dart';
 import '../onboarding/demo_data_actions.dart';
 import '../sync/pending_sync_screen.dart';
 import 'account_section.dart';
+import 'business_profile_section.dart';
+import 'notification_prefs_section.dart';
+import 'subscription_plan_tile.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -79,11 +82,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
         ),
         const Divider(height: 1),
+        const BusinessProfileSection(),
+        const Divider(height: 1),
+        const NotificationPrefsSection(),
+        const Divider(height: 1),
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: Text(l10n.aboutApp),
           subtitle: _version == null ? null : Text(l10n.appVersion(_version!)),
         ),
+        const SubscriptionPlanTile(),
         const AccountSettingsTiles(),
         const Divider(height: 1),
         ListTile(
