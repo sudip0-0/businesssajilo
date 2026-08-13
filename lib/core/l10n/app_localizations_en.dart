@@ -1530,6 +1530,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareAsImage => 'Share as image';
 
   @override
+  String get copyAsImage => 'Copy as image';
+
+  @override
+  String get statementImageCopied => 'Statement image copied';
+
+  @override
   String get shareAsPdf => 'Share as PDF';
 
   @override

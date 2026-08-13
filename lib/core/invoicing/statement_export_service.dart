@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../export/clipboard_image.dart';
 import 'pdf_raster_isolate.dart';
 import 'statement_document.dart';
 import 'statement_pdf_builder.dart';
 
-/// Share customer ledger statements as PDF or PNG.
+/// Share customer ledger statements as PDF, or copy the first page as PNG.
 class StatementExportService {
   const StatementExportService({StatementPdfBuilder? pdfBuilder})
     : _pdfBuilder = pdfBuilder ?? const StatementPdfBuilder();
@@ -23,7 +24,18 @@ class StatementExportService {
     return rasterPdfFirstPageToPng(pdfBytes);
   }
 
-  String fileName(StatementDocument doc) => _fileName(doc);
+  /// Rasterizes the statement PDF and copies the PNG.
+  ///
+  /// [loadDocument] may be async; on web the clipboard write starts
+  /// immediately so it still counts as a user gesture.
+  Future<void> copyPng(Future<StatementDocument> Function() loadDocument) {
+    return copyPngToClipboard(
+      Future(() async {
+        final doc = await loadDocument();
+        return buildPngBytes(doc);
+      }),
+    );
+  }
 
   Future<void> sharePdf(StatementDocument doc, {String? subject}) async {
     final bytes = await _pdfBuilder.build(doc);
@@ -36,34 +48,6 @@ class StatementExportService {
     await Share.shareXFiles([
       XFile.fromData(bytes, name: '$name.pdf', mimeType: 'application/pdf'),
     ], subject: subject ?? name);
-  }
-
-  /// Shares the first page as PNG (long statements should use [sharePdf]).
-  Future<void> sharePng(
-    StatementDocument doc, {
-    String? subject,
-    String? text,
-  }) async {
-    final png = await buildPngBytes(doc);
-    await sharePngBytes(
-      png,
-      fileName: _fileName(doc),
-      subject: subject,
-      text: text,
-    );
-  }
-
-  Future<void> sharePngBytes(
-    Uint8List png, {
-    required String fileName,
-    String? subject,
-    String? text,
-  }) async {
-    await Share.shareXFiles(
-      [XFile.fromData(png, name: '$fileName.png', mimeType: 'image/png')],
-      subject: subject ?? fileName,
-      text: text,
-    );
   }
 
   String _fileName(StatementDocument doc) {

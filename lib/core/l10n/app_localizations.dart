@@ -3008,6 +3008,18 @@ abstract class AppLocalizations {
   /// **'Share as image'**
   String get shareAsImage;
 
+  /// No description provided for @copyAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy as image'**
+  String get copyAsImage;
+
+  /// No description provided for @statementImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement image copied'**
+  String get statementImageCopied;
+
   /// No description provided for @shareAsPdf.
   ///
   /// In en, this message translates to:

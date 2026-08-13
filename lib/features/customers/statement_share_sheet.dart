@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/app_failure.dart';
-import '../../core/ui/inline_form_action.dart';
 import '../../core/invoicing/statement_document.dart';
 import '../../core/invoicing/statement_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/bs_snackbar.dart';
+import '../../core/ui/inline_form_action.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
-import '../../core/ui/adaptive_sheet.dart';
 import '../auth/providers/auth_provider.dart';
-import 'statement_image_preview.dart';
 
 /// Opens the statement share sheet for [customer].
 Future<void> showStatementShareSheet(
@@ -29,7 +29,7 @@ Future<void> showStatementShareSheet(
 
 enum _StatementRange { last30, last90, all }
 
-/// Date-range picker + share-as-PDF/image actions for a ledger statement.
+/// Date-range picker with copy-as-image and share-as-PDF actions.
 class StatementShareSheet extends ConsumerStatefulWidget {
   const StatementShareSheet({super.key, required this.customer});
 
@@ -45,65 +45,82 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
   bool _loading = false;
   String? _error;
 
-  Future<void> _share({required bool asPdf}) async {
+  Future<StatementDocument> _buildDocument(
+    AppLocalizations l10n,
+    Locale locale,
+  ) async {
+    final business = await ref.read(currentBusinessProvider.future);
+    if (business == null) throw StateError('no business');
+
+    final entries = await ref
+        .read(customersRepositoryProvider)
+        .ledger(widget.customer.id);
+
+    final now = DateTime.now().toUtc();
+    final from = switch (_range) {
+      _StatementRange.last30 => now.subtract(const Duration(days: 30)),
+      _StatementRange.last90 => now.subtract(const Duration(days: 90)),
+      _StatementRange.all => null,
+    };
+
+    return StatementDocument.fromLedger(
+      business: business,
+      customerLabel: widget.customer.shopName,
+      entries: entries,
+      from: from,
+      to: now,
+      locale: locale,
+      labels: StatementLabels(
+        title: l10n.statement,
+        period: l10n.statementPeriod,
+        customer: l10n.customers,
+        date: l10n.statementDate,
+        description: l10n.statementDescription,
+        debit: l10n.ledgerDebit,
+        credit: l10n.ledgerCredit,
+        balance: l10n.runningBalance,
+        openingBalance: l10n.entryOpeningBalance,
+        closingBalance: l10n.closingBalance,
+      ),
+      describeEntry: (entry) => _describeEntry(entry, l10n),
+    );
+  }
+
+  Future<void> _copyImage() async {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final sheetNav = Navigator.of(context);
-    final rootNav = Navigator.of(context, rootNavigator: true);
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final service = ref.read(statementExportServiceProvider);
+    // Start clipboard write before any await so web still has a user gesture.
+    final copy = service.copyPng(() => _buildDocument(l10n, locale));
     await runInlineFormAction(
       action: () async {
-        final business = await ref.read(currentBusinessProvider.future);
-        if (business == null) throw StateError('no business');
-
-        final entries = await ref
-            .read(customersRepositoryProvider)
-            .ledger(widget.customer.id);
-
-        final now = DateTime.now().toUtc();
-        final from = switch (_range) {
-          _StatementRange.last30 => now.subtract(const Duration(days: 30)),
-          _StatementRange.last90 => now.subtract(const Duration(days: 90)),
-          _StatementRange.all => null,
-        };
-
-        final doc = StatementDocument.fromLedger(
-          business: business,
-          customerLabel: widget.customer.shopName,
-          entries: entries,
-          from: from,
-          to: now,
-          locale: locale,
-          labels: StatementLabels(
-            title: l10n.statement,
-            period: l10n.statementPeriod,
-            customer: l10n.customers,
-            date: l10n.statementDate,
-            description: l10n.statementDescription,
-            debit: l10n.ledgerDebit,
-            credit: l10n.ledgerCredit,
-            balance: l10n.runningBalance,
-            openingBalance: l10n.entryOpeningBalance,
-            closingBalance: l10n.closingBalance,
-          ),
-          describeEntry: (entry) => _describeEntry(entry, l10n),
-        );
-
-        final service = ref.read(statementExportServiceProvider);
-        if (asPdf) {
-          await service.sharePdf(doc);
-          if (mounted) sheetNav.pop();
-          return;
+        await copy;
+        if (mounted) sheetNav.pop();
+        if (rootContext.mounted) {
+          showBsSnackBar(rootContext, message: l10n.statementImageCopied);
         }
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
+  }
 
-        final png = await service.buildPngBytes(doc);
-        final fileName = service.fileName(doc);
-        if (!mounted) return;
-        sheetNav.pop();
-        await showStatementImagePreview(
-          rootNav.context,
-          pngBytes: png,
-          fileName: fileName,
-        );
+  Future<void> _sharePdf() async {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final sheetNav = Navigator.of(context);
+    await runInlineFormAction(
+      action: () async {
+        final doc = await _buildDocument(l10n, locale);
+        await ref.read(statementExportServiceProvider).sharePdf(doc);
+        if (mounted) sheetNav.pop();
       },
       onState: ({required loading, error}) => setState(() {
         _loading = loading;
@@ -171,13 +188,13 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
           ],
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: _loading ? null : () => _share(asPdf: false),
-            icon: const Icon(Icons.image_outlined),
-            label: Text(l10n.shareAsImage),
+            onPressed: _loading ? null : _copyImage,
+            icon: const Icon(Icons.copy_outlined),
+            label: Text(l10n.copyAsImage),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: _loading ? null : () => _share(asPdf: true),
+            onPressed: _loading ? null : _sharePdf,
             icon: const Icon(Icons.picture_as_pdf_outlined),
             label: Text(l10n.shareAsPdf),
           ),

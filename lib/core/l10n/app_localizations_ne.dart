@@ -1527,6 +1527,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get shareAsImage => 'फोटोको रूपमा सेयर';
 
   @override
+  String get copyAsImage => 'इमेज कपी गर्नुहोस्';
+
+  @override
+  String get statementImageCopied => 'विवरणको इमेज कपी भयो';
+
+  @override
   String get shareAsPdf => 'PDF को रूपमा सेयर';
 
   @override
