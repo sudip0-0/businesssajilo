@@ -1832,5 +1832,10 @@ class AppLocalizationsNe extends AppLocalizations {
   String get notifQuoteStale => 'कोटेशनको म्याद सकियो';
 
   @override
-  String get notifDuesReminder => 'बाँकी रकम रिमाइन्डर';
+  String notifDuesReminder(String customer) {
+    return 'ग्राहक $customer बाँकी रिमाइन्डर';
+  }
+
+  @override
+  String get notifDuesReminderGeneric => 'बाँकी रकम रिमाइन्डर';
 }

@@ -7,6 +7,7 @@ class NotificationPayloadIds {
     this.quoteId,
     this.billId,
     this.productId,
+    this.customerId,
   });
 
   factory NotificationPayloadIds.fromItem(NotificationItem item) {
@@ -16,6 +17,7 @@ class NotificationPayloadIds {
       quoteId: payload['quote_id'] as String?,
       billId: payload['bill_id'] as String?,
       productId: payload['product_id'] as String?,
+      customerId: payload['customer_id'] as String?,
     );
   }
 
@@ -23,4 +25,5 @@ class NotificationPayloadIds {
   final String? quoteId;
   final String? billId;
   final String? productId;
+  final String? customerId;
 }

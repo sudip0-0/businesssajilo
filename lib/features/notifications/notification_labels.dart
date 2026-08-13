@@ -16,7 +16,7 @@ String notificationTitle(AppLocalizations l10n, NotificationItem item) {
     'low_stock' => l10n.notifLowStock,
     'negative_stock' => l10n.notifNegativeStock,
     'quote_stale' => l10n.notifQuoteStale,
-    'dues_reminder' => l10n.notifDuesReminder,
+    'dues_reminder' => _duesReminderTitle(l10n, item),
     _ => l10n.notifications,
   };
 }
@@ -36,4 +36,10 @@ IconData notificationIcon(String type) {
     'low_stock' || 'negative_stock' => Icons.inventory_2_outlined,
     _ => Icons.notifications_outlined,
   };
+}
+
+String _duesReminderTitle(AppLocalizations l10n, NotificationItem item) {
+  final name = item.payload['shop_name']?.toString().trim();
+  if (name == null || name.isEmpty) return l10n.notifDuesReminderGeneric;
+  return l10n.notifDuesReminder(name);
 }

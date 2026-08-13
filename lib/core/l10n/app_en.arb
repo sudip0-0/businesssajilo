@@ -725,5 +725,11 @@
     }
   },
   "notifQuoteStale": "A quote has expired",
-  "notifDuesReminder": "Outstanding dues reminder"
+  "notifDuesReminder": "Customer {customer} dues reminder",
+  "@notifDuesReminder": {
+    "placeholders": {
+      "customer": { "type": "String" }
+    }
+  },
+  "notifDuesReminderGeneric": "Outstanding dues reminder"
 }

@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
 
     const accessToken = await getFcmAccessToken(fcmJson);
     const projectId = JSON.parse(fcmJson).project_id as string;
-    const title = TITLE_BY_TYPE[notification.type] ?? "BusinessSajilo";
+    const title = titleFor(notification.type, notification.payload);
     const bodyText = notification.type.replaceAll("_", " ");
 
     // Only routing identifiers go to FCM — never names/amounts (PII).
@@ -135,6 +135,20 @@ Deno.serve(async (req) => {
     return json({ error: "Push dispatch failed" }, 500);
   }
 });
+
+function titleFor(type: string, payload: unknown): string {
+  if (type === "dues_reminder") {
+    const shop =
+      payload &&
+      typeof payload === "object" &&
+      "shop_name" in payload &&
+      typeof (payload as { shop_name: unknown }).shop_name === "string"
+        ? (payload as { shop_name: string }).shop_name.trim()
+        : "";
+    if (shop) return `Customer ${shop} dues reminder`;
+  }
+  return TITLE_BY_TYPE[type] ?? "BusinessSajilo";
+}
 
 async function getFcmAccessToken(serviceAccountJson: string): Promise<string> {
   const sa = JSON.parse(serviceAccountJson);

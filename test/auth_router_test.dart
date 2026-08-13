@@ -45,6 +45,11 @@ void main() {
       expect(pathAllowedForRole('/product/x', Role.customer), isFalse);
       expect(pathAllowedForRole('/order/x', Role.sales), isTrue);
       expect(pathAllowedForRole('/order/x', Role.customer), isTrue);
+      expect(pathAllowedForRole('/customers/c1', Role.owner), isTrue);
+      expect(pathAllowedForRole('/customers/c1', Role.sales), isTrue);
+      expect(pathAllowedForRole('/customers/c1', Role.customer), isFalse);
+      expect(pathAllowedForRole('/customer/dues', Role.customer), isTrue);
+      expect(pathAllowedForRole('/customer/dues', Role.owner), isFalse);
     });
   });
 
@@ -80,6 +85,7 @@ void main() {
         ('order_placed', {'order_id': 'o1'}, '/order/o1'),
         ('order_received', {'order_id': 'o1'}, '/order/o1'),
         ('order_status', {'order_id': 'o1'}, '/order/o1'),
+        ('dues_reminder', {'customer_id': 'c1'}, '/customers/c1'),
         ('unknown_type', {}, null),
       ];
 
@@ -98,25 +104,37 @@ void main() {
       final item = _item('payment_recorded', {'bill_id': 'b1'});
       final customer = resolveNotificationTarget(item, role: Role.customer);
       expect(customer, isA<NotificationNavigate>());
-      expect(
-        (customer as NotificationNavigate).path,
-        '/bill/b1',
-      );
+      expect((customer as NotificationNavigate).path, '/bill/b1');
 
       final warehouse = resolveNotificationTarget(item, role: Role.warehouse);
       expect(warehouse, isA<NotificationNavigate>());
-      expect(
-        (warehouse as NotificationNavigate).path,
-        '/bill/b1',
-      );
+      expect((warehouse as NotificationNavigate).path, '/bill/b1');
     });
+
+    test(
+      'dues reminder opens the customer for staff and dues for customers',
+      () {
+        final item = _item('dues_reminder', {'customer_id': 'c1'});
+        final owner = resolveNotificationTarget(item, role: Role.owner);
+        expect(owner, isA<NotificationNavigate>());
+        expect((owner as NotificationNavigate).path, '/customers/c1');
+
+        final sales = resolveNotificationTarget(item, role: Role.sales);
+        expect(sales, isA<NotificationNavigate>());
+        expect((sales as NotificationNavigate).path, '/customers/c1');
+
+        final customer = resolveNotificationTarget(item, role: Role.customer);
+        expect(customer, isA<NotificationNavigate>());
+        expect((customer as NotificationNavigate).path, '/customer/dues');
+
+        final warehouse = resolveNotificationTarget(item, role: Role.warehouse);
+        expect(warehouse, isA<NotificationNonNavigable>());
+      },
+    );
 
     test('web path mapping preserves order and customer bills', () {
       expect(
-        webPathForNotificationTarget(
-          role: Role.owner,
-          mobilePath: '/order/o1',
-        ),
+        webPathForNotificationTarget(role: Role.owner, mobilePath: '/order/o1'),
         '/owner/orders/o1',
       );
       expect(
@@ -125,6 +143,27 @@ void main() {
           mobilePath: '/bill/b1',
         ),
         '/customer/billing/b1',
+      );
+      expect(
+        webPathForNotificationTarget(
+          role: Role.owner,
+          mobilePath: '/customers/c1',
+        ),
+        '/owner/customers/c1',
+      );
+      expect(
+        webPathForNotificationTarget(
+          role: Role.sales,
+          mobilePath: '/customers/c1',
+        ),
+        '/sales/customers/c1',
+      );
+      expect(
+        webPathForNotificationTarget(
+          role: Role.customer,
+          mobilePath: '/customer/dues',
+        ),
+        '/customer/dues',
       );
     });
 

@@ -3593,8 +3593,14 @@ abstract class AppLocalizations {
   /// No description provided for @notifDuesReminder.
   ///
   /// In en, this message translates to:
+  /// **'Customer {customer} dues reminder'**
+  String notifDuesReminder(String customer);
+
+  /// No description provided for @notifDuesReminderGeneric.
+  ///
+  /// In en, this message translates to:
   /// **'Outstanding dues reminder'**
-  String get notifDuesReminder;
+  String get notifDuesReminderGeneric;
 }
 
 class _AppLocalizationsDelegate

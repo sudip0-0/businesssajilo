@@ -12,6 +12,10 @@ bool pathAllowedForRole(String path, Role role) {
   if (path.startsWith('/owner')) return role == Role.owner;
   if (path.startsWith('/sales')) return role == Role.sales;
   if (path.startsWith('/warehouse')) return role == Role.warehouse;
+  // `/customers/` must be checked before `/customer` (customer-role shell).
+  if (path.startsWith('/customers')) {
+    return role == Role.owner || role == Role.sales;
+  }
   if (path.startsWith('/customer')) return role == Role.customer;
 
   // Shared notification inbox.

@@ -57,6 +57,13 @@ NotificationTarget resolveNotificationTarget(
     case 'order_status':
       if (ids.orderId == null) return const NotificationNonNavigable();
       return NotificationNavigate('/order/${ids.orderId}');
+    case 'dues_reminder':
+      if (role == Role.customer) {
+        return const NotificationNavigate('/customer/dues');
+      }
+      if (role == Role.warehouse) return const NotificationNonNavigable();
+      if (ids.customerId == null) return const NotificationNonNavigable();
+      return NotificationNavigate('/customers/${ids.customerId}');
     default:
       return const NotificationNonNavigable();
   }
@@ -104,6 +111,17 @@ String? webPathForNotificationTarget({
     if (role == Role.warehouse) return null;
     final id = mobilePath.substring('/order/'.length);
     return '$base/orders/$id';
+  }
+  if (mobilePath.startsWith('/customers/')) {
+    final id = mobilePath.substring('/customers/'.length);
+    if (role == Role.owner || role == Role.sales) {
+      return '$base/customers/$id';
+    }
+    return null;
+  }
+  if (mobilePath == '/customer/dues') {
+    if (role == Role.customer) return '/customer/dues';
+    return null;
   }
   if (mobilePath.startsWith('/quote/')) {
     // No dedicated /quotes routes on web; quote notifs resolve to /order/.

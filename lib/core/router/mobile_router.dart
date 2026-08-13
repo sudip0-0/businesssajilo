@@ -11,6 +11,8 @@ import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/billing/bill_detail_screen.dart';
+import '../../features/customers/customer_detail_screen.dart';
+import '../../features/customers/customer_ledger_screen.dart';
 import '../../features/inventory/product_detail_screen.dart';
 import '../../features/notifications/notification_list_screen.dart';
 import '../../features/orders/order_detail_screen.dart';
@@ -69,6 +71,21 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/sales', builder: (_, _) => const SalesShell()),
       GoRoute(path: '/warehouse', builder: (_, _) => const WarehouseShell()),
       GoRoute(path: '/customer', builder: (_, _) => const CustomerShell()),
+      GoRoute(
+        path: '/customer/dues',
+        builder: (_, _) => const CustomerLedgerScreen(showBillHistory: true),
+      ),
+      GoRoute(
+        path: '/customers/:customerId',
+        builder: (context, state) {
+          final role = ref.read(authProvider).value?.member?.role;
+          return CustomerDetailScreen(
+            customerId: state.pathParameters['customerId']!,
+            canEdit: role == Role.owner,
+            canRecordPayments: role?.canRecordPayments ?? false,
+          );
+        },
+      ),
       GoRoute(
         path: '/bill/:billId',
         builder: (context, state) =>
