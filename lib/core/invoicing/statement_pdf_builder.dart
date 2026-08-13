@@ -11,8 +11,17 @@ import 'statement_document.dart';
 
 /// Builds A4 PDF bytes for customer ledger statements. Long statements
 /// paginate automatically via [pw.MultiPage].
+///
+/// Amounts use Nepali grouping with no currency symbol or paisa.
 class StatementPdfBuilder {
   const StatementPdfBuilder();
+
+  static const _titleSize = 20.0;
+  static const _businessSize = 16.0;
+  static const _bodySize = 12.0;
+  static const _tableHeaderSize = 12.0;
+  static const _tableCellSize = 11.0;
+  static const _totalSize = 13.0;
 
   Future<Uint8List> build(StatementDocument doc) async {
     final theme = await PdfFonts.loadTheme();
@@ -47,22 +56,42 @@ class StatementPdfBuilder {
       children: [
         pw.Text(
           labels.title.toUpperCase(),
-          style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+          style: pw.TextStyle(
+            fontSize: _titleSize,
+            fontWeight: pw.FontWeight.bold,
+          ),
           textAlign: pw.TextAlign.center,
         ),
         pw.SizedBox(height: 8),
         pw.Text(
           doc.businessDisplayName,
-          style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+          style: pw.TextStyle(
+            fontSize: _businessSize,
+            fontWeight: pw.FontWeight.bold,
+          ),
           textAlign: pw.TextAlign.center,
         ),
         if (doc.business.address != null && doc.business.address!.isNotEmpty)
-          pw.Text(doc.business.address!, textAlign: pw.TextAlign.center),
+          pw.Text(
+            doc.business.address!,
+            style: const pw.TextStyle(fontSize: _bodySize),
+            textAlign: pw.TextAlign.center,
+          ),
         if (doc.business.phone != null && doc.business.phone!.isNotEmpty)
-          pw.Text(doc.business.phone!, textAlign: pw.TextAlign.center),
+          pw.Text(
+            doc.business.phone!,
+            style: const pw.TextStyle(fontSize: _bodySize),
+            textAlign: pw.TextAlign.center,
+          ),
         pw.Divider(),
-        pw.Text('${labels.customer}: ${doc.customerLabel}'),
-        pw.Text('${labels.period}: $period'),
+        pw.Text(
+          '${labels.customer}: ${doc.customerLabel}',
+          style: const pw.TextStyle(fontSize: _bodySize),
+        ),
+        pw.Text(
+          '${labels.period}: $period',
+          style: const pw.TextStyle(fontSize: _bodySize),
+        ),
       ],
     );
   }
@@ -77,8 +106,11 @@ class StatementPdfBuilder {
         labels.credit,
         labels.balance,
       ],
-      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
-      cellStyle: const pw.TextStyle(fontSize: 8),
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        fontSize: _tableHeaderSize,
+      ),
+      cellStyle: const pw.TextStyle(fontSize: _tableCellSize),
       cellAlignments: {
         2: pw.Alignment.centerRight,
         3: pw.Alignment.centerRight,
@@ -92,24 +124,14 @@ class StatementPdfBuilder {
         4: const pw.FlexColumnWidth(1.8),
       },
       data: [
-        [
-          '',
-          labels.openingBalance,
-          '',
-          '',
-          formatNpr(Paisa(doc.openingBalance), showPaisa: false),
-        ],
+        ['', labels.openingBalance, '', '', _money(doc.openingBalance)],
         ...doc.lines.map(
           (line) => [
             BsDate.both(line.date, locale: doc.locale),
             line.description,
-            line.debit == 0
-                ? ''
-                : formatNpr(Paisa(line.debit), showPaisa: false),
-            line.credit == 0
-                ? ''
-                : formatNpr(Paisa(line.credit), showPaisa: false),
-            formatNpr(Paisa(line.balance), showPaisa: false),
+            line.debit == 0 ? '' : _money(line.debit),
+            line.credit == 0 ? '' : _money(line.credit),
+            _money(line.balance),
           ],
         ),
       ],
@@ -122,13 +144,23 @@ class StatementPdfBuilder {
       children: [
         pw.Text(
           doc.labels.closingBalance,
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          style: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: _totalSize,
+          ),
         ),
         pw.Text(
-          formatNpr(Paisa(doc.closingBalance), showPaisa: false),
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+          _money(doc.closingBalance),
+          style: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: _totalSize,
+          ),
         ),
       ],
     );
+  }
+
+  String _money(int amountPaisa) {
+    return formatNpr(Paisa(amountPaisa), showSymbol: false, showPaisa: false);
   }
 }

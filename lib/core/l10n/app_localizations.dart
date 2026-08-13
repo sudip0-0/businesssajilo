@@ -3014,6 +3014,12 @@ abstract class AppLocalizations {
   /// **'Copy as image'**
   String get copyAsImage;
 
+  /// No description provided for @previewStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview statement'**
+  String get previewStatement;
+
   /// No description provided for @statementImageCopied.
   ///
   /// In en, this message translates to:

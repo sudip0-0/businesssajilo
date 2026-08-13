@@ -1530,6 +1530,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get copyAsImage => 'इमेज कपी गर्नुहोस्';
 
   @override
+  String get previewStatement => 'विवरण हेर्नुहोस्';
+
+  @override
   String get statementImageCopied => 'विवरणको इमेज कपी भयो';
 
   @override

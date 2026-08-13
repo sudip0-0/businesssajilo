@@ -1533,6 +1533,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyAsImage => 'Copy as image';
 
   @override
+  String get previewStatement => 'Preview statement';
+
+  @override
   String get statementImageCopied => 'Statement image copied';
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/invoicing/statement_document.dart';
@@ -13,6 +14,8 @@ import '../../data/repositories/customers_repository.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../auth/providers/auth_provider.dart';
+import '../reports/report_period.dart';
+import 'statement_image_preview.dart';
 
 /// Opens the statement share sheet for [customer].
 Future<void> showStatementShareSheet(
@@ -27,9 +30,9 @@ Future<void> showStatementShareSheet(
   );
 }
 
-enum _StatementRange { last30, last90, all }
+enum _StatementRange { last30, last90, all, custom }
 
-/// Date-range picker with copy-as-image and share-as-PDF actions.
+/// Date-range picker with copy-as-image, preview, and share-as-PDF actions.
 class StatementShareSheet extends ConsumerStatefulWidget {
   const StatementShareSheet({super.key, required this.customer});
 
@@ -42,6 +45,7 @@ class StatementShareSheet extends ConsumerStatefulWidget {
 
 class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
   _StatementRange _range = _StatementRange.last30;
+  DateTimeRange? _customRange;
   bool _loading = false;
   String? _error;
 
@@ -57,18 +61,40 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
         .ledger(widget.customer.id);
 
     final now = DateTime.now().toUtc();
-    final from = switch (_range) {
-      _StatementRange.last30 => now.subtract(const Duration(days: 30)),
-      _StatementRange.last90 => now.subtract(const Duration(days: 90)),
-      _StatementRange.all => null,
-    };
+    final DateTime? from;
+    final DateTime to;
+    switch (_range) {
+      case _StatementRange.last30:
+        from = now.subtract(const Duration(days: 30));
+        to = now;
+      case _StatementRange.last90:
+        from = now.subtract(const Duration(days: 90));
+        to = now;
+      case _StatementRange.all:
+        from = null;
+        to = now;
+      case _StatementRange.custom:
+        final range = _customRange;
+        if (range == null) {
+          from = now.subtract(const Duration(days: 30));
+          to = now;
+        } else {
+          final period = ReportPeriod.custom(
+            fromDate: range.start,
+            toDate: range.end,
+          );
+          from = period.from;
+          // Statement range is inclusive; ReportPeriod.to is exclusive.
+          to = period.to.subtract(const Duration(microseconds: 1));
+        }
+    }
 
     return StatementDocument.fromLedger(
       business: business,
       customerLabel: widget.customer.shopName,
       entries: entries,
       from: from,
-      to: now,
+      to: to,
       locale: locale,
       labels: StatementLabels(
         title: l10n.statement,
@@ -112,6 +138,31 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
     );
   }
 
+  Future<void> _preview() async {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final sheetNav = Navigator.of(context);
+    final rootNav = Navigator.of(context, rootNavigator: true);
+    await runInlineFormAction(
+      action: () async {
+        final doc = await _buildDocument(l10n, locale);
+        final png = await ref
+            .read(statementExportServiceProvider)
+            .buildPngBytes(doc);
+        if (!mounted) return;
+        sheetNav.pop();
+        await showStatementImagePreview(rootNav.context, pngBytes: png);
+      },
+      onState: ({required loading, error}) => setState(() {
+        _loading = loading;
+        _error = error;
+      }),
+      mounted: () => mounted,
+      l10n: l10n,
+      mapError: (e, l) => AppFailure.from(e).message(l),
+    );
+  }
+
   Future<void> _sharePdf() async {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
@@ -143,6 +194,46 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
     };
   }
 
+  Future<void> _pickCustom() async {
+    final l10n = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final initial =
+        _customRange ??
+        DateTimeRange(
+          start: today.subtract(const Duration(days: 29)),
+          end: today,
+        );
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(today.year - 10),
+      lastDate: today,
+      initialDateRange: DateTimeRange(
+        start: initial.start.isBefore(DateTime(today.year - 10))
+            ? DateTime(today.year - 10)
+            : initial.start,
+        end: initial.end.isAfter(today) ? today : initial.end,
+      ),
+      helpText: l10n.periodCustom,
+      cancelText: l10n.cancel,
+      saveText: l10n.save,
+    );
+    if (range == null || !mounted) return;
+    setState(() {
+      _range = _StatementRange.custom;
+      _customRange = range;
+    });
+  }
+
+  String _customChipLabel(AppLocalizations l10n) {
+    final range = _customRange;
+    if (_range != _StatementRange.custom || range == null) {
+      return l10n.periodCustom;
+    }
+    final fmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
+    return '${fmt.format(range.start)} – ${fmt.format(range.end)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -164,33 +255,64 @@ class _StatementShareSheetState extends ConsumerState<StatementShareSheet> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          SegmentedButton<_StatementRange>(
-            segments: [
-              ButtonSegment(
-                value: _StatementRange.last30,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilterChip(
                 label: Text(l10n.rangeLast30Days),
+                selected: _range == _StatementRange.last30,
+                onSelected: (_) =>
+                    setState(() => _range = _StatementRange.last30),
               ),
-              ButtonSegment(
-                value: _StatementRange.last90,
+              FilterChip(
                 label: Text(l10n.rangeLast90Days),
+                selected: _range == _StatementRange.last90,
+                onSelected: (_) =>
+                    setState(() => _range = _StatementRange.last90),
               ),
-              ButtonSegment(
-                value: _StatementRange.all,
+              FilterChip(
                 label: Text(l10n.rangeAllTime),
+                selected: _range == _StatementRange.all,
+                onSelected: (_) => setState(() => _range = _StatementRange.all),
+              ),
+              FilterChip(
+                avatar: Icon(
+                  Icons.calendar_today_outlined,
+                  size: 16,
+                  color: _range == _StatementRange.custom
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outline,
+                ),
+                label: Text(_customChipLabel(l10n)),
+                selected: _range == _StatementRange.custom,
+                onSelected: (_) => _pickCustom(),
               ),
             ],
-            selected: {_range},
-            onSelectionChanged: (s) => setState(() => _range = s.first),
           ),
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(_error!, style: const TextStyle(color: BsColors.danger)),
           ],
           const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _loading ? null : _copyImage,
-            icon: const Icon(Icons.copy_outlined),
-            label: Text(l10n.copyAsImage),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _loading ? null : _copyImage,
+                  icon: const Icon(Icons.copy_outlined),
+                  label: Text(l10n.copyAsImage),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _loading ? null : _preview,
+                  icon: const Icon(Icons.visibility_outlined),
+                  label: Text(l10n.previewStatement),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(

@@ -1,6 +1,7 @@
 import 'package:businesssajilo/core/invoicing/pdf_fonts.dart';
 import 'package:businesssajilo/core/invoicing/statement_document.dart';
 import 'package:businesssajilo/core/invoicing/statement_pdf_builder.dart';
+import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/domain/models/business.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,5 +53,13 @@ void main() {
     final bytes = await const StatementPdfBuilder().build(_nepaliDoc());
     expect(bytes, isNotEmpty);
     expect(bytes.length, greaterThan(100));
+  });
+
+  test('statement amounts omit currency symbol and paisa', () {
+    expect(formatNpr(Paisa(10000), showSymbol: false, showPaisa: false), '100');
+    expect(
+      formatNpr(Paisa(10000), showSymbol: true, showPaisa: false),
+      isNot('100'),
+    );
   });
 }

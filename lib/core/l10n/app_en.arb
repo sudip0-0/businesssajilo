@@ -618,6 +618,7 @@
   "closingBalance": "Closing balance",
   "shareAsImage": "Share as image",
   "copyAsImage": "Copy as image",
+  "previewStatement": "Preview statement",
   "statementImageCopied": "Statement image copied",
   "shareAsPdf": "Share as PDF",
   "enablePortalAccess": "Enable portal login",
