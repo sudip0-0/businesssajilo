@@ -1149,7 +1149,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create a bill for a walk-in or credit customer.';
 
   @override
-  String get saveAsDraft => 'Save as Draft';
+  String get saveAsDue => 'Save as Due';
 
   @override
   String get unsavedBillTitle => 'Discard this bill?';

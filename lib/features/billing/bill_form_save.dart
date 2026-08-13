@@ -28,7 +28,7 @@ String? _nonEmpty(String? value) {
   return trimmed;
 }
 
-/// Web "save draft" payment: due status with the draft's customer.
+/// Web "save as due" payment: unpaid status with the form's customer.
 BillPaymentResult duePaymentForDraft(BillFormDraft draft) {
   final guest = draft.guestName?.trim();
   return BillPaymentResult(

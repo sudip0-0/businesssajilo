@@ -2294,11 +2294,11 @@ abstract class AppLocalizations {
   /// **'Create a bill for a walk-in or credit customer.'**
   String get createBillSubtitle;
 
-  /// No description provided for @saveAsDraft.
+  /// No description provided for @saveAsDue.
   ///
   /// In en, this message translates to:
-  /// **'Save as Draft'**
-  String get saveAsDraft;
+  /// **'Save as Due'**
+  String get saveAsDue;
 
   /// No description provided for @unsavedBillTitle.
   ///

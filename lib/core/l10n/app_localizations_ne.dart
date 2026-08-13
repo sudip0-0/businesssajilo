@@ -1146,7 +1146,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get createBillSubtitle => 'नगद वा उधारो ग्राहकका लागि बिल बनाउनुहोस्।';
 
   @override
-  String get saveAsDraft => 'ड्राफ्ट सुरक्षित गर्नुहोस्';
+  String get saveAsDue => 'बाँकी सेभ गर्नुहोस्';
 
   @override
   String get unsavedBillTitle => 'यो बिल छाड्ने?';

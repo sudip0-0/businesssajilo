@@ -461,7 +461,7 @@
   "saveCustomer": "Save Customer",
   "createNewBill": "Create New Bill",
   "createBillSubtitle": "Create a bill for a walk-in or credit customer.",
-  "saveAsDraft": "Save as Draft",
+  "saveAsDue": "Save as Due",
   "unsavedBillTitle": "Discard this bill?",
   "unsavedBillMessage": "You have unsaved changes. If you leave now, this bill will be lost.",
   "discardAndLeave": "Discard",

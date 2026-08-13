@@ -5,7 +5,7 @@ abstract final class IntegrationKeys {
   static const dashboardAddProduct = Key('dashboard_add_product');
   static const dashboardNewBill = Key('dashboard_new_bill');
   static const billFormCancel = Key('bill_form_cancel');
-  static const billFormSaveDraft = Key('bill_form_save_draft');
+  static const billFormSaveAsDue = Key('bill_form_save_as_due');
   static const billFormAddProduct = Key('bill_form_add_product');
   static const sidebarCreateBill = Key('sidebar_create_bill');
 

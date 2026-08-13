@@ -95,9 +95,9 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
             ),
             const SizedBox(width: 8),
             OutlinedButton(
-              key: IntegrationKeys.billFormSaveDraft,
-              onPressed: () => _formKey.currentState?.saveDraft(),
-              child: Text(l10n.saveAsDraft),
+              key: IntegrationKeys.billFormSaveAsDue,
+              onPressed: () => _formKey.currentState?.saveAsDue(),
+              child: Text(l10n.saveAsDue),
             ),
             const SizedBox(width: 8),
             FilledButton.icon(

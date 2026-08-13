@@ -263,7 +263,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     _customerSearchFocus.requestFocus();
   }
 
-  Future<void> saveDraft() => _save(forceStatus: BillStatus.due);
+  Future<void> saveAsDue() => _save(forceStatus: BillStatus.due);
 
   Future<void> saveBill() => _save();
 
