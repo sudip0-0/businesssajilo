@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/bills_repository.dart';
+import '../../data/repositories/payments_repository.dart';
 import '../../domain/models/bill.dart';
 
 /// Bumped after bill/payment writes so paginated bill lists can refresh.
@@ -52,6 +53,12 @@ final billDetailProvider = FutureProvider.autoDispose.family<Bill, String>((
 ) {
   return ref.watch(billsRepositoryProvider).get(id);
 });
+
+/// Sum of payments recorded against a bill, in paisa.
+final billReceivedTotalProvider = FutureProvider.autoDispose
+    .family<int, String>((ref, billId) {
+      return ref.watch(paymentsRepositoryProvider).totalReceivedForBill(billId);
+    });
 
 final todaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
   return ref.watch(billsRepositoryProvider).todaysSales();

@@ -34,6 +34,12 @@ int itemsTotalPaisa(Iterable<int> lineTotals) =>
 int grandTotalPaisa({required int itemsTotal, int billDiscountPaisa = 0}) =>
     itemsTotal - billDiscountPaisa;
 
+/// Remaining unpaid amount on a bill. Never negative.
+int remainingDuePaisa({required int grandTotal, required int amountReceived}) {
+  final left = grandTotal - amountReceived;
+  return left < 0 ? 0 : left;
+}
+
 /// Prorates a bill line's discount onto a partial return quantity.
 ///
 /// Uses integer floor division to match `create_credit_note` in Postgres:

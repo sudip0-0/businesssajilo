@@ -8,6 +8,8 @@ import '../../core/invoicing/invoice_export_service.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
+import '../../data/repositories/payments_repository.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/credit_note.dart';
 import '../auth/providers/auth_provider.dart';
@@ -133,11 +135,18 @@ Future<void> _exportBill(
 
   final factory = ref.read(invoiceDocumentFactoryProvider);
   final service = ref.read(invoiceExportServiceProvider);
+  int? amountReceived;
+  if (bill.status == BillStatus.partial) {
+    amountReceived = await ref
+        .read(paymentsRepositoryProvider)
+        .totalReceivedForBill(bill.id);
+  }
   final doc = factory.fromBill(
     business: business,
     bill: bill,
     l10n: l10n,
     locale: locale,
+    amountReceived: amountReceived,
   );
   await action(service, doc, l10n);
 }

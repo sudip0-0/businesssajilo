@@ -8,6 +8,7 @@ import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/bs_date.dart';
+import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/role_label.dart';
 import '../../domain/enums.dart';
@@ -80,6 +81,10 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
             (bill.createdByName != null || bill.createdByRole != null)
             ? _formatBillCreator(l10n, bill)
             : null;
+        final receivedAsync = bill.status == BillStatus.partial
+            ? ref.watch(billReceivedTotalProvider(bill.id))
+            : null;
+        final amountReceived = receivedAsync?.value;
 
         return ColoredBox(
           color: Theme.of(context).scaffoldBackgroundColor,
@@ -98,9 +103,14 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                 bill: bill,
                 dateStr: dateStr,
                 creator: creator,
+                amountReceived: amountReceived,
               ),
               const SizedBox(height: 16),
-              _BillLinesCard(l10n: l10n, bill: bill),
+              _BillLinesCard(
+                l10n: l10n,
+                bill: bill,
+                amountReceived: amountReceived,
+              ),
             ],
           ),
         );
@@ -200,10 +210,7 @@ class _BillActions extends ConsumerWidget {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'print',
-                child: Text(l10n.printInvoice),
-              ),
+              PopupMenuItem(value: 'print', child: Text(l10n.printInvoice)),
               PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
             ],
           ),
@@ -219,12 +226,14 @@ class _BillSummaryCard extends StatelessWidget {
     required this.bill,
     required this.dateStr,
     required this.creator,
+    this.amountReceived,
   });
 
   final AppLocalizations l10n;
   final Bill bill;
   final String dateStr;
   final String? creator;
+  final int? amountReceived;
 
   @override
   Widget build(BuildContext context) {
@@ -252,6 +261,7 @@ class _BillSummaryCard extends StatelessWidget {
               iconWash: iconWash,
               iconColor: iconColor,
               alignEnd: wide,
+              amountReceived: amountReceived,
             );
 
             if (!wide) {
@@ -394,6 +404,7 @@ class _SummaryRight extends StatelessWidget {
     required this.iconWash,
     required this.iconColor,
     required this.alignEnd,
+    this.amountReceived,
   });
 
   final AppLocalizations l10n;
@@ -402,17 +413,61 @@ class _SummaryRight extends StatelessWidget {
   final Color iconWash;
   final Color iconColor;
   final bool alignEnd;
+  final int? amountReceived;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final received = amountReceived;
     return Column(
       crossAxisAlignment: alignEnd
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
         BillStatusChip(bill.status),
+        if (received != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            l10n.amountPaid,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            formatNpr(Paisa(received), showPaisa: false),
+            textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.remainingDue,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            formatNpr(
+              Paisa(
+                remainingDuePaisa(
+                  grandTotal: bill.grandTotal,
+                  amountReceived: received,
+                ),
+              ),
+              showPaisa: false,
+            ),
+            textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -474,15 +529,21 @@ class _IconBadge extends StatelessWidget {
 }
 
 class _BillLinesCard extends StatelessWidget {
-  const _BillLinesCard({required this.l10n, required this.bill});
+  const _BillLinesCard({
+    required this.l10n,
+    required this.bill,
+    this.amountReceived,
+  });
 
   final AppLocalizations l10n;
   final Bill bill;
+  final int? amountReceived;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final received = amountReceived;
     return _BillCard(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -585,8 +646,9 @@ class _BillLinesCard extends StatelessWidget {
                       children: [
                         Text(
                           l10n.grandTotal,
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const Spacer(),
                         Container(
@@ -599,10 +661,7 @@ class _BillLinesCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(BsRadii.full),
                           ),
                           child: Text(
-                            formatNpr(
-                              Paisa(bill.grandTotal),
-                              showPaisa: false,
-                            ),
+                            formatNpr(Paisa(bill.grandTotal), showPaisa: false),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: scheme.successColor,
@@ -611,6 +670,26 @@ class _BillLinesCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (received != null) ...[
+                      const SizedBox(height: 8),
+                      _TotalRow(
+                        label: l10n.amountPaid,
+                        value: formatNpr(Paisa(received), showPaisa: false),
+                      ),
+                      const SizedBox(height: 8),
+                      _TotalRow(
+                        label: l10n.remainingDue,
+                        value: formatNpr(
+                          Paisa(
+                            remainingDuePaisa(
+                              grandTotal: bill.grandTotal,
+                              amountReceived: received,
+                            ),
+                          ),
+                          showPaisa: false,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -1334,6 +1334,12 @@ abstract class AppLocalizations {
   /// **'Amount paid'**
   String get amountPaid;
 
+  /// No description provided for @remainingDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining due'**
+  String get remainingDue;
+
   /// No description provided for @customerOptional.
   ///
   /// In en, this message translates to:
@@ -2617,6 +2623,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'INVOICE'**
   String get invoiceTitle;
+
+  /// No description provided for @invoiceNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice No.'**
+  String get invoiceNumber;
+
+  /// No description provided for @invoiceParticulars.
+  ///
+  /// In en, this message translates to:
+  /// **'Particulars'**
+  String get invoiceParticulars;
+
+  /// No description provided for @invoiceInWords.
+  ///
+  /// In en, this message translates to:
+  /// **'In Words'**
+  String get invoiceInWords;
+
+  /// No description provided for @invoiceAuthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorized'**
+  String get invoiceAuthorized;
 
   /// No description provided for @returnItems.
   ///

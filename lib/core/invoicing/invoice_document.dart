@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/bill_totals.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/business.dart';
 import 'invoice_labels.dart';
@@ -25,6 +26,7 @@ class InvoiceDocument {
     this.pendingSync = false,
     this.provisionalNotice,
     this.footerNote,
+    this.amountReceived,
   });
 
   factory InvoiceDocument.fromBill({
@@ -36,6 +38,7 @@ class InvoiceDocument {
     required InvoiceLabels labels,
     String? provisionalNotice,
     String? thankYou,
+    int? amountReceived,
   }) {
     return InvoiceDocument(
       business: business,
@@ -62,6 +65,7 @@ class InvoiceDocument {
       pendingSync: bill.pendingSync,
       provisionalNotice: bill.pendingSync ? provisionalNotice : null,
       footerNote: thankYou,
+      amountReceived: amountReceived,
     );
   }
 
@@ -80,6 +84,16 @@ class InvoiceDocument {
   final bool pendingSync;
   final String? provisionalNotice;
   final String? footerNote;
+
+  /// Paisa received against this bill. Set for partial bills.
+  final int? amountReceived;
+
+  bool get showPartialReceived => amountReceived != null;
+
+  int get remainingDue => remainingDuePaisa(
+    grandTotal: grandTotal,
+    amountReceived: amountReceived ?? 0,
+  );
 
   String get titleLabel => labels.title;
 

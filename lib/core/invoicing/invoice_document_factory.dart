@@ -24,17 +24,24 @@ class InvoiceDocumentFactory {
         InvoiceDocumentKind.bill => l10n.invoiceTitle,
         InvoiceDocumentKind.creditNote => l10n.creditNote.toUpperCase(),
       },
-      billNo: l10n.billNo,
+      billNo: l10n.invoiceNumber,
       date: l10n.invoiceDate,
       customer: l10n.invoiceCustomer,
-      item: l10n.productName,
+      name: l10n.name,
+      address: l10n.address,
+      item: l10n.invoiceParticulars,
       qty: l10n.qty,
       rate: l10n.rate,
       amount: l10n.invoiceAmount,
       subtotal: l10n.subtotal,
       discount: l10n.discount,
       grandTotal: l10n.grandTotal,
+      total: l10n.total,
       sn: l10n.sn,
+      inWords: l10n.invoiceInWords,
+      authorized: l10n.invoiceAuthorized,
+      amountPaid: l10n.amountPaid,
+      remainingDue: l10n.remainingDue,
     );
   }
 
@@ -43,6 +50,7 @@ class InvoiceDocumentFactory {
     required Bill bill,
     required AppLocalizations l10n,
     required Locale locale,
+    int? amountReceived,
   }) {
     return InvoiceDocument.fromBill(
       business: business,
@@ -53,6 +61,7 @@ class InvoiceDocumentFactory {
       labels: labelsFrom(l10n),
       provisionalNotice: l10n.provisionalBillNotice,
       thankYou: l10n.invoiceThankYou,
+      amountReceived: amountReceived,
     );
   }
 

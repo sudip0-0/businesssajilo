@@ -92,6 +92,25 @@ void main() {
       expect(paged, isTrue, reason: 'headers=$requestHeaders query=$query');
     });
 
+    test('totalReceivedForBill sums payment amounts for a bill', () async {
+      final capture = _Capture();
+      late Uri requestUri;
+      final client = _client(
+        MockClient((request) async {
+          capture.paths.add(request.url.path);
+          requestUri = request.url;
+          return _json(request, [
+            {'amount': 20000},
+            {'amount': 15000},
+          ]);
+        }),
+      );
+      final repo = SupabasePaymentsRepository(client);
+      expect(await repo.totalReceivedForBill('bill-1'), 35000);
+      expect(capture.paths.single, contains('/rest/v1/payments'));
+      expect(requestUri.query, contains('bill_id'));
+    });
+
     test('record posts record_payment RPC payload', () async {
       final capture = _Capture();
       final client = _client(
@@ -574,4 +593,7 @@ class _UnusedPayments implements PaymentsRepository {
 
   @override
   Future<int> totalDues() async => 0;
+
+  @override
+  Future<int> totalReceivedForBill(String billId) async => 0;
 }

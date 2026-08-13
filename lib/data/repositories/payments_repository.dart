@@ -41,4 +41,7 @@ abstract class PaymentsRepository {
     bool enqueueRemote = true,
   });
   Future<int> totalDues();
+
+  /// Sum of payments linked to [billId], in paisa.
+  Future<int> totalReceivedForBill(String billId);
 }

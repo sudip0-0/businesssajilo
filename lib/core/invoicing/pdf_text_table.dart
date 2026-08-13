@@ -11,36 +11,44 @@ pw.Table buildPdfTextTable({
   Map<int, pw.Alignment>? cellAlignments,
   Map<int, pw.TableColumnWidth>? columnWidths,
 }) {
-  final headerCells = headers
-      .map(
-        (h) => pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-          child: pw.Text(h, style: headerStyle),
-        ),
-      )
-      .toList();
+  pw.Widget cell(
+    String text, {
+    required int column,
+    pw.TextStyle? style,
+    bool header = false,
+  }) {
+    final align = cellAlignments?[column] ?? pw.Alignment.centerLeft;
+    return pw.Container(
+      alignment: align,
+      padding: pw.EdgeInsets.symmetric(vertical: header ? 4 : 3, horizontal: 2),
+      child: pw.Text(text, style: style),
+    );
+  }
 
   final rows = <pw.TableRow>[
-    pw.TableRow(children: headerCells),
+    pw.TableRow(
+      repeat: true,
+      children: [
+        for (var i = 0; i < headers.length; i++)
+          cell(headers[i], column: i, style: headerStyle, header: true),
+      ],
+    ),
     for (final row in data)
       pw.TableRow(
         children: [
           for (var i = 0; i < row.length; i++)
-            pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 2),
-              child: pw.Align(
-                alignment: cellAlignments?[i] ?? pw.Alignment.centerLeft,
-                child: pw.Text(row[i], style: cellStyle),
-              ),
-            ),
+            cell(row[i], column: i, style: cellStyle),
         ],
       ),
   ];
 
   return pw.Table(
     columnWidths: columnWidths,
-    border: pw.TableBorder(
-      horizontalInside: const pw.BorderSide(width: 0.4, color: PdfColors.grey400),
+    border: const pw.TableBorder(
+      horizontalInside: const pw.BorderSide(
+        width: 0.4,
+        color: PdfColors.grey400,
+      ),
       bottom: const pw.BorderSide(width: 0.6, color: PdfColors.grey600),
       top: const pw.BorderSide(width: 0.6, color: PdfColors.grey600),
     ),

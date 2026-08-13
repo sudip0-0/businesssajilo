@@ -51,6 +51,25 @@ Future<void> _openRecordSaleSheet(
   // Cache invalidation is handled by recordCustomerSale.
 }
 
+Future<void> _openEditCustomer(
+  BuildContext context,
+  WidgetRef ref, {
+  required String customerId,
+}) async {
+  final saved = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CustomerFormScreen(customerId: customerId),
+    ),
+  );
+  if (saved != true) return;
+  bumpCustomersRevision(ref);
+  ref.invalidate(customerDetailProvider(customerId));
+  ref.invalidate(customerLedgerProvider(customerId));
+  ref.invalidate(customerListProvider);
+  ref.invalidate(totalDuesProvider);
+}
+
 class CustomerDetailScreen extends ConsumerWidget {
   const CustomerDetailScreen({
     super.key,
@@ -90,6 +109,16 @@ class CustomerDetailScreen extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
+                    if (canEdit)
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: Text(l10n.editCustomer),
+                        onPressed: () => _openEditCustomer(
+                          context,
+                          ref,
+                          customerId: customerId,
+                        ),
+                      ),
                     if (canRecordPayments)
                       FilledButton.icon(
                         icon: const Icon(
@@ -287,21 +316,11 @@ class CustomerDetailScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: l10n.editCustomer,
-              onPressed: () async {
-                final saved = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CustomerFormScreen(customerId: customerId),
-                  ),
-                );
-                if (saved == true) {
-                  bumpCustomersRevision(ref);
-                  ref.invalidate(customerDetailProvider(customerId));
-                  ref.invalidate(customerLedgerProvider(customerId));
-                  ref.invalidate(customerListProvider);
-                  ref.invalidate(totalDuesProvider);
-                }
-              },
+              onPressed: () => _openEditCustomer(
+                context,
+                ref,
+                customerId: customerId,
+              ),
             ),
         ],
       ),

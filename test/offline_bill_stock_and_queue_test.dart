@@ -36,6 +36,9 @@ class _FakePaymentsRepository implements PaymentsRepository {
 
   @override
   Future<int> totalDues() async => 0;
+
+  @override
+  Future<int> totalReceivedForBill(String billId) async => 0;
 }
 
 void main() {

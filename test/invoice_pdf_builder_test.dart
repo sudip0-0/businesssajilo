@@ -2,6 +2,9 @@ import 'package:businesssajilo/core/invoicing/invoice_document.dart';
 import 'package:businesssajilo/core/invoicing/invoice_labels.dart';
 import 'package:businesssajilo/core/invoicing/invoice_paper_size.dart';
 import 'package:businesssajilo/core/invoicing/invoice_pdf_builder.dart';
+import 'package:businesssajilo/core/invoicing/pdf_fonts.dart';
+import 'package:businesssajilo/core/utils/money.dart';
+import 'package:businesssajilo/core/utils/rupees_in_words.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
 import 'package:businesssajilo/domain/models/bill_item.dart';
@@ -11,35 +14,49 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _labels = InvoiceLabels(
   title: 'INVOICE',
-  billNo: 'Bill no.',
+  billNo: 'Invoice No.',
   date: 'Date',
   customer: 'Customer',
-  item: 'Item',
+  name: 'Name',
+  address: 'Address',
+  item: 'Particulars',
   qty: 'Qty',
   rate: 'Rate',
   amount: 'Amount',
   subtotal: 'Subtotal',
   discount: 'Discount',
   grandTotal: 'Grand Total',
+  total: 'Total',
   sn: 'S.N.',
+  inWords: 'In Words',
+  authorized: 'Authorized',
+  amountPaid: 'Amount paid',
+  remainingDue: 'Remaining due',
 );
 
-InvoiceDocument _sampleDoc() {
+InvoiceDocument _sampleDoc({
+  int discount = 0,
+  BillStatus status = BillStatus.due,
+  String statusLabel = 'Due',
+  int? amountReceived,
+}) {
+  final itemsTotal = 10000;
   final business = const Business(
     id: 'biz1',
     name: 'Test Shop',
     phone: '9800000000',
     address: 'Kathmandu',
   );
-  final bill = const Bill(
+  final bill = Bill(
     id: 'b1',
     businessId: 'biz1',
     billNo: 'BS-0001',
-    itemsTotal: 10000,
-    grandTotal: 10000,
-    status: BillStatus.due,
+    itemsTotal: itemsTotal,
+    discount: discount,
+    grandTotal: itemsTotal - discount,
+    status: status,
     createdBy: 'm1',
-    items: [
+    items: const [
       BillItem(
         id: 'i1',
         billId: 'b1',
@@ -55,14 +72,17 @@ InvoiceDocument _sampleDoc() {
     business: business,
     bill: bill,
     customerLabel: 'Ram Store',
-    statusLabel: 'Due',
+    statusLabel: statusLabel,
     locale: const Locale('en'),
     labels: _labels,
+    amountReceived: amountReceived,
   );
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(PdfFonts.clearCache);
 
   test('InvoicePdfBuilder produces non-empty A4 bytes', () async {
     final bytes = await const InvoicePdfBuilder().build(
@@ -80,6 +100,54 @@ void main() {
     );
     expect(bytes, isNotEmpty);
     expect(bytes.length, greaterThan(100));
+  });
+
+  test('InvoicePdfBuilder renders discounted bill without throwing', () async {
+    final bytes = await const InvoicePdfBuilder().build(
+      _sampleDoc(discount: 500),
+    );
+    expect(bytes, isNotEmpty);
+  });
+
+  test('InvoicePdfBuilder renders due and partial status', () async {
+    final due = await const InvoicePdfBuilder().build(_sampleDoc());
+    final partial = await const InvoicePdfBuilder().build(
+      _sampleDoc(
+        status: BillStatus.partial,
+        statusLabel: 'Partial',
+        amountReceived: 4000,
+      ),
+    );
+    expect(due, isNotEmpty);
+    expect(partial, isNotEmpty);
+  });
+
+  test('InvoicePdfBuilder paginates a long item list', () async {
+    final lines = [
+      for (var i = 0; i < 28; i++)
+        InvoiceLine(
+          name: 'Item ${i + 1}',
+          qty: 1,
+          rate: 10000,
+          discount: 0,
+          lineTotal: 10000,
+        ),
+    ];
+    final doc = InvoiceDocument(
+      business: const Business(id: 'biz1', name: 'Test Shop'),
+      documentNo: 'BS-0099',
+      customerLabel: 'Ram Store',
+      createdAt: DateTime(2026, 8, 13),
+      statusLabel: 'Due',
+      lines: lines,
+      itemsTotal: 280000,
+      discount: 0,
+      grandTotal: 280000,
+      locale: const Locale('en'),
+      labels: _labels,
+    );
+    final bytes = await const InvoicePdfBuilder().build(doc);
+    expect(bytes, isNotEmpty);
   });
 
   test('InvoicePdfBuilder renders Nepali Unicode without throwing', () async {
@@ -118,14 +186,21 @@ void main() {
         billNo: 'बिल नं.',
         date: 'मिति',
         customer: 'ग्राहक',
-        item: 'सामान',
+        name: 'नाम',
+        address: 'ठेगाना',
+        item: 'विवरण',
         qty: 'मात्रा',
         rate: 'दर',
         amount: 'रकम',
         subtotal: 'जम्मा',
         discount: 'छुट',
         grandTotal: 'कुल',
+        total: 'जम्मा',
         sn: 'क्र.सं.',
+        inWords: 'अक्षरेपी',
+        authorized: 'प्रमाणित',
+        amountPaid: 'भुक्तानी रकम',
+        remainingDue: 'बाँकी रकम',
       ),
     );
     final bytes = await const InvoicePdfBuilder().build(doc);
@@ -168,9 +243,25 @@ void main() {
     expect(doc.titleLabel, isNotEmpty);
   });
 
-  test('money on PDF uses grouping without currency symbol', () {
-    // Smoke: builder accepts docs with large amounts (formatting covered in
-    // money unit tests via showSymbol: false).
-    expect(_sampleDoc().grandTotal, 10000);
+  test('partial invoice keeps remaining due from amount received', () {
+    final doc = _sampleDoc(
+      status: BillStatus.partial,
+      statusLabel: 'Partial',
+      amountReceived: 4000,
+    );
+    expect(doc.showPartialReceived, isTrue);
+    expect(doc.remainingDue, 6000);
+  });
+
+  test('print amounts use grouping without currency symbol or paisa', () {
+    expect(formatNpr(Paisa(10000), showSymbol: false, showPaisa: false), '100');
+    expect(
+      formatNpr(Paisa(690000), showSymbol: false, showPaisa: false),
+      '6,900',
+    );
+    expect(
+      formatNpr(Paisa(690000), showSymbol: false, showPaisa: false),
+      isNot(contains('रू')),
+    );
   });
 }

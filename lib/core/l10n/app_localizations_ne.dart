@@ -643,6 +643,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get amountPaid => 'भुक्तानी रकम';
 
   @override
+  String get remainingDue => 'बाँकी रकम';
+
+  @override
   String get customerOptional => 'ग्राहक (वैकल्पिक)';
 
   @override
@@ -1318,6 +1321,18 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get invoiceTitle => 'बिल';
+
+  @override
+  String get invoiceNumber => 'बिल नं.';
+
+  @override
+  String get invoiceParticulars => 'विवरण';
+
+  @override
+  String get invoiceInWords => 'अक्षरेपी';
+
+  @override
+  String get invoiceAuthorized => 'प्रमाणित';
 
   @override
   String get returnItems => 'सामान फिर्ता';

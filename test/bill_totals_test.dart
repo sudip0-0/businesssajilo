@@ -11,6 +11,8 @@ void main() {
     ];
     expect(itemsTotalPaisa(items), 15000);
     expect(grandTotalPaisa(itemsTotal: 15000, billDiscountPaisa: 2000), 13000);
+    expect(remainingDuePaisa(grandTotal: 13000, amountReceived: 4000), 9000);
+    expect(remainingDuePaisa(grandTotal: 1000, amountReceived: 1500), 0);
   });
 
   test('clampLineDiscountPaisa caps discount at line gross', () {

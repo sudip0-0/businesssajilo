@@ -70,4 +70,17 @@ class SupabasePaymentsRepository implements PaymentsRepository {
     final result = await client.rpc<dynamic>('total_dues');
     return (result as num?)?.toInt() ?? 0;
   }
+
+  @override
+  Future<int> totalReceivedForBill(String billId) async {
+    final client = requireSupabaseClient(_client);
+    final rows = await client
+        .from('payments')
+        .select('amount')
+        .eq('bill_id', billId);
+    return (rows as List).fold<int>(0, (sum, row) {
+      final amount = (row as Map)['amount'];
+      return sum + ((amount as num?)?.toInt() ?? 0);
+    });
+  }
 }

@@ -644,6 +644,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amountPaid => 'Amount paid';
 
   @override
+  String get remainingDue => 'Remaining due';
+
+  @override
   String get customerOptional => 'Customer (optional)';
 
   @override
@@ -1321,6 +1324,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invoiceTitle => 'INVOICE';
+
+  @override
+  String get invoiceNumber => 'Invoice No.';
+
+  @override
+  String get invoiceParticulars => 'Particulars';
+
+  @override
+  String get invoiceInWords => 'In Words';
+
+  @override
+  String get invoiceAuthorized => 'Authorized';
 
   @override
   String get returnItems => 'Return items';

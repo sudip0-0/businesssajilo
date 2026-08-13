@@ -114,4 +114,12 @@ class SyncingPaymentsRepository implements PaymentsRepository {
       (sum, c) => sum + (c.balanceDue > 0 ? c.balanceDue : 0),
     );
   }
+
+  @override
+  Future<int> totalReceivedForBill(String billId) async {
+    final rows = await (_db.select(
+      _db.localPayments,
+    )..where((p) => p.billId.equals(billId))).get();
+    return rows.fold<int>(0, (sum, p) => sum + p.amount);
+  }
 }
