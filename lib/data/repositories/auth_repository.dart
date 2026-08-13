@@ -3,6 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
+import '../../core/utils/app_prefs.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/models/member.dart';
 import '../../domain/models/session_state.dart';
@@ -52,6 +53,14 @@ class AuthRepository {
         // Best effort — offline sign-out failures shouldn't mask the cause.
       }
       throw const AccountDeactivatedException();
+    }
+
+    try {
+      await NotificationMutePrefs.fromNotificationPrefs(
+        row['notification_prefs'],
+      ).save();
+    } catch (_) {
+      // Local mute cache is best-effort; login must still succeed.
     }
 
     return SessionState(

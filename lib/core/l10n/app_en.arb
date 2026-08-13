@@ -725,11 +725,24 @@
     }
   },
   "notifQuoteStale": "A quote has expired",
-  "notifDuesReminder": "Customer {customer} dues reminder",
+  "notifDuesReminder": "Customer {customer} dues reminder — {amount}",
   "@notifDuesReminder": {
+    "placeholders": {
+      "customer": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "notifDuesReminderNamed": "Customer {customer} dues reminder",
+  "@notifDuesReminderNamed": {
     "placeholders": {
       "customer": { "type": "String" }
     }
   },
-  "notifDuesReminderGeneric": "Outstanding dues reminder"
+  "notifDuesReminderGeneric": "Outstanding dues reminder",
+  "notifDuesReminderGenericAmount": "Outstanding dues reminder — {amount}",
+  "@notifDuesReminderGenericAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  }
 }

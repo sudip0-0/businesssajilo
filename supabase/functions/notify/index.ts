@@ -138,16 +138,45 @@ Deno.serve(async (req) => {
 
 function titleFor(type: string, payload: unknown): string {
   if (type === "dues_reminder") {
+    const rec =
+      payload && typeof payload === "object"
+        ? (payload as Record<string, unknown>)
+        : null;
     const shop =
-      payload &&
-      typeof payload === "object" &&
-      "shop_name" in payload &&
-      typeof (payload as { shop_name: unknown }).shop_name === "string"
-        ? (payload as { shop_name: string }).shop_name.trim()
-        : "";
+      typeof rec?.shop_name === "string" ? rec.shop_name.trim() : "";
+    const amount = formatPaisaRupees(rec?.balance_due);
+    if (shop && amount) {
+      return `Customer ${shop} dues reminder — ${amount}`;
+    }
     if (shop) return `Customer ${shop} dues reminder`;
+    if (amount) return `Outstanding dues reminder — ${amount}`;
   }
   return TITLE_BY_TYPE[type] ?? "BusinessSajilo";
+}
+
+function formatPaisaRupees(value: unknown): string | null {
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : NaN;
+  if (!Number.isFinite(n)) return null;
+  const rupees = Math.floor(Math.abs(n) / 100);
+  return `रू ${groupNepali(String(rupees))}`;
+}
+
+function groupNepali(digits: string): string {
+  if (digits.length <= 3) return digits;
+  const last3 = digits.slice(-3);
+  let rest = digits.slice(0, -3);
+  const groups: string[] = [];
+  while (rest.length > 2) {
+    groups.unshift(rest.slice(-2));
+    rest = rest.slice(0, -2);
+  }
+  if (rest.length > 0) groups.unshift(rest);
+  return `${groups.join(",")},${last3}`;
 }
 
 async function getFcmAccessToken(serviceAccountJson: string): Promise<string> {

@@ -1835,10 +1835,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifQuoteStale => 'A quote has expired';
 
   @override
-  String notifDuesReminder(String customer) {
+  String notifDuesReminder(String customer, String amount) {
+    return 'Customer $customer dues reminder — $amount';
+  }
+
+  @override
+  String notifDuesReminderNamed(String customer) {
     return 'Customer $customer dues reminder';
   }
 
   @override
   String get notifDuesReminderGeneric => 'Outstanding dues reminder';
+
+  @override
+  String notifDuesReminderGenericAmount(String amount) {
+    return 'Outstanding dues reminder — $amount';
+  }
 }

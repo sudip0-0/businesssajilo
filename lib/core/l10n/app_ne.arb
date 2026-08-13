@@ -661,6 +661,8 @@
   "noBillsToCopy": "कपी गर्ने अघिल्लो बिल छैन",
   "lastSyncAt": "पछिल्लो सिंक {when}",
   "notifQuoteStale": "कोटेशनको म्याद सकियो",
-  "notifDuesReminder": "ग्राहक {customer} बाँकी रिमाइन्डर",
-  "notifDuesReminderGeneric": "बाँकी रकम रिमाइन्डर"
+  "notifDuesReminder": "ग्राहक {customer} बाँकी रिमाइन्डर — {amount}",
+  "notifDuesReminderNamed": "ग्राहक {customer} बाँकी रिमाइन्डर",
+  "notifDuesReminderGeneric": "बाँकी रकम रिमाइन्डर",
+  "notifDuesReminderGenericAmount": "बाँकी रकम रिमाइन्डर — {amount}"
 }

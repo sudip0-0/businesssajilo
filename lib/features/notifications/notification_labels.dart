@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/money.dart';
 import '../../domain/models/notification_item.dart';
 
 String notificationTitle(AppLocalizations l10n, NotificationItem item) {
@@ -40,6 +41,25 @@ IconData notificationIcon(String type) {
 
 String _duesReminderTitle(AppLocalizations l10n, NotificationItem item) {
   final name = item.payload['shop_name']?.toString().trim();
-  if (name == null || name.isEmpty) return l10n.notifDuesReminderGeneric;
-  return l10n.notifDuesReminder(name);
+  final hasName = name != null && name.isNotEmpty;
+  final amount = _payloadPaisa(item.payload['balance_due']);
+  final amountLabel = amount == null
+      ? null
+      : formatNpr(Paisa(amount), showPaisa: false);
+
+  if (hasName && amountLabel != null) {
+    return l10n.notifDuesReminder(name, amountLabel);
+  }
+  if (hasName) return l10n.notifDuesReminderNamed(name);
+  if (amountLabel != null) {
+    return l10n.notifDuesReminderGenericAmount(amountLabel);
+  }
+  return l10n.notifDuesReminderGeneric;
+}
+
+int? _payloadPaisa(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.round();
+  if (value is String) return int.tryParse(value);
+  return null;
 }

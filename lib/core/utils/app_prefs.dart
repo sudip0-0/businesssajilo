@@ -35,6 +35,31 @@ class NotificationMutePrefs {
     ];
   }
 
+  bool mutes(String type) => mutedTypes.contains(type);
+
+  factory NotificationMutePrefs.fromMutedTypes(Iterable<String> muted) {
+    final set = muted.toSet();
+    return NotificationMutePrefs(
+      chat: set.contains('chat_message'),
+      dues: set.contains('dues_reminder'),
+      lowStock: set.contains('low_stock'),
+    );
+  }
+
+  /// Parses `members.notification_prefs`. Missing/invalid JSON keeps defaults.
+  factory NotificationMutePrefs.fromNotificationPrefs(Object? raw) {
+    if (raw == null) return const NotificationMutePrefs();
+    if (raw is Map) {
+      final muted = raw['muted'];
+      if (muted is List) {
+        return NotificationMutePrefs.fromMutedTypes(
+          muted.map((e) => e.toString()),
+        );
+      }
+    }
+    return const NotificationMutePrefs();
+  }
+
   static Future<NotificationMutePrefs> load() async {
     final prefs = await SharedPreferences.getInstance();
     return NotificationMutePrefs(

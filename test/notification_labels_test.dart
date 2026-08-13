@@ -15,16 +15,19 @@ void main() {
     expect(notificationTitle(l10n, item), 'New order placed');
   });
 
-  test('dues reminder title includes the customer shop name', () {
+  test('dues reminder title includes the customer shop name and amount', () {
     final l10n = AppLocalizationsEn();
     final named = NotificationItem(
       id: '1',
       businessId: 'b',
       recipientMemberId: 'm',
       type: 'dues_reminder',
-      payload: const {'shop_name': 'Ram Store'},
+      payload: const {'shop_name': 'Ram Store', 'balance_due': 1234500},
     );
-    expect(notificationTitle(l10n, named), 'Customer Ram Store dues reminder');
+    expect(
+      notificationTitle(l10n, named),
+      'Customer Ram Store dues reminder — रू 12,345',
+    );
 
     final unnamed = const NotificationItem(
       id: '2',

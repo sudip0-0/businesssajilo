@@ -83,5 +83,31 @@ void main() {
       expect(prefs.dues, isFalse);
       expect(prefs.mutedTypes, isEmpty);
     });
+
+    test('fromNotificationPrefs reads muted types from server json', () {
+      final prefs = NotificationMutePrefs.fromNotificationPrefs({
+        'muted': ['dues_reminder', 'chat_message'],
+      });
+      expect(prefs.dues, isTrue);
+      expect(prefs.chat, isTrue);
+      expect(prefs.lowStock, isFalse);
+      expect(prefs.mutes('dues_reminder'), isTrue);
+      expect(prefs.mutes('low_stock'), isFalse);
+    });
+
+    test('fromNotificationPrefs treats an empty muted list as unmuted', () {
+      final prefs = NotificationMutePrefs.fromNotificationPrefs({
+        'muted': <String>[],
+      });
+      expect(prefs.dues, isFalse);
+      expect(prefs.mutedTypes, isEmpty);
+    });
+
+    test('fromNotificationPrefs keeps dues muted when json is missing', () {
+      expect(
+        NotificationMutePrefs.fromNotificationPrefs(null).dues,
+        isTrue,
+      );
+    });
   });
 }

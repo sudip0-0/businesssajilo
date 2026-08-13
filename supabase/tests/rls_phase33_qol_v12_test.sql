@@ -1,6 +1,6 @@
 -- v1.2 QoL: last_quoted_rate, oldest-first allocation, quote expiry, nudges.
 begin;
-select plan(8);
+select plan(13);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -106,6 +106,53 @@ select is(
 select lives_ok(
   $$select process_operational_nudges()$$,
   'owner can run operational nudges'
+);
+
+select ok(
+  (select notification_prefs -> 'muted' @> '["dues_reminder"]'::jsonb
+     from members
+     where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+  'owner default prefs mute dues_reminder'
+);
+
+select is(
+  insert_notification(
+    '11111111-1111-1111-1111-111111111111',
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'dues_reminder',
+    jsonb_build_object(
+      'customer_id', 'e1111111-1111-1111-1111-111111111111',
+      'shop_name', 'Ram Store',
+      'balance_due', 5000
+    )
+  ),
+  null::uuid,
+  'insert_notification skips muted dues_reminder'
+);
+
+select is(
+  (select count(*)::int from notifications where type = 'dues_reminder'),
+  0,
+  'muted dues reminders are not inserted by nudges'
+);
+
+select lives_ok(
+  $$select update_own_notification_prefs('[]'::jsonb)$$,
+  'owner can unmute dues reminders'
+);
+
+select ok(
+  insert_notification(
+    '11111111-1111-1111-1111-111111111111',
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    'dues_reminder',
+    jsonb_build_object(
+      'customer_id', 'e1111111-1111-1111-1111-111111111111',
+      'shop_name', 'Ram Store',
+      'balance_due', 5000
+    )
+  ) is not null,
+  'insert_notification allows dues_reminder when unmuted'
 );
 
 select * from finish();
