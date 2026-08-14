@@ -87,7 +87,10 @@ abstract final class BsElevation {
 }
 
 abstract final class AppTheme {
-  static const _textTheme = TextTheme(
+  static const _fontFamily = 'Inter';
+  static const _fontFallback = ['Noto Sans Devanagari'];
+
+  static final _textTheme = const TextTheme(
     headlineSmall: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w600,
@@ -121,7 +124,7 @@ abstract final class AppTheme {
       fontWeight: FontWeight.w500,
       height: 1.27,
     ),
-  );
+  ).apply(fontFamily: _fontFamily, fontFamilyFallback: _fontFallback);
 
   static ColorScheme get lightScheme => const ColorScheme(
     brightness: Brightness.light,
@@ -154,6 +157,21 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: BsColors.background,
       cardTheme: _cardTheme(Colors.white),
       inputDecorationTheme: _inputTheme(Colors.white, scheme),
+      appBarTheme: AppBarTheme(
+        titleTextStyle: _textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: BsColors.textCharcoal,
+        ),
+        titleSpacing: 16,
+      ),
+      listTileTheme: ListTileThemeData(
+        titleTextStyle: _textTheme.titleMedium?.copyWith(
+          color: BsColors.textCharcoal,
+        ),
+        subtitleTextStyle: _textTheme.bodySmall?.copyWith(
+          color: BsColors.outline,
+        ),
+      ),
     );
   }
 
@@ -171,8 +189,8 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       textTheme: _textTheme,
-      fontFamily: 'Inter',
-      fontFamilyFallback: const ['Noto Sans Devanagari'],
+      fontFamily: _fontFamily,
+      fontFamilyFallback: _fontFallback,
       navigationBarTheme: NavigationBarThemeData(
         height: 64,
         indicatorColor: BsColors.secondary.withValues(alpha: 0.12),

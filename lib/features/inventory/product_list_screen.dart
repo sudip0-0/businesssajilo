@@ -339,21 +339,18 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             );
           }
           final product = filtered[index];
-          final subtitleParts = [
-            if (product.sku != null && product.sku!.isNotEmpty) product.sku!,
-            if (!product.isActive) l10n.inactive,
-          ];
+          final inactiveLabel = product.isActive ? null : l10n.inactive;
           return Semantics(
             button: true,
             label: [
               product.name,
-              ...subtitleParts,
+              ?inactiveLabel,
               '${product.stockCached}',
             ].join(', '),
             child: ListTile(
               leading: ProductImage(storagePath: product.imageUrl),
               title: Text(product.name),
-              subtitle: Text(subtitleParts.join(' · ')),
+              subtitle: inactiveLabel == null ? null : Text(inactiveLabel),
               trailing: StockBadge(product: product),
               onTap: () => _openDetail(context, product),
             ),
