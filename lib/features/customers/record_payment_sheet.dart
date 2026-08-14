@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
+import '../../core/ui/sheet_select_field.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
@@ -32,6 +33,7 @@ class RecordPaymentSheet extends ConsumerStatefulWidget {
 
 class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
   final _amountController = TextEditingController();
+  final _amountFocus = FocusNode();
   final _refController = TextEditingController();
   PaymentMethod _method = PaymentMethod.cash;
   PaymentAllocateMode _allocation = PaymentAllocateMode.account;
@@ -43,11 +45,15 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
   void initState() {
     super.initState();
     _selectedCustomerId = widget.customerId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _amountFocus.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _amountFocus.dispose();
     _refController.dispose();
     super.dispose();
   }
@@ -134,17 +140,12 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                 customersAsync!.when(
                   loading: () => const LinearProgressIndicator(),
                   error: (e, _) => Text(l10n.loadingFailed),
-                  data: (customers) => DropdownButtonFormField<String>(
-                    decoration: InputDecoration(labelText: l10n.selectCustomer),
-                    initialValue: _selectedCustomerId,
-                    items: customers
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.shopName),
-                          ),
-                        )
-                        .toList(),
+                  data: (customers) => SheetSelectField<String>(
+                    label: l10n.selectCustomer,
+                    value: _selectedCustomerId,
+                    items: customers.map((c) => c.id).toList(),
+                    itemLabel: (id) =>
+                        customers.firstWhere((c) => c.id == id).shopName,
                     onChanged: (v) => setState(() {
                       _selectedCustomerId = v;
                       _billId = null;
@@ -161,26 +162,16 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
               const SizedBox(height: 12),
               Text(l10n.allocateToAccount),
               const SizedBox(height: 8),
-              DropdownButtonFormField<PaymentAllocateMode>(
-                decoration: InputDecoration(labelText: l10n.paymentAllocation),
-                initialValue: _allocation,
-                items: [
-                  DropdownMenuItem(
-                    value: PaymentAllocateMode.account,
-                    child: Text(l10n.allocateToAccount),
-                  ),
-                  DropdownMenuItem(
-                    value: PaymentAllocateMode.oldestFirst,
-                    child: Text(l10n.allocateOldestFirst),
-                  ),
-                  DropdownMenuItem(
-                    value: PaymentAllocateMode.bill,
-                    child: Text(l10n.allocateToBill),
-                  ),
-                ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _allocation = v);
+              SheetSelectField<PaymentAllocateMode>(
+                label: l10n.paymentAllocation,
+                value: _allocation,
+                items: PaymentAllocateMode.values,
+                itemLabel: (mode) => switch (mode) {
+                  PaymentAllocateMode.account => l10n.allocateToAccount,
+                  PaymentAllocateMode.oldestFirst => l10n.allocateOldestFirst,
+                  PaymentAllocateMode.bill => l10n.allocateToBill,
                 },
+                onChanged: (v) => setState(() => _allocation = v),
               ),
               if (_allocation == PaymentAllocateMode.bill &&
                   _selectedCustomerId != null) ...[
@@ -190,19 +181,14 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                     .when(
                       loading: () => const LinearProgressIndicator(),
                       error: (_, _) => Text(l10n.loadingFailed),
-                      data: (bills) => DropdownButtonFormField<String>(
-                        decoration: InputDecoration(labelText: l10n.selectBill),
-                        initialValue: _billId,
-                        items: bills
-                            .map(
-                              (b) => DropdownMenuItem(
-                                value: b.id,
-                                child: Text(
-                                  '${b.billNo} · ${formatNpr(Paisa(b.grandTotal), showPaisa: false)}',
-                                ),
-                              ),
-                            )
-                            .toList(),
+                      data: (bills) => SheetSelectField<String>(
+                        label: l10n.selectBill,
+                        value: _billId,
+                        items: bills.map((b) => b.id).toList(),
+                        itemLabel: (id) {
+                          final b = bills.firstWhere((bill) => bill.id == id);
+                          return '${b.billNo} · ${formatNpr(Paisa(b.grandTotal), showPaisa: false)}';
+                        },
                         onChanged: (v) => setState(() => _billId = v),
                       ),
                     ),
@@ -210,6 +196,8 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,
+                focusNode: _amountFocus,
+                autofocus: true,
                 decoration: InputDecoration(labelText: l10n.paymentAmount),
                 keyboardType: TextInputType.number,
                 onChanged: (_) => setState(() {}),
@@ -224,20 +212,12 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                 ),
               ],
               const SizedBox(height: 12),
-              DropdownButtonFormField<PaymentMethod>(
-                decoration: InputDecoration(labelText: l10n.paymentMethod),
-                initialValue: _method,
-                items: PaymentMethod.values
-                    .map(
-                      (m) => DropdownMenuItem(
-                        value: m,
-                        child: Text(paymentMethodLabel(l10n, m)),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _method = v);
-                },
+              SheetSelectField<PaymentMethod>(
+                label: l10n.paymentMethod,
+                value: _method,
+                items: PaymentMethod.values,
+                itemLabel: (m) => paymentMethodLabel(l10n, m),
+                onChanged: (v) => setState(() => _method = v),
               ),
               const SizedBox(height: 12),
               TextFormField(

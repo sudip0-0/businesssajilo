@@ -3137,13 +3137,13 @@ abstract class AppLocalizations {
   /// No description provided for @portalActive.
   ///
   /// In en, this message translates to:
-  /// **'Portal login: Active'**
+  /// **'Login: Active'**
   String get portalActive;
 
   /// No description provided for @portalDisabled.
   ///
   /// In en, this message translates to:
-  /// **'Portal login: Disabled'**
+  /// **'Login: Disabled'**
   String get portalDisabled;
 
   /// No description provided for @enablePortalLogin.

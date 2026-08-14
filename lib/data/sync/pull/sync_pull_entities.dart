@@ -49,11 +49,8 @@ class SyncPullEntities {
       ts: ts,
       startOffset: startOffset,
       budget: budget,
-      buildPage: (from, to) => _client
-          .from('products')
-          .select()
-          .order('id')
-          .range(from, to),
+      buildPage: (from, to) =>
+          _client.from('products').select().order('id').range(from, to),
       onPage: upsertProductsBatch,
     );
   }
@@ -189,11 +186,8 @@ class SyncPullEntities {
       ts: ts,
       startOffset: startOffset,
       budget: budget,
-      buildPage: (from, to) => _client
-          .from('payments')
-          .select()
-          .order('id')
-          .range(from, to),
+      buildPage: (from, to) =>
+          _client.from('payments').select().order('id').range(from, to),
       onPage: (rows) => upsertRemotePaymentsBatch(rows, synced: true),
     );
   }
@@ -294,8 +288,25 @@ class SyncPullEntities {
     List<Map<String, dynamic>> rows,
   ) async {
     if (rows.isEmpty) return;
+    final ids = rows.map((r) => r['customer_id'] as String).toList();
+    final existing = await (_db.select(
+      _db.localCustomers,
+    )..where((c) => c.id.isIn(ids))).get();
+    final byId = {for (final e in existing) e.id: e};
+    final pendingBalanceCustomerIds =
+        await _customerIdsWithPendingBalanceWrites(ids);
     await _db.transaction(() async {
       for (final row in rows) {
+        final id = row['customer_id'] as String;
+        final local = byId[id];
+        final remoteBalance = (row['balance_due'] as num?)?.toInt() ?? 0;
+        // Sync pulls customers before the just-recorded payment is pushed, which
+        // would clobber the optimistic local balance. Keep it while bills or
+        // payments for this customer are still pending.
+        final balanceDue =
+            local != null && pendingBalanceCustomerIds.contains(id)
+            ? local.balanceDue
+            : remoteBalance;
         final updatedAt = row['updated_at'] != null
             ? DateTime.parse(row['updated_at'] as String)
             : (row['created_at'] != null
@@ -305,7 +316,7 @@ class SyncPullEntities {
             .into(_db.localCustomers)
             .insertOnConflictUpdate(
               LocalCustomersCompanion.insert(
-                id: row['customer_id'] as String,
+                id: id,
                 businessId: row['business_id'] as String,
                 memberId: row['member_id'] as String? ?? '',
                 shopName: row['shop_name'] as String,
@@ -315,7 +326,7 @@ class SyncPullEntities {
                 openingBalance: Value(
                   (row['opening_balance'] as num?)?.toInt() ?? 0,
                 ),
-                balanceDue: Value((row['balance_due'] as num?)?.toInt() ?? 0),
+                balanceDue: Value(balanceDue),
                 updatedAt: updatedAt,
                 createdAt: Value(
                   row['created_at'] == null
@@ -326,6 +337,31 @@ class SyncPullEntities {
             );
       }
     });
+  }
+
+  Future<Set<String>> _customerIdsWithPendingBalanceWrites(
+    List<String> customerIds,
+  ) async {
+    if (customerIds.isEmpty) return {};
+    final pendingPayments =
+        await (_db.select(_db.localPayments)..where(
+              (p) =>
+                  p.customerId.isIn(customerIds) &
+                  p.syncStatus.equals('pending'),
+            ))
+            .get();
+    final pendingBills =
+        await (_db.select(_db.localBills)..where(
+              (b) =>
+                  b.customerId.isIn(customerIds) &
+                  b.syncStatus.equals('pending'),
+            ))
+            .get();
+    return {
+      ...pendingPayments.map((p) => p.customerId),
+      for (final b in pendingBills)
+        if (b.customerId != null) b.customerId!,
+    };
   }
 
   Future<void> upsertRemoteBillsBatch(List<Map<String, dynamic>> rows) async {

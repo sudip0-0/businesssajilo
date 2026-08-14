@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
+import '../../core/ui/sheet_select_field.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
@@ -149,11 +150,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
   }
 
   void _showError(String message) {
-    showBsSnackBar(
-      context,
-      message: message,
-      backgroundColor: BsColors.danger,
-    );
+    showBsSnackBar(context, message: message, backgroundColor: BsColors.danger);
   }
 
   List<Customer> _filterCustomers(List<Customer> customers, String query) {
@@ -199,8 +196,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     }
 
     final canRecordPayments =
-        ref.watch(authProvider).value?.member?.role.canRecordPayments ??
-        false;
+        ref.watch(authProvider).value?.member?.role.canRecordPayments ?? false;
 
     return Material(
       child: Padding(
@@ -379,20 +375,12 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               if (_status != BillStatus.due && !_walkIn ||
                   _status == BillStatus.partial) ...[
                 const SizedBox(height: 12),
-                DropdownButtonFormField<PaymentMethod>(
-                  decoration: InputDecoration(labelText: l10n.paymentMethod),
-                  initialValue: _method,
-                  items: PaymentMethod.values
-                      .map(
-                        (m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(paymentMethodLabel(l10n, m)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) setState(() => _method = v);
-                  },
+                SheetSelectField<PaymentMethod>(
+                  label: l10n.paymentMethod,
+                  value: _method,
+                  items: PaymentMethod.values,
+                  itemLabel: (m) => paymentMethodLabel(l10n, m),
+                  onChanged: (v) => setState(() => _method = v),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

@@ -381,8 +381,6 @@ class _CustomerTile extends StatelessWidget {
     final theme = Theme.of(context).textTheme;
     final due = customer.balanceDue;
 
-    final contact = customer.contactName;
-    final phone = customer.phone;
     final dueLabel = due < 0
         ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'
         : formatNpr(Paisa(due), showPaisa: false);
@@ -390,7 +388,7 @@ class _CustomerTile extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: [customer.shopName, ?contact, ?phone, dueLabel].join(', '),
+      label: [customer.shopName, dueLabel].join(', '),
       child: ListTile(
         onTap: onTap,
         selected: selected,
@@ -404,18 +402,6 @@ class _CustomerTile extends StatelessWidget {
           ),
         ),
         title: Text(customer.shopName),
-        subtitle: (contact == null && phone == null)
-            ? null
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (contact != null)
-                    Text(contact, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  if (phone != null)
-                    Text(phone, maxLines: 1, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-        isThreeLine: contact != null && phone != null,
         trailing: due < 0
             ? Chip(
                 label: Text(

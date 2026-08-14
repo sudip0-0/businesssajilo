@@ -1592,10 +1592,10 @@ class AppLocalizationsNe extends AppLocalizations {
   String get allOrders => 'सबै';
 
   @override
-  String get portalActive => 'पोर्टल लगइन: सक्रिय';
+  String get portalActive => 'लगइन: सक्रिय';
 
   @override
-  String get portalDisabled => 'पोर्टल लगइन: निष्क्रिय';
+  String get portalDisabled => 'लगइन: निष्क्रिय';
 
   @override
   String get enablePortalLogin => 'पोर्टल लगइन सक्षम गर्नुहोस्';

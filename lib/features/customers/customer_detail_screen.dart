@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
-import '../../core/layout/bs_touch_targets.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
@@ -27,7 +26,7 @@ Future<void> _openRecordPaymentSheet(
   required String customerName,
 }) async {
   final l10n = AppLocalizations.of(context);
-  await showAdaptiveSheet<bool>(
+  final saved = await showAdaptiveSheet<bool>(
     context: context,
     title: l10n.recordPayment,
     child: RecordPaymentSheet(
@@ -35,7 +34,12 @@ Future<void> _openRecordPaymentSheet(
       customerName: customerName,
     ),
   );
-  // Cache invalidation is handled by recordCustomerPayment.
+  if (saved != true) return;
+  bumpCustomersRevision(ref);
+  ref.invalidate(customerDetailProvider(customerId));
+  ref.invalidate(customerLedgerProvider(customerId));
+  ref.invalidate(customerListProvider);
+  ref.invalidate(totalDuesProvider);
 }
 
 Future<void> _openRecordSaleSheet(
@@ -45,12 +49,17 @@ Future<void> _openRecordSaleSheet(
   required String customerName,
 }) async {
   final l10n = AppLocalizations.of(context);
-  await showAdaptiveSheet<bool>(
+  final saved = await showAdaptiveSheet<bool>(
     context: context,
     title: l10n.recordSale,
     child: RecordSaleSheet(customerId: customerId, customerName: customerName),
   );
-  // Cache invalidation is handled by recordCustomerSale.
+  if (saved != true) return;
+  bumpCustomersRevision(ref);
+  ref.invalidate(customerDetailProvider(customerId));
+  ref.invalidate(customerLedgerProvider(customerId));
+  ref.invalidate(customerListProvider);
+  ref.invalidate(totalDuesProvider);
 }
 
 Future<void> _openEditCustomer(
@@ -93,6 +102,8 @@ class CustomerDetailScreen extends ConsumerWidget {
     final ledgerAsync = ref.watch(customerLedgerProvider(customerId));
 
     final body = customerAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorState(
         message: l10n.loadingFailed,
@@ -102,9 +113,15 @@ class CustomerDetailScreen extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Embedded (web master-detail) has no app bar; surface the
-            // same actions inline.
-            if (embedded)
+            if (embedded) ...[
+              if (canEdit && customer.memberId.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _PortalStatusChip(memberId: customer.memberId),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Wrap(
@@ -121,48 +138,12 @@ class CustomerDetailScreen extends ConsumerWidget {
                           customerId: customerId,
                         ),
                       ),
-                    if (canRecordPayments)
-                      FilledButton.icon(
-                        icon: const Icon(
-                          Icons.point_of_sale_outlined,
-                          size: 18,
-                        ),
-                        label: Text(l10n.recordSale),
-                        onPressed: () => _openRecordSaleSheet(
-                          context,
-                          ref,
-                          customerId: customerId,
-                          customerName: customer.shopName,
-                        ),
-                      ),
-                    if (canRecordPayments && customer.balanceDue > 0)
-                      FilledButton.tonalIcon(
-                        icon: const Icon(Icons.payments_outlined, size: 18),
-                        label: Text(l10n.recordPayment),
-                        onPressed: () => _openRecordPaymentSheet(
-                          context,
-                          ref,
-                          customerId: customerId,
-                          customerName: customer.shopName,
-                        ),
-                      ),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.ios_share_outlined, size: 18),
                       label: Text(l10n.shareStatement),
                       onPressed: () =>
                           showStatementShareSheet(context, customer: customer),
                     ),
-                    if (canRecordPayments && customer.balanceDue <= 0)
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.payments_outlined, size: 18),
-                        label: Text(l10n.recordPayment),
-                        onPressed: () => _openRecordPaymentSheet(
-                          context,
-                          ref,
-                          customerId: customerId,
-                          customerName: customer.shopName,
-                        ),
-                      ),
                     if (canEdit)
                       OutlinedButton.icon(
                         icon: const Icon(Icons.lock_reset_outlined, size: 18),
@@ -181,6 +162,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+            ],
             Card(
               margin: const EdgeInsets.all(16),
               child: Padding(
@@ -209,9 +191,43 @@ class CustomerDetailScreen extends ConsumerWidget {
                     ],
                     if (customer.phone != null) Text(customer.phone!),
                     if (customer.address != null) Text(customer.address!),
-                    if (canEdit && customer.memberId.isNotEmpty) ...[
+                    if (canRecordPayments) ...[
                       const SizedBox(height: 12),
-                      _PortalStatusChip(memberId: customer.memberId),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => _openRecordSaleSheet(
+                                context,
+                                ref,
+                                customerId: customerId,
+                                customerName: customer.shopName,
+                              ),
+                              child: Text(
+                                l10n.recordSale,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.tonal(
+                              onPressed: () => _openRecordPaymentSheet(
+                                context,
+                                ref,
+                                customerId: customerId,
+                                customerName: customer.shopName,
+                              ),
+                              child: Text(
+                                l10n.recordPayment,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ],
                 ),
@@ -234,6 +250,8 @@ class CustomerDetailScreen extends ConsumerWidget {
             const Divider(height: 1),
             Expanded(
               child: ledgerAsync.when(
+                skipLoadingOnReload: true,
+                skipLoadingOnRefresh: true,
                 loading: () => const ListSkeleton(),
                 error: (e, _) => ErrorState(
                   message: l10n.loadingFailed,
@@ -293,42 +311,17 @@ class CustomerDetailScreen extends ConsumerWidget {
           error: (_, _) => Text(l10n.customers),
         ),
         actions: [
-          if (canRecordPayments) ...[
-            BsTouchTargets.ensureMin(
-              context: context,
-              child: IconButton.filledTonal(
-                tooltip: l10n.recordSale,
-                icon: const Icon(Icons.point_of_sale_outlined),
-                onPressed: () async {
-                  final customer = customerAsync.value;
-                  if (customer == null) return;
-                  await _openRecordSaleSheet(
-                    context,
-                    ref,
-                    customerId: customerId,
-                    customerName: customer.shopName,
-                  );
-                },
-              ),
-            ),
-            BsTouchTargets.ensureMin(
-              context: context,
-              child: IconButton.filledTonal(
-                tooltip: l10n.recordPayment,
-                icon: const Icon(Icons.payments_outlined),
-                onPressed: () async {
-                  final customer = customerAsync.value;
-                  if (customer == null) return;
-                  await _openRecordPaymentSheet(
-                    context,
-                    ref,
-                    customerId: customerId,
-                    customerName: customer.shopName,
-                  );
-                },
-              ),
-            ),
-          ],
+          customerAsync.maybeWhen(
+            data: (c) => canEdit && c.memberId.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Center(
+                      child: _PortalStatusChip(memberId: c.memberId),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+            orElse: () => const SizedBox.shrink(),
+          ),
           _CustomerMoreMenu(
             customerId: customerId,
             canEdit: canEdit,
@@ -368,12 +361,15 @@ class _PortalStatusChip extends ConsumerWidget {
       data: (member) {
         if (member == null) return const SizedBox.shrink();
         return Chip(
+          visualDensity: VisualDensity.compact,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
           avatar: Icon(
             member.isActive ? Icons.login : Icons.lock_outline,
             size: 16,
           ),
           label: Text(
             member.isActive ? l10n.portalActive : l10n.portalDisabled,
+            style: Theme.of(context).textTheme.labelSmall,
           ),
         );
       },

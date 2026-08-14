@@ -1595,10 +1595,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allOrders => 'All';
 
   @override
-  String get portalActive => 'Portal login: Active';
+  String get portalActive => 'Login: Active';
 
   @override
-  String get portalDisabled => 'Portal login: Disabled';
+  String get portalDisabled => 'Login: Disabled';
 
   @override
   String get enablePortalLogin => 'Enable portal login';

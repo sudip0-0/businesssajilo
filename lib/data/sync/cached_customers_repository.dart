@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drift/drift.dart';
 
+import '../../core/utils/ledger_balance.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../local/app_database.dart';
@@ -103,7 +104,125 @@ class CachedCustomersRepository implements CustomersRepository {
     String customerId, {
     int offset = 0,
     int? limit,
-  }) => _remote.ledger(customerId, offset: offset, limit: limit);
+  }) async {
+    List<LedgerEntry> remoteEntries = const [];
+    var remoteOk = false;
+    try {
+      remoteEntries = await _remote.ledger(
+        customerId,
+        offset: offset,
+        limit: limit,
+      );
+      remoteOk = true;
+    } catch (_) {
+      // Offline / remote failure: build from local bills + payments.
+    }
+
+    if (!remoteOk) {
+      final local = await _localLedgerEntries(customerId);
+      local.sort(compareLedgerEntries);
+      if (limit != null) {
+        if (offset >= local.length) return const [];
+        final end = (offset + limit).clamp(0, local.length);
+        return local.sublist(offset, end);
+      }
+      return withRunningBalance(local);
+    }
+
+    final extras = await _unsyncedLocalLedgerEntries(
+      customerId,
+      knownRefIds: {
+        for (final e in remoteEntries)
+          if (e.refId != null) e.refId!,
+      },
+    );
+    if (extras.isEmpty) return remoteEntries;
+
+    if (limit != null) {
+      // New local rows are the newest; attach them on the last page.
+      if (remoteEntries.length < limit) {
+        final merged = [...remoteEntries, ...extras]
+          ..sort(compareLedgerEntries);
+        return merged;
+      }
+      return remoteEntries;
+    }
+
+    return withRunningBalance([
+      for (final e in remoteEntries) e.copyWith(runningBalance: 0),
+      ...extras,
+    ]);
+  }
+
+  /// Bills and payments that exist locally but are not yet in [knownRefIds]
+  /// (typically the remote ledger).
+  Future<List<LedgerEntry>> _unsyncedLocalLedgerEntries(
+    String customerId, {
+    required Set<String> knownRefIds,
+  }) async {
+    final entries = <LedgerEntry>[];
+    final bills = await (_db.select(
+      _db.localBills,
+    )..where((b) => b.customerId.equals(customerId))).get();
+    for (final b in bills) {
+      if (knownRefIds.contains(b.id)) continue;
+      entries.add(
+        LedgerEntry(
+          customerId: customerId,
+          businessId: b.businessId,
+          occurredAt: b.createdAt,
+          entryType: 'bill',
+          description: b.billNo,
+          debitPaisa: b.grandTotal,
+          refId: b.id,
+        ),
+      );
+    }
+    final payments = await (_db.select(
+      _db.localPayments,
+    )..where((p) => p.customerId.equals(customerId))).get();
+    for (final p in payments) {
+      if (knownRefIds.contains(p.id)) continue;
+      entries.add(
+        LedgerEntry(
+          customerId: customerId,
+          businessId: p.businessId,
+          occurredAt: p.createdAt,
+          entryType: 'payment',
+          description: p.refNote ?? p.method,
+          creditPaisa: p.amount,
+          refId: p.id,
+        ),
+      );
+    }
+    return entries;
+  }
+
+  Future<List<LedgerEntry>> _localLedgerEntries(String customerId) async {
+    final customer = await get(customerId);
+    final entries = <LedgerEntry>[];
+    if (customer.openingBalance != 0) {
+      entries.add(
+        LedgerEntry(
+          customerId: customer.id,
+          businessId: customer.businessId,
+          occurredAt:
+              customer.createdAt ??
+              DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+          entryType: 'opening_balance',
+          description: '',
+          debitPaisa: customer.openingBalance > 0 ? customer.openingBalance : 0,
+          creditPaisa: customer.openingBalance < 0
+              ? -customer.openingBalance
+              : 0,
+        ),
+      );
+    }
+    entries.addAll(
+      await _unsyncedLocalLedgerEntries(customerId, knownRefIds: const {}),
+    );
+    return entries;
+  }
 
   @override
   Future<Customer> update({

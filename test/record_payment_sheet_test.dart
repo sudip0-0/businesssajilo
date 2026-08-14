@@ -49,4 +49,39 @@ void main() {
 
     expect(find.text('Amount must be greater than zero'), findsOneWidget);
   });
+
+  testWidgets('record payment sheet focuses payment amount', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        const RecordPaymentSheet(customerId: 'c1', customerName: 'Ram Store'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    final amountField = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
+    expect(amountField.focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('payment method opens a sheet picker, not an overlay', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        const RecordPaymentSheet(customerId: 'c1', customerName: 'Ram Store'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cheque'), findsNothing);
+
+    await tester.tap(find.text('Cash'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cheque'), findsOneWidget);
+  });
 }

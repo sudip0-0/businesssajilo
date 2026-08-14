@@ -55,6 +55,7 @@ final recentCustomersProvider = FutureProvider.autoDispose<List<Customer>>((
 
 final customerDetailProvider = FutureProvider.autoDispose
     .family<Customer, String>((ref, id) {
+      ref.watch(customersRevisionProvider);
       final role = ref.watch(authProvider).value?.member?.role;
       final includeBalances = role?.canViewCustomerBalance ?? false;
       return ref
@@ -64,6 +65,7 @@ final customerDetailProvider = FutureProvider.autoDispose
 
 final customerLedgerProvider = FutureProvider.autoDispose
     .family<List<LedgerEntry>, String>((ref, id) {
+      ref.watch(customersRevisionProvider);
       return ref.watch(customersRepositoryProvider).ledger(id);
     });
 

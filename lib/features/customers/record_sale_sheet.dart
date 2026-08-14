@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
+import '../../core/ui/sheet_select_field.dart';
 import '../../core/ui/submit_action.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
@@ -127,20 +128,12 @@ class _RecordSaleSheetState extends ConsumerState<RecordSaleSheet> {
               ),
               if (_paidNow) ...[
                 const SizedBox(height: 4),
-                DropdownButtonFormField<PaymentMethod>(
-                  decoration: InputDecoration(labelText: l10n.paymentMethod),
-                  initialValue: _method,
-                  items: PaymentMethod.values
-                      .map(
-                        (m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(paymentMethodLabel(l10n, m)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) setState(() => _method = v);
-                  },
+                SheetSelectField<PaymentMethod>(
+                  label: l10n.paymentMethod,
+                  value: _method,
+                  items: PaymentMethod.values,
+                  itemLabel: (m) => paymentMethodLabel(l10n, m),
+                  onChanged: (v) => setState(() => _method = v),
                 ),
               ],
               const SizedBox(height: 24),
