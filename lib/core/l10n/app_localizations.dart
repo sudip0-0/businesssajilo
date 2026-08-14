@@ -3613,6 +3613,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Outstanding dues reminder — {amount}'**
   String notifDuesReminderGenericAmount(String amount);
+
+  /// No description provided for @ageDaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String ageDaysCount(int count);
+
+  /// No description provided for @noSalesYetToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales yet today'**
+  String get noSalesYetToday;
 }
 
 class _AppLocalizationsDelegate

@@ -30,21 +30,30 @@ class AdaptiveScaffold extends StatelessWidget {
     final wide = isWideLayout(context);
     final title = selectedIndex < titles.length ? titles[selectedIndex] : '';
 
+    final appBar = AppBar(
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      titleSpacing: 16,
+      actionsPadding: const EdgeInsets.only(right: 4),
+      actions: actions,
+    );
+
     if (!wide) {
       return Scaffold(
-        appBar: AppBar(title: Text(title), actions: actions),
+        appBar: appBar,
         body: body,
         floatingActionButton: floatingActionButton,
         bottomNavigationBar: NavigationBar(
           selectedIndex: selectedIndex,
           onDestinationSelected: onDestinationSelected,
           destinations: destinations,
+          height: 64,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(title), actions: actions),
+      appBar: appBar,
       floatingActionButton: floatingActionButton,
       body: Row(
         children: [

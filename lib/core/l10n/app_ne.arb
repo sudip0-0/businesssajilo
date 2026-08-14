@@ -664,5 +664,7 @@
   "notifDuesReminder": "ग्राहक {customer} बाँकी रिमाइन्डर — {amount}",
   "notifDuesReminderNamed": "ग्राहक {customer} बाँकी रिमाइन्डर",
   "notifDuesReminderGeneric": "बाँकी रकम रिमाइन्डर",
-  "notifDuesReminderGenericAmount": "बाँकी रकम रिमाइन्डर — {amount}"
+  "notifDuesReminderGenericAmount": "बाँकी रकम रिमाइन्डर — {amount}",
+  "ageDaysCount": "{count, plural, =1{१ दिन} other{{count} दिन}}",
+  "noSalesYetToday": "आज बिक्री भएको छैन"
 }

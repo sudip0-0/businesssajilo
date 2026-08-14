@@ -174,18 +174,24 @@ abstract final class AppTheme {
       fontFamily: 'Inter',
       fontFamilyFallback: const ['Noto Sans Devanagari'],
       navigationBarTheme: NavigationBarThemeData(
+        height: 64,
         indicatorColor: BsColors.secondary.withValues(alpha: 0.12),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final style = _textTheme.labelSmall?.copyWith(
+            fontSize: 11,
+            height: 1.2,
+          );
           if (states.contains(WidgetState.selected)) {
-            return _textTheme.labelLarge?.copyWith(color: BsColors.secondary);
+            return style?.copyWith(color: BsColors.secondary);
           }
-          return _textTheme.labelLarge;
+          return style;
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: BsColors.secondary);
+            return const IconThemeData(color: BsColors.secondary, size: 24);
           }
-          return IconThemeData(color: scheme.onSurface);
+          return IconThemeData(color: scheme.onSurface, size: 24);
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(

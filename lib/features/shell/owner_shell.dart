@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/ui/locale_toggle.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
 import '../billing/providers.dart';
@@ -187,7 +186,6 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
       destinations: wide ? destinations : mobileDestinations,
       titles: wide ? titles : mobileTitles,
       actions: [
-        const LocaleToggle(compact: true),
         IconButton(
           tooltip: l10n.globalSearch,
           onPressed: () => showGlobalSearch(context, ref),

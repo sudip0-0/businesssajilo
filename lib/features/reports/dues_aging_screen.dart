@@ -51,29 +51,42 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
                   icon: const Icon(Icons.download_outlined),
                 ),
               ),
-            Row(
-              children: [
-                Expanded(
-                  child: _BucketCard(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stackBuckets = constraints.maxWidth < 360;
+                final cards = [
+                  _BucketCard(
                     label: l10n.aging0to30,
                     amount: report.bucket0to30,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _BucketCard(
+                  _BucketCard(
                     label: l10n.aging31to60,
                     amount: report.bucket31to60,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _BucketCard(
+                  _BucketCard(
                     label: l10n.aging60plus,
                     amount: report.bucket60plus,
                   ),
-                ),
-              ],
+                ];
+                if (stackBuckets) {
+                  return Column(
+                    children: [
+                      for (var i = 0; i < cards.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 8),
+                        cards[i],
+                      ],
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    for (var i = 0; i < cards.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      Expanded(child: cards[i]),
+                    ],
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
             if (report.customers.isEmpty)
@@ -122,10 +135,22 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
               )
             else
               ...sorted.map(
-                (c) => ListTile(
-                  title: Text(c.shopName),
-                  subtitle: Text('${c.ageDays} ${l10n.ageDays}'),
-                  trailing: MoneyText(Paisa(c.balanceDue), showPaisa: false),
+                (c) => Column(
+                  children: [
+                    ListTile(
+                      dense: true,
+                      visualDensity: VisualDensity.compact,
+                      title: Text(c.shopName),
+                      subtitle: Text(l10n.ageDaysCount(c.ageDays)),
+                      trailing: MoneyText(
+                        Paisa(c.balanceDue),
+                        showPaisa: false,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Divider(height: 1),
+                  ],
                 ),
               ),
           ],
@@ -191,7 +216,19 @@ class _BucketCard extends StatelessWidget {
           children: [
             Text(label, style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 4),
-            MoneyText(Paisa(amount), showPaisa: false),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: MoneyText(
+                Paisa(amount),
+                showPaisa: false,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
           ],
         ),
       ),

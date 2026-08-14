@@ -101,6 +101,8 @@ class BsStatTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.outline,
                   ),

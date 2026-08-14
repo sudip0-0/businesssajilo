@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
-import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/money.dart';
 import '../customers/customer_ledger_screen.dart';
 import '../customers/providers.dart';
@@ -73,7 +72,6 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
       titles: [l10n.dashboard, l10n.catalog, l10n.myOrders, l10n.myDues],
       actions: const [
         CartAction(),
-        LocaleToggle(compact: true),
         NotificationBellAction(),
         AccountAction(),
         LogoutAction(),

@@ -1851,4 +1851,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifDuesReminderGenericAmount(String amount) {
     return 'Outstanding dues reminder — $amount';
   }
+
+  @override
+  String ageDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noSalesYetToday => 'No sales yet today';
 }

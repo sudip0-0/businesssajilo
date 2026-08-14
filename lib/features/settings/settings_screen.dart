@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../app.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/ui/locale_toggle.dart';
+import '../../core/ui/sync_badge.dart';
+import '../../core/utils/bs_date.dart';
+import '../../data/sync/sync_providers.dart';
 import '../auth/providers/auth_provider.dart';
 import '../onboarding/demo_data_actions.dart';
 import '../sync/pending_sync_screen.dart';
@@ -37,37 +40,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = ref.watch(localeProvider);
 
     return ListView(
       children: [
         ListTile(
           title: Text(l10n.language),
           subtitle: Text(
-            locale.languageCode == 'ne' ? l10n.nepali : l10n.english,
+            Localizations.localeOf(context).languageCode == 'ne'
+                ? l10n.nepali
+                : l10n.english,
           ),
-          trailing: SegmentedButton<String>(
-            segments: [
-              ButtonSegment(value: 'en', label: Text(l10n.english)),
-              ButtonSegment(value: 'ne', label: Text(l10n.nepali)),
-            ],
-            selected: {locale.languageCode},
-            onSelectionChanged: (selected) {
-              final code = selected.first;
-              ref.read(localeProvider.notifier).setLocale(Locale(code));
-            },
+          trailing: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: LocaleToggle(compact: true),
           ),
         ),
         const Divider(height: 1),
-        ListTile(
-          leading: const Icon(Icons.cloud_sync_outlined),
-          title: Text(l10n.pendingSyncItems),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PendingSyncScreen()),
-          ),
-        ),
+        const _SyncStatusTile(),
         ListTile(
           leading: const Icon(Icons.dataset_outlined),
           title: Text(l10n.loadDemoData),
@@ -121,6 +110,55 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+}
+
+class _SyncStatusTile extends ConsumerWidget {
+  const _SyncStatusTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final statusAsync = ref.watch(syncStatusProvider);
+
+    void openPending() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const PendingSyncScreen()),
+      );
+    }
+
+    return statusAsync.when(
+      loading: () => ListTile(
+        leading: const Icon(Icons.cloud_sync_outlined),
+        title: Text(l10n.syncStatus),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: openPending,
+      ),
+      error: (_, _) => ListTile(
+        leading: const Icon(Icons.cloud_off),
+        title: Text(l10n.offline),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: openPending,
+      ),
+      data: (status) {
+        final appearance = SyncBadgeAppearance.from(
+          l10n: l10n,
+          state: status.state,
+          pendingCount: status.pendingCount,
+        );
+        final lastSync = status.lastSuccessAt;
+        return ListTile(
+          leading: Icon(appearance.icon, color: appearance.color),
+          title: Text(appearance.label),
+          subtitle: lastSync == null
+              ? null
+              : Text(l10n.lastSyncAt(BsDate.both(lastSync))),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: openPending,
+        );
+      },
     );
   }
 }

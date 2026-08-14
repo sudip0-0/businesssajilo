@@ -72,11 +72,16 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
       onRefresh: _refresh,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(BsSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          BsSpacing.lg,
+          BsSpacing.sm,
+          BsSpacing.lg,
+          BsSpacing.xxl,
+        ),
         children: [
           Text(
             l10n.namasteGreeting(name),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: BsColors.textCharcoal,
             ),
@@ -109,6 +114,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 icon: Icons.payments_outlined,
                 trend: stats.when(
                   data: (d) {
+                    if (d.todaySales == 0) return null;
                     final pct = d.salesTrendPercent;
                     if (pct == null) return null;
                     return pct >= 0
@@ -120,6 +126,11 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                 ),
                 trendLabel: stats.when(
                   data: (d) => formatDashboardTrendPercent(d),
+                  loading: () => null,
+                  error: (_, _) => null,
+                ),
+                subtitle: stats.when(
+                  data: (d) => d.todaySales == 0 ? l10n.noSalesYetToday : null,
                   loading: () => null,
                   error: (_, _) => null,
                 ),

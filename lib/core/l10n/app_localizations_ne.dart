@@ -1848,4 +1848,18 @@ class AppLocalizationsNe extends AppLocalizations {
   String notifDuesReminderGenericAmount(String amount) {
     return 'बाँकी रकम रिमाइन्डर — $amount';
   }
+
+  @override
+  String ageDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दिन',
+      one: '१ दिन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noSalesYetToday => 'आज बिक्री भएको छैन';
 }

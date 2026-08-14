@@ -210,30 +210,36 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.createNewBill),
+          title: Text(
+            l10n.createNewBill,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           actions: [
-            TextButton(
-              onPressed: _loading ? null : _copyLastBill,
-              child: Text(l10n.copyLastBill),
-            ),
-            TextButton(
-              onPressed: _loading
-                  ? null
-                  : () async {
-                      if (!_isDirty) {
-                        Navigator.pop(context);
-                        return;
-                      }
-                      await _onWillPop();
-                    },
-              child: Text(l10n.cancel),
+            PopupMenuButton<String>(
+              tooltip: l10n.more,
+              onSelected: (value) {
+                if (value == 'copy') _copyLastBill();
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  enabled: !_loading,
+                  value: 'copy',
+                  child: Text(l10n.copyLastBill),
+                ),
+              ],
             ),
           ],
         ),
         body: body,
         bottomNavigationBar: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(BsSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              BsSpacing.lg,
+              BsSpacing.sm,
+              BsSpacing.lg,
+              BsSpacing.sm,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

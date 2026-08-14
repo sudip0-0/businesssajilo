@@ -744,5 +744,12 @@
     "placeholders": {
       "amount": { "type": "String" }
     }
-  }
+  },
+  "ageDaysCount": "{count, plural, =1{1 day} other{{count} days}}",
+  "@ageDaysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noSalesYetToday": "No sales yet today"
 }

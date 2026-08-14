@@ -55,6 +55,9 @@ class LocaleToggle extends ConsumerWidget {
       child = SizedBox(width: double.infinity, child: button);
     }
 
+    if (alignment == Alignment.center && !fullWidth) {
+      return child;
+    }
     return Align(alignment: alignment, child: child);
   }
 }

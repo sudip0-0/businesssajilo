@@ -141,9 +141,15 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     };
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _BillSortField.date => (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        _BillSortField.date =>
+          (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+          ),
         _BillSortField.amount => a.grandTotal.compareTo(b.grandTotal),
-        _BillSortField.customer => (a.customerShopName ?? '').toLowerCase().compareTo((b.customerShopName ?? '').toLowerCase()),
+        _BillSortField.customer =>
+          (a.customerShopName ?? '').toLowerCase().compareTo(
+            (b.customerShopName ?? '').toLowerCase(),
+          ),
       };
       return _sortAscending ? cmp : -cmp;
     });
@@ -280,10 +286,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         return const ListSkeleton();
       }
       if (search.phase == ListSearchPhase.error) {
-        return ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: search.retry,
-        );
+        return ErrorState(message: l10n.loadingFailed, onRetry: search.retry);
       }
       final results = _applyFilters(search.results ?? const <Bill>[]);
       if (results.isEmpty) {
@@ -302,6 +305,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         );
       }
       return ListView.separated(
+        padding: const EdgeInsets.only(bottom: BsSpacing.xxl),
         itemCount: results.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
@@ -327,15 +331,14 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         icon: Icons.receipt_long_outlined,
         message: filtering ? l10n.noMatchingResults : l10n.noBills,
         actionLabel: filtering ? l10n.periodAllDates : l10n.newBill,
-        onAction: filtering
-            ? _clearFilters
-            : () => _openForm(context),
+        onAction: filtering ? _clearFilters : () => _openForm(context),
       );
     }
     return RefreshIndicator(
       onRefresh: () => pager.refresh(),
       child: ListView.separated(
         controller: _scrollController,
+        padding: const EdgeInsets.only(bottom: BsSpacing.xxl),
         itemCount: filtered.length + (pager.hasMore ? 1 : 0),
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {

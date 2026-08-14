@@ -12,6 +12,9 @@ class MoneyText extends StatelessWidget {
     this.style,
     this.colorBySign = false,
     this.showPaisa = true,
+    this.maxLines,
+    this.overflow,
+    this.softWrap,
   });
 
   final Paisa amount;
@@ -20,6 +23,9 @@ class MoneyText extends StatelessWidget {
   /// Dues red, credits green — never by color alone, callers add icons/labels.
   final bool colorBySign;
   final bool showPaisa;
+  final int? maxLines;
+  final TextOverflow? overflow;
+  final bool? softWrap;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +55,13 @@ class MoneyText extends StatelessWidget {
     return Semantics(
       label: formatted,
       excludeSemantics: true,
-      child: Text(formatted, style: effective),
+      child: Text(
+        formatted,
+        style: effective,
+        maxLines: maxLines,
+        overflow: overflow,
+        softWrap: softWrap,
+      ),
     );
   }
 }

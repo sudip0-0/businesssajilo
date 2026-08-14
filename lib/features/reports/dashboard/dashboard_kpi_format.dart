@@ -20,8 +20,9 @@ String formatDashboardKpiCount(AppLocalizations l10n, int? count) {
   return '$count';
 }
 
-/// Trend percent label for sales KPI (null when unavailable).
+/// Trend percent label for sales KPI (null when unavailable or no sales today).
 String? formatDashboardTrendPercent(OwnerDashboardStats stats) {
+  if (stats.todaySales == 0) return null;
   final pct = stats.salesTrendPercent;
   if (pct == null) return null;
   return '${pct.abs().toStringAsFixed(0)}%';

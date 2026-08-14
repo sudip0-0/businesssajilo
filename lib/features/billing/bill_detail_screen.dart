@@ -18,6 +18,7 @@ import '../customers/providers.dart';
 import 'credit_note_form_screen.dart';
 import 'credit_note_providers.dart';
 import 'invoice_export_actions.dart';
+import 'bill_lines_table.dart';
 import 'providers.dart';
 
 class BillDetailScreen extends ConsumerStatefulWidget {
@@ -527,20 +528,8 @@ class _BillLinesCard extends StatelessWidget {
             const SizedBox(height: 14),
             ClipRRect(
               borderRadius: BorderRadius.circular(BsRadii.lg),
-              child: Column(
-                children: [
-                  ColoredBox(
-                    color: scheme.surfaceContainerLow,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      child: _BillLinesHeader(l10n: l10n),
-                    ),
-                  ),
-                  if (bill.items.isEmpty)
-                    Padding(
+              child: bill.items.isEmpty
+                  ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Text(
                         l10n.noBillLines,
@@ -549,31 +538,21 @@ class _BillLinesCard extends StatelessWidget {
                         ),
                       ),
                     )
-                  else
-                    for (var i = 0; i < bill.items.length; i++) ...[
-                      if (i > 0)
-                        Divider(height: 1, color: scheme.outlineVariant),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        child: _BillLineRow(
-                          name: bill.items[i].nameSnapshot,
-                          qty: '${bill.items[i].qty}',
-                          rate: formatNpr(
-                            Paisa(bill.items[i].rate),
-                            showPaisa: false,
+                  : BillLinesTable(
+                      l10n: l10n,
+                      lines: [
+                        for (final item in bill.items)
+                          BillLineView(
+                            name: item.nameSnapshot,
+                            qty: '${item.qty}',
+                            rate: formatNpr(Paisa(item.rate), showPaisa: false),
+                            amount: formatNpr(
+                              Paisa(item.lineTotal),
+                              showPaisa: false,
+                            ),
                           ),
-                          amount: formatNpr(
-                            Paisa(bill.items[i].lineTotal),
-                            showPaisa: false,
-                          ),
-                        ),
-                      ),
-                    ],
-                ],
-              ),
+                      ],
+                    ),
             ),
             const SizedBox(height: 16),
             Align(
@@ -707,94 +686,6 @@ class _CustomerContactLine extends ConsumerWidget {
         );
       },
       orElse: () => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _BillLinesHeader extends StatelessWidget {
-  const _BillLinesHeader({required this.l10n});
-
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-      fontWeight: FontWeight.w700,
-    );
-    return Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            l10n.productName,
-            style: style,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        SizedBox(
-          width: 56,
-          child: Text(l10n.qty, style: style, textAlign: TextAlign.center),
-        ),
-        SizedBox(
-          width: 96,
-          child: Text(l10n.rate, style: style, textAlign: TextAlign.end),
-        ),
-        SizedBox(
-          width: 104,
-          child: Text(l10n.amountRs, style: style, textAlign: TextAlign.end),
-        ),
-      ],
-    );
-  }
-}
-
-class _BillLineRow extends StatelessWidget {
-  const _BillLineRow({
-    required this.name,
-    required this.qty,
-    required this.rate,
-    required this.amount,
-  });
-
-  final String name;
-  final String qty;
-  final String rate;
-  final String amount;
-
-  @override
-  Widget build(BuildContext context) {
-    final body = Theme.of(context).textTheme.bodyMedium;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 4,
-          child: Text(
-            name,
-            style: body,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        SizedBox(
-          width: 56,
-          child: Text(qty, style: body, textAlign: TextAlign.center),
-        ),
-        SizedBox(
-          width: 96,
-          child: Text(rate, style: body, textAlign: TextAlign.end),
-        ),
-        SizedBox(
-          width: 104,
-          child: Text(
-            amount,
-            style: body?.copyWith(fontWeight: FontWeight.w600),
-            textAlign: TextAlign.end,
-          ),
-        ),
-      ],
     );
   }
 }
