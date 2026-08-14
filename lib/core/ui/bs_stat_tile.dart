@@ -38,6 +38,8 @@ class BsStatTile extends StatelessWidget {
     return Material(
       color: Colors.white,
       elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BsRadii.lg),
         side: const BorderSide(color: BsColors.border),
@@ -49,8 +51,8 @@ class BsStatTile extends StatelessWidget {
           constraints: BoxConstraints(minHeight: minHeight),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.circular(BsRadii.lg),
-            boxShadow: BsElevation.level2,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
