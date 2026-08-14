@@ -266,8 +266,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deactivate => 'Deactivate';
 
   @override
-  String get deactivateConfirm =>
-      'Deactivate this member? They will no longer be able to log in.';
+  String get deactivateConfirm => 'Deactivate this member? They will no longer be able to log in.';
 
   @override
   String get active => 'Active';
@@ -320,8 +319,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadSampleExcel => 'Download sample Excel';
 
   @override
-  String get importExcelHint =>
-      'Download the sample file, fill in your products (prices in NPR), then upload the Excel file.';
+  String get importExcelHint => 'Download the sample file, fill in your products (prices in NPR), then upload the Excel file.';
 
   @override
   String get chooseExcelFile => 'Choose Excel file';
@@ -422,8 +420,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deactivateProduct => 'Deactivate product';
 
   @override
-  String get deactivateProductConfirm =>
-      'Deactivate this product? It will be hidden from sales.';
+  String get deactivateProductConfirm => 'Deactivate this product? It will be hidden from sales.';
 
   @override
   String get imageOptional => 'Product image (optional)';
@@ -435,8 +432,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get initialQuantity => 'Initial quantity';
 
   @override
-  String get initialQuantityHint =>
-      'Stock on hand when the product is first added';
+  String get initialQuantityHint => 'Stock on hand when the product is first added';
 
   @override
   String get piece => 'Piece';
@@ -508,8 +504,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paidNow => 'Paid now';
 
   @override
-  String get paidNowHint =>
-      'Record payment with this sale so balance stays unchanged';
+  String get paidNowHint => 'Record payment with this sale so balance stays unchanged';
 
   @override
   String get paymentMethod => 'Payment method';
@@ -903,8 +898,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadDemoData => 'Load sample data';
 
   @override
-  String get loadDemoDataConfirm =>
-      'Add sample products and a customer to get started?';
+  String get loadDemoDataConfirm => 'Add sample products and a customer to get started?';
 
   @override
   String get demoDataLoaded => 'Sample data added';
@@ -913,12 +907,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get demoDataSkipped => 'Sample data already exists';
 
   @override
-  String get accountDeactivated =>
-      'This account has been deactivated. Contact your business owner.';
+  String get accountDeactivated => 'This account has been deactivated. Contact your business owner.';
 
   @override
-  String get configError =>
-      'App is not configured. Missing SUPABASE_URL / SUPABASE_ANON_KEY.';
+  String get configError => 'App is not configured. Missing SUPABASE_URL / SUPABASE_ANON_KEY.';
 
   @override
   String get pageNotFound => 'Page not found';
@@ -950,8 +942,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noStaff => 'No staff members yet';
 
   @override
-  String get selectCustomerForCredit =>
-      'Select a customer for credit or partial bills';
+  String get selectCustomerForCredit => 'Select a customer for credit or partial bills';
 
   @override
   String get amountExceedsTotal => 'Amount cannot exceed the grand total';
@@ -978,12 +969,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageSendFailed => 'Message could not be sent. Try again.';
 
   @override
-  String get openingBalanceLocked =>
-      'Opening balance can only be set when the customer is created';
+  String get openingBalanceLocked => 'Opening balance can only be set when the customer is created';
 
   @override
-  String get overpaymentWarning =>
-      'This exceeds the due amount and will create a credit balance.';
+  String get overpaymentWarning => 'This exceeds the due amount and will create a credit balance.';
 
   @override
   String get creditBalance => 'Credit';
@@ -997,8 +986,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get removedUnavailableItems =>
-      'Some items were removed because they are no longer available';
+  String get removedUnavailableItems => 'Some items were removed because they are no longer available';
 
   @override
   String get orderPlaceFailed => 'Could not place the order. Try again.';
@@ -1021,15 +1009,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorValidation => 'Please check the form and try again.';
 
   @override
-  String get errorConflict =>
-      'This record already exists or conflicts with another.';
+  String get errorConflict => 'This record already exists or conflicts with another.';
 
   @override
   String get errorNotConfigured => 'App is not configured. Contact support.';
 
   @override
-  String get quoteRatesLoadFailed =>
-      'Some product rates could not be loaded. Enter them manually.';
+  String get quoteRatesLoadFailed => 'Some product rates could not be loaded. Enter them manually.';
 
   @override
   String get valueUnavailable => '—';
@@ -1079,8 +1065,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dashboardTodaySummary =>
-      'Here\'s what\'s happening in your business today.';
+  String get dashboardTodaySummary => 'Here\'s what\'s happening in your business today.';
 
   @override
   String get salesPerformance => 'Sales Performance';
@@ -1104,15 +1089,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addNewCustomer => 'Add New Customer';
 
   @override
-  String get addCustomerSubtitle =>
-      'Create a new profile for your business client to manage credit and sales.';
+  String get addCustomerSubtitle => 'Create a new profile for your business client to manage credit and sales.';
 
   @override
   String get customerIdentity => 'Customer Identity';
 
   @override
-  String get customerIdentityHint =>
-      'Fill in the basic and legal information of the business.';
+  String get customerIdentityHint => 'Fill in the basic and legal information of the business.';
 
   @override
   String get contactAndLocation => 'Contact & Location';
@@ -1148,8 +1131,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createNewBill => 'Create New Bill';
 
   @override
-  String get createBillSubtitle =>
-      'Create a bill for a walk-in or credit customer.';
+  String get createBillSubtitle => 'Create a bill for a walk-in or credit customer.';
 
   @override
   String get saveAsDue => 'Save as Due';
@@ -1158,8 +1140,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unsavedBillTitle => 'Discard this bill?';
 
   @override
-  String get unsavedBillMessage =>
-      'You have unsaved changes. If you leave now, this bill will be lost.';
+  String get unsavedBillMessage => 'You have unsaved changes. If you leave now, this bill will be lost.';
 
   @override
   String get discardAndLeave => 'Discard';
@@ -1183,8 +1164,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smeManagement => 'SME Management';
 
   @override
-  String get globalSearchHint =>
-      'Type at least 2 characters to search products, customers, and bills.';
+  String get globalSearchHint => 'Type at least 2 characters to search products, customers, and bills.';
 
   @override
   String get export => 'Export';
@@ -1208,6 +1188,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get billDate => 'Bill Date';
 
   @override
+  String get billTime => 'Bill Time';
+
+  @override
   String get customerName => 'Customer Name';
 
   @override
@@ -1220,16 +1203,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taxableAmount => 'Taxable Amount';
 
   @override
-  String get verificationTip =>
-      'Always verify the PAN/VAT number for tax compliance.';
+  String get verificationTip => 'Always verify the PAN/VAT number for tax compliance.';
 
   @override
-  String get creditPolicyTip =>
-      'Set realistic credit limits based on transaction history.';
+  String get creditPolicyTip => 'Set realistic credit limits based on transaction history.';
 
   @override
-  String get privacyTip =>
-      'All customer data is encrypted and stored securely.';
+  String get privacyTip => 'All customer data is encrypted and stored securely.';
 
   @override
   String newBillCreated(String billNo) {
@@ -1256,8 +1236,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portalAccess => 'Portal Access';
 
   @override
-  String get portalAccessHint =>
-      'Credentials for the customer to log in and view orders.';
+  String get portalAccessHint => 'Credentials for the customer to log in and view orders.';
 
   @override
   String get amountNpr => 'Amount (NPR)';
@@ -1392,12 +1371,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get forgotPasswordPhoneHint =>
-      'Phone logins cannot reset by email. Ask your business owner to reset your password.';
+  String get forgotPasswordPhoneHint => 'Phone logins cannot reset by email. Ask your business owner to reset your password.';
 
   @override
-  String get resetPasswordEmailHint =>
-      'Enter your account email and we\'ll send a password reset link.';
+  String get resetPasswordEmailHint => 'Enter your account email and we\'ll send a password reset link.';
 
   @override
   String get sendResetLink => 'Send reset link';
@@ -1417,12 +1394,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get temporaryPassword => 'Temporary password';
 
   @override
-  String get temporaryPasswordHint =>
-      'Share this password with the member. They must choose a new one on next login.';
+  String get temporaryPasswordHint => 'Share this password with the member. They must choose a new one on next login.';
 
   @override
-  String get passwordResetDone =>
-      'Password reset. Existing sessions were signed out.';
+  String get passwordResetDone => 'Password reset. Existing sessions were signed out.';
 
   @override
   String get newPassword => 'New password';
@@ -1461,8 +1436,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setNewPasswordTitle => 'Set a new password';
 
   @override
-  String get setNewPasswordHint =>
-      'Your password was reset by the business owner. Choose a new password to continue.';
+  String get setNewPasswordHint => 'Your password was reset by the business owner. Choose a new password to continue.';
 
   @override
   String get account => 'Account';
@@ -1471,15 +1445,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccount => 'Delete my account';
 
   @override
-  String get deleteAccountWarning =>
-      'This permanently deletes your login. Order and payment records stay with the business. This cannot be undone.';
+  String get deleteAccountWarning => 'This permanently deletes your login. Order and payment records stay with the business. This cannot be undone.';
 
   @override
   String get deleteBusiness => 'Delete business';
 
   @override
-  String get deleteBusinessWarning =>
-      'This permanently deletes the business and ALL its data: products, bills, orders, customers, and every staff and customer login. This cannot be undone.';
+  String get deleteBusinessWarning => 'This permanently deletes the business and ALL its data: products, bills, orders, customers, and every staff and customer login. This cannot be undone.';
 
   @override
   String typeToConfirm(String word) {
@@ -1493,8 +1465,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmPasswordToDelete => 'Enter your password to confirm';
 
   @override
-  String get passwordRequiredToDelete =>
-      'Password is required to delete the business';
+  String get passwordRequiredToDelete => 'Password is required to delete the business';
 
   @override
   String get reorder => 'Reorder';
@@ -1560,8 +1531,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emptyFulfillment => 'No orders to fulfill';
 
   @override
-  String get syncErrorGeneric =>
-      'Could not sync. Check your connection and try again.';
+  String get syncErrorGeneric => 'Could not sync. Check your connection and try again.';
 
   @override
   String get sidebarExpand => 'Expand sidebar';
@@ -1579,8 +1549,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewAll => 'View all';
 
   @override
-  String get accountNotLinked =>
-      'Your account is not linked to a customer profile. Ask the owner for help.';
+  String get accountNotLinked => 'Your account is not linked to a customer profile. Ask the owner for help.';
 
   @override
   String get needsAction => 'Needs action';
@@ -1607,12 +1576,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disablePortalLogin => 'Disable portal login';
 
   @override
-  String get disablePortalConfirm =>
-      'This customer will not be able to sign in until portal login is re-enabled.';
+  String get disablePortalConfirm => 'This customer will not be able to sign in until portal login is re-enabled.';
 
   @override
-  String get enablePortalConfirm =>
-      'Re-enable portal login for this customer? You can set a new password next.';
+  String get enablePortalConfirm => 'Re-enable portal login for this customer? You can set a new password next.';
 
   @override
   String get reactivate => 'Reactivate';
@@ -1723,8 +1690,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oversellConfirmTitle => 'Sell beyond available stock?';
 
   @override
-  String get oversellConfirmBody =>
-      'Some lines sell more than the quantity on hand. Selling them will take stock negative.';
+  String get oversellConfirmBody => 'Some lines sell more than the quantity on hand. Selling them will take stock negative.';
 
   @override
   String get oversellContinue => 'Sell anyway';
@@ -1739,8 +1705,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get negativeAdjustTitle => 'Stock will go negative?';
 
   @override
-  String get negativeAdjustBody =>
-      'This adjustment will take stock below zero. Continue?';
+  String get negativeAdjustBody => 'This adjustment will take stock below zero. Continue?';
 
   @override
   String get continueAnyway => 'Continue anyway';
@@ -1755,29 +1720,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourStepProductTitle => 'Add a product';
 
   @override
-  String get tourStepProductBody =>
-      'Start with one item you sell — name, unit, and a reference rate.';
+  String get tourStepProductBody => 'Start with one item you sell — name, unit, and a reference rate.';
 
   @override
   String get tourStepCustomerTitle => 'Add a customer';
 
   @override
-  String get tourStepCustomerBody =>
-      'Create a retailer login so they can order, or bill walk-in customers at the counter.';
+  String get tourStepCustomerBody => 'Create a retailer login so they can order, or bill walk-in customers at the counter.';
 
   @override
   String get tourStepBillTitle => 'Create a bill';
 
   @override
-  String get tourStepBillBody =>
-      'Walk-in billing takes seconds. Quote-first orders work the same way once accepted.';
+  String get tourStepBillBody => 'Walk-in billing takes seconds. Quote-first orders work the same way once accepted.';
 
   @override
   String get tourStepPaymentTitle => 'Record a payment';
 
   @override
-  String get tourStepPaymentBody =>
-      'Collect cash, cheque, wallet or bank and keep the udharo ledger honest.';
+  String get tourStepPaymentBody => 'Collect cash, cheque, wallet or bank and keep the udharo ledger honest.';
 
   @override
   String get skip => 'Skip';

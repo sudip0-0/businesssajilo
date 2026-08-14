@@ -83,7 +83,7 @@ class InvoicePdfBuilder {
   }
 
   pw.Widget _buildSinglePage(InvoiceDocument doc, double scale) {
-    final dateStr = BsDate.both(doc.createdAt, locale: doc.locale);
+    final dateStr = BsDate.bothWithTime(doc.createdAt, locale: doc.locale);
     final fs = _Sizes(scale);
 
     return pw.Column(
@@ -98,7 +98,7 @@ class InvoicePdfBuilder {
   }
 
   List<pw.Widget> _buildOverflowBody(InvoiceDocument doc, double scale) {
-    final dateStr = BsDate.both(doc.createdAt, locale: doc.locale);
+    final dateStr = BsDate.bothWithTime(doc.createdAt, locale: doc.locale);
     final fs = _Sizes(scale);
 
     return [

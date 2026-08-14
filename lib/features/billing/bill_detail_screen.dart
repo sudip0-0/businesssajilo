@@ -72,11 +72,12 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
         onRetry: () => ref.invalidate(billDetailProvider(billId)),
       ),
       data: (bill) {
+        final locale = Localizations.localeOf(context);
         final dateStr = bill.createdAt != null
-            ? BsDate.both(
-                bill.createdAt!,
-                locale: Localizations.localeOf(context),
-              )
+            ? BsDate.both(bill.createdAt!, locale: locale)
+            : '—';
+        final timeStr = bill.createdAt != null
+            ? BsDate.time(bill.createdAt!, locale: locale)
             : '—';
         final creator =
             (bill.createdByName != null || bill.createdByRole != null)
@@ -103,6 +104,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                 l10n: l10n,
                 bill: bill,
                 dateStr: dateStr,
+                timeStr: timeStr,
                 creator: creator,
               ),
               const SizedBox(height: 16),
@@ -231,12 +233,14 @@ class _BillSummaryCard extends StatelessWidget {
     required this.l10n,
     required this.bill,
     required this.dateStr,
+    required this.timeStr,
     required this.creator,
   });
 
   final AppLocalizations l10n;
   final Bill bill;
   final String dateStr;
+  final String timeStr;
   final String? creator;
 
   @override
@@ -262,6 +266,7 @@ class _BillSummaryCard extends StatelessWidget {
               l10n: l10n,
               bill: bill,
               dateStr: dateStr,
+              timeStr: timeStr,
               iconWash: iconWash,
               iconColor: iconColor,
               alignEnd: wide,
@@ -404,6 +409,7 @@ class _SummaryRight extends StatelessWidget {
     required this.l10n,
     required this.bill,
     required this.dateStr,
+    required this.timeStr,
     required this.iconWash,
     required this.iconColor,
     required this.alignEnd,
@@ -412,6 +418,55 @@ class _SummaryRight extends StatelessWidget {
   final AppLocalizations l10n;
   final Bill bill;
   final String dateStr;
+  final String timeStr;
+  final Color iconWash;
+  final Color iconColor;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        BillStatusChip(bill.status),
+        const SizedBox(height: 20),
+        _SummaryMetaField(
+          icon: Icons.calendar_today_outlined,
+          label: l10n.billDate,
+          value: dateStr,
+          iconWash: iconWash,
+          iconColor: iconColor,
+          alignEnd: alignEnd,
+        ),
+        const SizedBox(height: 16),
+        _SummaryMetaField(
+          icon: Icons.schedule_outlined,
+          label: l10n.billTime,
+          value: timeStr,
+          iconWash: iconWash,
+          iconColor: iconColor,
+          alignEnd: alignEnd,
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryMetaField extends StatelessWidget {
+  const _SummaryMetaField({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.iconWash,
+    required this.iconColor,
+    required this.alignEnd,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
   final Color iconWash;
   final Color iconColor;
   final bool alignEnd;
@@ -425,13 +480,11 @@ class _SummaryRight extends StatelessWidget {
           ? CrossAxisAlignment.end
           : CrossAxisAlignment.start,
       children: [
-        BillStatusChip(bill.status),
-        const SizedBox(height: 20),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _IconBadge(
-              icon: Icons.calendar_today_outlined,
+              icon: icon,
               wash: iconWash,
               color: iconColor,
               size: 32,
@@ -439,7 +492,7 @@ class _SummaryRight extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              l10n.billDate,
+              label,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -448,7 +501,7 @@ class _SummaryRight extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          dateStr,
+          value,
           textAlign: alignEnd ? TextAlign.end : TextAlign.start,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,

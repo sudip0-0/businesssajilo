@@ -480,6 +480,7 @@
   "reportOverview": "Business analytics overview",
   "billNumber": "Bill Number",
   "billDate": "Bill Date",
+  "billTime": "Bill Time",
   "customerName": "Customer Name",
   "remarksTerms": "Remarks / Terms",
   "subtotal": "Subtotal",

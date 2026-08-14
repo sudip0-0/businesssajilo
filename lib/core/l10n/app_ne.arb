@@ -461,6 +461,7 @@
   "reportOverview": "व्यवसाय विश्लेषण अवलोकन",
   "billNumber": "बिल नम्बर",
   "billDate": "बिल मिति",
+  "billTime": "बिल समय",
   "customerName": "ग्राहकको नाम",
   "remarksTerms": "कैफियत / सर्त",
   "subtotal": "उप-योग",
