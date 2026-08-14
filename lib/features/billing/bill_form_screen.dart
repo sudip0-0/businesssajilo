@@ -10,15 +10,18 @@ import '../../core/ui/bs_success_button.dart';
 import '../../core/ui/error_state.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/products_repository.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
 import '../inventory/providers.dart';
 import 'bill_form_draft.dart';
+import 'bill_form_leave_confirm.dart';
 import 'bill_form_line_editor.dart';
 import 'bill_form_product_picker.dart';
 import 'bill_form_submit.dart';
 import 'bill_summary.dart';
 import 'copy_last_bill.dart';
+import 'providers.dart';
 
 class BillFormScreen extends ConsumerStatefulWidget {
   const BillFormScreen({super.key, this.embedded = false, this.onSaved});
@@ -60,6 +63,16 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     super.dispose();
   }
 
+  bool get _isDirty =>
+      _draft.lines.isNotEmpty ||
+      _draft.customerId != null ||
+      (_draft.guestName?.trim().isNotEmpty ?? false) ||
+      _draft.billDiscount != 0;
+
+  void _syncDirtyFlag() {
+    ref.read(billFormDirtyProvider.notifier).setDirty(_isDirty);
+  }
+
   Future<void> _copyLastBill() async {
     final l10n = AppLocalizations.of(context);
     setState(() => _loading = true);
@@ -82,6 +95,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         _billDiscountController.text = _draft.billDiscountText;
         _showCart = _draft.lines.isNotEmpty;
       });
+      _syncDirtyFlag();
       if (_draft.lines.isEmpty) {
         showBsSnackBar(context, message: l10n.noBillLines);
       }
@@ -110,21 +124,41 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       _draft.addProduct(product);
       _showCart = true;
     });
+    _syncDirtyFlag();
   }
 
-  Future<Bill?> _save({bool exportAfterSave = false}) async {
+  Future<Bill?> _save({
+    bool exportAfterSave = false,
+    BillStatus? forceStatus,
+  }) async {
     _syncDiscountText();
     setState(() => _loading = true);
     final bill = await submitBillForm(
       ref: ref,
       context: context,
       draft: _draft,
+      forceStatus: forceStatus,
       exportAfterSave: exportAfterSave,
-      onSaved: widget.onSaved,
+      onSaved: () {
+        ref.read(billFormDirtyProvider.notifier).clear();
+        widget.onSaved?.call();
+      },
       popOnSuccess: widget.onSaved == null && !widget.embedded,
     );
     if (mounted) setState(() => _loading = false);
     return bill;
+  }
+
+  Future<void> _onWillPop() async {
+    if (!_isDirty) {
+      ref.read(billFormDirtyProvider.notifier).clear();
+      return;
+    }
+    final leave = await confirmLeaveUnsavedBill(context);
+    if (leave && mounted) {
+      ref.read(billFormDirtyProvider.notifier).clear();
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -165,52 +199,115 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     }
 
     if (widget.embedded) return body;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.createNewBill),
-        actions: [
-          TextButton(
-            onPressed: _loading ? null : _copyLastBill,
-            child: Text(l10n.copyLastBill),
-          ),
-          TextButton(
-            onPressed: _loading ? null : () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-        ],
-      ),
-      body: body,
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(BsSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              BsSuccessButton(
-                loading: _loading,
-                onPressed: () {
-                  final narrow = MediaQuery.sizeOf(context).width < 720;
-                  if (narrow && !_showCart && _draft.lines.isNotEmpty) {
-                    setState(() => _showCart = true);
-                    return;
-                  }
-                  _save();
-                },
-                label: l10n.saveBill,
-              ),
-              if (_draft.lines.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                TextButton.icon(
+    return PopScope(
+      canPop: !_isDirty,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) {
+          ref.read(billFormDirtyProvider.notifier).clear();
+          return;
+        }
+        await _onWillPop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.createNewBill),
+          actions: [
+            TextButton(
+              onPressed: _loading ? null : _copyLastBill,
+              child: Text(l10n.copyLastBill),
+            ),
+            TextButton(
+              onPressed: _loading
+                  ? null
+                  : () async {
+                      if (!_isDirty) {
+                        Navigator.pop(context);
+                        return;
+                      }
+                      await _onWillPop();
+                    },
+              child: Text(l10n.cancel),
+            ),
+          ],
+        ),
+        body: body,
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(BsSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                OutlinedButton(
                   onPressed: _loading
                       ? null
-                      : () => _save(exportAfterSave: true),
-                  icon: const Icon(Icons.print_outlined, size: 18),
-                  label: Text(l10n.printAndSave),
+                      : () => _save(forceStatus: BillStatus.due),
+                  child: Text(l10n.saveAsDue),
                 ),
+                const SizedBox(height: 8),
+                BsSuccessButton(
+                  loading: _loading,
+                  onPressed: () {
+                    final narrow = MediaQuery.sizeOf(context).width < 720;
+                    if (narrow && !_showCart && _draft.lines.isNotEmpty) {
+                      setState(() => _showCart = true);
+                      return;
+                    }
+                    _save();
+                  },
+                  label: l10n.saveBill,
+                ),
+                if (_draft.lines.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: _loading
+                        ? null
+                        : () => _save(exportAfterSave: true),
+                    icon: const Icon(Icons.print_outlined, size: 18),
+                    label: Text(l10n.printAndSave),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _embeddedSaveBar({
+    required AppLocalizations l10n,
+    required VoidCallback onPrimary,
+    required String primaryLabel,
+    bool showSaveAsDue = true,
+  }) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(BsSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (showSaveAsDue) ...[
+              OutlinedButton(
+                onPressed: _loading
+                    ? null
+                    : () => _save(forceStatus: BillStatus.due),
+                child: Text(l10n.saveAsDue),
+              ),
+              const SizedBox(height: 8),
+            ],
+            FilledButton(
+              onPressed: _loading ? null : onPrimary,
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(primaryLabel),
+            ),
+          ],
         ),
       ),
     );
@@ -268,11 +365,17 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                     final line = _draft.lines[index];
                     return BillFormLineEditor(
                       line: line,
-                      onChanged: () => setState(() {}),
-                      onRemove: () => setState(() {
-                        _draft.removeLineAt(index);
-                        if (_draft.lines.isEmpty) _showCart = false;
-                      }),
+                      onChanged: () {
+                        setState(() {});
+                        _syncDirtyFlag();
+                      },
+                      onRemove: () {
+                        setState(() {
+                          _draft.removeLineAt(index);
+                          if (_draft.lines.isEmpty) _showCart = false;
+                        });
+                        _syncDirtyFlag();
+                      },
                     );
                   },
                 ),
@@ -284,6 +387,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           onDiscountChanged: () {
             _syncDiscountText();
             setState(() {});
+            _syncDirtyFlag();
           },
         ),
       ],
@@ -294,32 +398,19 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         children: [
           Expanded(child: showPicker ? productPicker() : cartPane()),
           if (widget.embedded)
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(BsSpacing.lg),
-                child: FilledButton(
-                  onPressed: _loading
-                      ? null
-                      : () {
-                          if (showPicker && _draft.lines.isNotEmpty) {
-                            setState(() => _showCart = true);
-                            return;
-                          }
-                          _save();
-                        },
-                  child: _loading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          showPicker && _draft.lines.isNotEmpty
-                              ? l10n.reviewAndSave
-                              : l10n.saveBill,
-                        ),
-                ),
-              ),
+            _embeddedSaveBar(
+              l10n: l10n,
+              showSaveAsDue: !(showPicker && _draft.lines.isNotEmpty),
+              onPrimary: () {
+                if (showPicker && _draft.lines.isNotEmpty) {
+                  setState(() => _showCart = true);
+                  return;
+                }
+                _save();
+              },
+              primaryLabel: showPicker && _draft.lines.isNotEmpty
+                  ? l10n.reviewAndSave
+                  : l10n.saveBill,
             ),
         ],
       );
@@ -334,20 +425,10 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           child: showCart ? cartPane() : const SizedBox.shrink(),
         ),
         if (widget.embedded)
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(BsSpacing.lg),
-              child: FilledButton(
-                onPressed: _loading ? null : _save,
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.saveBill),
-              ),
-            ),
+          _embeddedSaveBar(
+            l10n: l10n,
+            onPrimary: () => _save(),
+            primaryLabel: l10n.saveBill,
           ),
       ],
     );

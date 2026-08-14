@@ -8,8 +8,10 @@ import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../domain/models/customer.dart';
+import '../../../core/ui/adaptive_sheet.dart';
 import '../../../features/customers/customer_detail_screen.dart';
 import '../../../features/customers/providers.dart';
+import '../../../features/customers/record_payment_sheet.dart';
 import '../../layout/web_master_detail.dart';
 import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
@@ -81,6 +83,17 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openRecordPayment() async {
+    await showAdaptiveSheet<bool>(
+      context: context,
+      title: AppLocalizations.of(context).recordPayment,
+      child: const RecordPaymentSheet(showCustomerPicker: true),
+    );
+    if (!mounted) return;
+    await _pager?.refresh();
+    ref.invalidate(totalDuesProvider);
   }
 
   void _onQueryChanged(String value) {
@@ -199,16 +212,23 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
 
     return WebPageScaffold(
       title: l10n.customers,
-      actions: widget.canEdit
-          ? [
-              FilledButton.icon(
-                onPressed: () =>
-                    context.go('${_webRolePrefix(context)}/customers/new'),
-                icon: const Icon(PhosphorIconsRegular.userPlus),
-                label: Text(l10n.addCustomer),
-              ),
-            ]
-          : const [],
+      actions: [
+        if (widget.canRecordPayments)
+          OutlinedButton.icon(
+            onPressed: _openRecordPayment,
+            icon: const Icon(PhosphorIconsRegular.wallet),
+            label: Text(l10n.recordPayment),
+          ),
+        if (widget.canRecordPayments && widget.canEdit)
+          const SizedBox(width: 8),
+        if (widget.canEdit)
+          FilledButton.icon(
+            onPressed: () =>
+                context.go('${_webRolePrefix(context)}/customers/new'),
+            icon: const Icon(PhosphorIconsRegular.userPlus),
+            label: Text(l10n.addCustomer),
+          ),
+      ],
       body: WebMasterDetail(
         hasSelection: selectedId != null,
         list: Column(

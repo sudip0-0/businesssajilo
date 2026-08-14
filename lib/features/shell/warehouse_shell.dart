@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
 import '../billing/providers.dart';
@@ -40,6 +41,7 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
       onDestinationSelected: (i) => setState(() => _index = i),
       titles: [l10n.stock, l10n.billing],
       actions: const [
+        LocaleToggle(compact: true),
         SyncBadgeAction(),
         NotificationBellAction(),
         AccountAction(),

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/l10n/app_localizations.dart';
 import '../theme/web_tokens.dart';
 import '../ui/web_keyboard_scope.dart';
 import '../ui/web_paper.dart';
 import 'web_sidebar.dart';
 import 'web_top_bar.dart';
+
+/// Compact bottom-nav keeps at most 5 slots. With more destinations, the
+/// first four stay on the bar and the rest are reached via a More sheet.
+const _compactPrimaryCount = 4;
+const _compactMaxWithoutMore = 5;
 
 /// Persistent web shell: sidebar + top bar + routed content.
 class WebAppShell extends StatefulWidget {
@@ -92,10 +99,7 @@ class _WebAppShellState extends State<WebAppShell> {
           ],
         ),
         bottomNavigationBar: compact
-            ? _MobileBottomNav(
-                items: widget.navItems.take(5).toList(),
-                location: location,
-              )
+            ? _MobileBottomNav(items: widget.navItems, location: location)
             : null,
       ),
     );
@@ -108,18 +112,78 @@ class _MobileBottomNav extends StatelessWidget {
   final List<WebNavItem> items;
   final String location;
 
+  bool get _useMore => items.length > _compactMaxWithoutMore;
+
+  List<WebNavItem> get _primary =>
+      _useMore ? items.take(_compactPrimaryCount).toList() : items;
+
+  List<WebNavItem> get _overflow =>
+      _useMore ? items.skip(_compactPrimaryCount).toList() : const [];
+
+  int _selectedIndex() {
+    final primaryIndex = _primary.indexWhere(
+      (i) => location.startsWith(i.path),
+    );
+    if (primaryIndex >= 0) return primaryIndex;
+    if (_overflow.any((i) => location.startsWith(i.path))) {
+      return _primary.length;
+    }
+    return 0;
+  }
+
+  Future<void> _openMore(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(title: Text(l10n.more)),
+              for (final item in _overflow)
+                ListTile(
+                  leading: Icon(item.icon),
+                  title: Text(item.label),
+                  selected: location.startsWith(item.path),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    context.go(item.path);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final destinations = <NavigationDestination>[
+      for (final item in _primary)
+        NavigationDestination(icon: Icon(item.icon), label: item.label),
+      if (_useMore)
+        NavigationDestination(
+          icon: const Icon(PhosphorIconsRegular.dotsThreeOutline),
+          selectedIcon: const Icon(PhosphorIconsRegular.dotsThree),
+          label: l10n.more,
+        ),
+    ];
+
     return NavigationBar(
       height: 64,
-      selectedIndex: items
-          .indexWhere((i) => location.startsWith(i.path))
-          .clamp(0, items.length - 1),
-      onDestinationSelected: (index) => context.go(items[index].path),
-      destinations: [
-        for (final item in items)
-          NavigationDestination(icon: Icon(item.icon), label: item.label),
-      ],
+      selectedIndex: _selectedIndex().clamp(0, destinations.length - 1),
+      onDestinationSelected: (index) {
+        if (_useMore && index == _primary.length) {
+          _openMore(context);
+          return;
+        }
+        context.go(_primary[index].path);
+      },
+      destinations: destinations,
     );
   }
 }

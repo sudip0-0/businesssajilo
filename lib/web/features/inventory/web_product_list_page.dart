@@ -11,9 +11,12 @@ import '../../../core/ui/stock_badge.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/products_repository.dart';
 import '../../../domain/models/product.dart';
+import '../../../core/ui/adaptive_sheet.dart';
 import '../../../features/inventory/product_detail_screen.dart';
 import '../../../features/inventory/product_import_sheet.dart';
 import '../../../features/inventory/providers.dart';
+import '../../../features/inventory/reorder_low_stock_sheet.dart';
+import '../../../features/inventory/stock_in_picker_sheet.dart';
 import '../../layout/web_master_detail.dart';
 import '../../theme/web_palette.dart';
 import '../../ui/web_data_table.dart';
@@ -112,6 +115,34 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openStockIn() async {
+    final l10n = AppLocalizations.of(context);
+    final saved = await showAdaptiveSheet<bool>(
+      context: context,
+      title: l10n.stockIn,
+      child: const StockInPickerSheet(),
+    );
+    if (saved == true && mounted) {
+      bumpInventoryRevision(ref);
+      ref.invalidate(lowStockCountProvider);
+      await _pager?.refresh();
+    }
+  }
+
+  Future<void> _openReorder() async {
+    final saved = await showAdaptiveSheet<bool>(
+      context: context,
+      title: AppLocalizations.of(context).reorder,
+      child: const ReorderLowStockSheet(),
+    );
+    if (saved == true && mounted) {
+      ref.invalidate(lowStockCountProvider);
+      ref.invalidate(lowStockProductsProvider);
+      bumpInventoryRevision(ref);
+      await _pager?.refresh();
+    }
+  }
+
   @override
   void dispose() {
     _searchDebounceTimer?.cancel();
@@ -196,6 +227,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
     final selectedId = widget.selectedProductId;
+    final lowStockCount = ref.watch(lowStockCountProvider).value ?? 0;
 
     ref.listen<int>(inventoryRevisionProvider, (prev, next) {
       if (prev != next) {
@@ -206,6 +238,14 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     return WebPageScaffold(
       title: l10n.inventory,
       actions: [
+        if (widget.canManageStock) ...[
+          OutlinedButton.icon(
+            onPressed: _openStockIn,
+            icon: const Icon(PhosphorIconsRegular.package),
+            label: Text(l10n.stockIn),
+          ),
+          const SizedBox(width: 8),
+        ],
         if (widget.canEdit) ...[
           FilterChip(
             label: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
@@ -225,8 +265,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
-            onPressed: () =>
-                context.push('${_inventoryListBase(context)}/new'),
+            onPressed: () => context.push('${_inventoryListBase(context)}/new'),
             icon: const Icon(PhosphorIconsRegular.plus),
             label: Text(l10n.addProduct),
           ),
@@ -253,6 +292,18 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                 ],
               ),
             ),
+            if (lowStockCount > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    onPressed: _openReorder,
+                    icon: const Icon(PhosphorIconsRegular.arrowsClockwise),
+                    label: Text('${l10n.reorder} · $lowStockCount'),
+                  ),
+                ),
+              ),
             Expanded(child: _buildListBody(l10n, pager)),
           ],
         ),

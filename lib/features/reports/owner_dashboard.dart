@@ -24,6 +24,7 @@ import 'dashboard/dashboard_activity_feed.dart';
 import 'dashboard/dashboard_kpi_format.dart';
 import 'dues_aging_screen.dart';
 import 'providers.dart';
+import 'report_export_actions.dart';
 import 'sales_summary_screen.dart';
 import 'stock_valuation_screen.dart';
 
@@ -294,9 +295,22 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.todaysTransactions,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.todaysTransactions,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.exportCsv,
+                        onPressed: todaysBills.hasValue
+                            ? () => exportTodaysBillsCsv(ref, context)
+                            : null,
+                        icon: const Icon(Icons.download_outlined),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   todaysBills.when(

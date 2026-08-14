@@ -36,7 +36,7 @@ abstract final class AppLog {
         level: SentryLevel.warning,
         data: {
           if (error != null) 'error': error.toString(),
-          if (extras != null) ...extras,
+          ...?extras,
         },
       ),
     );

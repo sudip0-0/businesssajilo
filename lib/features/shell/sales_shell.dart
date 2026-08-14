@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/adaptive_sheet.dart';
+import '../../core/ui/locale_toggle.dart';
 import '../../core/utils/money.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
-import '../../core/theme/app_theme.dart';
 import '../billing/providers.dart';
 import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
-import '../../core/ui/adaptive_sheet.dart';
 import '../customers/record_payment_sheet.dart';
 import '../inventory/product_form_screen.dart';
 import '../inventory/product_list_screen.dart';
@@ -122,6 +123,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
         ),
       ],
       actions: [
+        const LocaleToggle(compact: true),
         IconButton(
           tooltip: l10n.globalSearch,
           onPressed: () => showGlobalSearch(context, ref),

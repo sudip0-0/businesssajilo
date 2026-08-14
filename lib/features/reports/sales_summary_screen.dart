@@ -8,9 +8,10 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
-import '../../domain/enums.dart';
 import '../../core/ui/bs_sales_line_chart.dart';
 import 'providers.dart';
+import 'report_period.dart';
+import 'report_period_picker.dart';
 
 class SalesSummaryScreen extends ConsumerStatefulWidget {
   const SalesSummaryScreen({super.key, this.embedded = false});
@@ -22,39 +23,50 @@ class SalesSummaryScreen extends ConsumerStatefulWidget {
 }
 
 class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
-  ReportRange _range = ReportRange.week;
+  ReportPeriod _period = ReportPeriod.preset(ReportPeriodPreset.last7Days);
+
+  Future<void> _exportCsv(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final daily = await ref.read(salesDailyRangeProvider(_period).future);
+    final topProducts = await ref.read(
+      topProductsRangeProvider(_period).future,
+    );
+    final topCustomers = await ref.read(
+      topCustomersRangeProvider(_period).future,
+    );
+    if (!context.mounted) return;
+    await exportSalesReportCsvFromData(
+      ref,
+      context,
+      daily: daily,
+      topProducts: topProducts,
+      topCustomers: topCustomers,
+      subject: l10n.salesSummary,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final salesAsync = ref.watch(salesDailyProvider(_range));
-    final productsAsync = ref.watch(topProductsProvider(_range));
-    final customersAsync = ref.watch(topCustomersProvider(_range));
+    final salesAsync = ref.watch(salesDailyRangeProvider(_period));
+    final productsAsync = ref.watch(topProductsRangeProvider(_period));
+    final customersAsync = ref.watch(topCustomersRangeProvider(_period));
 
     final body = ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Wrap(
-          spacing: 8,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ChoiceChip(
-              label: Text(l10n.periodToday),
-              selected: _range == ReportRange.today,
-              onSelected: (_) => setState(() => _range = ReportRange.today),
-            ),
-            ChoiceChip(
-              label: Text(l10n.periodWeek),
-              selected: _range == ReportRange.week,
-              onSelected: (_) => setState(() => _range = ReportRange.week),
-            ),
-            ChoiceChip(
-              label: Text(l10n.periodMonth),
-              selected: _range == ReportRange.month,
-              onSelected: (_) => setState(() => _range = ReportRange.month),
+            Expanded(
+              child: ReportPeriodPicker(
+                value: _period,
+                onChanged: (p) => setState(() => _period = p),
+              ),
             ),
             IconButton(
               tooltip: l10n.exportCsv,
-              onPressed: () => exportSalesReportCsv(ref, context, _range),
+              onPressed: () => _exportCsv(context),
               icon: const Icon(Icons.download_outlined),
             ),
           ],
@@ -64,7 +76,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ErrorState(
             message: l10n.loadingFailed,
-            onRetry: () => ref.invalidate(salesDailyProvider(_range)),
+            onRetry: () => ref.invalidate(salesDailyRangeProvider(_period)),
           ),
           data: (points) {
             final total = points.fold<int>(0, (sum, p) => sum + p.totalSales);
@@ -97,7 +109,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
           loading: () => const LinearProgressIndicator(),
           error: (e, _) => ErrorState(
             message: l10n.loadingFailed,
-            onRetry: () => ref.invalidate(topProductsProvider(_range)),
+            onRetry: () => ref.invalidate(topProductsRangeProvider(_period)),
           ),
           data: (rows) => _RankedList(
             wide: isWideLayout(context),
@@ -119,7 +131,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
           loading: () => const LinearProgressIndicator(),
           error: (e, _) => ErrorState(
             message: l10n.loadingFailed,
-            onRetry: () => ref.invalidate(topCustomersProvider(_range)),
+            onRetry: () => ref.invalidate(topCustomersRangeProvider(_period)),
           ),
           data: (rows) => _RankedList(
             wide: isWideLayout(context),
