@@ -19,6 +19,16 @@ if (-not $env:SUPABASE_URL -or -not $env:SUPABASE_ANON_KEY) {
 $projectRoot = Join-Path $PSScriptRoot ".."
 Set-Location $projectRoot
 
+# A physical phone's 127.0.0.1 is the phone, not this PC. Reverse the API port
+# over USB so local Supabase stays reachable without changing .env.local.
+if ($env:SUPABASE_URL -match 'https?://(127\.0\.0\.1|localhost):(\d+)') {
+    $apiPort = $Matches[2]
+    $adb = Get-Command adb -ErrorAction SilentlyContinue
+    if ($adb) {
+        adb reverse "tcp:$apiPort" "tcp:$apiPort" | Out-Host
+    }
+}
+
 flutter run `
     --dart-define=SUPABASE_URL=$env:SUPABASE_URL `
     --dart-define=SUPABASE_ANON_KEY=$env:SUPABASE_ANON_KEY `
