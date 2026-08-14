@@ -266,7 +266,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get deactivate => 'निष्क्रिय गर्नुहोस्';
 
   @override
-  String get deactivateConfirm => 'यो सदस्यलाई निष्क्रिय गर्ने? उनीहरू अब लगइन गर्न सक्ने छैनन्।';
+  String get deactivateConfirm =>
+      'यो सदस्यलाई निष्क्रिय गर्ने? उनीहरू अब लगइन गर्न सक्ने छैनन्।';
 
   @override
   String get active => 'सक्रिय';
@@ -319,7 +320,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get downloadSampleExcel => 'नमूना Excel डाउनलोड';
 
   @override
-  String get importExcelHint => 'नमूना फाइल डाउनलोड गरी उत्पादनहरू भर्नुहोस् (मूल्य NPR मा), अनि Excel फाइल अपलोड गर्नुहोस्।';
+  String get importExcelHint =>
+      'नमूना फाइल डाउनलोड गरी उत्पादनहरू भर्नुहोस् (मूल्य NPR मा), अनि Excel फाइल अपलोड गर्नुहोस्।';
 
   @override
   String get chooseExcelFile => 'Excel फाइल छान्नुहोस्';
@@ -420,7 +422,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get deactivateProduct => 'उत्पादन निष्क्रिय';
 
   @override
-  String get deactivateProductConfirm => 'यो उत्पादन निष्क्रिय गर्ने? बिक्रीबाट लुकाइनेछ।';
+  String get deactivateProductConfirm =>
+      'यो उत्पादन निष्क्रिय गर्ने? बिक्रीबाट लुकाइनेछ।';
 
   @override
   String get imageOptional => 'उत्पादन तस्बिर (वैकल्पिक)';
@@ -504,7 +507,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get paidNow => 'अहिले तिरेको';
 
   @override
-  String get paidNowHint => 'यस बिक्रीसँग भुक्तानी रेकर्ड गर्नुहोस् ताकि बाँकी नबढोस्';
+  String get paidNowHint =>
+      'यस बिक्रीसँग भुक्तानी रेकर्ड गर्नुहोस् ताकि बाँकी नबढोस्';
 
   @override
   String get paymentMethod => 'भुक्तानी विधि';
@@ -907,10 +911,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get demoDataSkipped => 'नमूना डाटा पहिले नै छ';
 
   @override
-  String get accountDeactivated => 'यो खाता निष्क्रिय गरिएको छ। आफ्नो व्यवसाय मालिकलाई सम्पर्क गर्नुहोस्।';
+  String get accountDeactivated =>
+      'यो खाता निष्क्रिय गरिएको छ। आफ्नो व्यवसाय मालिकलाई सम्पर्क गर्नुहोस्।';
 
   @override
-  String get configError => 'एप कन्फिगर गरिएको छैन। SUPABASE_URL / SUPABASE_ANON_KEY छैन।';
+  String get configError =>
+      'एप कन्फिगर गरिएको छैन। SUPABASE_URL / SUPABASE_ANON_KEY छैन।';
 
   @override
   String get pageNotFound => 'पृष्ठ फेला परेन';
@@ -942,7 +948,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get noStaff => 'अहिलेसम्म कुनै कर्मचारी छैन';
 
   @override
-  String get selectCustomerForCredit => 'उधारो वा आंशिक बिलका लागि ग्राहक छान्नुहोस्';
+  String get selectCustomerForCredit =>
+      'उधारो वा आंशिक बिलका लागि ग्राहक छान्नुहोस्';
 
   @override
   String get amountExceedsTotal => 'रकम कुल जम्माभन्दा बढी हुन सक्दैन';
@@ -969,10 +976,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get messageSendFailed => 'सन्देश पठाउन सकिएन। फेरि प्रयास गर्नुहोस्।';
 
   @override
-  String get openingBalanceLocked => 'सुरुवाती बाँकी ग्राहक बनाउँदा मात्र सेट गर्न सकिन्छ';
+  String get openingBalanceLocked =>
+      'सुरुवाती बाँकी ग्राहक बनाउँदा मात्र सेट गर्न सकिन्छ';
 
   @override
-  String get overpaymentWarning => 'यो बाँकी रकमभन्दा बढी छ र क्रेडिट ब्यालेन्स बन्नेछ।';
+  String get overpaymentWarning =>
+      'यो बाँकी रकमभन्दा बढी छ र क्रेडिट ब्यालेन्स बन्नेछ।';
 
   @override
   String get creditBalance => 'क्रेडिट';
@@ -1000,7 +1009,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get actionFailed => 'केही गडबड भयो। फेरि प्रयास गर्नुहोस्।';
 
   @override
-  String get errorNetwork => 'जडान छैन। नेटवर्क जाँच गरी फेरि प्रयास गर्नुहोस्।';
+  String get errorNetwork =>
+      'जडान छैन। नेटवर्क जाँच गरी फेरि प्रयास गर्नुहोस्।';
 
   @override
   String get errorPermission => 'तपाईंसँग यो कार्यको अनुमति छैन।';
@@ -1012,10 +1022,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get errorConflict => 'यो रेकर्ड पहिले नै छ वा द्वन्द्व छ।';
 
   @override
-  String get errorNotConfigured => 'एप कन्फिगर छैन। सहयोगसँग सम्पर्क गर्नुहोस्।';
+  String get errorNotConfigured =>
+      'एप कन्फिगर छैन। सहयोगसँग सम्पर्क गर्नुहोस्।';
 
   @override
-  String get quoteRatesLoadFailed => 'केही उत्पादन दर लोड गर्न सकिएन। म्यानुअल रूपमा लेख्नुहोस्।';
+  String get quoteRatesLoadFailed =>
+      'केही उत्पादन दर लोड गर्न सकिएन। म्यानुअल रूपमा लेख्नुहोस्।';
 
   @override
   String get valueUnavailable => '—';
@@ -1074,7 +1086,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get salesPerformanceSubtitle => '७-दिने राजस्व प्रवृत्ति विश्लेषण';
 
   @override
-  String get salesPerformanceSubtitleMonthly => '३०-दिने राजस्व प्रवृत्ति विश्लेषण';
+  String get salesPerformanceSubtitleMonthly =>
+      '३०-दिने राजस्व प्रवृत्ति विश्लेषण';
 
   @override
   String get quickStockCheck => 'छिटो स्टक जाँच';
@@ -1089,13 +1102,15 @@ class AppLocalizationsNe extends AppLocalizations {
   String get addNewCustomer => 'नयाँ ग्राहक थप्नुहोस्';
 
   @override
-  String get addCustomerSubtitle => 'क्रेडिट र बिक्री व्यवस्थापनका लागि नयाँ ग्राहक प्रोफाइल बनाउनुहोस्।';
+  String get addCustomerSubtitle =>
+      'क्रेडिट र बिक्री व्यवस्थापनका लागि नयाँ ग्राहक प्रोफाइल बनाउनुहोस्।';
 
   @override
   String get customerIdentity => 'ग्राहक पहिचान';
 
   @override
-  String get customerIdentityHint => 'व्यवसायको आधारभूत र कानूनी जानकारी भर्नुहोस्।';
+  String get customerIdentityHint =>
+      'व्यवसायको आधारभूत र कानूनी जानकारी भर्नुहोस्।';
 
   @override
   String get contactAndLocation => 'सम्पर्क र स्थान';
@@ -1140,7 +1155,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get unsavedBillTitle => 'यो बिल छाड्ने?';
 
   @override
-  String get unsavedBillMessage => 'तपाईंका परिवर्तनहरू सुरक्षित भएका छैनन्। अहिले छाड्नुभयो भने यो बिल हराउनेछ।';
+  String get unsavedBillMessage =>
+      'तपाईंका परिवर्तनहरू सुरक्षित भएका छैनन्। अहिले छाड्नुभयो भने यो बिल हराउनेछ।';
 
   @override
   String get discardAndLeave => 'छाड्ने';
@@ -1164,7 +1180,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get smeManagement => 'SME व्यवस्थापन';
 
   @override
-  String get globalSearchHint => 'सामान, ग्राहक र बिल खोज्न कम्तीमा २ अक्षर लेख्नुहोस्.';
+  String get globalSearchHint =>
+      'सामान, ग्राहक र बिल खोज्न कम्तीमा २ अक्षर लेख्नुहोस्.';
 
   @override
   String get export => 'निर्यात';
@@ -1203,13 +1220,16 @@ class AppLocalizationsNe extends AppLocalizations {
   String get taxableAmount => 'कर योग्य रकम';
 
   @override
-  String get verificationTip => 'कर अनुपालनका लागi PAN/VAT नम्बर सधैं प्रमाणित गर्नुहोस्।';
+  String get verificationTip =>
+      'कर अनुपालनका लागi PAN/VAT नम्बर सधैं प्रमाणित गर्नुहोस्।';
 
   @override
-  String get creditPolicyTip => 'कारोबार इतिहास अनुसार वास्तविक क्रेडिट सीमा तोक्नुहोस्।';
+  String get creditPolicyTip =>
+      'कारोबार इतिहास अनुसार वास्तविक क्रेडिट सीमा तोक्नुहोस्।';
 
   @override
-  String get privacyTip => 'सबै ग्राहक डाटा इन्क्रिप्टेड र सुरक्षित रूपमा भण्डारण गरिन्छ।';
+  String get privacyTip =>
+      'सबै ग्राहक डाटा इन्क्रिप्टेड र सुरक्षित रूपमा भण्डारण गरिन्छ।';
 
   @override
   String newBillCreated(String billNo) {
@@ -1236,7 +1256,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get portalAccess => 'पोर्टल पहुँच';
 
   @override
-  String get portalAccessHint => 'ग्राहकले लग-इन गरी अर्डर हेर्नका लागि प्रमाणपत्र।';
+  String get portalAccessHint =>
+      'ग्राहकले लग-इन गरी अर्डर हेर्नका लागि प्रमाणपत्र।';
 
   @override
   String get amountNpr => 'रकम (NPR)';
@@ -1371,16 +1392,19 @@ class AppLocalizationsNe extends AppLocalizations {
   String get forgotPassword => 'पासवर्ड बिर्सनुभयो?';
 
   @override
-  String get forgotPasswordPhoneHint => 'फोन लगइनबाट इमेलमार्फत पासवर्ड रिसेट हुँदैन। आफ्नो व्यवसाय मालिकलाई पासवर्ड रिसेट गर्न भन्नुहोस्।';
+  String get forgotPasswordPhoneHint =>
+      'फोन लगइनबाट इमेलमार्फत पासवर्ड रिसेट हुँदैन। आफ्नो व्यवसाय मालिकलाई पासवर्ड रिसेट गर्न भन्नुहोस्।';
 
   @override
-  String get resetPasswordEmailHint => 'आफ्नो खाताको इमेल लेख्नुहोस्, हामी पासवर्ड रिसेट लिंक पठाउँछौं।';
+  String get resetPasswordEmailHint =>
+      'आफ्नो खाताको इमेल लेख्नुहोस्, हामी पासवर्ड रिसेट लिंक पठाउँछौं।';
 
   @override
   String get sendResetLink => 'रिसेट लिंक पठाउनुहोस्';
 
   @override
-  String get resetEmailSent => 'पासवर्ड रिसेट इमेल पठाइयो। आफ्नो इनबक्स हेर्नुहोस्।';
+  String get resetEmailSent =>
+      'पासवर्ड रिसेट इमेल पठाइयो। आफ्नो इनबक्स हेर्नुहोस्।';
 
   @override
   String get resetPassword => 'पासवर्ड रिसेट';
@@ -1394,10 +1418,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get temporaryPassword => 'अस्थायी पासवर्ड';
 
   @override
-  String get temporaryPasswordHint => 'यो पासवर्ड सदस्यलाई दिनुहोस्। अर्को लगइनमा नयाँ पासवर्ड रोज्नुपर्छ।';
+  String get temporaryPasswordHint =>
+      'यो पासवर्ड सदस्यलाई दिनुहोस्। अर्को लगइनमा नयाँ पासवर्ड रोज्नुपर्छ।';
 
   @override
-  String get passwordResetDone => 'पासवर्ड रिसेट भयो। पुराना सेसनहरू साइन आउट गरियो।';
+  String get passwordResetDone =>
+      'पासवर्ड रिसेट भयो। पुराना सेसनहरू साइन आउट गरियो।';
 
   @override
   String get newPassword => 'नयाँ पासवर्ड';
@@ -1436,7 +1462,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get setNewPasswordTitle => 'नयाँ पासवर्ड सेट गर्नुहोस्';
 
   @override
-  String get setNewPasswordHint => 'व्यवसाय मालिकले तपाईंको पासवर्ड रिसेट गर्नुभयो। जारी राख्न नयाँ पासवर्ड रोज्नुहोस्।';
+  String get setNewPasswordHint =>
+      'व्यवसाय मालिकले तपाईंको पासवर्ड रिसेट गर्नुभयो। जारी राख्न नयाँ पासवर्ड रोज्नुहोस्।';
 
   @override
   String get account => 'खाता';
@@ -1445,13 +1472,15 @@ class AppLocalizationsNe extends AppLocalizations {
   String get deleteAccount => 'मेरो खाता मेटाउनुहोस्';
 
   @override
-  String get deleteAccountWarning => 'यसले तपाईंको लगइन स्थायी रूपमा मेटाउँछ। अर्डर र भुक्तानी रेकर्ड व्यवसायसँग रहन्छ। यो फिर्ता गर्न सकिँदैन।';
+  String get deleteAccountWarning =>
+      'यसले तपाईंको लगइन स्थायी रूपमा मेटाउँछ। अर्डर र भुक्तानी रेकर्ड व्यवसायसँग रहन्छ। यो फिर्ता गर्न सकिँदैन।';
 
   @override
   String get deleteBusiness => 'व्यवसाय मेटाउनुहोस्';
 
   @override
-  String get deleteBusinessWarning => 'यसले व्यवसाय र सबै डाटा स्थायी रूपमा मेटाउँछ: उत्पादन, बिल, अर्डर, ग्राहक, र सबै लगइनहरू। यो फिर्ता गर्न सकिँदैन।';
+  String get deleteBusinessWarning =>
+      'यसले व्यवसाय र सबै डाटा स्थायी रूपमा मेटाउँछ: उत्पादन, बिल, अर्डर, ग्राहक, र सबै लगइनहरू। यो फिर्ता गर्न सकिँदैन।';
 
   @override
   String typeToConfirm(String word) {
@@ -1531,7 +1560,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get emptyFulfillment => 'पूरा गर्नुपर्ने अर्डर छैन';
 
   @override
-  String get syncErrorGeneric => 'सिंक गर्न सकिएन। इन्टरनेट जाँच गरी फेरि प्रयास गर्नुहोस्।';
+  String get syncErrorGeneric =>
+      'सिंक गर्न सकिएन। इन्टरनेट जाँच गरी फेरि प्रयास गर्नुहोस्।';
 
   @override
   String get sidebarExpand => 'साइडबार फुकाउनुहोस्';
@@ -1549,7 +1579,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get viewAll => 'सबै हेर्नुहोस्';
 
   @override
-  String get accountNotLinked => 'तपाईंको खाता ग्राहक प्रोफाइलसँग जोडिएको छैन। मालिकलाई सम्पर्क गर्नुहोस्।';
+  String get accountNotLinked =>
+      'तपाईंको खाता ग्राहक प्रोफाइलसँग जोडिएको छैन। मालिकलाई सम्पर्क गर्नुहोस्।';
 
   @override
   String get needsAction => 'कारबाही चाहिने';
@@ -1576,10 +1607,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get disablePortalLogin => 'पोर्टल लगइन असक्षम गर्नुहोस्';
 
   @override
-  String get disablePortalConfirm => 'पोर्टल लगइन फेरि सक्षम नगरेसम्म यो ग्राहकले लगइन गर्न सक्दैनन्।';
+  String get disablePortalConfirm =>
+      'पोर्टल लगइन फेरि सक्षम नगरेसम्म यो ग्राहकले लगइन गर्न सक्दैनन्।';
 
   @override
-  String get enablePortalConfirm => 'यो ग्राहकको पोर्टल लगइन फेरि सक्षम गर्ने? तपाईं अर्को चरणमा नयाँ पासवर्ड सेट गर्न सक्नुहुन्छ।';
+  String get enablePortalConfirm =>
+      'यो ग्राहकको पोर्टल लगइन फेरि सक्षम गर्ने? तपाईं अर्को चरणमा नयाँ पासवर्ड सेट गर्न सक्नुहुन्छ।';
 
   @override
   String get reactivate => 'पुनः सक्रिय गर्नुहोस्';
@@ -1690,7 +1723,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get oversellConfirmTitle => 'स्टकभन्दा बढी बिक्री गर्ने?';
 
   @override
-  String get oversellConfirmBody => 'केही वस्तुहरू स्टकमा भएको भन्दा बढी बिक्री भइरहेका छन्। बिक्री गर्दा स्टक ऋणात्मक हुनेछ।';
+  String get oversellConfirmBody =>
+      'केही वस्तुहरू स्टकमा भएको भन्दा बढी बिक्री भइरहेका छन्। बिक्री गर्दा स्टक ऋणात्मक हुनेछ।';
 
   @override
   String get oversellContinue => 'जसरी भए पनि बिक्री गर्नुहोस्';
@@ -1705,7 +1739,8 @@ class AppLocalizationsNe extends AppLocalizations {
   String get negativeAdjustTitle => 'स्टक ऋणात्मक हुनेछ?';
 
   @override
-  String get negativeAdjustBody => 'यो समायोजनले स्टक शून्यभन्दा तल लैजानेछ। जारी राख्ने?';
+  String get negativeAdjustBody =>
+      'यो समायोजनले स्टक शून्यभन्दा तल लैजानेछ। जारी राख्ने?';
 
   @override
   String get continueAnyway => 'जसरी भए पनि जारी राख्नुहोस्';
@@ -1720,25 +1755,29 @@ class AppLocalizationsNe extends AppLocalizations {
   String get tourStepProductTitle => 'सामान थप्नुहोस्';
 
   @override
-  String get tourStepProductBody => 'बेच्ने एउटा सामानबाट सुरु गर्नुहोस् — नाम, एकाइ र सन्दर्भ दर।';
+  String get tourStepProductBody =>
+      'बेच्ने एउटा सामानबाट सुरु गर्नुहोस् — नाम, एकाइ र सन्दर्भ दर।';
 
   @override
   String get tourStepCustomerTitle => 'ग्राहक थप्नुहोस्';
 
   @override
-  String get tourStepCustomerBody => 'खुद्रा पसलको लगइन बनाउनुहोस् वा काउन्टरमा वाक-इन बिल काट्नुहोस्।';
+  String get tourStepCustomerBody =>
+      'खुद्रा पसलको लगइन बनाउनुहोस् वा काउन्टरमा वाक-इन बिल काट्नुहोस्।';
 
   @override
   String get tourStepBillTitle => 'बिल बनाउनुहोस्';
 
   @override
-  String get tourStepBillBody => 'वाक-इन बिल छिटो हुन्छ। कोटेशन स्वीकार भएपछि अर्डर पनि त्यस्तै बिल हुन्छ।';
+  String get tourStepBillBody =>
+      'वाक-इन बिल छिटो हुन्छ। कोटेशन स्वीकार भएपछि अर्डर पनि त्यस्तै बिल हुन्छ।';
 
   @override
   String get tourStepPaymentTitle => 'भुक्तानी रेकर्ड गर्नुहोस्';
 
   @override
-  String get tourStepPaymentBody => 'नगद, चेक, वालेट वा बैंक संकलन गरी उधारो खाता सफा राख्नुहोस्।';
+  String get tourStepPaymentBody =>
+      'नगद, चेक, वालेट वा बैंक संकलन गरी उधारो खाता सफा राख्नुहोस्।';
 
   @override
   String get skip => 'छोड्नुहोस्';
