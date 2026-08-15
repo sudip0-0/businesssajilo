@@ -13,6 +13,7 @@ class InvoiceLabels {
     required this.amount,
     required this.subtotal,
     required this.discount,
+    required this.billDiscount,
     required this.grandTotal,
     required this.total,
     required this.sn,
@@ -34,6 +35,7 @@ class InvoiceLabels {
   final String amount;
   final String subtotal;
   final String discount;
+  final String billDiscount;
   final String grandTotal;
   final String total;
   final String sn;

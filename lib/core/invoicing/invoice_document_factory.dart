@@ -35,6 +35,7 @@ class InvoiceDocumentFactory {
       amount: l10n.invoiceAmount,
       subtotal: l10n.subtotal,
       discount: l10n.discount,
+      billDiscount: l10n.billDiscount,
       grandTotal: l10n.grandTotal,
       total: l10n.total,
       sn: l10n.sn,

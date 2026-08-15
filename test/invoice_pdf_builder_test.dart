@@ -25,6 +25,7 @@ const _labels = InvoiceLabels(
   amount: 'Amount',
   subtotal: 'Subtotal',
   discount: 'Discount',
+  billDiscount: 'Bill discount',
   grandTotal: 'Grand Total',
   total: 'Total',
   sn: 'S.N.',
@@ -196,6 +197,7 @@ void main() {
         amount: 'रकम',
         subtotal: 'जम्मा',
         discount: 'छुट',
+        billDiscount: 'बिल छुट',
         grandTotal: 'कुल',
         total: 'जम्मा',
         sn: 'क्र.सं.',
@@ -258,6 +260,49 @@ void main() {
   test('invoice document carries customer address', () {
     final doc = _sampleDoc(customerAddress: 'Bharatpur-10, Chitwan');
     expect(doc.customerAddress, 'Bharatpur-10, Chitwan');
+  });
+
+  test('invoice totals keep line discounts out of line amounts', () async {
+    final doc = InvoiceDocument(
+      business: const Business(id: 'biz1', name: 'Test Shop'),
+      documentNo: 'BS-0239',
+      customerLabel: 'Shop 07',
+      createdAt: DateTime(2026, 8, 14, 17, 5),
+      statusLabel: 'Paid',
+      lines: const [
+        InvoiceLine(
+          name: 'Product 03',
+          qty: 3,
+          rate: 14000,
+          discount: 0,
+          lineTotal: 42000,
+        ),
+        InvoiceLine(
+          name: 'Product 04',
+          qty: 6,
+          rate: 18500,
+          discount: 5000,
+          lineTotal: 106000,
+        ),
+        InvoiceLine(
+          name: 'Product 02',
+          qty: 2,
+          rate: 9500,
+          discount: 2000,
+          lineTotal: 17000,
+        ),
+      ],
+      itemsTotal: 165000,
+      discount: 0,
+      grandTotal: 165000,
+      locale: const Locale('en'),
+      labels: _labels,
+    );
+    expect(doc.lineDiscountsTotal, 7000);
+    expect(doc.itemsGross, 172000);
+    expect(doc.grandTotal, 165000);
+    final bytes = await const InvoicePdfBuilder().build(doc);
+    expect(bytes, isNotEmpty);
   });
 
   test('print amounts use grouping without currency symbol or paisa', () {

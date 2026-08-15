@@ -17,7 +17,11 @@ class InvoiceImageBuilder {
     InvoicePaperSize paperSize = InvoicePaperSize.a4,
     double dpi = 180,
   }) async {
-    final pdfBytes = await _pdfBuilder.build(doc, paperSize: paperSize);
+    final pdfBytes = await _pdfBuilder.build(
+      doc,
+      paperSize: paperSize,
+      textScale: 1.2,
+    );
     return rasterPdfFirstPageToPng(pdfBytes, dpi: dpi);
   }
 }

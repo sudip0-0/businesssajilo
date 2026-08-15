@@ -96,6 +96,11 @@ class InvoiceDocument {
 
   bool get showPartialReceived => amountReceived != null;
 
+  int get lineDiscountsTotal =>
+      lineDiscountsTotalPaisa(lines.map((l) => l.discount));
+
+  int get itemsGross => itemsTotal + lineDiscountsTotal;
+
   int get remainingDue => remainingDuePaisa(
     grandTotal: grandTotal,
     amountReceived: amountReceived ?? 0,

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../utils/bill_totals.dart';
 import '../utils/bs_date.dart';
 import '../utils/money.dart';
 import '../utils/rupees_in_words.dart';
@@ -30,10 +31,11 @@ class InvoicePdfBuilder {
   Future<Uint8List> build(
     InvoiceDocument doc, {
     InvoicePaperSize paperSize = InvoicePaperSize.a4,
+    double textScale = 1,
   }) async {
     final theme = await PdfFonts.loadTheme();
     final pdf = pw.Document(theme: theme);
-    final scale = paperSize.scale;
+    final scale = paperSize.scale * textScale;
     final margin = paperSize.margin;
     final pageTheme = pw.PageTheme(
       pageFormat: paperSize.pageFormat,
@@ -297,7 +299,12 @@ class InvoicePdfBuilder {
             _lineLabel(doc.lines[i], labels.discount),
             '${doc.lines[i].qty}',
             _money(doc.lines[i].rate),
-            _money(doc.lines[i].lineTotal),
+            _money(
+              lineGrossPaisa(
+                qty: doc.lines[i].qty,
+                ratePaisa: doc.lines[i].rate,
+              ),
+            ),
           ],
           fs,
           style: cellStyle,
@@ -305,39 +312,20 @@ class InvoicePdfBuilder {
     ];
 
     final totals = <pw.Widget>[
-      if (doc.discount > 0)
-        _dataRow(
-          ['', '', '', labels.subtotal, _money(doc.itemsTotal)],
-          fs,
-          style: boldCell,
-        ),
-      if (doc.discount > 0)
-        _dataRow(
-          ['', '', '', labels.discount, _money(-doc.discount)],
-          fs,
-          style: boldCell,
-        ),
       pw.Container(
         decoration: const pw.BoxDecoration(
           border: pw.Border(top: pw.BorderSide(width: 0.7)),
         ),
-        child: _dataRow(
-          ['', '', '', labels.total, _money(doc.grandTotal)],
-          fs,
-          style: boldCell,
-        ),
+        child: _summaryRow(labels.total, doc.itemsGross, fs, boldCell),
       ),
+      if (doc.lineDiscountsTotal > 0)
+        _summaryRow(labels.discount, -doc.lineDiscountsTotal, fs, boldCell),
+      if (doc.discount > 0)
+        _summaryRow(labels.billDiscount, -doc.discount, fs, boldCell),
+      _summaryRow(labels.grandTotal, doc.grandTotal, fs, boldCell),
       if (doc.showPartialReceived) ...[
-        _dataRow(
-          ['', '', '', labels.amountPaid, _money(doc.amountReceived!)],
-          fs,
-          style: boldCell,
-        ),
-        _dataRow(
-          ['', '', '', labels.remainingDue, _money(doc.remainingDue)],
-          fs,
-          style: boldCell,
-        ),
+        _summaryRow(labels.amountPaid, doc.amountReceived!, fs, boldCell),
+        _summaryRow(labels.remainingDue, doc.remainingDue, fs, boldCell),
       ],
     ];
 
@@ -358,6 +346,19 @@ class InvoicePdfBuilder {
         if (pinTotalToBottom) pw.Expanded(child: pw.SizedBox()),
         ...totals,
       ],
+    );
+  }
+
+  pw.Widget _summaryRow(
+    String label,
+    int amountPaisa,
+    _Sizes fs,
+    pw.TextStyle style,
+  ) {
+    return _dataRow(
+      ['', '', '', label, _money(amountPaisa)],
+      fs,
+      style: style,
     );
   }
 
