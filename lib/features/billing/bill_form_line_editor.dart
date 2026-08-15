@@ -86,6 +86,16 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
               ),
             ),
           ),
+          if (line.discount > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                '${l10n.discount} -${formatNpr(Paisa(line.discount), showPaisa: false)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ),
           if (_expanded) ...[
             const SizedBox(height: 8),
             Text(l10n.rate),

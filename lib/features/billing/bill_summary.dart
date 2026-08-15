@@ -7,7 +7,7 @@ import '../../core/utils/money.dart';
 /// Visual treatment for [BillSummary] — dense bar (mobile) vs card (web).
 enum BillSummaryStyle { denseBar, card }
 
-/// Shared bill totals: subtotal, discount editor, taxable, grand total.
+/// Shared bill totals: subtotal, discount editor, grand total.
 class BillSummary extends StatelessWidget {
   const BillSummary({
     super.key,
@@ -36,19 +36,20 @@ class BillSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final discount = parseNpr(billDiscountController.text)?.value ?? 0;
-    final taxable = itemsTotal - discount;
     final discountError = (discount < 0 || discount > itemsTotal)
         ? l10n.discountExceedsItems
         : null;
 
     final accent = accentColor ?? BsColors.primary;
+    final compact = style == BillSummaryStyle.denseBar;
 
     final discountField = TextFormField(
       controller: billDiscountController,
       decoration: InputDecoration(
-        labelText: l10n.billDiscount,
         isDense: true,
+        hintText: '0',
         errorText: discountError,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       ),
       keyboardType: TextInputType.number,
       onChanged: (_) => onDiscountChanged(),
@@ -58,25 +59,32 @@ class BillSummary extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _summaryRow(context, l10n.subtotal, itemsTotal),
-        const SizedBox(height: 8),
-        if (style == BillSummaryStyle.card)
-          Row(
-            children: [
-              Expanded(child: discountField),
+        SizedBox(height: compact ? 6 : 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.billDiscount,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            SizedBox(width: compact ? 96 : 120, child: discountField),
+            if (style == BillSummaryStyle.card) ...[
               const SizedBox(width: 8),
-              Text(
-                discount > 0
-                    ? '- ${formatNpr(Paisa(discount), showPaisa: false)}'
-                    : '—',
-                style: Theme.of(context).textTheme.bodySmall,
+              SizedBox(
+                width: 72,
+                child: Text(
+                  discount > 0
+                      ? '- ${formatNpr(Paisa(discount), showPaisa: false)}'
+                      : '—',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.end,
+                ),
               ),
             ],
-          )
-        else
-          discountField,
-        const SizedBox(height: 8),
-        _summaryRow(context, l10n.taxableAmount, taxable),
-        Divider(height: style == BillSummaryStyle.card ? 24 : 20),
+          ],
+        ),
+        Divider(height: compact ? 14 : 18),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -84,11 +92,11 @@ class BillSummary extends StatelessWidget {
               l10n.grandTotal,
               style: Theme.of(
                 context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             Text(
               formatNpr(Paisa(grandTotal), showPaisa: false),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: accent,
               ),
@@ -99,12 +107,10 @@ class BillSummary extends StatelessWidget {
     );
 
     if (style == BillSummaryStyle.card) {
-      final bg =
-          cardBackground ?? accent.withValues(alpha: 0.04);
-      final border =
-          cardBorderColor ?? accent.withValues(alpha: 0.12);
+      final bg = cardBackground ?? accent.withValues(alpha: 0.04);
+      final border = cardBorderColor ?? accent.withValues(alpha: 0.12);
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(BsRadii.lg),
@@ -119,7 +125,12 @@ class BillSummary extends StatelessWidget {
         color: BsColors.primary.withValues(alpha: 0.04),
         border: const Border(top: BorderSide(color: BsColors.border)),
       ),
-      padding: const EdgeInsets.all(BsSpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+        BsSpacing.lg,
+        BsSpacing.sm,
+        BsSpacing.lg,
+        BsSpacing.sm,
+      ),
       child: body,
     );
   }

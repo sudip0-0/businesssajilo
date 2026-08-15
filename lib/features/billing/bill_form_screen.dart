@@ -236,44 +236,25 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               BsSpacing.lg,
-              BsSpacing.sm,
+              4,
               BsSpacing.lg,
               BsSpacing.sm,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                OutlinedButton(
-                  onPressed: _loading
-                      ? null
-                      : () => _save(forceStatus: BillStatus.due),
-                  child: Text(l10n.saveAsDue),
-                ),
-                const SizedBox(height: 8),
-                BsSuccessButton(
-                  loading: _loading,
-                  onPressed: () {
-                    final narrow = MediaQuery.sizeOf(context).width < 720;
-                    if (narrow && !_showCart && _draft.lines.isNotEmpty) {
-                      setState(() => _showCart = true);
-                      return;
-                    }
-                    _save();
-                  },
-                  label: l10n.saveBill,
-                ),
-                if (_draft.lines.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: _loading
-                        ? null
-                        : () => _save(exportAfterSave: true),
-                    icon: const Icon(Icons.print_outlined, size: 18),
-                    label: Text(l10n.printAndSave),
-                  ),
-                ],
-              ],
+            child: _SaveActionBar(
+              loading: _loading,
+              showSaveAsDue: true,
+              showPrint: _draft.lines.isNotEmpty,
+              primaryLabel: l10n.saveBill,
+              onSaveAsDue: () => _save(forceStatus: BillStatus.due),
+              onPrimary: () {
+                final narrow = MediaQuery.sizeOf(context).width < 720;
+                if (narrow && !_showCart && _draft.lines.isNotEmpty) {
+                  setState(() => _showCart = true);
+                  return;
+                }
+                _save();
+              },
+              onPrintAndSave: () => _save(exportAfterSave: true),
             ),
           ),
         ),
@@ -282,38 +263,25 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   }
 
   Widget _embeddedSaveBar({
-    required AppLocalizations l10n,
     required VoidCallback onPrimary,
     required String primaryLabel,
     bool showSaveAsDue = true,
   }) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(BsSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (showSaveAsDue) ...[
-              OutlinedButton(
-                onPressed: _loading
-                    ? null
-                    : () => _save(forceStatus: BillStatus.due),
-                child: Text(l10n.saveAsDue),
-              ),
-              const SizedBox(height: 8),
-            ],
-            FilledButton(
-              onPressed: _loading ? null : onPrimary,
-              child: _loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(primaryLabel),
-            ),
-          ],
+        padding: const EdgeInsets.fromLTRB(
+          BsSpacing.lg,
+          4,
+          BsSpacing.lg,
+          BsSpacing.sm,
+        ),
+        child: _SaveActionBar(
+          loading: _loading,
+          showSaveAsDue: showSaveAsDue,
+          showPrint: false,
+          primaryLabel: primaryLabel,
+          onSaveAsDue: () => _save(forceStatus: BillStatus.due),
+          onPrimary: onPrimary,
         ),
       ),
     );
@@ -405,7 +373,6 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           Expanded(child: showPicker ? productPicker() : cartPane()),
           if (widget.embedded)
             _embeddedSaveBar(
-              l10n: l10n,
               showSaveAsDue: !(showPicker && _draft.lines.isNotEmpty),
               onPrimary: () {
                 if (showPicker && _draft.lines.isNotEmpty) {
@@ -432,9 +399,112 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         ),
         if (widget.embedded)
           _embeddedSaveBar(
-            l10n: l10n,
             onPrimary: () => _save(),
             primaryLabel: l10n.saveBill,
+          ),
+      ],
+    );
+  }
+}
+
+class _SaveActionBar extends StatelessWidget {
+  const _SaveActionBar({
+    required this.loading,
+    required this.showSaveAsDue,
+    required this.showPrint,
+    required this.primaryLabel,
+    required this.onSaveAsDue,
+    required this.onPrimary,
+    this.onPrintAndSave,
+  });
+
+  final bool loading;
+  final bool showSaveAsDue;
+  final bool showPrint;
+  final String primaryLabel;
+  final VoidCallback onSaveAsDue;
+  final VoidCallback onPrimary;
+  final VoidCallback? onPrintAndSave;
+
+  static const _compactSize = Size(0, 40);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final outlinedStyle = OutlinedButton.styleFrom(
+      minimumSize: _compactSize,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+    );
+    final textStyle = TextButton.styleFrom(
+      minimumSize: const Size(0, 32),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showSaveAsDue)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: outlinedStyle,
+                  onPressed: loading ? null : onSaveAsDue,
+                  child: Text(
+                    l10n.saveAsDue,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    filledButtonTheme: FilledButtonThemeData(
+                      style: FilledButton.styleFrom(
+                        minimumSize: _compactSize,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                  child: BsSuccessButton(
+                    loading: loading,
+                    onPressed: onPrimary,
+                    label: primaryLabel,
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          Theme(
+            data: Theme.of(context).copyWith(
+              filledButtonTheme: FilledButtonThemeData(
+                style: FilledButton.styleFrom(
+                  minimumSize: _compactSize,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+            child: BsSuccessButton(
+              loading: loading,
+              onPressed: onPrimary,
+              label: primaryLabel,
+            ),
+          ),
+        if (showPrint && onPrintAndSave != null)
+          TextButton.icon(
+            style: textStyle,
+            onPressed: loading ? null : onPrintAndSave,
+            icon: const Icon(Icons.print_outlined, size: 16),
+            label: Text(l10n.printAndSave),
           ),
       ],
     );

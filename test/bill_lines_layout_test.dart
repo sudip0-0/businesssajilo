@@ -51,6 +51,44 @@ void main() {
     expect(find.byType(BillLineRow), findsNothing);
   });
 
+  testWidgets('stacked bill lines show per-line discount', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: _l10nDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 360,
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return BillLinesTable(
+                    l10n: l10n,
+                    lines: const [
+                      BillLineView(
+                        name: 'Product 05',
+                        qty: '4',
+                        rate: 'Rs 230',
+                        amount: 'Rs 900',
+                        discount: 'Rs 20',
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('4 × Rs 230'), findsOneWidget);
+    expect(find.text('Discount -Rs 20'), findsOneWidget);
+    expect(find.text('Rs 900'), findsOneWidget);
+  });
+
   testWidgets('wide bill lines keep a table row', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

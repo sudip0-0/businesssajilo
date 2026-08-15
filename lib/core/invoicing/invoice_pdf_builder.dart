@@ -291,7 +291,7 @@ class InvoicePdfBuilder {
         _dataRow(
           [
             '${i + 1}',
-            doc.lines[i].name,
+            _lineLabel(doc.lines[i], labels.discount),
             '${doc.lines[i].qty}',
             _money(doc.lines[i].rate),
             _money(doc.lines[i].lineTotal),
@@ -430,6 +430,11 @@ class InvoicePdfBuilder {
         ],
       ),
     );
+  }
+
+  String _lineLabel(InvoiceLine line, String discountLabel) {
+    if (line.discount <= 0) return line.name;
+    return '${line.name}  ($discountLabel ${_money(-line.discount)})';
   }
 
   /// Bill print amounts: Nepali grouping, no currency symbol, no paisa.

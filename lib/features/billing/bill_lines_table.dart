@@ -16,12 +16,16 @@ class BillLineView {
     required this.qty,
     required this.rate,
     required this.amount,
+    this.discount,
   });
 
   final String name;
   final String qty;
   final String rate;
   final String amount;
+
+  /// Formatted line discount; null when the line has no discount.
+  final String? discount;
 }
 
 /// Product-first line items: stacked on phones, table on wider layouts.
@@ -50,7 +54,7 @@ class BillLinesTable extends StatelessWidget {
                     horizontal: 12,
                     vertical: 12,
                   ),
-                  child: BillLineStackedRow(line: lines[i]),
+                  child: BillLineStackedRow(l10n: l10n, line: lines[i]),
                 ),
               ],
             ],
@@ -79,7 +83,7 @@ class BillLinesTable extends StatelessWidget {
                   horizontal: 12,
                   vertical: 12,
                 ),
-                child: BillLineRow(line: lines[i]),
+                child: BillLineRow(l10n: l10n, line: lines[i]),
               ),
             ],
           ],
@@ -128,8 +132,9 @@ class BillLinesHeader extends StatelessWidget {
 }
 
 class BillLineRow extends StatelessWidget {
-  const BillLineRow({super.key, required this.line});
+  const BillLineRow({super.key, required this.l10n, required this.line});
 
+  final AppLocalizations l10n;
   final BillLineView line;
 
   @override
@@ -137,46 +142,65 @@ class BillLineRow extends StatelessWidget {
     final body = Theme.of(context).textTheme.bodyMedium?.copyWith(
       fontFeatures: const [FontFeature.tabularFigures()],
     );
-    return Row(
+    final discount = line.discount;
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(
-            line.name,
-            style: body,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                line.name,
+                style: body,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(
+              width: _qtyColumnWidth,
+              child: Text(line.qty, style: body, textAlign: TextAlign.center),
+            ),
+            SizedBox(
+              width: _rateColumnWidth,
+              child: Text(line.rate, style: body, textAlign: TextAlign.end),
+            ),
+            SizedBox(
+              width: _amountColumnWidth,
+              child: Text(
+                line.amount,
+                style: body?.copyWith(fontWeight: FontWeight.w600),
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
+        ),
+        if (discount != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            '${l10n.discount} -$discount',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
-        ),
-        SizedBox(
-          width: _qtyColumnWidth,
-          child: Text(line.qty, style: body, textAlign: TextAlign.center),
-        ),
-        SizedBox(
-          width: _rateColumnWidth,
-          child: Text(line.rate, style: body, textAlign: TextAlign.end),
-        ),
-        SizedBox(
-          width: _amountColumnWidth,
-          child: Text(
-            line.amount,
-            style: body?.copyWith(fontWeight: FontWeight.w600),
-            textAlign: TextAlign.end,
-          ),
-        ),
+        ],
       ],
     );
   }
 }
 
 class BillLineStackedRow extends StatelessWidget {
-  const BillLineStackedRow({super.key, required this.line});
+  const BillLineStackedRow({super.key, required this.l10n, required this.line});
 
+  final AppLocalizations l10n;
   final BillLineView line;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final discount = line.discount;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -193,7 +217,7 @@ class BillLineStackedRow extends StatelessWidget {
               child: Text(
                 '${line.qty} × ${line.rate}',
                 style: theme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: scheme.onSurfaceVariant,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -207,6 +231,16 @@ class BillLineStackedRow extends StatelessWidget {
             ),
           ],
         ),
+        if (discount != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            '${l10n.discount} -$discount',
+            style: theme.bodySmall?.copyWith(
+              color: scheme.error,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ],
     );
   }

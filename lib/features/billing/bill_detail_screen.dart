@@ -91,7 +91,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
         return ColoredBox(
           color: Theme.of(context).scaffoldBackgroundColor,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               _BillActions(
                 bill: bill,
@@ -99,7 +99,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                 embedded: widget.embedded,
                 onChanged: () => setState(() => _changed = true),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _BillSummaryCard(
                 l10n: l10n,
                 bill: bill,
@@ -107,7 +107,7 @@ class _BillDetailScreenState extends ConsumerState<BillDetailScreen> {
                 timeStr: timeStr,
                 creator: creator,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _BillLinesCard(
                 l10n: l10n,
                 bill: bill,
@@ -245,296 +245,101 @@ class _BillSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final iconWash = scheme.primary.withValues(alpha: 0.08);
-    final iconColor = scheme.primary;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
 
     return _BillCard(
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 520;
-            final left = _SummaryLeft(
-              l10n: l10n,
-              bill: bill,
-              creator: creator,
-              iconWash: iconWash,
-              iconColor: iconColor,
-            );
-            final right = _SummaryRight(
-              l10n: l10n,
-              bill: bill,
-              dateStr: dateStr,
-              timeStr: timeStr,
-              iconWash: iconWash,
-              iconColor: iconColor,
-              alignEnd: wide,
-            );
-
-            if (!wide) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  left,
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-                  right,
-                ],
-              );
-            }
-
-            return IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(flex: 3, child: left),
-                  Container(
-                    width: 1,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    color: scheme.outlineVariant,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          bill.billNo,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      if (bill.pendingSync) ...[
+                        const SizedBox(width: 6),
+                        Tooltip(
+                          message: l10n.provisionalBillNo,
+                          child: Icon(
+                            Icons.schedule,
+                            color: scheme.accentColor,
+                            size: 16,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  Expanded(flex: 2, child: right),
-                ],
+                ),
+                const SizedBox(width: 8),
+                BillStatusChip(bill.status),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              billCustomerLabel(bill, walkInLabel: l10n.walkIn),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
               ),
-            );
-          },
+            ),
+            if (bill.customerId != null)
+              _CustomerContactLine(customerId: bill.customerId!),
+            if (creator != null) ...[
+              const SizedBox(height: 2),
+              Text('${l10n.billCreatedBy}: $creator', style: muted),
+            ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _InlineMeta(icon: Icons.calendar_today_outlined, text: dateStr),
+                _InlineMeta(icon: Icons.schedule_outlined, text: timeStr),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SummaryLeft extends StatelessWidget {
-  const _SummaryLeft({
-    required this.l10n,
-    required this.bill,
-    required this.creator,
-    required this.iconWash,
-    required this.iconColor,
-  });
-
-  final AppLocalizations l10n;
-  final Bill bill;
-  final String? creator;
-  final Color iconWash;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _IconBadge(
-              icon: Icons.description_outlined,
-              wash: iconWash,
-              color: iconColor,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      bill.billNo,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  if (bill.pendingSync) ...[
-                    const SizedBox(width: 8),
-                    Tooltip(
-                      message: l10n.provisionalBillNo,
-                      child: Icon(
-                        Icons.schedule,
-                        color: scheme.accentColor,
-                        size: 18,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Text(
-          l10n.customerName,
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          billCustomerLabel(bill, walkInLabel: l10n.walkIn),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: scheme.onSurface,
-          ),
-        ),
-        if (bill.customerId != null)
-          _CustomerContactLine(customerId: bill.customerId!),
-        if (creator != null) ...[
-          const SizedBox(height: 16),
-          Text(
-            l10n.billCreatedBy,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            creator!,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _SummaryRight extends StatelessWidget {
-  const _SummaryRight({
-    required this.l10n,
-    required this.bill,
-    required this.dateStr,
-    required this.timeStr,
-    required this.iconWash,
-    required this.iconColor,
-    required this.alignEnd,
-  });
-
-  final AppLocalizations l10n;
-  final Bill bill;
-  final String dateStr;
-  final String timeStr;
-  final Color iconWash;
-  final Color iconColor;
-  final bool alignEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: alignEnd
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      children: [
-        BillStatusChip(bill.status),
-        const SizedBox(height: 20),
-        _SummaryMetaField(
-          icon: Icons.calendar_today_outlined,
-          label: l10n.billDate,
-          value: dateStr,
-          iconWash: iconWash,
-          iconColor: iconColor,
-          alignEnd: alignEnd,
-        ),
-        const SizedBox(height: 16),
-        _SummaryMetaField(
-          icon: Icons.schedule_outlined,
-          label: l10n.billTime,
-          value: timeStr,
-          iconWash: iconWash,
-          iconColor: iconColor,
-          alignEnd: alignEnd,
-        ),
-      ],
-    );
-  }
-}
-
-class _SummaryMetaField extends StatelessWidget {
-  const _SummaryMetaField({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.iconWash,
-    required this.iconColor,
-    required this.alignEnd,
-  });
+class _InlineMeta extends StatelessWidget {
+  const _InlineMeta({required this.icon, required this.text});
 
   final IconData icon;
-  final String label;
-  final String value;
-  final Color iconWash;
-  final Color iconColor;
-  final bool alignEnd;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Column(
-      crossAxisAlignment: alignEnd
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _IconBadge(
-              icon: icon,
-              wash: iconWash,
-              color: iconColor,
-              size: 32,
-              iconSize: 16,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: scheme.onSurface,
-          ),
-        ),
-      ],
+    final scheme = Theme.of(context).colorScheme;
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: scheme.onSurface,
     );
-  }
-}
-
-class _IconBadge extends StatelessWidget {
-  const _IconBadge({
-    required this.icon,
-    required this.wash,
-    required this.color,
-    this.size = 40,
-    this.iconSize = 20,
-  });
-
-  final IconData icon;
-  final Color wash;
-  final Color color;
-  final double size;
-  final double iconSize;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: wash, shape: BoxShape.circle),
-      child: Icon(icon, size: iconSize, color: color),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Text(text, style: style),
+      ],
     );
   }
 }
@@ -603,6 +408,12 @@ class _BillLinesCard extends StatelessWidget {
                               Paisa(item.lineTotal),
                               showPaisa: false,
                             ),
+                            discount: item.discount > 0
+                                ? formatNpr(
+                                    Paisa(item.discount),
+                                    showPaisa: false,
+                                  )
+                                : null,
                           ),
                       ],
                     ),
@@ -706,7 +517,7 @@ class _CustomerContactLine extends ConsumerWidget {
             (address == null || address.isEmpty)) {
           return const SizedBox.shrink();
         }
-        final muted = Theme.of(context).textTheme.bodyMedium?.copyWith(
+        final muted = Theme.of(context).textTheme.bodySmall?.copyWith(
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         );
         return Padding(
