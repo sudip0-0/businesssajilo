@@ -2,6 +2,16 @@ import 'package:businesssajilo/core/utils/bill_totals.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('line gross and line-discount sum stay separate from net total', () {
+    expect(lineGrossPaisa(qty: 6, ratePaisa: 18500), 111000);
+    expect(lineDiscountsTotalPaisa(const [5000, 2000, 0]), 7000);
+    expect(
+      lineGrossPaisa(qty: 6, ratePaisa: 18500) -
+          lineDiscountsTotalPaisa(const [5000]),
+      lineTotalPaisa(qty: 6, ratePaisa: 18500, discountPaisa: 5000),
+    );
+  });
+
   test('line and grand totals in paisa', () {
     expect(lineTotalPaisa(qty: 2, ratePaisa: 5000, discountPaisa: 500), 9500);
 

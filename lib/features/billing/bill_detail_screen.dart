@@ -177,50 +177,80 @@ class _BillActions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    final returnedAsync = canReturn && bill.customerId != null
+        ? ref.watch(billReturnedQtyProvider(bill.id))
+        : null;
+    final showReturn =
+        returnedAsync?.maybeWhen(
+          data: (returned) => bill.items.any((item) {
+            final already = returned[item.id] ?? 0;
+            return item.qty - already > 0;
+          }),
+          orElse: () => false,
+        ) ??
+        false;
+    const actionStyle = ButtonStyle(
+      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
+      minimumSize: WidgetStatePropertyAll(Size(0, 48)),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+
+    return Row(
       children: [
-        FilledButton.icon(
-          onPressed: () => exportBillAsPng(ref, context, bill),
-          icon: const Icon(Icons.chat_outlined, size: 18),
-          label: Text(l10n.shareViaWhatsApp),
-        ),
-        if (canReturn && bill.customerId != null)
-          _ReturnItemsButton(
-            bill: bill,
-            embedded: embedded,
-            onChanged: onChanged,
+        Expanded(
+          child: FilledButton(
+            onPressed: () => exportBillAsPng(ref, context, bill),
+            style: actionStyle,
+            child: _ActionButtonLabel(
+              icon: Icons.chat_outlined,
+              label: l10n.shareViaWhatsApp,
+            ),
           ),
+        ),
+        if (showReturn) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            child: _ReturnItemsButton(
+              bill: bill,
+              embedded: embedded,
+              onChanged: onChanged,
+              style: actionStyle,
+            ),
+          ),
+        ],
+        const SizedBox(width: 8),
         Material(
           color: scheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BsRadii.lg),
             side: BorderSide(color: scheme.outlineVariant),
           ),
-          child: PopupMenuButton<String>(
-            tooltip: l10n.export,
-            padding: EdgeInsets.zero,
-            icon: Icon(Icons.more_horiz, color: scheme.onSurface),
-            onSelected: (value) {
-              switch (value) {
-                case 'print':
-                  exportBillPrint(ref, context, bill);
-                case 'copyImage':
-                  exportBillCopyImage(ref, context, bill);
-                case 'pdf':
-                  exportBillPdfDownload(ref, context, bill);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'print', child: Text(l10n.printInvoice)),
-              PopupMenuItem(
-                value: 'copyImage',
-                child: Text(l10n.copyBillAsImage),
-              ),
-              PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
-            ],
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: PopupMenuButton<String>(
+              tooltip: l10n.export,
+              padding: EdgeInsets.zero,
+              icon: Icon(Icons.more_horiz, color: scheme.onSurface),
+              onSelected: (value) {
+                switch (value) {
+                  case 'print':
+                    exportBillPrint(ref, context, bill);
+                  case 'copyImage':
+                    exportBillCopyImage(ref, context, bill);
+                  case 'pdf':
+                    exportBillPdfDownload(ref, context, bill);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'print', child: Text(l10n.printInvoice)),
+                PopupMenuItem(
+                  value: 'copyImage',
+                  child: Text(l10n.copyBillAsImage),
+                ),
+                PopupMenuItem(value: 'pdf', child: Text(l10n.downloadPdf)),
+              ],
+            ),
           ),
         ),
       ],
@@ -360,6 +390,10 @@ class _BillLinesCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final received = amountReceived;
+    final lineDiscounts = lineDiscountsTotalPaisa(
+      bill.items.map((item) => item.discount),
+    );
+    final itemsGross = bill.itemsTotal + lineDiscounts;
     return _BillCard(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -405,7 +439,12 @@ class _BillLinesCard extends StatelessWidget {
                             qty: '${item.qty}',
                             rate: formatNpr(Paisa(item.rate), showPaisa: false),
                             amount: formatNpr(
-                              Paisa(item.lineTotal),
+                              Paisa(
+                                lineGrossPaisa(
+                                  qty: item.qty,
+                                  ratePaisa: item.rate,
+                                ),
+                              ),
                               showPaisa: false,
                             ),
                             discount: item.discount > 0
@@ -419,58 +458,57 @@ class _BillLinesCard extends StatelessWidget {
                     ),
             ),
             const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 220, maxWidth: 280),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _TotalRow(
+                    label: l10n.total,
+                    value: formatNpr(Paisa(itemsGross), showPaisa: false),
+                  ),
+                  if (lineDiscounts > 0) ...[
+                    const SizedBox(height: 8),
                     _TotalRow(
-                      label: l10n.total,
-                      value: formatNpr(
-                        Paisa(bill.itemsTotal),
-                        showPaisa: false,
-                      ),
+                      label: l10n.discount,
+                      value:
+                          '-${formatNpr(Paisa(lineDiscounts), showPaisa: false)}',
                     ),
-                    if (bill.discount > 0) ...[
-                      const SizedBox(height: 8),
-                      _TotalRow(
-                        label: l10n.billDiscount,
-                        value:
-                            '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
-                      ),
-                    ],
-                    const SizedBox(height: 10),
-                    _TotalRow(
-                      label: l10n.grandTotal,
-                      value: formatNpr(
-                        Paisa(bill.grandTotal),
-                        showPaisa: false,
-                      ),
-                    ),
-                    if (received != null) ...[
-                      const SizedBox(height: 8),
-                      _TotalRow(
-                        label: l10n.amountPaid,
-                        value: formatNpr(Paisa(received), showPaisa: false),
-                      ),
-                      const SizedBox(height: 8),
-                      _TotalRow(
-                        label: l10n.remainingDue,
-                        value: formatNpr(
-                          Paisa(
-                            remainingDuePaisa(
-                              grandTotal: bill.grandTotal,
-                              amountReceived: received,
-                            ),
-                          ),
-                          showPaisa: false,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                  if (bill.discount > 0) ...[
+                    const SizedBox(height: 8),
+                    _TotalRow(
+                      label: l10n.billDiscount,
+                      value:
+                          '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  _TotalRow(
+                    label: l10n.grandTotal,
+                    value: formatNpr(Paisa(bill.grandTotal), showPaisa: false),
+                  ),
+                  if (received != null) ...[
+                    const SizedBox(height: 8),
+                    _TotalRow(
+                      label: l10n.amountPaid,
+                      value: formatNpr(Paisa(received), showPaisa: false),
+                    ),
+                    const SizedBox(height: 8),
+                    _TotalRow(
+                      label: l10n.remainingDue,
+                      value: formatNpr(
+                        Paisa(
+                          remainingDuePaisa(
+                            grandTotal: bill.grandTotal,
+                            amountReceived: received,
+                          ),
+                        ),
+                        showPaisa: false,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -554,16 +592,39 @@ class _CustomerContactLine extends ConsumerWidget {
   }
 }
 
+class _ActionButtonLabel extends StatelessWidget {
+  const _ActionButtonLabel({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
+  }
+}
+
 class _ReturnItemsButton extends ConsumerWidget {
   const _ReturnItemsButton({
     required this.bill,
     this.embedded = false,
     this.onChanged,
+    this.style,
   });
 
   final Bill bill;
   final bool embedded;
   final VoidCallback? onChanged;
+  final ButtonStyle? style;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -580,7 +641,7 @@ class _ReturnItemsButton extends ConsumerWidget {
         });
         if (!hasReturnable) return const SizedBox.shrink();
 
-        return OutlinedButton.icon(
+        return OutlinedButton(
           onPressed: () async {
             if (embedded) {
               final segments = GoRouterState.of(context).uri.pathSegments;
@@ -608,16 +669,19 @@ class _ReturnItemsButton extends ConsumerWidget {
               onChanged?.call();
             }
           },
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
+          style: (style ?? const ButtonStyle()).merge(
+            OutlinedButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+              backgroundColor: Theme.of(context).colorScheme.surface,
             ),
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
-          icon: const Icon(Icons.keyboard_return_rounded, size: 18),
-          label: Text(l10n.returnItems),
+          child: _ActionButtonLabel(
+            icon: Icons.keyboard_return_rounded,
+            label: l10n.returnItems,
+          ),
         );
       },
     );

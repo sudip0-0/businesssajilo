@@ -1,12 +1,17 @@
 /// Pure bill total calculations — all amounts in paisa.
+int lineGrossPaisa({required int qty, required int ratePaisa}) =>
+    qty * ratePaisa;
+
 int lineTotalPaisa({
   required int qty,
   required int ratePaisa,
   int discountPaisa = 0,
 }) {
-  final gross = qty * ratePaisa;
-  return gross - discountPaisa;
+  return lineGrossPaisa(qty: qty, ratePaisa: ratePaisa) - discountPaisa;
 }
+
+int lineDiscountsTotalPaisa(Iterable<int> lineDiscounts) =>
+    lineDiscounts.fold(0, (sum, v) => sum + v);
 
 /// Caps a line discount so it never exceeds the line gross (qty * rate),
 /// and never goes negative.

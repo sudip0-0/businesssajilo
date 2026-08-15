@@ -51,7 +51,9 @@ void main() {
     expect(find.byType(BillLineRow), findsNothing);
   });
 
-  testWidgets('stacked bill lines show per-line discount', (tester) async {
+  testWidgets('stacked bill lines show per-line discount beside gross amount', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: _l10nDelegates,
@@ -70,7 +72,7 @@ void main() {
                         name: 'Product 05',
                         qty: '4',
                         rate: 'Rs 230',
-                        amount: 'Rs 900',
+                        amount: 'Rs 920',
                         discount: 'Rs 20',
                       ),
                     ],
@@ -86,7 +88,7 @@ void main() {
 
     expect(find.text('4 × Rs 230'), findsOneWidget);
     expect(find.text('Discount -Rs 20'), findsOneWidget);
-    expect(find.text('Rs 900'), findsOneWidget);
+    expect(find.text('Rs 920'), findsOneWidget);
   });
 
   testWidgets('wide bill lines keep a table row', (tester) async {

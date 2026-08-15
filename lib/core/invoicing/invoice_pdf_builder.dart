@@ -71,11 +71,14 @@ class InvoicePdfBuilder {
     final inset = margin * 0.4;
     return pw.FullPage(
       ignoreMargins: true,
-      child: pw.Padding(
-        padding: pw.EdgeInsets.all(inset),
-        child: pw.Container(
-          decoration: pw.BoxDecoration(
-            border: pw.Border.all(width: 0.8, color: PdfColors.black),
+      child: pw.Container(
+        color: PdfColors.white,
+        child: pw.Padding(
+          padding: pw.EdgeInsets.all(inset),
+          child: pw.Container(
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(width: 0.8, color: PdfColors.black),
+            ),
           ),
         ),
       ),
