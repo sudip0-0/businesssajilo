@@ -3,9 +3,13 @@ import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/member.dart';
 import 'package:businesssajilo/domain/models/session_state.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+
   group('AccountDeactivatedException', () {
     test('is distinct from generic exceptions', () {
       const e = AccountDeactivatedException();

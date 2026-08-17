@@ -66,7 +66,7 @@ final webRouterProvider = Provider<GoRouter>((ref) {
           : rawPath;
       final isAuthRoute = path == '/login' || path == '/register';
 
-      if (auth.isLoading) return null;
+      if (auth.isLoading && auth.value == null) return null;
 
       final session = auth.value ?? SessionState.empty;
       final loggedIn = session.isAuthenticated;

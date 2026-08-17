@@ -4,57 +4,79 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
 import '../../core/utils/app_prefs.dart';
+import '../../core/utils/session_cache.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/models/member.dart';
 import '../../domain/models/session_state.dart';
 import '../remote/supabase_provider.dart';
+import 'session_restore.dart';
+
+export 'session_restore.dart' show AccountDeactivatedException;
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(supabaseClientProvider));
 });
 
-/// Thrown when a Supabase user exists but has no active member row
-/// (deactivated by the business owner, or orphaned).
-class AccountDeactivatedException implements Exception {
-  const AccountDeactivatedException();
-
-  @override
-  String toString() => 'AccountDeactivatedException: account deactivated';
-}
-
 class AuthRepository {
-  AuthRepository(this._client);
+  AuthRepository(
+    this._client, {
+    SessionCache? sessionCache,
+    Duration memberFetchTimeout = sessionMemberFetchTimeout,
+  }) : _sessionCache = sessionCache ?? SessionCache(),
+       _memberFetchTimeout = memberFetchTimeout;
 
   final SupabaseClient? _client;
+  final SessionCache _sessionCache;
+  final Duration _memberFetchTimeout;
 
   Stream<AuthState> get authStateChanges =>
       _client?.auth.onAuthStateChange ?? const Stream.empty();
 
+  AuthUser? get _currentAuthUser {
+    final user = _client?.auth.currentUser;
+    if (user == null) return null;
+    return AuthUser(id: user.id, email: user.email);
+  }
+
+  /// Last cached staff session for [currentUser], without hitting the network.
+  Future<SessionState?> peekCachedSession() {
+    return SessionRestore.peek(user: _currentAuthUser, cache: _sessionCache);
+  }
+
   Future<SessionState> loadSession() async {
     final client = _client;
-    if (client == null) return SessionState.empty;
+    if (client == null) {
+      await _sessionCache.clear();
+      return SessionState.empty;
+    }
 
+    try {
+      return await SessionRestore.resolve(
+        user: _currentAuthUser,
+        cache: _sessionCache,
+        timeout: _memberFetchTimeout,
+        fetchMember: () => _fetchActiveMember(client),
+      );
+    } on AccountDeactivatedException {
+      try {
+        await client.auth.signOut();
+      } catch (_) {
+        // Best effort — offline sign-out failures shouldn't mask the cause.
+      }
+      rethrow;
+    }
+  }
+
+  Future<Member?> _fetchActiveMember(SupabaseClient client) async {
     final user = client.auth.currentUser;
-    if (user == null) return SessionState.empty;
-
+    if (user == null) return null;
     final row = await client
         .from('members')
         .select()
         .eq('auth_user_id', user.id)
         .eq('is_active', true)
         .maybeSingle();
-
-    if (row == null) {
-      // Orphan session: auth user without an active member row. Sign out so
-      // the stale session cannot linger, and surface a distinct error.
-      try {
-        await client.auth.signOut();
-      } catch (_) {
-        // Best effort — offline sign-out failures shouldn't mask the cause.
-      }
-      throw const AccountDeactivatedException();
-    }
-
+    if (row == null) return null;
     try {
       await NotificationMutePrefs.fromNotificationPrefs(
         row['notification_prefs'],
@@ -62,11 +84,7 @@ class AuthRepository {
     } catch (_) {
       // Local mute cache is best-effort; login must still succeed.
     }
-
-    return SessionState(
-      user: AuthUser(id: user.id, email: user.email),
-      member: Member.fromJson(row),
-    );
+    return Member.fromJson(Map<String, dynamic>.from(row as Map));
   }
 
   Future<void> signIn({required String email, required String password}) async {
@@ -132,6 +150,7 @@ class AuthRepository {
       final message = data is Map ? data['error']?.toString() : null;
       throw AuthException(message ?? 'Account deletion failed');
     }
+    await _sessionCache.clear();
     // Local session is now orphaned; sign out best-effort.
     try {
       await client.auth.signOut();
@@ -141,6 +160,7 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    await _sessionCache.clear();
     final client = _client;
     if (client == null) return;
     await client.auth.signOut();

@@ -119,7 +119,9 @@ void main() {
       client: SupabaseClient('http://localhost', 'anon'),
       connectivityCheck: () async => [ConnectivityResult.none],
       reachabilityProbe: () async => false,
+      scheduleRetry: (_, __) {},
     );
+    addTearDown(sync.dispose);
 
     await db.ensureDeviceMeta('dev-1');
     await sync.syncNow();

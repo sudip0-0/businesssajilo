@@ -22,10 +22,14 @@ class SyncService {
     Connectivity? connectivity,
     Future<List<ConnectivityResult>> Function()? connectivityCheck,
     Future<bool> Function()? reachabilityProbe,
+    void Function(Duration delay, void Function() run)? scheduleRetry,
+    void Function()? cancelScheduledRetry,
   }) : _db = db,
        _connectivity = connectivity ?? Connectivity(),
        _connectivityCheck = connectivityCheck,
        _reachabilityProbe = reachabilityProbe ?? isSupabaseReachable,
+       _scheduleRetry = scheduleRetry,
+       _cancelScheduledRetry = cancelScheduledRetry,
        _puller = SyncPuller(db: db, client: client),
        _pusher = SyncPusher(db: db, client: client);
 
@@ -33,10 +37,15 @@ class SyncService {
   final Connectivity _connectivity;
   final Future<List<ConnectivityResult>> Function()? _connectivityCheck;
   final Future<bool> Function() _reachabilityProbe;
+  final void Function(Duration delay, void Function() run)? _scheduleRetry;
+  final void Function()? _cancelScheduledRetry;
   final SyncPuller _puller;
   final SyncPusher _pusher;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   final SyncCoalesce _coalesce = SyncCoalesce();
+  final ReachabilityBackoff _reachabilityBackoff = ReachabilityBackoff();
+  Timer? _reachabilityTimer;
+  bool _retryArmed = false;
 
   /// True when the last bootstrap pass hit page/duration budget.
   bool get bootstrapIncomplete => _puller.bootstrapIncomplete;
@@ -56,6 +65,7 @@ class SyncService {
       AppLog.warn('Initial sync failed (will retry later)', e, st, {
         'phase': 'initial_sync',
       });
+      _armReachabilityRetry();
     }
   }
 
@@ -69,6 +79,7 @@ class SyncService {
   void dispose() {
     unawaited(_connectivitySub?.cancel());
     _connectivitySub = null;
+    _clearReachabilityRetry();
   }
 
   Future<bool> get isOnline async {
@@ -78,12 +89,41 @@ class SyncService {
     return _reachabilityProbe();
   }
 
+  void _armReachabilityRetry() {
+    if (_retryArmed) return;
+    _retryArmed = true;
+    final delay = _reachabilityBackoff.next();
+    void run() {
+      _retryArmed = false;
+      unawaited(syncNow());
+    }
+
+    final scheduleRetry = _scheduleRetry;
+    if (scheduleRetry != null) {
+      scheduleRetry(delay, run);
+      return;
+    }
+    _reachabilityTimer?.cancel();
+    _reachabilityTimer = Timer(delay, run);
+  }
+
+  void _clearReachabilityRetry() {
+    _reachabilityTimer?.cancel();
+    _reachabilityTimer = null;
+    _retryArmed = false;
+    _reachabilityBackoff.reset();
+    _cancelScheduledRetry?.call();
+  }
+
   Future<void> syncNow({bool initial = false}) async {
     if (_coalesce.syncing) {
       _coalesce.markQueuedIfBusy();
       return;
     }
-    if (!await isOnline) return;
+    if (!await isOnline) {
+      _armReachabilityRetry();
+      return;
+    }
     if (!_coalesce.tryEnter()) return;
 
     final started = DateTime.now().toUtc();
@@ -110,6 +150,11 @@ class SyncService {
         syncMetaLastSuccessAt,
         DateTime.now().toUtc().toIso8601String(),
       );
+      _clearReachabilityRetry();
+    } catch (e, st) {
+      AppLog.warn('sync failed; will retry', e, st, {'phase': 'sync_now'});
+      _armReachabilityRetry();
+      rethrow;
     } finally {
       final duration = DateTime.now().toUtc().difference(started);
       final pendingEnd = await _db.pendingCount();

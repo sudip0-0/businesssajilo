@@ -78,19 +78,27 @@ class SyncingBillsRepository implements BillsRepository {
     if (net != null) return net;
     // Offline fallback: local bills only (credit notes are online-only).
     final start = nptDayStartUtc();
-    final rows = await (_db.select(
-      _db.localBills,
-    )..where((b) => b.createdAt.isBiggerOrEqualValue(start))).get();
+    final end = start.add(const Duration(days: 1));
+    final rows = await (_db.select(_db.localBills)..where(
+          (b) =>
+              b.createdAt.isBiggerOrEqualValue(start) &
+              b.createdAt.isSmallerThanValue(end),
+        ))
+        .get();
     return rows.fold<int>(0, (sum, b) => sum + b.grandTotal);
   }
 
   @override
   Future<int> todaysBillCount() async {
     final start = nptDayStartUtc();
+    final end = start.add(const Duration(days: 1));
     final count = _db.localBills.id.count();
     final query = _db.selectOnly(_db.localBills)
       ..addColumns([count])
-      ..where(_db.localBills.createdAt.isBiggerOrEqualValue(start));
+      ..where(
+        _db.localBills.createdAt.isBiggerOrEqualValue(start) &
+            _db.localBills.createdAt.isSmallerThanValue(end),
+      );
     final row = await query.getSingle();
     return row.read(count) ?? 0;
   }
@@ -120,7 +128,9 @@ class SyncingBillsRepository implements BillsRepository {
       final rows = await client
           .from('report_sales_daily')
           .select('total_sales')
-          .eq('sale_date', day);
+          .eq('sale_date', day)
+          .then((value) => value)
+          .timeout(const Duration(seconds: 3));
       var total = 0;
       for (final row in rows as List) {
         total += ((row as Map)['total_sales'] as num?)?.toInt() ?? 0;
@@ -134,9 +144,14 @@ class SyncingBillsRepository implements BillsRepository {
   @override
   Future<List<Bill>> listTodaysBills({int limit = 20}) async {
     final start = nptDayStartUtc();
+    final end = start.add(const Duration(days: 1));
     final bills =
         await (_db.select(_db.localBills)
-              ..where((b) => b.createdAt.isBiggerOrEqualValue(start))
+              ..where(
+                (b) =>
+                    b.createdAt.isBiggerOrEqualValue(start) &
+                    b.createdAt.isSmallerThanValue(end),
+              )
               ..orderBy([(b) => OrderingTerm.desc(b.createdAt)])
               ..limit(limit))
             .get();
@@ -286,6 +301,7 @@ class SyncingBillsRepository implements BillsRepository {
       }
     }
 
+    final createdAt = DateTime.now().toUtc();
     await _db.transaction(() async {
       await _db
           .into(_db.localBills)
@@ -304,6 +320,7 @@ class SyncingBillsRepository implements BillsRepository {
               createdBy: createdByMemberId,
               customerShopName: Value(shopName),
               syncStatus: const Value('pending'),
+              createdAt: Value(createdAt),
             ),
           );
 
@@ -387,6 +404,7 @@ class SyncingBillsRepository implements BillsRepository {
           'discount': discount,
           'status': status.name,
           'device_prefix': meta.devicePrefix,
+          'created_at': createdAt.toIso8601String(),
           if (customerId == null && shopName != null) 'guest_name': shopName,
           'items': itemRows,
           'payment': ?paymentPayload,
@@ -435,6 +453,7 @@ class SyncingBillsRepository implements BillsRepository {
     final note = refNote?.trim();
     final nameSnapshot = (note == null || note.isEmpty) ? 'Manual sale' : note;
 
+    final createdAt = DateTime.now().toUtc();
     await _db.transaction(() async {
       await _db
           .into(_db.localBills)
@@ -453,6 +472,7 @@ class SyncingBillsRepository implements BillsRepository {
               createdBy: createdByMemberId,
               customerShopName: Value(shopName),
               syncStatus: const Value('pending'),
+              createdAt: Value(createdAt),
             ),
           );
 
@@ -507,6 +527,7 @@ class SyncingBillsRepository implements BillsRepository {
           'amount': amountPaisa,
           'ref_note': note,
           'device_prefix': meta.devicePrefix,
+          'created_at': createdAt.toIso8601String(),
           'payment': ?paymentPayload,
         },
       );

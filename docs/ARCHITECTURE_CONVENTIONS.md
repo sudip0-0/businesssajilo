@@ -34,6 +34,9 @@ lib/web     → features, core, data, domain
 - Active Drift + `SyncService` are owned by `SyncBundleRegistry`.
 - `bootstrapSyncForSession` / `disposeSyncBundle` replace or clear the registry and bump `syncBundleVersionProvider`.
 - Tenant switches must dispose the previous bundle before opening a new one.
+- Staff mobile restores the last cached member when Supabase is unreachable, then opens Drift immediately so previously synced rows are usable offline.
+- While the host is down, `SyncService` retries on a 5s/15s/30s/60s reachability backoff (Wi-Fi up + Docker down does not fire connectivity events).
+- Offline bills send `created_at` on `create_bill` / `record_customer_sale` so delayed sync does not move the sale to today.
 - Initial bootstrap is resumable: page/duration budgets persist `bootstrap_table` + `bootstrap_offset` in `syncMeta`; table watermarks advance only after that table completes.
 - Credit notes (online-only) update `customer_balances.updated_at` on the server; the customers delta pull in `SyncPuller` upserts revised `balance_due` into Drift.
 - Local verification: `test/sync_strategy_test.dart` covers watermark deferral, bootstrap resume offsets, bill-before-payment ordering, legacy queue rejection.

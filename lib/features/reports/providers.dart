@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/report_range.dart';
@@ -100,7 +102,10 @@ final last7DaySalesProvider =
 final ownerDashboardStatsProvider =
     FutureProvider.autoDispose<OwnerDashboardStats>((ref) async {
       try {
-        return await ref.watch(reportsRepositoryProvider).ownerDashboardStats();
+        return await ref
+            .watch(reportsRepositoryProvider)
+            .ownerDashboardStats()
+            .timeout(const Duration(seconds: 5));
       } catch (e, st) {
         AppLog.warn('owner_dashboard_stats RPC fallback', e, st);
         Future<int?> safe(String metric, Future<int> Function() load) async {

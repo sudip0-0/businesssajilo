@@ -129,12 +129,16 @@ class SyncPusher {
   /// server-assigned `bill_no` finalizes the provisional local number.
   /// When the payload embeds a payment, that local payment is marked synced.
   Future<void> _pushBill(String billId, Map<String, dynamic> payload) async {
-    final result = payload['manual_sale'] == true
+    final local = await (_db.select(
+      _db.localBills,
+    )..where((b) => b.id.equals(billId))).getSingleOrNull();
+    final stamped = stampOccurredAt(payload, local?.createdAt);
+    final result = stamped['manual_sale'] == true
         ? await _client.rpc<dynamic>(
             'record_customer_sale',
-            params: {'p': payload},
+            params: {'p': stamped},
           )
-        : await _client.rpc<dynamic>('create_bill', params: {'p': payload});
+        : await _client.rpc<dynamic>('create_bill', params: {'p': stamped});
     final map = result as Map<String, dynamic>;
     final bill = map['bill'] as Map<String, dynamic>?;
     final serverBillNo = bill?['bill_no'] as String?;

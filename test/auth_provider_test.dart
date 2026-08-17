@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:businesssajilo/data/repositories/auth_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/auth_user.dart';
@@ -36,6 +38,7 @@ void main() {
     repo = _MockAuthRepository();
     when(() => repo.authStateChanges).thenAnswer((_) => const Stream.empty());
     when(() => repo.loadSession()).thenAnswer((_) async => _session);
+    when(() => repo.peekCachedSession()).thenAnswer((_) async => null);
     container = ProviderContainer(
       overrides: [authRepositoryProvider.overrideWithValue(repo)],
     );
@@ -95,5 +98,26 @@ void main() {
       () => controller.signIn('staff@test.com', 'password123'),
       throwsA(isA<AccountDeactivatedException>()),
     );
+  });
+
+  test('keeps cached session when live member fetch fails', () async {
+    final load = Completer<SessionState>();
+    when(() => repo.peekCachedSession()).thenAnswer((_) async => _session);
+    when(() => repo.loadSession()).thenAnswer((_) => load.future);
+
+    container.read(authProvider);
+    for (var i = 0; i < 20; i++) {
+      if (container.read(authProvider).value?.member?.id == 'm1') break;
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(container.read(authProvider).value?.isAuthenticated, isTrue);
+
+    load.completeError(Exception('Connection refused'));
+    await Future<void>.delayed(Duration.zero);
+
+    final auth = container.read(authProvider);
+    expect(auth.hasError, isFalse);
+    expect(auth.value?.member?.id, 'm1');
+    expect(auth.value?.isAuthenticated, isTrue);
   });
 }

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../local/app_database.dart';
+import '../sync_helpers.dart';
 import '../sync_merge.dart';
 import 'sync_pull_page.dart';
 
@@ -425,9 +426,12 @@ class SyncPullEntities {
                 customerShopName: Value(shopName),
                 syncStatus: const Value('synced'),
                 createdAt: Value(
-                  map['created_at'] == null
-                      ? DateTime.now().toUtc()
-                      : DateTime.parse(map['created_at'] as String),
+                  preferOccurredAt(
+                    local: local?.createdAt,
+                    remote: map['created_at'] == null
+                        ? null
+                        : DateTime.tryParse(map['created_at'] as String),
+                  ),
                 ),
               ),
             );

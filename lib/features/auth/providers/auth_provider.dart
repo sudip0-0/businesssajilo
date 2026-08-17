@@ -23,11 +23,19 @@ final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
 ) async {
   final businessId = ref.watch(authProvider).value?.member?.businessId;
   if (businessId == null) return null;
-  return ref.watch(businessesRepositoryProvider).getById(businessId);
+  try {
+    return await ref
+        .watch(businessesRepositoryProvider)
+        .getById(businessId)
+        .timeout(const Duration(seconds: 5));
+  } catch (_) {
+    return null;
+  }
 });
 
 class AuthController extends Notifier<AsyncValue<SessionState>> {
   StreamSubscription<dynamic>? _subscription;
+  String? _bootstrappedMemberId;
 
   @override
   AsyncValue<SessionState> build() {
@@ -42,14 +50,25 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   /// Sync bootstrap and push registration are best-effort side effects.
   /// They must never fail login/registration/session restore (offline-first).
   void _startSessionSideEffects(SessionState session) {
-    final member = session.member;
-    if (member != null) {
-      configureSentrySessionScope(
-        memberId: member.id,
-        role: member.role,
-        syncEnabled: syncEnabledFor(member.role),
-      );
+    if (!session.isAuthenticated || session.member == null) {
+      if (_bootstrappedMemberId == null) return;
+      _bootstrappedMemberId = null;
+      clearSentrySessionScope();
+      unawaited(() async {
+        await disposeSyncBundle();
+        ref.read(syncBundleVersionProvider.notifier).bump();
+      }());
+      return;
     }
+
+    final member = session.member!;
+    configureSentrySessionScope(
+      memberId: member.id,
+      role: member.role,
+      syncEnabled: syncEnabledFor(member.role),
+    );
+    if (_bootstrappedMemberId == member.id) return;
+    _bootstrappedMemberId = member.id;
     unawaited(() async {
       try {
         await syncBootstrapForSession(session);
@@ -60,25 +79,48 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
           e,
           st,
         );
-      }
-      final member = session.member;
-      if (member != null) {
-        try {
-          await ref.read(pushServiceProvider).registerForMember(member.id);
-        } catch (e, st) {
-          AppLog.warn('Push token registration failed', e, st);
+        if (_bootstrappedMemberId == member.id) {
+          _bootstrappedMemberId = null;
         }
+      }
+      try {
+        await ref.read(pushServiceProvider).registerForMember(member.id);
+      } catch (e, st) {
+        AppLog.warn('Push token registration failed', e, st);
       }
     }());
   }
 
   Future<void> _reload() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      return ref.read(authRepositoryProvider).loadSession();
-    });
-    final session = state.value;
-    if (session != null) _startSessionSideEffects(session);
+    final repo = ref.read(authRepositoryProvider);
+    final cached = await repo.peekCachedSession();
+    if (cached != null && cached.isAuthenticated) {
+      final alreadyShown = state.value?.member?.id == cached.member?.id;
+      state = AsyncValue.data(cached);
+      if (!alreadyShown) _startSessionSideEffects(cached);
+    } else if (state.value == null) {
+      state = const AsyncValue.loading();
+    }
+
+    final result = await AsyncValue.guard(repo.loadSession);
+    if (result.hasError) {
+      if (state.value?.isAuthenticated == true &&
+          result.error is! AccountDeactivatedException) {
+        AppLog.warn(
+          'Session refresh failed; keeping cached session',
+          result.error,
+          result.stackTrace,
+        );
+        return;
+      }
+      _bootstrappedMemberId = null;
+      state = result;
+      return;
+    }
+
+    final session = result.value ?? SessionState.empty;
+    state = AsyncValue.data(session);
+    _startSessionSideEffects(session);
   }
 
   /// [identifier] may be an email address or a Nepali phone number
@@ -135,6 +177,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
         .deleteAccount(deleteBusiness: deleteBusiness, password: password);
     await disposeSyncBundle();
     clearSentrySessionScope();
+    _bootstrappedMemberId = null;
     ref.read(syncBundleVersionProvider.notifier).bump();
     state = const AsyncValue.data(SessionState.empty);
   }
@@ -148,6 +191,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     }
     await disposeSyncBundle();
     clearSentrySessionScope();
+    _bootstrappedMemberId = null;
     ref.read(syncBundleVersionProvider.notifier).bump();
     await ref.read(authRepositoryProvider).signOut();
     state = const AsyncValue.data(SessionState.empty);

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:businesssajilo/core/utils/report_range.dart';
 import 'package:businesssajilo/data/local/app_database.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
 import 'package:businesssajilo/data/repositories/payments_repository.dart';
@@ -205,6 +208,65 @@ void main() {
       db.localProducts,
     )..where((p) => p.id.equals('prod-x'))).getSingle();
     expect(product.stockCached, 8);
+  });
+
+  test('offline bill queue payload includes created_at', () async {
+    await db.ensureDeviceMeta('device-1');
+    await billsRepo().create(
+      createdByMemberId: 'member-1',
+      status: BillStatus.paid,
+      itemsTotal: 100,
+      discount: 0,
+      grandTotal: 100,
+      lines: const [
+        BillLineInput(
+          productId: 'missing',
+          nameSnapshot: 'X',
+          qty: 1,
+          rate: 100,
+          lineTotal: 100,
+        ),
+      ],
+    );
+
+    final queued = await db.pendingQueue();
+    expect(queued, isNotEmpty);
+    final payload = jsonDecode(queued.first.payloadJson) as Map<String, dynamic>;
+    expect(payload['created_at'], isNotEmpty);
+    expect(DateTime.tryParse(payload['created_at'] as String), isNot(null));
+  });
+
+  test('todaysSales ignores bills from the previous NPT day', () async {
+    await db.ensureDeviceMeta('device-1');
+    final start = nptDayStartUtc();
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'yesterday',
+            businessId: 'biz',
+            billNo: 'D1-1',
+            grandTotal: const Value(9000),
+            status: 'paid',
+            createdBy: 'member-1',
+            createdAt: Value(start.subtract(const Duration(hours: 1))),
+          ),
+        );
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'today',
+            businessId: 'biz',
+            billNo: 'D1-2',
+            grandTotal: const Value(500),
+            status: 'paid',
+            createdBy: 'member-1',
+            createdAt: Value(start.add(const Duration(hours: 1))),
+          ),
+        );
+
+    expect(await billsRepo().todaysSales(), 500);
   });
 
   test('pruneSyncedQueue deletes old synced rows only', () async {
