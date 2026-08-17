@@ -8,6 +8,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/testing/integration_keys.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
+import '../../../features/inventory/providers.dart';
 import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../utils/before_unload.dart';
 import '../web_page_scaffold.dart';
@@ -45,6 +46,8 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
 
   void _onSaved() {
     bumpBillingRevision(ref);
+    bumpInventoryRevision(ref);
+    bumpCustomersRevision(ref);
     ref.invalidate(billListProvider);
     ref.invalidate(todaysSalesProvider);
     ref.invalidate(todaysBillCountProvider);

@@ -120,6 +120,10 @@ class _StockInPickerSheetState extends ConsumerState<StockInPickerSheet> {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
 
+    ref.listen<int>(inventoryRevisionProvider, (prev, next) {
+      if (prev != next) _pager?.refresh();
+    });
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.7,

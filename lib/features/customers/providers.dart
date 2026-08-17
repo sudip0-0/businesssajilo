@@ -38,6 +38,7 @@ void bumpCustomersRevisionFromRef(Ref ref) {
 /// loads the directory without balances.
 final customerListProvider = FutureProvider.autoDispose
     .family<List<Customer>, String>((ref, query) {
+      ref.watch(customersRevisionProvider);
       final role = ref.watch(authProvider).value?.member?.role;
       final includeBalances = role?.canViewCustomerBalance ?? false;
       return ref
@@ -52,6 +53,7 @@ final customerListProvider = FutureProvider.autoDispose
 final recentCustomersProvider = FutureProvider.autoDispose<List<Customer>>((
   ref,
 ) {
+  ref.watch(customersRevisionProvider);
   return ref.watch(customersRepositoryProvider).listRecent(limit: 2);
 });
 
@@ -78,6 +80,7 @@ final customerMemberProvider = FutureProvider.autoDispose
     });
 
 final ownCustomerProvider = FutureProvider.autoDispose<Customer?>((ref) {
+  ref.watch(customersRevisionProvider);
   return ref.watch(customersRepositoryProvider).getOwnProfile();
 });
 
@@ -91,6 +94,7 @@ final ownLedgerProvider = FutureProvider.autoDispose<List<LedgerEntry>>((
 
 final totalDuesProvider = FutureProvider.autoDispose<int>((ref) {
   ref.watch(authProvider.select((s) => s.value?.member?.id));
+  ref.watch(customersRevisionProvider);
   final link = ref.keepAlive();
   final timer = Timer(const Duration(seconds: 45), link.close);
   ref.onDispose(timer.cancel);

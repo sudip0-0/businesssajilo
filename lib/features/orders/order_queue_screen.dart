@@ -10,6 +10,7 @@ import '../../core/ui/status_chip.dart';
 import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/models/order.dart';
+import '../billing/providers.dart';
 import 'order_detail_screen.dart';
 import 'providers.dart';
 import 'staff_order_filter.dart';
@@ -71,6 +72,10 @@ class _OrderQueueScreenState extends ConsumerState<OrderQueueScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
+
+    ref.listen<int>(billingRevisionProvider, (prev, next) {
+      if (prev != next) _refresh();
+    });
 
     Widget listBody;
     if (pager == null || pager.initialLoading) {

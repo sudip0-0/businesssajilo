@@ -61,6 +61,10 @@ class _CustomerLedgerScreenState extends ConsumerState<CustomerLedgerScreen> {
     final l10n = AppLocalizations.of(context);
     final customerAsync = ref.watch(ownCustomerProvider);
 
+    ref.listen<int>(customersRevisionProvider, (prev, next) {
+      if (prev != next) _pager?.refresh();
+    });
+
     return customerAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorState(

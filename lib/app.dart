@@ -16,6 +16,7 @@ import 'core/utils/locale_prefs.dart';
 import 'domain/models/notification_item.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/notifications/notification_navigation.dart';
+import 'features/sync/sync_list_refresh.dart';
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -93,6 +94,7 @@ class BusinessSajiloApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final router = ref.watch(routerProvider);
     ref.watch(pushNavigationBootstrapProvider);
+    ref.watch(syncQueueListRefreshProvider);
 
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,

@@ -66,6 +66,11 @@ class SyncStatus {
   final int failedCount;
   final bool bootstrapIncomplete;
   final DateTime? lastSuccessAt;
+
+  /// Changes when queued work or a successful pull/push may have rewritten
+  /// local lists. IndexedStack pagers and report providers watch this.
+  (int, int, SyncState, DateTime?) get refreshEpoch =>
+      (pendingCount, failedCount, state, lastSuccessAt);
 }
 
 /// Reactive sync status: re-evaluates on queue changes (drift `.watch()`)

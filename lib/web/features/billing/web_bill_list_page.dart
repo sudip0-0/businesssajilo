@@ -236,6 +236,9 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     ref.listen<int>(billingRevisionProvider, (prev, next) {
       if (prev != next) {
         _pager?.refresh();
+        if (_search?.isActive == true) {
+          _search!.retry();
+        }
       }
     });
 

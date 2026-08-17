@@ -93,6 +93,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final productId = widget.productId;
     final productAsync = ref.watch(productDetailProvider(productId));
 
+    ref.listen<int>(inventoryRevisionProvider, (prev, next) {
+      if (prev != next) _movementsPager?.refresh();
+    });
+
     return productAsync.when(
       loading: () => widget.embedded
           ? const Center(child: CircularProgressIndicator())

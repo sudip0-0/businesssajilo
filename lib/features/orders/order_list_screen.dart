@@ -11,6 +11,7 @@ import '../../core/ui/status_chip.dart';
 import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/models/order.dart';
+import '../billing/providers.dart';
 import '../customers/providers.dart';
 
 class OrderListScreen extends ConsumerStatefulWidget {
@@ -62,6 +63,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
+
+    ref.listen<int>(billingRevisionProvider, (prev, next) {
+      if (prev != next) _refresh();
+    });
 
     if (widget.ownOnly) {
       final profileAsync = ref.watch(ownCustomerProvider);

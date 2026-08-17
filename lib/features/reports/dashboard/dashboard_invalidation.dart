@@ -11,12 +11,18 @@ void _invalidateOwnerDashboardCore(dynamic ref) {
   ref.invalidate(last7DaySalesProvider);
   ref.invalidate(salesDailyProvider(ReportRange.last30Days));
   ref.invalidate(salesDailyProvider(ReportRange.last7Days));
+  ref.invalidate(salesDailyProvider(ReportRange.week));
   ref.invalidate(ownerDashboardStatsProvider);
   ref.invalidate(lowStockAlertsProvider);
   ref.invalidate(todaysBillsProvider);
   ref.invalidate(todaysSalesProvider);
   ref.invalidate(pendingTodaysSalesProvider);
+  ref.invalidate(yesterdaysSalesProvider);
   ref.invalidate(recentCustomersProvider);
+  ref.invalidate(duesAgingProvider);
+  ref.invalidate(stockValuationProvider);
+  ref.invalidate(topProductsProvider);
+  ref.invalidate(topCustomersProvider);
 }
 
 /// Invalidates all owner-dashboard data sources (Ref context, e.g. repositories).

@@ -45,6 +45,7 @@ class BillFormDirty extends Notifier<bool> {
 }
 
 final billListProvider = FutureProvider.autoDispose<List<Bill>>((ref) {
+  ref.watch(billingRevisionProvider);
   return ref.watch(billsRepositoryProvider).list();
 });
 
@@ -52,42 +53,41 @@ final billDetailProvider = FutureProvider.autoDispose.family<Bill, String>((
   ref,
   id,
 ) {
+  ref.watch(billingRevisionProvider);
   return ref.watch(billsRepositoryProvider).get(id);
 });
 
 /// Sum of payments recorded against a bill, in paisa.
 final billReceivedTotalProvider = FutureProvider.autoDispose
     .family<int, String>((ref, billId) {
+      ref.watch(billingRevisionProvider);
       return ref.watch(paymentsRepositoryProvider).totalReceivedForBill(billId);
     });
 
 final todaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
-  ref.watch(
-    syncStatusProvider.select(
-      (s) => (s.value?.pendingCount, s.value?.failedCount, s.value?.state),
-    ),
-  );
+  ref.watch(billingRevisionProvider);
+  ref.watch(syncStatusProvider.select((s) => s.value?.refreshEpoch));
   return ref.watch(billsRepositoryProvider).todaysSales();
 });
 
 final pendingTodaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
-  ref.watch(
-    syncStatusProvider.select(
-      (s) => (s.value?.pendingCount, s.value?.failedCount, s.value?.state),
-    ),
-  );
+  ref.watch(billingRevisionProvider);
+  ref.watch(syncStatusProvider.select((s) => s.value?.refreshEpoch));
   return ref.watch(billsRepositoryProvider).unsyncedTodaysSales();
 });
 
 final todaysBillCountProvider = FutureProvider.autoDispose<int>((ref) {
+  ref.watch(billingRevisionProvider);
   return ref.watch(billsRepositoryProvider).todaysBillCount();
 });
 
 final yesterdaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
+  ref.watch(billingRevisionProvider);
   return ref.watch(billsRepositoryProvider).yesterdaysSales();
 });
 
 final todaysBillsProvider = FutureProvider.autoDispose<List<Bill>>((ref) {
+  ref.watch(billingRevisionProvider);
   return ref.watch(billsRepositoryProvider).listTodaysBills(limit: 20);
 });
 
@@ -101,6 +101,7 @@ final salesTrendProvider = FutureProvider.autoDispose<double?>((ref) async {
 
 final openBillsForCustomerProvider = FutureProvider.autoDispose
     .family<List<Bill>, String>((ref, customerId) {
+      ref.watch(billingRevisionProvider);
       if (customerId.isEmpty) return Future.value(const []);
       return ref.watch(billsRepositoryProvider).listOpenForCustomer(customerId);
     });

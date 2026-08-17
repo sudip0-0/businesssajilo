@@ -9,6 +9,7 @@ import '../../../core/ui/status_chip.dart';
 import '../../../core/utils/bs_date.dart';
 import '../../../data/repositories/orders_repository.dart';
 import '../../../domain/models/order.dart';
+import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/orders/order_detail_screen.dart';
 import '../../../features/orders/providers.dart';
@@ -161,6 +162,10 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
     final l10n = AppLocalizations.of(context);
     final selectedId = widget.selectedOrderId;
     final pager = _pager;
+
+    ref.listen<int>(billingRevisionProvider, (prev, next) {
+      if (prev != next) _refresh();
+    });
 
     if (widget.ownOnly) {
       final profileAsync = ref.watch(ownCustomerProvider);

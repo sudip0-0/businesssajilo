@@ -19,10 +19,14 @@ import '../../domain/models/top_customer_row.dart';
 import '../../domain/models/top_product_row.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../data/sync/sync_providers.dart';
+import '../billing/providers.dart';
+import '../customers/providers.dart';
+import '../inventory/providers.dart';
 import 'report_period.dart';
 
 final salesDailyProvider = FutureProvider.autoDispose
     .family<List<SalesPeriodPoint>, ReportRange>((ref, range) {
+      ref.watch(billingRevisionProvider);
       final window = dateRangeFor(range);
       return ref
           .watch(reportsRepositoryProvider)
@@ -31,6 +35,7 @@ final salesDailyProvider = FutureProvider.autoDispose
 
 final topProductsProvider = FutureProvider.autoDispose
     .family<List<TopProductRow>, ReportRange>((ref, range) {
+      ref.watch(billingRevisionProvider);
       final window = dateRangeFor(range);
       return ref
           .watch(reportsRepositoryProvider)
@@ -39,6 +44,8 @@ final topProductsProvider = FutureProvider.autoDispose
 
 final topCustomersProvider = FutureProvider.autoDispose
     .family<List<TopCustomerRow>, ReportRange>((ref, range) {
+      ref.watch(billingRevisionProvider);
+      ref.watch(customersRevisionProvider);
       final window = dateRangeFor(range);
       return ref
           .watch(reportsRepositoryProvider)
@@ -48,6 +55,7 @@ final topCustomersProvider = FutureProvider.autoDispose
 /// Range-keyed variants for web report pages (preset + custom).
 final salesDailyRangeProvider = FutureProvider.autoDispose
     .family<List<SalesPeriodPoint>, ReportPeriod>((ref, period) {
+      ref.watch(billingRevisionProvider);
       return ref
           .watch(reportsRepositoryProvider)
           .salesDaily(from: period.from, to: period.to);
@@ -55,6 +63,7 @@ final salesDailyRangeProvider = FutureProvider.autoDispose
 
 final topProductsRangeProvider = FutureProvider.autoDispose
     .family<List<TopProductRow>, ReportPeriod>((ref, period) {
+      ref.watch(billingRevisionProvider);
       return ref
           .watch(reportsRepositoryProvider)
           .topProducts(from: period.from, to: period.to, limit: 10);
@@ -62,6 +71,8 @@ final topProductsRangeProvider = FutureProvider.autoDispose
 
 final topCustomersRangeProvider = FutureProvider.autoDispose
     .family<List<TopCustomerRow>, ReportPeriod>((ref, period) {
+      ref.watch(billingRevisionProvider);
+      ref.watch(customersRevisionProvider);
       return ref
           .watch(reportsRepositoryProvider)
           .topCustomers(from: period.from, to: period.to, limit: 10);
@@ -69,6 +80,7 @@ final topCustomersRangeProvider = FutureProvider.autoDispose
 
 final billsInRangeProvider = FutureProvider.autoDispose
     .family<List<Bill>, BillsRangeQuery>((ref, key) {
+      ref.watch(billingRevisionProvider);
       return ref
           .watch(billsRepositoryProvider)
           .listInRange(
@@ -81,6 +93,8 @@ final billsInRangeProvider = FutureProvider.autoDispose
 
 final duesAgingProvider = FutureProvider.autoDispose<DuesAgingReport>((ref) {
   ref.watch(authProvider.select((s) => s.value?.member?.id));
+  ref.watch(billingRevisionProvider);
+  ref.watch(customersRevisionProvider);
   final link = ref.keepAlive();
   final timer = Timer(const Duration(seconds: 45), link.close);
   ref.onDispose(timer.cancel);
@@ -89,6 +103,7 @@ final duesAgingProvider = FutureProvider.autoDispose<DuesAgingReport>((ref) {
 
 final stockValuationProvider = FutureProvider.autoDispose
     .family<List<StockValuationRow>, bool>((ref, lowStockOnly) {
+      ref.watch(inventoryRevisionProvider);
       return ref
           .watch(reportsRepositoryProvider)
           .stockValuation(lowStockOnly: lowStockOnly);
@@ -96,6 +111,7 @@ final stockValuationProvider = FutureProvider.autoDispose
 
 final last7DaySalesProvider =
     FutureProvider.autoDispose<List<SalesPeriodPoint>>((ref) {
+      ref.watch(billingRevisionProvider);
       final window = dateRangeFor(ReportRange.last7Days);
       return ref
           .watch(reportsRepositoryProvider)
@@ -108,11 +124,10 @@ final last7DaySalesProvider =
 final ownerDashboardStatsProvider =
     FutureProvider.autoDispose<OwnerDashboardStats>((ref) async {
       ref.watch(authProvider.select((s) => s.value?.member?.id));
-      ref.watch(
-        syncStatusProvider.select(
-          (s) => (s.value?.pendingCount, s.value?.failedCount, s.value?.state),
-        ),
-      );
+      ref.watch(billingRevisionProvider);
+      ref.watch(inventoryRevisionProvider);
+      ref.watch(customersRevisionProvider);
+      ref.watch(syncStatusProvider.select((s) => s.value?.refreshEpoch));
       final link = ref.keepAlive();
       final timer = Timer(const Duration(seconds: 45), link.close);
       ref.onDispose(timer.cancel);
