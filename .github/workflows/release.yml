@@ -26,7 +26,7 @@ jobs:
           deno-version: v2.x
       - run: deno test supabase/functions/_shared/validation_test.ts --allow-read
       - run: deno test supabase/functions/notify/push_policy_test.ts --allow-read
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
       - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
       - run: supabase test db
 
@@ -54,7 +54,7 @@ jobs:
             echo "has_vercel=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         if: steps.secrets.outputs.has_supabase == 'true'
       - name: Link Supabase project
         if: steps.secrets.outputs.has_supabase == 'true'
