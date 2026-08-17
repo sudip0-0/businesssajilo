@@ -122,7 +122,9 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
             padding: EdgeInsets.fromLTRB(48, 48, 48, 48 + bottomInset),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: BsBreakpoints.phoneCompact),
+              constraints: const BoxConstraints(
+                maxWidth: BsBreakpoints.phoneCompact,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -194,6 +196,9 @@ class _WebRegisterPageState extends ConsumerState<WebRegisterPage> {
                       decoration: InputDecoration(
                         labelText: l10n.password,
                         suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? l10n.showPassword
+                              : l10n.hidePassword,
                           icon: Icon(
                             _obscurePassword
                                 ? PhosphorIconsRegular.eye

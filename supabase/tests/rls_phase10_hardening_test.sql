@@ -145,7 +145,7 @@ select throws_ok(
 select test_set_auth('55555555-5555-5555-5555-555555555555');
 select throws_ok(
   $$select insert_audit_log('products', 'b1111111-1111-1111-1111-111111111111', 'name', 'a', 'b', 'sync_lww')$$,
-  '42501',
+  'P0001',
   null,
   'authenticated cannot execute insert_audit_log'
 );

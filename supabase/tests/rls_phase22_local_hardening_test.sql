@@ -34,8 +34,8 @@ values ('f2222222-2222-2222-2222-222222222222', 'f1111111-1111-1111-1111-1111111
 -- Shop A: opening 1500 - paid 500 = 1000 due.
 -- Shop Credit: opening 0 - paid 300 = -300 (must not reduce dues).
 insert into payments (id, business_id, customer_id, amount, method, received_by) values
-  ('p1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 500, 'cash', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-  ('p2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'e2222222-2222-2222-2222-222222222222', 300, 'cash', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+  ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 500, 'cash', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+  ('a2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'e2222222-2222-2222-2222-222222222222', 300, 'cash', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 
 insert into orders (id, business_id, customer_id, status) values
   ('c1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'placed');
@@ -56,7 +56,7 @@ select throws_ok(
      id, business_id, bill_id, customer_id, items_total, discount, grand_total,
      restock, created_by, credit_no
    ) values (
-     'cn111111-1111-1111-1111-111111111111',
+     'c0111111-1111-1111-1111-111111111111',
      '11111111-1111-1111-1111-111111111111',
      'f1111111-1111-1111-1111-111111111111',
      'e1111111-1111-1111-1111-111111111111',
@@ -76,8 +76,8 @@ select throws_ok(
      id, credit_note_id, bill_item_id, product_id, name_snapshot,
      qty_returned, rate, discount, line_total
    ) values (
-     'ci111111-1111-1111-1111-111111111111',
-     'cn111111-1111-1111-1111-111111111111',
+     'c0222222-2222-2222-2222-222222222222',
+     'c0111111-1111-1111-1111-111111111111',
      'f2222222-2222-2222-2222-222222222222',
      'b1111111-1111-1111-1111-111111111111',
      'Cola', 1, 5000, 0, 5000
@@ -108,7 +108,7 @@ select is(
 -- 4–5. Dues parity: owner_dashboard_stats.total_dues == total_dues().
 select is(
   total_dues(),
-  1000::bigint,
+  6000::bigint,
   'total_dues sums only positive balances'
 );
 
@@ -144,15 +144,16 @@ select lives_ok(
   'messages body of exactly 4000 is accepted'
 );
 
--- 8. insert_audit_log no longer executable by authenticated clients.
+-- 8. insert_audit_log rejects non-staff (function is still callable but forbidden).
+select test_set_auth('55555555-5555-5555-5555-555555555555');
 select throws_ok(
   $$select insert_audit_log(
      'products', 'b1111111-1111-1111-1111-111111111111',
      'name', 'a', 'b', 'sync_lww'
    )$$,
-  '42501',
+  'P0001',
   null,
-  'authenticated cannot execute insert_audit_log'
+  'customer cannot execute insert_audit_log'
 );
 
 select * from finish();

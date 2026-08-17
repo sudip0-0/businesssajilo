@@ -56,9 +56,14 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
 
     final rowHeight = widget.compact ? 40.0 : 48.0;
 
+    final start = widget.page * kListPageSize;
+    final visible = widget.items.length <= kListPageSize
+        ? widget.items
+        : widget.items.skip(start).take(kListPageSize).toList();
+
     final rows = <DataRow>[];
-    for (var i = 0; i < widget.items.length; i++) {
-      final item = widget.items[i];
+    for (var i = 0; i < visible.length; i++) {
+      final item = visible[i];
       final id = widget.idFor?.call(item);
       final selected = id != null && id == widget.selectedId;
       final built = widget.rowBuilder(item, i);

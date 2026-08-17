@@ -66,7 +66,11 @@ Write-Host "Project: $ProjectRoot"
 Write-Host "HARDENING_GATE: $HardeningGate"
 
 Invoke-Step "dart format (check)" {
-    dart format --output=none --set-exit-if-changed .
+    dart format --output=none --set-exit-if-changed lib test integration_test
+}
+
+Invoke-Step "generated code (build_runner)" {
+    dart run build_runner build --delete-conflicting-outputs
 }
 
 Invoke-Step "flutter analyze" {
@@ -103,6 +107,7 @@ if ($dockerOk -and $supabaseOk) {
 if (Test-Command "deno") {
     Invoke-Step "deno test (validation.ts)" {
         deno test supabase/functions/_shared/validation_test.ts --allow-read
+        deno test supabase/functions/notify/push_policy_test.ts --allow-read
     }
 } else {
     if ($HardeningGate) {

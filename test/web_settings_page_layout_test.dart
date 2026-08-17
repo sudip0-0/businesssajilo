@@ -34,57 +34,58 @@ void main() {
     );
   });
 
-  testWidgets('settings page scrolls instead of overflowing on a short window', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1200, 480);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'settings page scrolls instead of overflowing on a short window',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 480);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authProvider.overrideWith(
-            () => _FixedAuth(
-              const SessionState(
-                member: Member(
-                  id: 'me',
-                  businessId: 'biz',
-                  authUserId: 'auth-me',
-                  role: Role.owner,
-                  displayName: 'Owner',
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(
+              () => _FixedAuth(
+                const SessionState(
+                  member: Member(
+                    id: 'me',
+                    businessId: 'biz',
+                    authUserId: 'auth-me',
+                    role: Role.owner,
+                    displayName: 'Owner',
+                  ),
                 ),
               ),
             ),
-          ),
-          currentBusinessProvider.overrideWith(
-            (ref) async => const Business(
-              id: 'biz',
-              name: 'Test Shop',
-              nameNp: 'टेस्ट',
-              address: 'Kathmandu',
-              phone: '9800000000',
-              subscriptionPlan: 'free',
+            currentBusinessProvider.overrideWith(
+              (ref) async => const Business(
+                id: 'biz',
+                name: 'Test Shop',
+                nameNp: 'टेस्ट',
+                address: 'Kathmandu',
+                phone: '9800000000',
+                subscriptionPlan: 'free',
+              ),
             ),
+          ],
+          child: MaterialApp(
+            theme: ThemeData(extensions: const [WebTokens.light]),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const WebSettingsPage(),
           ),
-        ],
-        child: MaterialApp(
-          theme: ThemeData(extensions: const [WebTokens.light]),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const WebSettingsPage(),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull);
-    expect(find.text('Phone'), findsOneWidget);
-    expect(find.text('Mute order chat notifications'), findsOneWidget);
-    expect(find.text('Plan'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Phone'), findsOneWidget);
+      expect(find.text('Mute order chat notifications'), findsOneWidget);
+      expect(find.text('Plan'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Plan'));
-    expect(tester.takeException(), isNull);
-  });
+      await tester.ensureVisible(find.text('Plan'));
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

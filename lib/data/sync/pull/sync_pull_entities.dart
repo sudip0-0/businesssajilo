@@ -139,6 +139,44 @@ class SyncPullEntities {
     }).toList();
   }
 
+  static const _billsSelectWithMembers =
+      '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)';
+  static const _billsSelect = '*, customers(shop_name), bill_items(*)';
+
+  Future<dynamic> _pullBillsPage(int from, int to) async {
+    try {
+      return await _client
+          .from('bills')
+          .select(_billsSelectWithMembers)
+          .order('created_at', ascending: false)
+          .range(from, to);
+    } on PostgrestException {
+      return await _client
+          .from('bills')
+          .select(_billsSelect)
+          .order('created_at', ascending: false)
+          .range(from, to);
+    }
+  }
+
+  Future<dynamic> _pullBillsDeltaPage(int from, int to, String iso) async {
+    try {
+      return await _client
+          .from('bills')
+          .select(_billsSelectWithMembers)
+          .gte('updated_at', iso)
+          .order('created_at', ascending: false)
+          .range(from, to);
+    } on PostgrestException {
+      return await _client
+          .from('bills')
+          .select(_billsSelect)
+          .gte('updated_at', iso)
+          .order('created_at', ascending: false)
+          .range(from, to);
+    }
+  }
+
   Future<PullPageResult> pullBillsBootstrap(
     DateTime ts, {
     int startOffset = 0,
@@ -150,27 +188,14 @@ class SyncPullEntities {
       ts: ts,
       startOffset: startOffset,
       budget: budget,
-      buildPage: (from, to) => _client
-          .from('bills')
-          .select(
-            '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)',
-          )
-          .order('created_at', ascending: false)
-          .range(from, to),
+      buildPage: (from, to) => _pullBillsPage(from, to),
       onPage: upsertRemoteBillsBatch,
     );
   }
 
   Future<void> pullBillsDelta(String iso, DateTime ts) async {
     await _page.pullPaged(
-      buildPage: (from, to) => _client
-          .from('bills')
-          .select(
-            '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)',
-          )
-          .gte('updated_at', iso)
-          .order('created_at', ascending: false)
-          .range(from, to),
+      buildPage: (from, to) => _pullBillsDeltaPage(from, to, iso),
       onPage: upsertRemoteBillsBatch,
     );
     await _db.setWatermark('bills', ts);
@@ -348,14 +373,16 @@ class SyncPullEntities {
         await (_db.select(_db.localPayments)..where(
               (p) =>
                   p.customerId.isIn(customerIds) &
-                  p.syncStatus.equals('pending'),
+                  (p.syncStatus.equals('pending') |
+                      p.syncStatus.equals('failed')),
             ))
             .get();
     final pendingBills =
         await (_db.select(_db.localBills)..where(
               (b) =>
                   b.customerId.isIn(customerIds) &
-                  b.syncStatus.equals('pending'),
+                  (b.syncStatus.equals('pending') |
+                      b.syncStatus.equals('failed')),
             ))
             .get();
     return {
@@ -393,18 +420,27 @@ class SyncPullEntities {
             ? guestName
             : (local?.customerId == null ? local?.customerShopName : null);
 
-        if (local != null && local.syncStatus == 'pending') {
-          final serverBillNo = map['bill_no'] as String;
+        if (local != null &&
+            (local.syncStatus == 'pending' || local.syncStatus == 'failed')) {
+          final serverBillNo = map['bill_no']?.toString();
           await (_db.update(
             _db.localBills,
           )..where((b) => b.id.equals(billId))).write(
             LocalBillsCompanion(
               syncStatus: const Value('synced'),
-              billNo: Value(serverBillNo),
-              status: Value(map['status'] as String),
+              billNo: serverBillNo != null && serverBillNo.isNotEmpty
+                  ? Value(serverBillNo)
+                  : const Value.absent(),
+              status: map['status'] is String
+                  ? Value(map['status'] as String)
+                  : const Value.absent(),
+              customerId: map['customer_id'] is String
+                  ? Value(map['customer_id'] as String)
+                  : const Value.absent(),
               customerShopName: Value(shopName),
             ),
           );
+          await _db.markQueueSyncedForEntity(billId);
           continue;
         }
 

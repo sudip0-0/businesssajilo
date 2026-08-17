@@ -226,12 +226,21 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Unsynced items shown in the badge (pending + terminal failures).
   Future<int> pendingCount() async {
     final rows =
         await (select(syncQueue)..where(
               (q) => q.status.equals('pending') | q.status.equals('failed'),
             ))
             .get();
+    return rows.length;
+  }
+
+  /// Automatically retryable queue items only (excludes terminal `failed`).
+  Future<int> retryableCount() async {
+    final rows = await (select(
+      syncQueue,
+    )..where((q) => q.status.equals('pending'))).get();
     return rows.length;
   }
 
@@ -242,16 +251,56 @@ class AppDatabase extends _$AppDatabase {
     return rows.length;
   }
 
+  /// Marks queue rows for [entityId] synced (pull found the remote row).
+  Future<void> markQueueSyncedForEntity(String entityId) async {
+    await (update(syncQueue)..where(
+          (q) =>
+              q.entityId.equals(entityId) &
+              (q.status.equals('pending') | q.status.equals('failed')),
+        ))
+        .write(const SyncQueueCompanion(status: Value('synced')));
+  }
+
   /// Resets terminally failed items so they get retried from scratch.
-  Future<void> retryFailed() async {
-    await (update(syncQueue)..where((q) => q.status.equals('failed'))).write(
-      const SyncQueueCompanion(
-        status: Value('pending'),
-        attempts: Value(0),
-        nextAttemptAt: Value(null),
-        lastError: Value(null),
-      ),
-    );
+  /// When [queueRowId] is set, only that row is reset.
+  Future<void> retryFailed({int? queueRowId}) async {
+    final rows =
+        await (select(syncQueue)..where((q) {
+              final failed = q.status.equals('failed');
+              if (queueRowId == null) return failed;
+              return failed & q.id.equals(queueRowId);
+            }))
+            .get();
+    for (final row in rows) {
+      await (update(syncQueue)..where((q) => q.id.equals(row.id))).write(
+        const SyncQueueCompanion(
+          status: Value('pending'),
+          attempts: Value(0),
+          nextAttemptAt: Value(null),
+          lastError: Value(null),
+        ),
+      );
+      await setLocalEntitySyncStatus(row.entityType, row.entityId, 'pending');
+    }
+  }
+
+  Future<void> setLocalEntitySyncStatus(
+    String entityType,
+    String entityId,
+    String status,
+  ) async {
+    switch (entityType) {
+      case 'bill':
+        await (update(localBills)..where((b) => b.id.equals(entityId))).write(
+          LocalBillsCompanion(syncStatus: Value(status)),
+        );
+      case 'payment':
+        await (update(localPayments)..where((p) => p.id.equals(entityId)))
+            .write(LocalPaymentsCompanion(syncStatus: Value(status)));
+      case 'stock_movement':
+        await (update(localStockMovements)..where((m) => m.id.equals(entityId)))
+            .write(LocalStockMovementsCompanion(syncStatus: Value(status)));
+    }
   }
 
   /// Deletes successfully synced queue rows older than [olderThan].

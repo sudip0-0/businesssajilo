@@ -20,6 +20,7 @@ void invalidateAfterBillSaved(
 }) {
   ref.invalidate(billListProvider);
   ref.invalidate(todaysSalesProvider);
+  ref.invalidate(pendingTodaysSalesProvider);
   ref.invalidate(todaysBillCountProvider);
   ref.invalidate(todaysBillsProvider);
   ref.invalidate(totalDuesProvider);

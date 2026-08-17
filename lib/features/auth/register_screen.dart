@@ -45,19 +45,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context);
     await runInlineFormAction(
-      action: () => ref.read(authProvider.notifier).registerBusiness(
-        email: _emailController.text,
-        password: _passwordController.text,
-        displayName: _displayNameController.text,
-        businessName: _businessNameController.text,
-        businessNameNp: _businessNameNpController.text.isEmpty
-            ? null
-            : _businessNameNpController.text,
-        phone: _phoneController.text.isEmpty ? null : _phoneController.text,
-        address: _addressController.text.isEmpty
-            ? null
-            : _addressController.text,
-      ),
+      action: () => ref
+          .read(authProvider.notifier)
+          .registerBusiness(
+            email: _emailController.text,
+            password: _passwordController.text,
+            displayName: _displayNameController.text,
+            businessName: _businessNameController.text,
+            businessNameNp: _businessNameNpController.text.isEmpty
+                ? null
+                : _businessNameNpController.text,
+            phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+            address: _addressController.text.isEmpty
+                ? null
+                : _addressController.text,
+          ),
       onState: ({required loading, error}) => setState(() {
         _loading = loading;
         _error = error;

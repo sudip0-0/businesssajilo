@@ -3,11 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 /// Core enums — names must match Postgres enums exactly (see Agent.md).
 enum Role { owner, sales, warehouse, customer }
 
-enum OrderStatus {
-  placed,
-  received,
-  billed,
-}
+enum OrderStatus { placed, received, billed }
 
 enum QuoteStatus { sent, accepted, rejected, superseded }
 
@@ -16,6 +12,12 @@ enum BillStatus { paid, partial, due }
 enum PaymentMethod { cash, cheque, wallet, bank }
 
 enum ReportRange { today, week, month, last7Days, last30Days }
+
+/// Server-side product stock filter for paginated inventory lists.
+enum ProductStockFilter { all, low, out, inStock }
+
+/// Server-side customer ledger filter for paginated customer lists.
+enum CustomerBalanceFilter { all, due, credit, settled }
 
 enum AgingBucket { bucket0to30, bucket31to60, bucket60plus }
 
@@ -55,8 +57,7 @@ extension RolePermissions on Role {
       this == Role.owner || this == Role.sales || this == Role.warehouse;
 
   /// Customer ledger / balance_due / dues (warehouse must never see this).
-  bool get canViewCustomerBalance =>
-      this == Role.owner || this == Role.sales;
+  bool get canViewCustomerBalance => this == Role.owner || this == Role.sales;
 
   bool get canManageStock => this == Role.owner || this == Role.warehouse;
   bool get canQuote => this == Role.owner || this == Role.sales;

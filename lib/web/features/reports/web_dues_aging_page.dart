@@ -274,20 +274,14 @@ class _DuesBody extends StatelessWidget {
                     height: 420,
                     child: WebDataTable<AgingCustomerRow>(
                       columns: [
-                        DataColumn(
-                          label: Text(l10n.customers),
-                          onSort: onSort,
-                        ),
+                        DataColumn(label: Text(l10n.customers), onSort: onSort),
                         DataColumn(label: Text(l10n.phone), onSort: onSort),
                         DataColumn(
                           label: Text(l10n.dues),
                           numeric: true,
                           onSort: onSort,
                         ),
-                        DataColumn(
-                          label: Text(l10n.oldestDue),
-                          onSort: onSort,
-                        ),
+                        DataColumn(label: Text(l10n.oldestDue), onSort: onSort),
                         DataColumn(
                           label: Text(l10n.ageDays),
                           numeric: true,
@@ -313,10 +307,7 @@ class _DuesBody extends StatelessWidget {
                           ),
                           DataCell(
                             Text(
-                              formatNpr(
-                                Paisa(c.balanceDue),
-                                showPaisa: false,
-                              ),
+                              formatNpr(Paisa(c.balanceDue), showPaisa: false),
                               style: WebTypography.mono(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,

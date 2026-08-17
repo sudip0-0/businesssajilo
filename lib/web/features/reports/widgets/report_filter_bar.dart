@@ -41,10 +41,7 @@ class ReportFilterBar extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               if (search != null)
-                SizedBox(
-                  width: compact ? double.infinity : 280,
-                  child: search,
-                ),
+                SizedBox(width: compact ? double.infinity : 280, child: search),
               ...filters,
               ...actions,
             ],

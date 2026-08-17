@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/logging/sentry_scope.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/models/aging_customer_row.dart';
 import '../../domain/models/dues_aging_report.dart';
@@ -136,7 +137,11 @@ class SupabaseReportsRepository implements ReportsRepository {
   @override
   Future<OwnerDashboardStats> ownerDashboardStats() async {
     final client = requireSupabaseClient(_client);
-    final raw = await client.rpc('owner_dashboard_stats');
+    final raw = await tracedOp(
+      'rpc.owner_dashboard_stats',
+      'db.rpc',
+      () => client.rpc('owner_dashboard_stats'),
+    );
     final map = raw is Map
         ? Map<String, dynamic>.from(raw)
         : Map<String, dynamic>.from((raw as List).first as Map);

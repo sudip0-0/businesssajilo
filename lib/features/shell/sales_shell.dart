@@ -39,11 +39,31 @@ class _SalesShellState extends ConsumerState<SalesShell> {
     final l10n = AppLocalizations.of(context);
     final totalDuesAsync = ref.watch(totalDuesProvider);
     final todaysBillsAsync = ref.watch(todaysBillCountProvider);
+    final todaysSalesAsync = ref.watch(todaysSalesProvider);
+    final pendingSalesAsync = ref.watch(pendingTodaysSalesProvider);
     final pendingOrdersAsync = ref.watch(pendingOrdersCountProvider);
 
     final pages = [
       RoleDashboard(
         stats: [
+          DashboardStat(
+            icon: Icons.payments_outlined,
+            label: l10n.todaysSales,
+            value: todaysSalesAsync.when(
+              data: (d) => formatNpr(Paisa(d), showPaisa: false),
+              loading: () => '…',
+              error: (_, _) => '—',
+            ),
+            subtitle: pendingSalesAsync.when(
+              data: (d) => d > 0
+                  ? l10n.pendingSyncSalesHint(
+                      formatNpr(Paisa(d), showPaisa: false),
+                    )
+                  : null,
+              loading: () => null,
+              error: (_, _) => null,
+            ),
+          ),
           DashboardStat(
             icon: Icons.shopping_cart,
             label: l10n.pendingOrders,
@@ -132,7 +152,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
         const AccountAction(),
         const LogoutAction(),
       ],
-      body: pages[_index],
+      body: IndexedStack(index: _index, children: pages),
       floatingActionButton: switch (_index) {
         1 => FloatingActionButton.extended(
           backgroundColor: BsColors.secondary,
@@ -175,6 +195,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
               bumpBillingRevision(ref);
               ref.invalidate(billListProvider);
               ref.invalidate(todaysSalesProvider);
+              ref.invalidate(pendingTodaysSalesProvider);
               ref.invalidate(todaysBillCountProvider);
               ref.invalidate(totalDuesProvider);
             }

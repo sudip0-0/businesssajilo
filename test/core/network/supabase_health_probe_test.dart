@@ -22,12 +22,14 @@ void main() {
       await request.response.close();
     });
 
-    final result = await probeSupabaseHealth(
-      timeout: const Duration(seconds: 2),
-    ).timeout(const Duration(seconds: 3), onTimeout: () {
-      // Env.supabaseUrl empty in unit tests — use direct URI override via env
-      return HealthProbeResult.unreachable;
-    });
+    final result =
+        await probeSupabaseHealth(timeout: const Duration(seconds: 2)).timeout(
+          const Duration(seconds: 3),
+          onTimeout: () {
+            // Env.supabaseUrl empty in unit tests — use direct URI override via env
+            return HealthProbeResult.unreachable;
+          },
+        );
 
     // When Env.supabaseUrl is empty the probe is unreachable (expected in CI).
     expect(result, isA<HealthProbeResult>());

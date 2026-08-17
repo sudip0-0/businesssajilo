@@ -130,7 +130,14 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
                   error: (_, _) => null,
                 ),
                 subtitle: stats.when(
-                  data: (d) => d.todaySales == 0 ? l10n.noSalesYetToday : null,
+                  data: (d) {
+                    final pending = formatPendingSyncSalesSubtitle(
+                      l10n,
+                      d.pendingSyncSales,
+                    );
+                    if (pending != null) return pending;
+                    return d.todaySales == 0 ? l10n.noSalesYetToday : null;
+                  },
                   loading: () => null,
                   error: (_, _) => null,
                 ),

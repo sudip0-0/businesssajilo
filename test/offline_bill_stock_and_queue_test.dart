@@ -231,9 +231,54 @@ void main() {
 
     final queued = await db.pendingQueue();
     expect(queued, isNotEmpty);
-    final payload = jsonDecode(queued.first.payloadJson) as Map<String, dynamic>;
+    final payload =
+        jsonDecode(queued.first.payloadJson) as Map<String, dynamic>;
     expect(payload['created_at'], isNotEmpty);
     expect(DateTime.tryParse(payload['created_at'] as String), isNot(null));
+  });
+
+  test('customer bill queue payload includes identity snapshot', () async {
+    await db.ensureDeviceMeta('device-1');
+    await db
+        .into(db.localCustomers)
+        .insert(
+          LocalCustomersCompanion.insert(
+            id: 'cust-stale',
+            businessId: 'biz',
+            memberId: 'm1',
+            shopName: 'Ram Store',
+            phone: const Value('+9779811111111'),
+            updatedAt: DateTime.utc(2026, 7, 1),
+          ),
+        );
+
+    await billsRepo().create(
+      createdByMemberId: 'member-1',
+      customerId: 'cust-stale',
+      status: BillStatus.due,
+      itemsTotal: 100,
+      discount: 0,
+      grandTotal: 100,
+      lines: const [
+        BillLineInput(
+          productId: 'prod-1',
+          nameSnapshot: 'Cola',
+          qty: 1,
+          rate: 100,
+          lineTotal: 100,
+        ),
+      ],
+    );
+
+    final queued = await db.pendingQueue();
+    expect(queued, isNotEmpty);
+    final payload =
+        jsonDecode(queued.first.payloadJson) as Map<String, dynamic>;
+    expect(payload['id'], isNotEmpty);
+    expect(payload['customer_id'], 'cust-stale');
+    expect(payload['customer_shop_name'], 'Ram Store');
+    expect(payload['customer_phone'], '+9779811111111');
+    expect(payload['created_at'], isNotEmpty);
   });
 
   test('todaysSales ignores bills from the previous NPT day', () async {
@@ -249,6 +294,7 @@ void main() {
             grandTotal: const Value(9000),
             status: 'paid',
             createdBy: 'member-1',
+            syncStatus: const Value('synced'),
             createdAt: Value(start.subtract(const Duration(hours: 1))),
           ),
         );
@@ -262,12 +308,129 @@ void main() {
             grandTotal: const Value(500),
             status: 'paid',
             createdBy: 'member-1',
+            syncStatus: const Value('synced'),
             createdAt: Value(start.add(const Duration(hours: 1))),
           ),
         );
 
     expect(await billsRepo().todaysSales(), 500);
   });
+
+  test('todaysSales excludes pending and failed local bills', () async {
+    await db.ensureDeviceMeta('device-1');
+    final start = nptDayStartUtc();
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'confirmed',
+            businessId: 'biz',
+            billNo: 'D1-1',
+            grandTotal: const Value(800),
+            status: 'paid',
+            createdBy: 'member-1',
+            syncStatus: const Value('synced'),
+            createdAt: Value(start.add(const Duration(hours: 1))),
+          ),
+        );
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'pending',
+            businessId: 'biz',
+            billNo: 'D1-2',
+            grandTotal: const Value(400),
+            status: 'paid',
+            createdBy: 'member-1',
+            syncStatus: const Value('pending'),
+            createdAt: Value(start.add(const Duration(hours: 2))),
+          ),
+        );
+    await db
+        .into(db.localBills)
+        .insert(
+          LocalBillsCompanion.insert(
+            id: 'failed',
+            businessId: 'biz',
+            billNo: 'D1-3',
+            grandTotal: const Value(200),
+            status: 'paid',
+            createdBy: 'member-1',
+            syncStatus: const Value('failed'),
+            createdAt: Value(start.add(const Duration(hours: 3))),
+          ),
+        );
+
+    expect(await billsRepo().todaysSales(), 800);
+    expect(await billsRepo().unsyncedTodaysSales(), 600);
+  });
+
+  test(
+    'unsyncedTodaysSales counts pending and failed bills from today',
+    () async {
+      await db.ensureDeviceMeta('device-1');
+      final start = nptDayStartUtc();
+      await db
+          .into(db.localBills)
+          .insert(
+            LocalBillsCompanion.insert(
+              id: 'pending-today',
+              businessId: 'biz',
+              billNo: 'D1-1',
+              grandTotal: const Value(700),
+              status: 'paid',
+              createdBy: 'member-1',
+              syncStatus: const Value('pending'),
+              createdAt: Value(start.add(const Duration(hours: 1))),
+            ),
+          );
+      await db
+          .into(db.localBills)
+          .insert(
+            LocalBillsCompanion.insert(
+              id: 'synced-today',
+              businessId: 'biz',
+              billNo: 'D1-2',
+              grandTotal: const Value(9000),
+              status: 'paid',
+              createdBy: 'member-1',
+              syncStatus: const Value('synced'),
+              createdAt: Value(start.add(const Duration(hours: 2))),
+            ),
+          );
+      await db
+          .into(db.localBills)
+          .insert(
+            LocalBillsCompanion.insert(
+              id: 'pending-yesterday',
+              businessId: 'biz',
+              billNo: 'D1-3',
+              grandTotal: const Value(400),
+              status: 'paid',
+              createdBy: 'member-1',
+              syncStatus: const Value('pending'),
+              createdAt: Value(start.subtract(const Duration(hours: 1))),
+            ),
+          );
+      await db
+          .into(db.localBills)
+          .insert(
+            LocalBillsCompanion.insert(
+              id: 'failed-today',
+              businessId: 'biz',
+              billNo: 'D1-4',
+              grandTotal: const Value(300),
+              status: 'paid',
+              createdBy: 'member-1',
+              syncStatus: const Value('failed'),
+              createdAt: Value(start.add(const Duration(hours: 3))),
+            ),
+          );
+
+      expect(await billsRepo().unsyncedTodaysSales(), 1000);
+    },
+  );
 
   test('pruneSyncedQueue deletes old synced rows only', () async {
     final old = DateTime.now().toUtc().subtract(const Duration(days: 10));

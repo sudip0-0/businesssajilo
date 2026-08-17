@@ -150,13 +150,18 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
     final size = box.size;
     final screenHeight = MediaQuery.sizeOf(context).height;
     final spaceBelow =
-        screenHeight - (offset.dy + size.height) - _viewportPadding - _overlayGap;
+        screenHeight -
+        (offset.dy + size.height) -
+        _viewportPadding -
+        _overlayGap;
     final spaceAbove = offset.dy - _viewportPadding - _overlayGap;
     final preferBelow =
         spaceBelow >= widget.maxHeight || spaceBelow >= spaceAbove;
     _openUpward = !preferBelow;
-    _overlayMaxHeight = (preferBelow ? spaceBelow : spaceAbove)
-        .clamp(80.0, widget.maxHeight);
+    _overlayMaxHeight = (preferBelow ? spaceBelow : spaceAbove).clamp(
+      80.0,
+      widget.maxHeight,
+    );
   }
 
   void _open() {
@@ -189,7 +194,8 @@ class _WebSearchDropdownState<T> extends State<WebSearchDropdown<T>> {
       _entry?.markNeedsBuild();
     }
 
-    if (phase == SchedulerPhase.idle || phase == SchedulerPhase.postFrameCallbacks) {
+    if (phase == SchedulerPhase.idle ||
+        phase == SchedulerPhase.postFrameCallbacks) {
       refresh();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) => refresh());

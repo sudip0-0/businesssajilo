@@ -29,7 +29,7 @@ class WebTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final unread = ref.watch(unreadNotificationCountProvider);
+    final unread = ref.watch(unreadNotificationCountProvider).value ?? 0;
     final badgeLabel = formatUnreadBadge(unread);
     final tokens = context.webTokens;
     final auth = ref.watch(authProvider).value;
@@ -60,7 +60,7 @@ class WebTopBar extends ConsumerWidget {
           const Spacer(),
           if (isOwner || role == Role.sales)
             IconButton(
-              tooltip: l10n.globalSearch,
+              tooltip: '${l10n.globalSearch} (Ctrl+K)',
               onPressed: () => showGlobalSearch(context, ref),
               icon: const Icon(
                 PhosphorIconsRegular.magnifyingGlass,

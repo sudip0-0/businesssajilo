@@ -95,9 +95,7 @@ class _WebSalesReportPageState extends ConsumerState<WebSalesReportPage> {
     final productsAsync = ref.watch(topProductsRangeProvider(_period));
     final customersAsync = ref.watch(topCustomersRangeProvider(_period));
     final billsAsync = ref.watch(
-      billsInRangeProvider(
-        BillsRangeQuery(period: _period, query: _search),
-      ),
+      billsInRangeProvider(BillsRangeQuery(period: _period, query: _search)),
     );
 
     return WebPageScaffold(
@@ -350,7 +348,10 @@ class _TopProductsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.topProducts, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            l10n.topProducts,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 14),
           async.when(
             loading: () => const SizedBox(
@@ -454,16 +455,9 @@ class _BillsTable extends StatelessWidget {
             : dateFmt.format(created.toUtc().add(nptOffset));
         return DataRow(
           cells: [
-            DataCell(
-              Text(
-                b.billNo,
-                style: WebTypography.mono(fontSize: 12.5),
-              ),
-            ),
+            DataCell(Text(b.billNo, style: WebTypography.mono(fontSize: 12.5))),
             DataCell(Text(npt)),
-            DataCell(
-              Text(billCustomerLabel(b, walkInLabel: l10n.walkIn)),
-            ),
+            DataCell(Text(billCustomerLabel(b, walkInLabel: l10n.walkIn))),
             DataCell(BillStatusChip(b.status)),
             DataCell(
               Text(

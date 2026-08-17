@@ -181,12 +181,27 @@ async function removeFolder(
   bucket: string,
   folder: string,
 ) {
-  const { data: files } = await admin.storage.from(bucket).list(folder, {
-    limit: 1000,
-  });
-  if (!files || files.length === 0) return;
-  const paths = files.map((f: { name: string }) => `${folder}/${f.name}`);
-  await admin.storage.from(bucket).remove(paths);
+  let offset = 0;
+  const pageSize = 1000;
+  for (;;) {
+    const { data: files } = await admin.storage.from(bucket).list(folder, {
+      limit: pageSize,
+      offset,
+    });
+    if (!files || files.length === 0) return;
+    const nested = files.filter((f: { id?: string; name: string }) => !f.id);
+    const objects = files
+      .filter((f: { id?: string }) => f.id)
+      .map((f: { name: string }) => `${folder}/${f.name}`);
+    if (objects.length > 0) {
+      await admin.storage.from(bucket).remove(objects);
+    }
+    for (const dir of nested) {
+      await removeFolder(admin, bucket, `${folder}/${dir.name}`);
+    }
+    if (files.length < pageSize) return;
+    offset += pageSize;
+  }
 }
 
 function str(v: unknown): string | null {

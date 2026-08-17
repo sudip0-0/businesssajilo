@@ -13,7 +13,7 @@ final notificationsRepositoryProvider = Provider<NotificationsRepository>((
 abstract class NotificationsRepository {
   Future<List<NotificationItem>> list({int offset = 0, int limit = 30});
   Stream<List<NotificationItem>> watch({int limit = 50});
-  Future<int> unreadCount();
+  Future<int> unreadCount({Iterable<String> excludedTypes = const []});
   Future<void> markRead(String id);
   Future<void> markAllRead();
 }

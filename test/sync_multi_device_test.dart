@@ -22,7 +22,9 @@ void main() {
     test('concurrent offline bills decrement shared product stock', () async {
       await db.ensureDeviceMeta('device-a');
       final now = DateTime.utc(2026, 7, 1);
-      await db.into(db.localProducts).insert(
+      await db
+          .into(db.localProducts)
+          .insert(
             LocalProductsCompanion.insert(
               id: 'shared-prod',
               businessId: 'biz',
@@ -35,7 +37,9 @@ void main() {
 
       for (var i = 0; i < 2; i++) {
         final billId = 'bill-$i';
-        await db.into(db.localBills).insert(
+        await db
+            .into(db.localBills)
+            .insert(
               LocalBillsCompanion.insert(
                 id: billId,
                 businessId: 'biz',
@@ -50,18 +54,16 @@ void main() {
           entityId: billId,
           payload: {'id': billId, 'lines': []},
         );
-        await (db.update(db.localProducts)
-              ..where((p) => p.id.equals('shared-prod')))
-            .write(
-          LocalProductsCompanion(
-            stockCached: Value(20 - ((i + 1) * 3)),
-          ),
+        await (db.update(
+          db.localProducts,
+        )..where((p) => p.id.equals('shared-prod'))).write(
+          LocalProductsCompanion(stockCached: Value(20 - ((i + 1) * 3))),
         );
       }
 
-      final product = await (db.select(db.localProducts)
-            ..where((p) => p.id.equals('shared-prod')))
-          .getSingle();
+      final product = await (db.select(
+        db.localProducts,
+      )..where((p) => p.id.equals('shared-prod'))).getSingle();
       expect(product.stockCached, 14);
       expect(await db.pendingQueue(), hasLength(2));
     });
@@ -119,7 +121,7 @@ void main() {
       client: SupabaseClient('http://localhost', 'anon'),
       connectivityCheck: () async => [ConnectivityResult.none],
       reachabilityProbe: () async => false,
-      scheduleRetry: (_, __) {},
+      scheduleRetry: (_, _) {},
     );
     addTearDown(sync.dispose);
 

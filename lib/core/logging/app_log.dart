@@ -34,10 +34,7 @@ abstract final class AppLog {
       Breadcrumb(
         message: message,
         level: SentryLevel.warning,
-        data: {
-          if (error != null) 'error': error.toString(),
-          ...?extras,
-        },
+        data: {if (error != null) 'error': error.toString(), ...?extras},
       ),
     );
     if (error != null) {

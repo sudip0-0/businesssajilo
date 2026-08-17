@@ -28,6 +28,7 @@ declare
   v_items jsonb;
   v_total bigint;
   v_payment jsonb;
+  v_occurred timestamptz;
 begin
   if not exists (select 1 from businesses where id = v_biz) then
     raise exception 'E2E business % missing — run seed.sql first', v_biz;
@@ -209,15 +210,31 @@ begin
       v_payment := null;
     end if;
 
+    -- Spread across the last 30 NPT days, excluding today, so the dashboard
+    -- "today's sales" KPI is not the lifetime billed total.
+    v_occurred := (
+      (timezone('Asia/Kathmandu', now())::date
+        - (1 + ((v_i - 1) % 30))::int)::timestamp
+      + time '09:00'
+      + ((v_i % 10) * interval '25 minutes')
+    ) at time zone 'Asia/Kathmandu';
+
     perform create_bill(
       jsonb_build_object(
         'id', v_bill,
         'customer_id', v_customer,
         'discount', 0,
+        'created_at', v_occurred,
         'items', v_items,
         'payment', v_payment
       )
     );
+    update payments
+      set created_at = v_occurred
+      where id = v_pay;
+    update stock_movements
+      set created_at = v_occurred
+      where ref_bill_id = v_bill;
   end loop;
 
   raise notice 'E2E bulk demo seeded: 55 products, 55 customers, 220 bills';

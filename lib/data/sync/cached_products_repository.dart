@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
 import '../local/app_database.dart';
 import '../local/local_mappers.dart';
@@ -22,8 +23,17 @@ class CachedProductsRepository implements ProductsRepository {
     int offset = 0,
     int? limit,
     String? query,
+    ProductStockFilter stockFilter = ProductStockFilter.all,
   }) async {
     final q = query?.trim();
+    final stockSql = switch (stockFilter) {
+      ProductStockFilter.all => '',
+      ProductStockFilter.low =>
+        'AND low_stock_threshold > 0 AND stock_cached <= low_stock_threshold ',
+      ProductStockFilter.out => 'AND stock_cached <= 0 ',
+      ProductStockFilter.inStock =>
+        'AND stock_cached > 0 AND (low_stock_threshold <= 0 OR stock_cached > low_stock_threshold) ',
+    };
     if (q != null && q.isNotEmpty) {
       final pattern = '%${q.toLowerCase()}%';
       final rows = await _db
@@ -32,6 +42,7 @@ class CachedProductsRepository implements ProductsRepository {
             'WHERE is_active = ? '
             'AND (lower(name) LIKE ? OR lower(ifnull(sku, \'\')) LIKE ? '
             'OR lower(ifnull(name_np, \'\')) LIKE ?) '
+            '$stockSql'
             'ORDER BY name ASC '
             'LIMIT ? OFFSET ?',
             variables: [
@@ -39,6 +50,24 @@ class CachedProductsRepository implements ProductsRepository {
               Variable.withString(pattern),
               Variable.withString(pattern),
               Variable.withString(pattern),
+              Variable.withInt(limit ?? 50),
+              Variable.withInt(offset),
+            ],
+            readsFrom: {_db.localProducts},
+          )
+          .map((row) => _db.localProducts.map(row.data))
+          .get();
+      return rows.map(mapLocalProduct).toList();
+    }
+    if (stockFilter != ProductStockFilter.all) {
+      final rows = await _db
+          .customSelect(
+            'SELECT * FROM local_products '
+            'WHERE is_active = ? $stockSql'
+            'ORDER BY name ASC '
+            'LIMIT ? OFFSET ?',
+            variables: [
+              Variable.withBool(activeOnly),
               Variable.withInt(limit ?? 50),
               Variable.withInt(offset),
             ],

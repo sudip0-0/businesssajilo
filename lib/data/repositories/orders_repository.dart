@@ -45,8 +45,7 @@ Order mapOrderRow(dynamic row) {
       if (product is Map) {
         // Prefer joined product fields; keep snapshotted columns as fallback
         // (customers cannot SELECT products via RLS).
-        itemMap['product_name'] =
-            product['name'] ?? itemMap['product_name'];
+        itemMap['product_name'] = product['name'] ?? itemMap['product_name'];
         itemMap['product_name_np'] =
             product['name_np'] ?? itemMap['product_name_np'];
         itemMap['unit'] = product['unit'] ?? itemMap['unit'];

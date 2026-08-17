@@ -25,6 +25,7 @@ void main() {
           ),
           stockValuationProvider(false).overrideWith((ref) async => []),
           todaysSalesProvider.overrideWith((ref) async => 0),
+          pendingTodaysSalesProvider.overrideWith((ref) async => 0),
           totalDuesProvider.overrideWith((ref) async => 0),
           lowStockCountProvider.overrideWith((ref) async => 0),
         ],

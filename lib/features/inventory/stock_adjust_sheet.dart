@@ -43,9 +43,7 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
     }
     final delta = _negative ? -_qtyDelta : _qtyDelta;
     final product = ref.read(productDetailProvider(widget.productId)).value;
-    if (delta < 0 &&
-        product != null &&
-        product.stockCached + delta < 0) {
+    if (delta < 0 && product != null && product.stockCached + delta < 0) {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -110,8 +108,9 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
                     icon: const Icon(Icons.add),
                     label: Text('+ ${l10n.qtyChange}'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          _negative ? BsColors.success : Colors.white,
+                      foregroundColor: _negative
+                          ? BsColors.success
+                          : Colors.white,
                       backgroundColor: _negative ? null : BsColors.success,
                       side: const BorderSide(color: BsColors.success),
                     ),
@@ -124,7 +123,9 @@ class _StockAdjustSheetState extends ConsumerState<StockAdjustSheet> {
                     icon: const Icon(Icons.remove),
                     label: Text('- ${l10n.qtyChange}'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: _negative ? Colors.white : BsColors.danger,
+                      foregroundColor: _negative
+                          ? Colors.white
+                          : BsColors.danger,
                       backgroundColor: _negative ? BsColors.danger : null,
                       side: const BorderSide(color: BsColors.danger),
                     ),

@@ -3,7 +3,7 @@
 ## Row Level Security (RLS)
 
 - All tenant tables use `FORCE ROW LEVEL SECURITY` with `current_business_id()` and `current_role_name()` helpers.
-- pgTAP suite in `supabase/tests/` (including v1.2 QoL in `rls_phase33_qol_v12_test.sql`).
+- pgTAP suite in `supabase/tests/` (including v1.2 QoL in `rls_phase33_qol_v12_test.sql`, list filters in `rls_phase36_qol_filters_test.sql`, and gated balance projections in `rls_phase37_balance_projection_test.sql`).
 - Run locally: `supabase test db`
 
 ## Storage
@@ -26,7 +26,7 @@ Configured in `supabase/config.toml` under `[auth.rate_limit]` (email sign-up, s
 - `delete-account` — member JWT required. `mode: self` anonymizes the member
   (financial snapshots retained); `mode: business` (owner only) purges the
   whole tenant including storage folders and auth users.
-- `notify` — service role / webhook triggered.
+- `notify` — service role / webhook triggered. `pushed_at` is set only after all FCM sends succeed; invalid tokens are deleted. Repeat invocation is idempotent.
 
 All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `supabase/README.md`).
 
@@ -49,6 +49,7 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 ## Observability
 
 - Production crash reporting uses `sentry_flutter` when `SENTRY_DSN` is passed via `--dart-define` (wired in `.github/workflows/release.yml`). Set the GitHub Actions secret before a production tag.
+- Performance tracing is sampled at `SENTRY_TRACES_SAMPLE_RATE` (default **0.1**). Auth session load, sync, `create_bill` / dashboard RPCs, and route changes emit spans. Sync completion logs `failedCount` without customer PII.
 - Local diagnosis uses `AppLog` (debug + Sentry breadcrumbs when DSN is set).
 
 ## Push (web)

@@ -18,10 +18,9 @@ Future<T?> showWebSidePanel<T>({
     transitionDuration: const Duration(milliseconds: 280),
     pageBuilder: (ctx, animation, secondaryAnimation) {
       final panelTheme = theme ?? Theme.of(ctx);
-      final panelWidth = width.clamp(
-        320.0,
-        MediaQuery.sizeOf(ctx).width * 0.9,
-      ).toDouble();
+      final panelWidth = width
+          .clamp(320.0, MediaQuery.sizeOf(ctx).width * 0.9)
+          .toDouble();
 
       // Build the panel (and its stateful [child]) once. AnimatedBuilder
       // reuses this via its `child` argument so TextEditingControllers are

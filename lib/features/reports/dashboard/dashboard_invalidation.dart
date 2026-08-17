@@ -14,6 +14,8 @@ void _invalidateOwnerDashboardCore(dynamic ref) {
   ref.invalidate(ownerDashboardStatsProvider);
   ref.invalidate(lowStockAlertsProvider);
   ref.invalidate(todaysBillsProvider);
+  ref.invalidate(todaysSalesProvider);
+  ref.invalidate(pendingTodaysSalesProvider);
   ref.invalidate(recentCustomersProvider);
 }
 
@@ -28,6 +30,7 @@ void _invalidateSalesDashboardCore(dynamic ref) {
   ref.invalidate(pendingOrdersCountProvider);
   ref.invalidate(todaysBillCountProvider);
   ref.invalidate(todaysSalesProvider);
+  ref.invalidate(pendingTodaysSalesProvider);
   ref.invalidate(totalDuesProvider);
 }
 
@@ -41,7 +44,8 @@ void _invalidateCustomerDashboardCore(dynamic ref) {
   ref.invalidate(totalDuesProvider);
 }
 
-void invalidateCustomerDashboard(Ref ref) => _invalidateCustomerDashboardCore(ref);
+void invalidateCustomerDashboard(Ref ref) =>
+    _invalidateCustomerDashboardCore(ref);
 
 void invalidateCustomerDashboardWidget(WidgetRef ref) =>
     _invalidateCustomerDashboardCore(ref);

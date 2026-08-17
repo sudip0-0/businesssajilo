@@ -78,17 +78,27 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
           onPressed: () => showGlobalSearch(context, ref),
           icon: const Icon(PhosphorIconsRegular.magnifyingGlass),
         ),
-        OutlinedButton(
-          key: IntegrationKeys.dashboardAddProduct,
-          onPressed: () => context.push('/owner/inventory/new'),
-          child: Text(l10n.addProduct),
+        Semantics(
+          identifier: 'dashboard_add_product',
+          button: true,
+          label: l10n.addProduct,
+          child: OutlinedButton(
+            key: IntegrationKeys.dashboardAddProduct,
+            onPressed: () => context.push('/owner/inventory/new'),
+            child: Text(l10n.addProduct),
+          ),
         ),
         const SizedBox(width: 8),
-        OutlinedButton.icon(
-          key: IntegrationKeys.dashboardNewBill,
-          onPressed: () => context.push('/owner/billing/new'),
-          icon: const Icon(PhosphorIconsRegular.receipt, size: 18),
-          label: Text(l10n.newBill),
+        Semantics(
+          identifier: 'dashboard_new_bill',
+          button: true,
+          label: l10n.newBill,
+          child: OutlinedButton.icon(
+            key: IntegrationKeys.dashboardNewBill,
+            onPressed: () => context.push('/owner/billing/new'),
+            icon: const Icon(PhosphorIconsRegular.receipt, size: 18),
+            label: Text(l10n.newBill),
+          ),
         ),
       ],
       body: RefreshIndicator(

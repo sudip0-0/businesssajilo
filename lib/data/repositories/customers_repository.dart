@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../remote/supabase_customers_repository.dart';
@@ -20,12 +21,16 @@ final customersRepositoryProvider = Provider<CustomersRepository>((ref) {
   return remote;
 });
 
+/// Live balance reads stay on `customer_balances`. The gated
+/// `customer_balance_projections` table is not consumed here until
+/// benchmark + parity checks pass (see migration 37).
 abstract class CustomersRepository {
   Future<List<Customer>> list({
     int offset = 0,
     int? limit,
     String? query,
     bool includeBalances = true,
+    CustomerBalanceFilter balanceFilter = CustomerBalanceFilter.all,
   });
 
   /// Most recently created customers, capped for dashboards.

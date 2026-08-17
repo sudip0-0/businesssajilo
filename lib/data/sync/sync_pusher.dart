@@ -60,13 +60,16 @@ class SyncPusher {
             attempts: Value(attempts),
             lastError: Value(truncated),
             nextAttemptAt: Value(
-              terminal
-                  ? null
-                  : DateTime.now().toUtc().add(backoffForAttempts(attempts)),
+              DateTime.now().toUtc().add(backoffForAttempts(attempts)),
             ),
           ),
         );
         if (terminal) {
+          await _db.setLocalEntitySyncStatus(
+            item.entityType,
+            item.entityId,
+            'failed',
+          );
           AppLog.error(
             'Sync queue item terminal failure',
             error: e,
@@ -132,17 +135,36 @@ class SyncPusher {
     final local = await (_db.select(
       _db.localBills,
     )..where((b) => b.id.equals(billId))).getSingleOrNull();
-    final stamped = stampOccurredAt(payload, local?.createdAt);
+    var stamped = sanitizeBillPayload(
+      stampOccurredAt(payload, local?.createdAt),
+    );
+    stamped = await _withCustomerSnapshot(
+      stamped,
+      billCustomerId: local?.customerId,
+      billShopName: local?.customerShopName,
+    );
     final result = stamped['manual_sale'] == true
         ? await _client.rpc<dynamic>(
             'record_customer_sale',
             params: {'p': stamped},
           )
         : await _client.rpc<dynamic>('create_bill', params: {'p': stamped});
-    final map = result as Map<String, dynamic>;
-    final bill = map['bill'] as Map<String, dynamic>?;
+    Map<String, dynamic> map = const {};
+    try {
+      map = mapRpcObject(result);
+    } catch (e, st) {
+      AppLog.warn(
+        'bill RPC returned a non-object; marking local synced',
+        e,
+        st,
+        {'billId': billId},
+      );
+    }
+    final billRaw = map['bill'];
+    final bill = billRaw is Map ? Map<String, dynamic>.from(billRaw) : null;
     final serverBillNo = bill?['bill_no'] as String?;
     final serverStatus = bill?['status'] as String?;
+    final serverCustomerId = bill?['customer_id'] as String?;
     final serverGuest = (bill?['guest_name'] as String?)?.trim();
     final payloadGuest = (payload['guest_name'] as String?)?.trim();
     final guestName = (serverGuest != null && serverGuest.isNotEmpty)
@@ -159,15 +181,80 @@ class SyncPusher {
         status: serverStatus != null
             ? Value(serverStatus)
             : const Value.absent(),
+        customerId: serverCustomerId != null
+            ? Value(serverCustomerId)
+            : const Value.absent(),
         customerShopName: guestName != null
             ? Value(guestName)
             : const Value.absent(),
       ),
     );
+    await _reconcileLocalCustomerBalance(
+      grandTotal: local?.grandTotal ?? 0,
+      localCustomerId: local?.customerId,
+      serverCustomerId: serverCustomerId,
+      payment: payload['payment'],
+    );
     final payment = payload['payment'];
     if (payment is Map && payment['id'] is String) {
       await _markPaymentSynced(payment['id'] as String);
     }
+  }
+
+  Future<Map<String, dynamic>> _withCustomerSnapshot(
+    Map<String, dynamic> payload, {
+    String? billCustomerId,
+    String? billShopName,
+  }) async {
+    final id = (payload['customer_id'] as String?)?.trim().isNotEmpty == true
+        ? (payload['customer_id'] as String).trim()
+        : billCustomerId;
+    if (id == null || id.isEmpty) {
+      return withCustomerSnapshot(payload, shopName: billShopName);
+    }
+    final local = await (_db.select(
+      _db.localCustomers,
+    )..where((c) => c.id.equals(id))).getSingleOrNull();
+    return withCustomerSnapshot(
+      payload,
+      shopName: local?.shopName ?? billShopName,
+      phone: local?.phone,
+    );
+  }
+
+  Future<void> _reconcileLocalCustomerBalance({
+    required int grandTotal,
+    String? localCustomerId,
+    String? serverCustomerId,
+    Object? payment,
+  }) async {
+    if (serverCustomerId == null || serverCustomerId.isEmpty) return;
+    var paymentAmount = 0;
+    String? paymentId;
+    if (payment is Map) {
+      paymentAmount = (payment['amount'] as num?)?.toInt() ?? 0;
+      if (payment['id'] is String) paymentId = payment['id'] as String;
+    }
+    if (paymentId != null &&
+        localCustomerId != null &&
+        localCustomerId != serverCustomerId) {
+      await (_db.update(_db.localPayments)
+            ..where((p) => p.id.equals(paymentId!)))
+          .write(LocalPaymentsCompanion(customerId: Value(serverCustomerId)));
+    }
+    if (localCustomerId == serverCustomerId) return;
+    final net = grandTotal - paymentAmount;
+    if (net == 0) return;
+    if (localCustomerId != null && localCustomerId.isNotEmpty) {
+      await _db.customStatement(
+        'UPDATE local_customers SET balance_due = balance_due - ? WHERE id = ?',
+        [net, localCustomerId],
+      );
+    }
+    await _db.customStatement(
+      'UPDATE local_customers SET balance_due = balance_due + ? WHERE id = ?',
+      [net, serverCustomerId],
+    );
   }
 
   Future<void> _pushPayment(Map<String, dynamic> payload) async {

@@ -50,15 +50,17 @@ Future<void> exportSalesReportCsv(
     final topCustomers = await ref.read(topCustomersProvider(range).future);
     final filename =
         'businesssajilo-sales-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-    await ref.read(exportShareServiceProvider).shareCsv(
-      filename: filename,
-      subject: l10n.salesSummary,
-      rows: salesReportCsvRows(
-        daily: daily,
-        topProducts: topProducts,
-        topCustomers: topCustomers,
-      ),
-    );
+    await ref
+        .read(exportShareServiceProvider)
+        .shareCsv(
+          filename: filename,
+          subject: l10n.salesSummary,
+          rows: salesReportCsvRows(
+            daily: daily,
+            topProducts: topProducts,
+            topCustomers: topCustomers,
+          ),
+        );
   });
 }
 
@@ -73,15 +75,17 @@ Future<void> exportSalesReportCsvFromData(
   await _shareCsvExport(context, () async {
     final filename =
         'businesssajilo-sales-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-    await ref.read(exportShareServiceProvider).shareCsv(
-      filename: filename,
-      subject: subject,
-      rows: salesReportCsvRows(
-        daily: daily,
-        topProducts: topProducts,
-        topCustomers: topCustomers,
-      ),
-    );
+    await ref
+        .read(exportShareServiceProvider)
+        .shareCsv(
+          filename: filename,
+          subject: subject,
+          rows: salesReportCsvRows(
+            daily: daily,
+            topProducts: topProducts,
+            topCustomers: topCustomers,
+          ),
+        );
   });
 }
 
@@ -94,11 +98,13 @@ Future<void> exportDuesAgingCsv(
     final l10n = AppLocalizations.of(context);
     final filename =
         'businesssajilo-dues-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-    await ref.read(exportShareServiceProvider).shareCsv(
-      filename: filename,
-      subject: l10n.duesAging,
-      rows: duesAgingCsvRows(report),
-    );
+    await ref
+        .read(exportShareServiceProvider)
+        .shareCsv(
+          filename: filename,
+          subject: l10n.duesAging,
+          rows: duesAgingCsvRows(report),
+        );
   });
 }
 
@@ -111,11 +117,13 @@ Future<void> exportStockValuationCsv(
     final l10n = AppLocalizations.of(context);
     final filename =
         'businesssajilo-stock-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-    await ref.read(exportShareServiceProvider).shareCsv(
-      filename: filename,
-      subject: l10n.stockValuation,
-      rows: stockValuationCsvRows(rows),
-    );
+    await ref
+        .read(exportShareServiceProvider)
+        .shareCsv(
+          filename: filename,
+          subject: l10n.stockValuation,
+          rows: stockValuationCsvRows(rows),
+        );
   });
 }
 
@@ -141,11 +149,13 @@ Future<void> exportLedgerCsv(
     final l10n = AppLocalizations.of(context);
     final filename =
         'businesssajilo-ledger-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-    await ref.read(exportShareServiceProvider).shareCsv(
-      filename: filename,
-      subject: l10n.ledger,
-      rows: ledgerCsvRows(withRunningBalance(entries)),
-    );
+    await ref
+        .read(exportShareServiceProvider)
+        .shareCsv(
+          filename: filename,
+          subject: l10n.ledger,
+          rows: ledgerCsvRows(withRunningBalance(entries)),
+        );
   });
 }
 
@@ -155,10 +165,12 @@ Future<void> exportTodaysBillsCsv(WidgetRef ref, BuildContext context) async {
     final bills = await ref.read(todaysBillsProvider.future);
     final filename =
         'businesssajilo-bills-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
-    await ref.read(exportShareServiceProvider).shareCsv(
-      filename: filename,
-      subject: l10n.todaysTransactions,
-      rows: todaysBillsCsvRows(bills),
-    );
+    await ref
+        .read(exportShareServiceProvider)
+        .shareCsv(
+          filename: filename,
+          subject: l10n.todaysTransactions,
+          rows: todaysBillsCsvRows(bills),
+        );
   });
 }

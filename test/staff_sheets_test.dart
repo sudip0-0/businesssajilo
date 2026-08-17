@@ -30,20 +30,16 @@ class _FailingMembers extends MembersRepository {
   _FailingMembers();
 
   @override
-  Future<List<Member>> listMembers() =>
-      throw UnimplementedError();
+  Future<List<Member>> listMembers() => throw UnimplementedError();
 
   @override
-  Future<void> deactivateMember(String memberId) =>
-      throw UnimplementedError();
+  Future<void> deactivateMember(String memberId) => throw UnimplementedError();
 
   @override
-  Future<void> activateMember(String memberId) =>
-      throw UnimplementedError();
+  Future<void> activateMember(String memberId) => throw UnimplementedError();
 
   @override
-  Future<Member?> getMember(String memberId) =>
-      throw UnimplementedError();
+  Future<Member?> getMember(String memberId) => throw UnimplementedError();
 
   @override
   Future<({String memberId, String? customerId})> createMember({

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 
 import '../../core/utils/ledger_balance.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../local/app_database.dart';
@@ -30,6 +31,7 @@ class CachedCustomersRepository implements CustomersRepository {
     int? limit,
     String? query,
     bool includeBalances = true,
+    CustomerBalanceFilter balanceFilter = CustomerBalanceFilter.all,
   }) async {
     if (!includeBalances) {
       return _remote.list(
@@ -39,21 +41,45 @@ class CachedCustomersRepository implements CustomersRepository {
         includeBalances: false,
       );
     }
+    final balanceSql = switch (balanceFilter) {
+      CustomerBalanceFilter.all => '',
+      CustomerBalanceFilter.due => 'AND balance_due > 0 ',
+      CustomerBalanceFilter.credit => 'AND balance_due < 0 ',
+      CustomerBalanceFilter.settled => 'AND balance_due = 0 ',
+    };
     final q = query?.trim();
     if (q != null && q.isNotEmpty) {
       final pattern = '%${q.toLowerCase()}%';
       final rows = await _db
           .customSelect(
             'SELECT * FROM local_customers '
-            'WHERE lower(shop_name) LIKE ? '
+            'WHERE (lower(shop_name) LIKE ? '
             'OR lower(ifnull(contact_name, \'\')) LIKE ? '
-            'OR ifnull(phone, \'\') LIKE ? '
+            'OR ifnull(phone, \'\') LIKE ?) '
+            '$balanceSql'
             'ORDER BY shop_name ASC '
             'LIMIT ? OFFSET ?',
             variables: [
               Variable.withString(pattern),
               Variable.withString(pattern),
               Variable.withString(pattern),
+              Variable.withInt(limit ?? 50),
+              Variable.withInt(offset),
+            ],
+            readsFrom: {_db.localCustomers},
+          )
+          .map((row) => _db.localCustomers.map(row.data))
+          .get();
+      return rows.map(mapLocalCustomer).toList();
+    }
+    if (balanceFilter != CustomerBalanceFilter.all) {
+      final rows = await _db
+          .customSelect(
+            'SELECT * FROM local_customers '
+            'WHERE 1=1 $balanceSql'
+            'ORDER BY shop_name ASC '
+            'LIMIT ? OFFSET ?',
+            variables: [
               Variable.withInt(limit ?? 50),
               Variable.withInt(offset),
             ],

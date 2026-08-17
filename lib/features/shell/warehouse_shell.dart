@@ -45,7 +45,7 @@ class _WarehouseShellState extends ConsumerState<WarehouseShell> {
         AccountAction(),
         LogoutAction(),
       ],
-      body: pages[_index],
+      body: IndexedStack(index: _index, children: pages),
       floatingActionButton: switch (_index) {
         0 => FloatingActionButton.extended(
           onPressed: () => showAdaptiveSheet(

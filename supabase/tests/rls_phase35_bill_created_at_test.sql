@@ -47,14 +47,14 @@ select is(
 );
 
 select is(
-  (select coalesce(sum(total_sales), 0) from report_sales_daily
+  (select coalesce(sum(total_sales), 0)::bigint from report_sales_daily
     where sale_date = date '2026-08-16'),
   5000::bigint,
   'delayed sync counts on the original sale date'
 );
 
 select is(
-  (select coalesce(sum(total_sales), 0) from report_sales_daily
+  (select coalesce(sum(total_sales), 0)::bigint from report_sales_daily
     where sale_date = (timezone('Asia/Kathmandu', now()))::date
       and sale_date is distinct from date '2026-08-16'),
   0::bigint,

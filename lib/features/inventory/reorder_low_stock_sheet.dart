@@ -34,8 +34,10 @@ class _ReorderLowStockSheetState extends ConsumerState<ReorderLowStockSheet> {
   void _ensureQtys(List<Product> products) {
     if (_qtys.isNotEmpty) return;
     for (final product in products) {
-      _qtys[product.id] =
-          _suggestedQty(product.stockCached, product.lowStockThreshold);
+      _qtys[product.id] = _suggestedQty(
+        product.stockCached,
+        product.lowStockThreshold,
+      );
     }
   }
 
@@ -133,42 +135,42 @@ class _ReorderLowStockSheetState extends ConsumerState<ReorderLowStockSheet> {
                                 ],
                               ),
                             ),
-                          QtyStepper(
-                            value: _qtys[product.id] ??
-                                _suggestedQty(
-                                  product.stockCached,
-                                  product.lowStockThreshold,
-                                ),
-                            min: 1,
-                            onChanged: (v) => setState(
-                              () => _qtys[product.id] = v,
+                            QtyStepper(
+                              value:
+                                  _qtys[product.id] ??
+                                  _suggestedQty(
+                                    product.stockCached,
+                                    product.lowStockThreshold,
+                                  ),
+                              min: 1,
+                              onChanged: (v) =>
+                                  setState(() => _qtys[product.id] = v),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _loading || _qtys.isEmpty ? null : _save,
-                child: _loading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text('${l10n.stockIn} · $total'),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loading || _qtys.isEmpty ? null : _save,
+                  child: _loading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text('${l10n.stockIn} · $total'),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

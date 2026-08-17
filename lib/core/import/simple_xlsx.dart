@@ -57,19 +57,9 @@ class SimpleXlsx {
     sharedXml.write('</sst>');
 
     final archive = Archive()
-      ..addFile(
-        ArchiveFile.string(
-          '[Content_Types].xml',
-          _contentTypesXml,
-        ),
-      )
+      ..addFile(ArchiveFile.string('[Content_Types].xml', _contentTypesXml))
       ..addFile(ArchiveFile.string('_rels/.rels', _rootRelsXml))
-      ..addFile(
-        ArchiveFile.string(
-          'xl/workbook.xml',
-          _workbookXml(sheetName),
-        ),
-      )
+      ..addFile(ArchiveFile.string('xl/workbook.xml', _workbookXml(sheetName)))
       ..addFile(
         ArchiveFile.string('xl/_rels/workbook.xml.rels', _workbookRelsXml),
       )
@@ -158,9 +148,7 @@ class SimpleXlsx {
     final grid = <List<String>>[];
     for (var r = 0; r <= maxRow; r++) {
       final map = rows[r] ?? const {};
-      grid.add([
-        for (var c = 0; c <= maxCol; c++) map[c] ?? '',
-      ]);
+      grid.add([for (var c = 0; c <= maxCol; c++) map[c] ?? '']);
     }
     return grid;
   }

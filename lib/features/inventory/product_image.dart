@@ -1,9 +1,19 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data/repositories/products_repository.dart';
+
+final signedProductImageUrlProvider = FutureProvider.autoDispose
+    .family<String?, String>((ref, storagePath) {
+      final link = ref.keepAlive();
+      final timer = Timer(const Duration(minutes: 2), link.close);
+      ref.onDispose(timer.cancel);
+      return ref.watch(productsRepositoryProvider).signedImageUrl(storagePath);
+    });
 
 class ProductImage extends ConsumerWidget {
   const ProductImage({super.key, required this.storagePath, this.size = 48});
@@ -17,23 +27,19 @@ class ProductImage extends ConsumerWidget {
       return _placeholder();
     }
 
-    return FutureBuilder<String?>(
-      future: ref.read(productsRepositoryProvider).signedImageUrl(storagePath),
-      builder: (context, snapshot) {
-        final url = snapshot.data;
-        if (url == null) return _placeholder();
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: CachedNetworkImage(
-            imageUrl: url,
-            width: size,
-            height: size,
-            memCacheWidth: (size * 2).round(),
-            fit: BoxFit.cover,
-            errorWidget: (_, _, _) => _placeholder(),
-          ),
-        );
-      },
+    final asyncUrl = ref.watch(signedProductImageUrlProvider(storagePath!));
+    final url = asyncUrl.value;
+    if (url == null) return _placeholder();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: size,
+        height: size,
+        memCacheWidth: (size * 2).round(),
+        fit: BoxFit.cover,
+        errorWidget: (_, _, _) => _placeholder(),
+      ),
     );
   }
 

@@ -1,14 +1,21 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import '../config/env.dart';
 
 /// Result of probing Supabase Auth `/auth/v1/health`.
-enum HealthProbeResult {
-  ok,
-  timeout,
-  serverError,
-  unreachable,
+enum HealthProbeResult { ok, timeout, serverError, unreachable }
+
+HttpClient? _sharedClient;
+
+HttpClient _httpClient() => _sharedClient ??= HttpClient();
+
+@visibleForTesting
+void resetSupabaseHealthProbeClient() {
+  _sharedClient?.close(force: true);
+  _sharedClient = null;
 }
 
 /// Lightweight GET against Supabase Auth health endpoint.
@@ -22,7 +29,7 @@ Future<HealthProbeResult> probeSupabaseHealth({
   if (base.isEmpty) return HealthProbeResult.unreachable;
 
   final uri = Uri.parse('$base/auth/v1/health');
-  final client = HttpClient()..connectionTimeout = timeout;
+  final client = _httpClient()..connectionTimeout = timeout;
   try {
     final request = await client.getUrl(uri).timeout(timeout);
     final response = await request.close().timeout(timeout);
@@ -34,8 +41,6 @@ Future<HealthProbeResult> probeSupabaseHealth({
     return HealthProbeResult.timeout;
   } catch (_) {
     return HealthProbeResult.unreachable;
-  } finally {
-    client.close(force: true);
   }
 }
 

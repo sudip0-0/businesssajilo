@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/mobile_router.dart';
 import '../../core/router/router_keys.dart';
+import '../../core/logging/sentry_scope.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../domain/models/session_state.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -43,8 +44,10 @@ import '../features/orders/web_order_detail_page.dart' deferred as order_detail;
 import '../features/orders/web_order_list_page.dart' deferred as order_list;
 import '../features/reports/web_dues_aging_page.dart' deferred as dues_aging;
 import '../features/reports/web_reports_hub_page.dart' deferred as reports_hub;
-import '../features/reports/web_sales_report_page.dart' deferred as sales_report;
-import '../features/reports/web_stock_report_page.dart' deferred as stock_report;
+import '../features/reports/web_sales_report_page.dart'
+    deferred as sales_report;
+import '../features/reports/web_stock_report_page.dart'
+    deferred as stock_report;
 
 final webRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
@@ -52,6 +55,7 @@ final webRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
+    observers: sentryNavigatorObservers(),
     refreshListenable: refresh,
     initialLocation: '/',
     redirect: (context, state) {
@@ -116,22 +120,10 @@ final webRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       // Bare role roots → home (also handled in [redirect] for safety).
-      GoRoute(
-        path: '/owner',
-        redirect: (_, _) => '/owner/dashboard',
-      ),
-      GoRoute(
-        path: '/sales',
-        redirect: (_, _) => '/sales/dashboard',
-      ),
-      GoRoute(
-        path: '/warehouse',
-        redirect: (_, _) => '/warehouse/stock',
-      ),
-      GoRoute(
-        path: '/customer',
-        redirect: (_, _) => '/customer/dashboard',
-      ),
+      GoRoute(path: '/owner', redirect: (_, _) => '/owner/dashboard'),
+      GoRoute(path: '/sales', redirect: (_, _) => '/sales/dashboard'),
+      GoRoute(path: '/warehouse', redirect: (_, _) => '/warehouse/stock'),
+      GoRoute(path: '/customer', redirect: (_, _) => '/customer/dashboard'),
       _ownerRoutes(),
       _salesRoutes(),
       _warehouseRoutes(),
@@ -590,9 +582,8 @@ ShellRoute _customerRoutes() {
       ),
       GoRoute(
         path: '/customer/billing/:billId',
-        builder: (_, state) => WebCustomerBillDetailPage(
-          billId: state.pathParameters['billId']!,
-        ),
+        builder: (_, state) =>
+            WebCustomerBillDetailPage(billId: state.pathParameters['billId']!),
       ),
       GoRoute(
         path: '/customer/notifications',

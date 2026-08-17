@@ -17,6 +17,8 @@ import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
 import '../../domain/models/top_product_row.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../data/sync/sync_providers.dart';
 import 'report_period.dart';
 
 final salesDailyProvider = FutureProvider.autoDispose
@@ -78,6 +80,10 @@ final billsInRangeProvider = FutureProvider.autoDispose
     });
 
 final duesAgingProvider = FutureProvider.autoDispose<DuesAgingReport>((ref) {
+  ref.watch(authProvider.select((s) => s.value?.member?.id));
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(seconds: 45), link.close);
+  ref.onDispose(timer.cancel);
   return ref.watch(reportsRepositoryProvider).duesAging();
 });
 
@@ -101,18 +107,40 @@ final last7DaySalesProvider =
 /// Individual fallbacks that also fail become null (UI shows "—", not a false 0).
 final ownerDashboardStatsProvider =
     FutureProvider.autoDispose<OwnerDashboardStats>((ref) async {
+      ref.watch(authProvider.select((s) => s.value?.member?.id));
+      ref.watch(
+        syncStatusProvider.select(
+          (s) => (s.value?.pendingCount, s.value?.failedCount, s.value?.state),
+        ),
+      );
+      final link = ref.keepAlive();
+      final timer = Timer(const Duration(seconds: 45), link.close);
+      ref.onDispose(timer.cancel);
+      Future<int> pendingSales() async {
+        try {
+          return await ref.read(billsRepositoryProvider).unsyncedTodaysSales();
+        } catch (_) {
+          return 0;
+        }
+      }
+
       try {
-        return await ref
+        final stats = await ref
             .watch(reportsRepositoryProvider)
             .ownerDashboardStats()
             .timeout(const Duration(seconds: 5));
+        return stats.copyWith(pendingSyncSales: await pendingSales());
       } catch (e, st) {
         AppLog.warn('owner_dashboard_stats RPC fallback', e, st);
         Future<int?> safe(String metric, Future<int> Function() load) async {
           try {
             return await load();
           } catch (inner, innerSt) {
-            AppLog.warn('owner_dashboard_stats partial fallback: $metric', inner, innerSt);
+            AppLog.warn(
+              'owner_dashboard_stats partial fallback: $metric',
+              inner,
+              innerSt,
+            );
             return null;
           }
         }
@@ -134,6 +162,7 @@ final ownerDashboardStatsProvider =
           totalDues: results[2],
           lowStockCount: results[3],
           pendingOrders: results[4],
+          pendingSyncSales: await pendingSales(),
         );
       }
     });

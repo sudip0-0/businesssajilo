@@ -22,12 +22,7 @@ void main() {
 
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     registry.replace(
-      SyncBundle(
-        db: db,
-        sync: sync,
-        businessId: 'biz',
-        memberId: 'mem',
-      ),
+      SyncBundle(db: db, sync: sync, businessId: 'biz', memberId: 'mem'),
     );
     expect(registry.active, isNotNull);
 

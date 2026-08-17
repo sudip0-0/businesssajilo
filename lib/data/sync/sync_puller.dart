@@ -31,7 +31,8 @@ class SyncPuller {
         .then((r) => r.isNotEmpty);
 
     final bootstrapTable = await _db.metaValue(syncMetaBootstrapTable);
-    if (!hasWatermarks || (bootstrapTable != null && bootstrapTable.isNotEmpty)) {
+    if (!hasWatermarks ||
+        (bootstrapTable != null && bootstrapTable.isNotEmpty)) {
       bootstrapIncomplete = !await _bootstrapResumable();
     } else {
       bootstrapIncomplete = false;
@@ -46,13 +47,16 @@ class SyncPuller {
   Future<bool> _bootstrapResumable() async {
     final budget = SyncPullBudget();
     var startTable = await _db.metaValue(syncMetaBootstrapTable);
-    var offset = int.tryParse(await _db.metaValue(syncMetaBootstrapOffset) ?? '') ?? 0;
+    var offset =
+        int.tryParse(await _db.metaValue(syncMetaBootstrapOffset) ?? '') ?? 0;
 
     if (startTable != null && startTable.isEmpty) startTable = null;
 
     final startIndex = startTable == null
         ? 0
-        : syncBootstrapTables.indexOf(startTable).clamp(0, syncBootstrapTables.length);
+        : syncBootstrapTables
+              .indexOf(startTable)
+              .clamp(0, syncBootstrapTables.length);
 
     for (var i = startIndex; i < syncBootstrapTables.length; i++) {
       final table = syncBootstrapTables[i];
@@ -119,7 +123,10 @@ class SyncPuller {
         );
       default:
         return Future.value(
-          const PullPageResult(outcome: PullPageOutcome.complete, nextOffset: 0),
+          const PullPageResult(
+            outcome: PullPageOutcome.complete,
+            nextOffset: 0,
+          ),
         );
     }
   }

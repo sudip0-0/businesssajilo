@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/app_localizations.dart';
+import '../logging/sentry_scope.dart';
 import '../theme/app_theme.dart';
 import '../../features/auth/change_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -29,6 +30,7 @@ final mobileRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
+    observers: sentryNavigatorObservers(),
     refreshListenable: refresh,
     initialLocation: '/',
     redirect: (context, state) {

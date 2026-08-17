@@ -22,10 +22,14 @@ class ReportPeriod {
     assert(preset != ReportPeriodPreset.custom);
     final range = switch (preset) {
       ReportPeriodPreset.today => dateRangeFor(ReportRange.today, now: now),
-      ReportPeriodPreset.last7Days =>
-        dateRangeFor(ReportRange.last7Days, now: now),
-      ReportPeriodPreset.last30Days =>
-        dateRangeFor(ReportRange.last30Days, now: now),
+      ReportPeriodPreset.last7Days => dateRangeFor(
+        ReportRange.last7Days,
+        now: now,
+      ),
+      ReportPeriodPreset.last30Days => dateRangeFor(
+        ReportRange.last30Days,
+        now: now,
+      ),
       ReportPeriodPreset.thisMonth => dateRangeFor(ReportRange.month, now: now),
       ReportPeriodPreset.custom => throw StateError('Use ReportPeriod.custom'),
     };
@@ -54,12 +58,18 @@ class ReportPeriod {
   factory ReportPeriod.fromQuery(String? period, {DateTime? now}) {
     return switch (period) {
       'today' => ReportPeriod.preset(ReportPeriodPreset.today, now: now),
-      '7d' || 'last7Days' =>
-        ReportPeriod.preset(ReportPeriodPreset.last7Days, now: now),
-      '30d' || 'last30Days' =>
-        ReportPeriod.preset(ReportPeriodPreset.last30Days, now: now),
-      'month' || 'thisMonth' =>
-        ReportPeriod.preset(ReportPeriodPreset.thisMonth, now: now),
+      '7d' || 'last7Days' => ReportPeriod.preset(
+        ReportPeriodPreset.last7Days,
+        now: now,
+      ),
+      '30d' || 'last30Days' => ReportPeriod.preset(
+        ReportPeriodPreset.last30Days,
+        now: now,
+      ),
+      'month' || 'thisMonth' => ReportPeriod.preset(
+        ReportPeriodPreset.thisMonth,
+        now: now,
+      ),
       _ => ReportPeriod.preset(ReportPeriodPreset.last7Days, now: now),
     };
   }

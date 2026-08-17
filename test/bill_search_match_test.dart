@@ -35,10 +35,7 @@ void main() {
         isTrue,
       );
       expect(
-        billMatchesSearch(
-          _bill(customerShopName: 'umesh rai'),
-          query: 'Umesh',
-        ),
+        billMatchesSearch(_bill(customerShopName: 'umesh rai'), query: 'Umesh'),
         isTrue,
       );
       expect(

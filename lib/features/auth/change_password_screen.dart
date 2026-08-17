@@ -100,12 +100,14 @@ class _ChangePasswordFormState extends ConsumerState<ChangePasswordForm> {
     if (!_formKey.currentState!.validate()) return;
     final ok = await runInlineFormAction(
       action: () async {
-        await ref.read(authProvider.notifier).updateOwnPassword(
-          _passwordController.text,
-          currentPassword: widget.requireCurrentPassword
-              ? _currentController.text
-              : null,
-        );
+        await ref
+            .read(authProvider.notifier)
+            .updateOwnPassword(
+              _passwordController.text,
+              currentPassword: widget.requireCurrentPassword
+                  ? _currentController.text
+                  : null,
+            );
         if (mounted) {
           showBsSnackBar(context, message: l10n.passwordChanged);
           widget.onChanged?.call();

@@ -19,6 +19,7 @@ class SupabaseCustomersRepository implements CustomersRepository {
     int? limit,
     String? query,
     bool includeBalances = true,
+    CustomerBalanceFilter balanceFilter = CustomerBalanceFilter.all,
   }) async {
     final client = requireSupabaseClient(_client);
     if (!includeBalances) {
@@ -33,6 +34,12 @@ class SupabaseCustomersRepository implements CustomersRepository {
         'shop_name.ilike.$pattern,contact_name.ilike.$pattern,phone.ilike.$pattern',
       );
     }
+    filter = switch (balanceFilter) {
+      CustomerBalanceFilter.all => filter,
+      CustomerBalanceFilter.due => filter.gt('balance_due', 0),
+      CustomerBalanceFilter.credit => filter.lt('balance_due', 0),
+      CustomerBalanceFilter.settled => filter.eq('balance_due', 0),
+    };
     var built = filter.order('shop_name', ascending: true);
     if (limit != null) {
       built = built.range(offset, offset + limit - 1);

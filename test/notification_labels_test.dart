@@ -17,12 +17,12 @@ void main() {
 
   test('dues reminder title includes the customer shop name and amount', () {
     final l10n = AppLocalizationsEn();
-    final named = NotificationItem(
+    final named = const NotificationItem(
       id: '1',
       businessId: 'b',
       recipientMemberId: 'm',
       type: 'dues_reminder',
-      payload: const {'shop_name': 'Ram Store', 'balance_due': 1234500},
+      payload: {'shop_name': 'Ram Store', 'balance_due': 1234500},
     );
     expect(
       notificationTitle(l10n, named),

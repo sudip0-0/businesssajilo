@@ -56,7 +56,7 @@ class StatementPdfBuilder {
       children: [
         pw.Text(
           labels.title.toUpperCase(),
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
             fontSize: _titleSize,
             fontWeight: pw.FontWeight.bold,
           ),
@@ -65,7 +65,7 @@ class StatementPdfBuilder {
         pw.SizedBox(height: 8),
         pw.Text(
           doc.businessDisplayName,
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
             fontSize: _businessSize,
             fontWeight: pw.FontWeight.bold,
           ),
@@ -106,7 +106,7 @@ class StatementPdfBuilder {
         labels.credit,
         labels.balance,
       ],
-      headerStyle: pw.TextStyle(
+      headerStyle: const pw.TextStyle(
         fontWeight: pw.FontWeight.bold,
         fontSize: _tableHeaderSize,
       ),
@@ -144,14 +144,14 @@ class StatementPdfBuilder {
       children: [
         pw.Text(
           doc.labels.closingBalance,
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
             fontSize: _totalSize,
           ),
         ),
         pw.Text(
           _money(doc.closingBalance),
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
             fontSize: _totalSize,
           ),

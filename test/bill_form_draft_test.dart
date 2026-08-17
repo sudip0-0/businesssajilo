@@ -77,7 +77,7 @@ void main() {
   test('loadFromBill copies lines even when catalog is empty', () {
     final draft = BillFormDraft();
     draft.addProduct(_product(id: 'old', name: 'Stale'));
-    final bill = Bill(
+    final bill = const Bill(
       id: 'b1',
       businessId: 'biz',
       customerId: 'c1',
@@ -85,7 +85,7 @@ void main() {
       createdBy: 'm1',
       status: BillStatus.due,
       discount: 500,
-      items: const [
+      items: [
         BillItem(
           id: 'i1',
           billId: 'b1',

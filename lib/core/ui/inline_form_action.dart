@@ -20,8 +20,7 @@ Future<bool> runInlineFormAction({
     return true;
   } catch (e) {
     if (mounted()) {
-      error =
-          mapError?.call(e, l10n) ?? AppFailure.from(e).message(l10n);
+      error = mapError?.call(e, l10n) ?? AppFailure.from(e).message(l10n);
       onState(loading: true, error: error);
     }
     return false;

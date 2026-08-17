@@ -27,7 +27,5 @@ BillFormValidationError? validateBillForm(BillFormDraft draft) {
 ///
 /// Used to warn (but not block) overselling at the counter.
 List<BillDraftLine> oversellingLines(BillFormDraft draft) {
-  return draft.lines
-      .where((l) => l.qty > l.product.stockCached)
-      .toList();
+  return draft.lines.where((l) => l.qty > l.product.stockCached).toList();
 }

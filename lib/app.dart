@@ -21,6 +21,41 @@ final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 bool get _useWebUi => kIsWeb || Env.forceWebUi;
 
+final pushNavigationBootstrapProvider = Provider<void>((ref) {
+  PushService.onNotificationTap = (data) {
+    final navContext = rootNavigatorKey.currentContext;
+    if (navContext == null) return;
+    final role = ref.read(authProvider).value?.member?.role;
+    final item = NotificationItem(
+      id: data['notification_id'] as String? ?? '',
+      businessId: data['business_id'] as String? ?? '',
+      recipientMemberId: data['recipient_member_id'] as String? ?? '',
+      type: data['type'] as String? ?? '',
+      payload: data,
+    );
+    if (_useWebUi) {
+      openWebNotificationTarget(navContext, item, role: role);
+    } else {
+      openNotificationTarget(navContext, item, role: role);
+    }
+  };
+  PushService.onForegroundMessage = (message) {
+    final title = message.notification?.title ?? message.data['title'];
+    final body = message.notification?.body ?? message.data['body'];
+    final text = [title, body].whereType<String>().join(' — ');
+    if (text.isEmpty) return;
+    final ctx = scaffoldMessengerKey.currentContext;
+    final messenger = scaffoldMessengerKey.currentState;
+    if (ctx != null && messenger != null) {
+      showBsSnackBarOn(messenger, context: ctx, message: text);
+    }
+  };
+  ref.onDispose(() {
+    PushService.onNotificationTap = null;
+    PushService.onForegroundMessage = null;
+  });
+});
+
 /// App locale; persisted per device via SharedPreferences.
 final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
   LocaleNotifier.new,
@@ -57,36 +92,7 @@ class BusinessSajiloApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final router = ref.watch(routerProvider);
-
-    // Wire push notification taps and foreground banners into the app.
-    PushService.onNotificationTap = (data) {
-      final navContext = rootNavigatorKey.currentContext;
-      if (navContext == null) return;
-      final role = ref.read(authProvider).value?.member?.role;
-      final item = NotificationItem(
-        id: data['notification_id'] as String? ?? '',
-        businessId: data['business_id'] as String? ?? '',
-        recipientMemberId: data['recipient_member_id'] as String? ?? '',
-        type: data['type'] as String? ?? '',
-        payload: data,
-      );
-      if (_useWebUi) {
-        openWebNotificationTarget(navContext, item, role: role);
-      } else {
-        openNotificationTarget(navContext, item, role: role);
-      }
-    };
-    PushService.onForegroundMessage = (message) {
-      final title = message.notification?.title ?? message.data['title'];
-      final body = message.notification?.body ?? message.data['body'];
-      final text = [title, body].whereType<String>().join(' — ');
-      if (text.isEmpty) return;
-      final ctx = scaffoldMessengerKey.currentContext;
-      final messenger = scaffoldMessengerKey.currentState;
-      if (ctx != null && messenger != null) {
-        showBsSnackBarOn(messenger, context: ctx, message: text);
-      }
-    };
+    ref.watch(pushNavigationBootstrapProvider);
 
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,
@@ -101,7 +107,7 @@ class BusinessSajiloApp extends ConsumerWidget {
           data: media.copyWith(
             textScaler: media.textScaler.clamp(
               minScaleFactor: 1.0,
-              maxScaleFactor: 1.3,
+              maxScaleFactor: 2.0,
             ),
           ),
           child: child ?? const SizedBox.shrink(),

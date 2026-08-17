@@ -38,7 +38,9 @@ class WebDashboardRecentActivity extends StatelessWidget {
       return ErrorState(message: l10n.loadingFailed, onRetry: onRetry);
     }
 
-    if (bills.isLoading || lowStockAlerts.isLoading || recentCustomers.isLoading) {
+    if (bills.isLoading ||
+        lowStockAlerts.isLoading ||
+        recentCustomers.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -83,15 +85,18 @@ class WebDashboardRecentActivity extends StatelessWidget {
           },
           text: item.text,
           onTap: switch (item.kind) {
-            DashboardActivityKind.bill => item.entityId == null
-                ? null
-                : () => context.go('/owner/billing/${item.entityId}'),
-            DashboardActivityKind.lowStock => item.entityId == null
-                ? null
-                : () => context.go('/owner/inventory/${item.entityId}'),
-            DashboardActivityKind.newCustomer => item.entityId == null
-                ? null
-                : () => context.go('/owner/customers/${item.entityId}'),
+            DashboardActivityKind.bill =>
+              item.entityId == null
+                  ? null
+                  : () => context.go('/owner/billing/${item.entityId}'),
+            DashboardActivityKind.lowStock =>
+              item.entityId == null
+                  ? null
+                  : () => context.go('/owner/inventory/${item.entityId}'),
+            DashboardActivityKind.newCustomer =>
+              item.entityId == null
+                  ? null
+                  : () => context.go('/owner/customers/${item.entityId}'),
           },
         );
       },

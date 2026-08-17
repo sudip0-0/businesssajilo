@@ -1,4 +1,5 @@
 import '../l10n/app_localizations.dart';
+import '../../data/sync/sync_helpers.dart';
 
 String syncEntityLabel(AppLocalizations l10n, String entityType) =>
     switch (entityType) {
@@ -9,6 +10,22 @@ String syncEntityLabel(AppLocalizations l10n, String entityType) =>
       'product' => l10n.syncEntityProduct,
       _ => entityType,
     };
+
+String syncErrorDetail(AppLocalizations l10n, String? raw) {
+  final extracted = extractSyncErrorDetail(raw);
+  if (extracted == null) return l10n.syncErrorGeneric;
+  final lower = extracted.toLowerCase();
+  if (lower.contains('customer not found')) {
+    return l10n.syncErrorCustomerNotFound;
+  }
+  if (lower.contains('ambiguous customer')) {
+    return l10n.syncErrorAmbiguousCustomer;
+  }
+  if (lower.contains('product does not belong')) {
+    return l10n.syncErrorStaleProduct;
+  }
+  return extracted;
+}
 
 String syncStatusLabel(AppLocalizations l10n, String status) =>
     switch (status) {

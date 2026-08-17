@@ -45,10 +45,12 @@ class _ResetMemberPasswordSheetState
     if (!_formKey.currentState!.validate()) return;
     await runInlineFormAction(
       action: () async {
-        await ref.read(membersRepositoryProvider).resetMemberPassword(
-          memberId: widget.memberId,
-          newPassword: _passwordController.text,
-        );
+        await ref
+            .read(membersRepositoryProvider)
+            .resetMemberPassword(
+              memberId: widget.memberId,
+              newPassword: _passwordController.text,
+            );
         if (mounted) Navigator.pop(context, true);
       },
       onState: ({required loading, error}) => setState(() {
@@ -140,7 +142,7 @@ Future<void> showResetMemberPasswordSheet(
     title: l10n.resetPassword,
     child: ResetMemberPasswordSheet(memberId: memberId, memberName: memberName),
   );
-  if (done == true) {
+  if (done == true && context.mounted) {
     showBsSnackBarOn(
       messenger,
       context: context,

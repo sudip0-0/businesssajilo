@@ -28,7 +28,11 @@ class ErrorState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline, size: iconSize, color: scheme.error),
+                  Icon(
+                    Icons.error_outline,
+                    size: iconSize,
+                    color: scheme.error,
+                  ),
                   SizedBox(height: gap),
                   Semantics(
                     liveRegion: true,

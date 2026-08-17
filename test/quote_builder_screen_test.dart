@@ -88,6 +88,7 @@ class _FakeProducts implements ProductsRepository {
     int offset = 0,
     int? limit,
     String? query,
+    ProductStockFilter stockFilter = ProductStockFilter.all,
   }) async => const [];
 
   @override
@@ -140,6 +141,12 @@ class _FakeProducts implements ProductsRepository {
 
 class _FailingQuotes extends QuotesRepository {
   _FailingQuotes() : super(null);
+
+  @override
+  Future<int?> lastQuotedRate({
+    required String customerId,
+    required String productId,
+  }) async => 500;
 
   @override
   Future<Quote> sendQuote({

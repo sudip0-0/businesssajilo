@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -41,9 +42,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context);
     await runInlineFormAction(
-      action: () => ref
-          .read(authProvider.notifier)
-          .signIn(_emailController.text, _passwordController.text),
+      action: () async {
+        await ref
+            .read(authProvider.notifier)
+            .signIn(_emailController.text, _passwordController.text);
+        TextInput.finishAutofillContext();
+      },
       onState: ({required loading, error}) => setState(() {
         _loading = loading;
         _error = error;
@@ -71,138 +75,144 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Icon(
-                      Icons.storefront,
-                      size: 56,
-                      color: BsColors.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.appTitle,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: BsColors.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.tagline,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
+              child: AutofillGroup(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Icon(
+                        Icons.storefront,
+                        size: 56,
+                        color: BsColors.primary,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    const LocaleToggle(fullWidth: true),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(labelText: l10n.emailOrPhone),
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.username],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return l10n.fieldRequired;
-                        }
-                        if (!isValidLoginIdentifier(v)) {
-                          return l10n.invalidEmailOrPhone;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: l10n.password,
-                        suffixIcon: IconButton(
-                          tooltip: _obscurePassword
-                              ? l10n.showPassword
-                              : l10n.hidePassword,
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
-                      ),
-                      obscureText: _obscurePassword,
-                      autofillHints: const [AutofillHints.password],
-                      validator: (v) =>
-                          v == null || v.isEmpty ? l10n.fieldRequired : null,
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          final identifier = _emailController.text.trim();
-                          final isPhone =
-                              identifier.isNotEmpty &&
-                              !identifier.contains('@');
-                          if (isPhone) {
-                            showBsSnackBar(
-                              context,
-                              message: l10n.forgotPasswordPhoneHint,
-                            );
-                            return;
-                          }
-                          showAdaptiveSheet<void>(
-                            context: context,
-                            title: l10n.resetPassword,
-                            child: ForgotPasswordSheet(
-                              initialEmail: identifier.isEmpty
-                                  ? null
-                                  : identifier,
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.appTitle,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: BsColors.primary,
                             ),
-                          );
-                        },
-                        child: Text(l10n.forgotPassword),
                       ),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 12),
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(color: BsColors.danger),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.tagline,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.outline,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(l10n.signIn),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(l10n.noAccount),
-                        TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: Text(l10n.signUp),
+                      const SizedBox(height: 16),
+                      const LocaleToggle(fullWidth: true),
+                      const SizedBox(height: 24),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: l10n.emailOrPhone,
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.username],
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return l10n.fieldRequired;
+                          }
+                          if (!isValidLoginIdentifier(v)) {
+                            return l10n.invalidEmailOrPhone;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: l10n.password,
+                          suffixIcon: IconButton(
+                            tooltip: _obscurePassword
+                                ? l10n.showPassword
+                                : l10n.hidePassword,
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
+                        ),
+                        obscureText: _obscurePassword,
+                        autofillHints: const [AutofillHints.password],
+                        validator: (v) =>
+                            v == null || v.isEmpty ? l10n.fieldRequired : null,
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            final identifier = _emailController.text.trim();
+                            final isPhone =
+                                identifier.isNotEmpty &&
+                                !identifier.contains('@');
+                            if (isPhone) {
+                              showBsSnackBar(
+                                context,
+                                message: l10n.forgotPasswordPhoneHint,
+                              );
+                              return;
+                            }
+                            showAdaptiveSheet<void>(
+                              context: context,
+                              title: l10n.resetPassword,
+                              child: ForgotPasswordSheet(
+                                initialEmail: identifier.isEmpty
+                                    ? null
+                                    : identifier,
+                              ),
+                            );
+                          },
+                          child: Text(l10n.forgotPassword),
+                        ),
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 12),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            _error!,
+                            style: const TextStyle(color: BsColors.danger),
+                          ),
                         ),
                       ],
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: _loading ? null : _submit,
+                        child: _loading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(l10n.signIn),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(l10n.noAccount),
+                          TextButton(
+                            onPressed: () => context.go('/register'),
+                            child: Text(l10n.signUp),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

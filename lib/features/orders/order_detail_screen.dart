@@ -49,7 +49,8 @@ class OrderDetailScreen extends ConsumerWidget {
       data: (order) {
         final catalogById = {
           for (final p
-              in ref.watch(catalogListProvider).value ?? const <CatalogProduct>[])
+              in ref.watch(catalogListProvider).value ??
+                  const <CatalogProduct>[])
             p.id: p,
         };
         return ListView(
@@ -93,7 +94,10 @@ class OrderDetailScreen extends ConsumerWidget {
             ...order.items.map((item) {
               final catalog = catalogById[item.productId];
               final name =
-                  item.productName ?? catalog?.name ?? item.productNameNp ?? '—';
+                  item.productName ??
+                  catalog?.name ??
+                  item.productNameNp ??
+                  '—';
               final unit = item.unit ?? catalog?.unit;
               final imageUrl = item.imageUrl ?? catalog?.imageUrl;
               return ListTile(

@@ -24,7 +24,7 @@ class WebNavItem {
 }
 
 /// The ink-navy rail — the signature spine of the web experience.
-class WebSidebar extends StatelessWidget {
+class WebSidebar extends StatefulWidget {
   const WebSidebar({
     super.key,
     required this.items,
@@ -41,11 +41,26 @@ class WebSidebar extends StatelessWidget {
   final bool inDrawer;
 
   @override
+  State<WebSidebar> createState() => _WebSidebarState();
+}
+
+class _WebSidebarState extends State<WebSidebar> {
+  var _playEntrance = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(milliseconds: 480), () {
+      if (mounted) setState(() => _playEntrance = false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = context.webTokens;
     final location = GoRouterState.of(context).uri.path;
-    final isCollapsed = collapsed && !inDrawer;
+    final isCollapsed = widget.collapsed && !widget.inDrawer;
     final width = isCollapsed
         ? tokens.sidebarCollapsedWidth
         : tokens.sidebarWidth;
@@ -53,15 +68,15 @@ class WebSidebar extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
-      width: inDrawer ? null : width,
+      width: widget.inDrawer ? null : width,
       decoration: const BoxDecoration(gradient: WebPalette.railGradient),
       child: Column(
         children: [
           _BrandBlock(
             collapsed: isCollapsed,
-            inDrawer: inDrawer,
+            inDrawer: widget.inDrawer,
             l10n: l10n,
-            onToggleCollapse: onToggleCollapse,
+            onToggleCollapse: widget.onToggleCollapse,
           ),
           const Divider(height: 1, color: WebPalette.railLine),
           Expanded(
@@ -72,33 +87,41 @@ class WebSidebar extends StatelessWidget {
                 isCollapsed ? 10 : 12,
                 8,
               ),
-              itemCount: items.length,
+              itemCount: widget.items.length,
               itemBuilder: (context, index) {
-                final item = items[index];
+                final item = widget.items[index];
                 final selected = location.startsWith(item.path);
 
-                return _SidebarTile(
-                      item: item,
-                      selected: selected,
-                      collapsed: isCollapsed,
-                      onTap: () {
-                        context.go(item.path);
-                        if (inDrawer) Navigator.of(context).pop();
-                      },
-                    )
-                    .animate()
-                    .fadeIn(duration: 260.ms, delay: (40 + index * 30).ms)
-                    .slideX(
-                      begin: -0.04,
-                      end: 0,
-                      duration: 260.ms,
-                      delay: (40 + index * 30).ms,
-                      curve: Curves.easeOutCubic,
-                    );
+                Widget tile = _SidebarTile(
+                  item: item,
+                  selected: selected,
+                  collapsed: isCollapsed,
+                  onTap: () {
+                    context.go(item.path);
+                    if (widget.inDrawer) Navigator.of(context).pop();
+                  },
+                );
+                tile = KeyedSubtree(
+                  key: IntegrationKeys.sidebarNav(item.path),
+                  child: tile,
+                );
+                if (_playEntrance) {
+                  tile = tile
+                      .animate()
+                      .fadeIn(duration: 260.ms, delay: (40 + index * 30).ms)
+                      .slideX(
+                        begin: -0.04,
+                        end: 0,
+                        duration: 260.ms,
+                        delay: (40 + index * 30).ms,
+                        curve: Curves.easeOutCubic,
+                      );
+                }
+                return tile;
               },
             ),
           ),
-          if (footer != null) ...[
+          if (widget.footer != null) ...[
             const Divider(height: 1, color: WebPalette.railLine),
             // Footer CTAs (e.g. "Create bill") take the brass treatment so
             // they stay legible on the dark rail.
@@ -132,7 +155,7 @@ class WebSidebar extends StatelessWidget {
               ),
               child: Padding(
                 padding: EdgeInsets.all(isCollapsed ? 12 : 14),
-                child: footer!,
+                child: widget.footer!,
               ),
             ),
           ],

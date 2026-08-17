@@ -20,6 +20,16 @@ String formatDashboardKpiCount(AppLocalizations l10n, int? count) {
   return '$count';
 }
 
+String? formatPendingSyncSalesSubtitle(
+  AppLocalizations l10n,
+  int pendingPaisa,
+) {
+  if (pendingPaisa <= 0) return null;
+  return l10n.pendingSyncSalesHint(
+    formatNpr(Paisa(pendingPaisa), showPaisa: false),
+  );
+}
+
 /// Trend percent label for sales KPI (null when unavailable or no sales today).
 String? formatDashboardTrendPercent(OwnerDashboardStats stats) {
   if (stats.todaySales == 0) return null;

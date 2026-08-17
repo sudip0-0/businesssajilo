@@ -20,6 +20,15 @@ abstract final class Env {
   /// Optional Sentry DSN. When empty, crash reporting is a no-op.
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
+  /// Sentry performance tracing sample rate (0–1). Default 0.1 in prod.
+  static double get sentryTracesSampleRate {
+    const raw = String.fromEnvironment(
+      'SENTRY_TRACES_SAMPLE_RATE',
+      defaultValue: '0.1',
+    );
+    return double.tryParse(raw) ?? 0.1;
+  }
+
   /// Integration tests on desktop use the web shell when true.
   static const forceWebUi = bool.fromEnvironment('FORCE_WEB_UI');
 

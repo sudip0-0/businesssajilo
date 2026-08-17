@@ -80,6 +80,7 @@ Future<void> exportCustomerLedgerCsv(
   final entries = await ref
       .read(customersRepositoryProvider)
       .ledger(customerId);
+  if (!context.mounted) return;
   await exportLedgerCsv(ref, context, entries);
 }
 

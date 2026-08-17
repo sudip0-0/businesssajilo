@@ -31,14 +31,16 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final chartRange =
-        _monthlyChart ? ReportRange.last30Days : ReportRange.last7Days;
+    final chartRange = _monthlyChart
+        ? ReportRange.last30Days
+        : ReportRange.last7Days;
     final salesChart = ref.watch(salesDailyProvider(chartRange));
     final salesWeek = ref.watch(salesDailyProvider(ReportRange.week));
     final topProducts = ref.watch(topProductsProvider(ReportRange.week));
     final dues = ref.watch(duesAgingProvider);
     final stock = ref.watch(stockValuationProvider(false));
     final todaysSales = ref.watch(todaysSalesProvider);
+    final pendingTodaysSales = ref.watch(pendingTodaysSalesProvider);
     final yesterdaysSales = ref.watch(yesterdaysSalesProvider);
     final totalDues = ref.watch(totalDuesProvider);
     final lowStock = ref.watch(lowStockCountProvider);
@@ -54,6 +56,7 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
           ref.invalidate(duesAgingProvider);
           ref.invalidate(stockValuationProvider(false));
           ref.invalidate(todaysSalesProvider);
+          ref.invalidate(pendingTodaysSalesProvider);
           ref.invalidate(yesterdaysSalesProvider);
           ref.invalidate(totalDuesProvider);
           ref.invalidate(lowStockCountProvider);
@@ -78,6 +81,15 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                       todaysSales,
                       yesterdaysSales,
                       l10n,
+                    ),
+                    subtitle: pendingTodaysSales.when(
+                      data: (d) => d > 0
+                          ? l10n.pendingSyncSalesHint(
+                              formatNpr(Paisa(d), showPaisa: false),
+                            )
+                          : null,
+                      loading: () => null,
+                      error: (_, _) => null,
                     ),
                     onTap: () => context.go('/owner/reports/sales'),
                   ),
@@ -280,7 +292,9 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                           (s, r) => s + r.valuation,
                         );
                         final low = rows.where((r) => r.isLowStock).length;
-                        final out = rows.where((r) => r.stockCached <= 0).length;
+                        final out = rows
+                            .where((r) => r.stockCached <= 0)
+                            .length;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

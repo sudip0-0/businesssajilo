@@ -629,6 +629,9 @@
   "noRecentActivity": "No recent activity",
   "emptyFulfillment": "No orders to fulfill",
   "syncErrorGeneric": "Could not sync. Check your connection and try again.",
+  "syncErrorCustomerNotFound": "Customer could not be matched. Retry after checking shop name and phone, or contact support.",
+  "syncErrorAmbiguousCustomer": "More than one customer matches this name or phone. Retry is paused until the bill is assigned to the right customer.",
+  "syncErrorStaleProduct": "A product on this bill is no longer in the catalog. The bill can still sync as a named line.",
   "sidebarExpand": "Expand sidebar",
   "sidebarCollapse": "Collapse sidebar",
   "openMenu": "Open menu",
@@ -752,5 +755,14 @@
       "count": { "type": "int" }
     }
   },
-  "noSalesYetToday": "No sales yet today"
+  "noSalesYetToday": "No sales yet today",
+  "pendingSyncSales": "Pending sync sales",
+  "pendingSyncSalesHint": "{amount} pending sync — not yet confirmed",
+  "@pendingSyncSalesHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -84,22 +84,15 @@ select is(
   'owner reads all tenant chat images'
 );
 
--- Owner can delete a chat image.
-select lives_ok(
+-- Direct DELETE on storage.objects is blocked by storage.protect_delete;
+-- owners must use the Storage API. RLS still allows the owner to see the row.
+select throws_ok(
   $$delete from storage.objects
     where bucket_id = 'order-chat-images'
       and name = '11111111-1111-1111-1111-111111111111/c2222222-2222-2222-2222-222222222222/img_b.jpg'$$,
-  'owner can delete chat images'
-);
-
--- Re-seed image B for remaining tests.
-set local role service_role;
-insert into storage.objects (bucket_id, name, owner, metadata)
-values (
-  'order-chat-images',
-  '11111111-1111-1111-1111-111111111111/c2222222-2222-2222-2222-222222222222/img_b.jpg',
-  '66666666-6666-6666-6666-666666666666',
-  '{}'::jsonb
+  '42501',
+  null,
+  'direct storage.objects delete is blocked; use Storage API'
 );
 
 -- payments(bill_id) index exists.

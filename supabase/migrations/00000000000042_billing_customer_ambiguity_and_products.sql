@@ -1,0 +1,195 @@
+-- Forward-fix for stale-customer recovery:
+-- * unique phone / unique shop-name remap only (never pick an arbitrary match)
+-- * create a portal-disabled customer only with trustworthy identity
+-- * never reuse another tenant's customer primary key
+-- * pgcrypto lives in the extensions schema on hosted Supabase
+-- * stale product IDs become snapshot-only lines (no name-based remap)
+
+create or replace function resolve_billing_customer(p jsonb)
+returns uuid
+language plpgsql
+volatile
+security definer
+set search_path = public, extensions
+set row_security = off
+as $$
+declare
+  v_raw text;
+  v_id uuid;
+  v_phone text;
+  v_shop text;
+  v_resolved uuid;
+  v_match_count int;
+  v_biz uuid;
+  v_auth uuid;
+  v_member uuid;
+  v_email text;
+  v_member_phone text;
+begin
+  v_biz := current_business_id();
+  v_raw := nullif(btrim(coalesce(p->>'customer_id', '')), '');
+  if v_raw is null then
+    return null;
+  end if;
+
+  begin
+    v_id := v_raw::uuid;
+  exception when others then
+    raise exception 'customer not found';
+  end;
+
+  -- 1. Existing customer ID within the current business.
+  select c.id into v_resolved
+  from customers c
+  where c.id = v_id and c.business_id = v_biz;
+  if v_resolved is not null then
+    return v_resolved;
+  end if;
+
+  v_phone := nullif(btrim(coalesce(p->>'customer_phone', '')), '');
+  v_shop := nullif(btrim(coalesce(p->>'customer_shop_name', '')), '');
+
+  -- 2. Exact phone match within the current business.
+  if v_phone is not null then
+    select count(*) into v_match_count
+    from customers c
+    where c.business_id = v_biz and c.phone = v_phone;
+    if v_match_count = 1 then
+      select c.id into v_resolved
+      from customers c
+      where c.business_id = v_biz and c.phone = v_phone;
+      return v_resolved;
+    elsif v_match_count > 1 then
+      raise exception 'ambiguous customer phone';
+    end if;
+  end if;
+
+  -- 3. Unique shop-name match (case-insensitive) within the current business.
+  -- Multiple matches must fail: never map an ambiguous name to an arbitrary row.
+  if v_shop is not null then
+    select count(*) into v_match_count
+    from customers c
+    where c.business_id = v_biz and lower(c.shop_name) = lower(v_shop);
+    if v_match_count = 1 then
+      select c.id into v_resolved
+      from customers c
+      where c.business_id = v_biz and lower(c.shop_name) = lower(v_shop);
+      return v_resolved;
+    elsif v_match_count > 1 then
+      raise exception 'ambiguous customer name';
+    end if;
+  end if;
+
+  -- 4. Create a portal-disabled customer only with trustworthy identity.
+  if v_shop is null and v_phone is null then
+    raise exception 'customer not found';
+  end if;
+  if v_shop is null then
+    v_shop := v_phone;
+  end if;
+
+  -- Do not steal another tenant's primary key.
+  if exists (select 1 from customers where id = v_id) then
+    v_id := gen_random_uuid();
+  end if;
+
+  v_auth := gen_random_uuid();
+  v_member := gen_random_uuid();
+  v_email := replace(v_id::text, '-', '') || '@sync.businesssajilo.invalid';
+
+  if v_phone is not null and exists (
+    select 1 from members
+    where phone = v_phone and is_active
+  ) then
+    v_member_phone := null;
+  else
+    v_member_phone := v_phone;
+  end if;
+
+  insert into auth.users (
+    id, instance_id, aud, role, email, encrypted_password,
+    email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at,
+    confirmation_token, recovery_token, email_change_token_new,
+    email_change, email_change_token_current, phone_change, phone_change_token
+  ) values (
+    v_auth,
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    v_email,
+    crypt(gen_random_uuid()::text, gen_salt('bf')),
+    now(),
+    '{"provider":"email","providers":["email"]}',
+    '{}',
+    now(),
+    now(),
+    '', '', '', '', '', '', ''
+  );
+
+  insert into auth.identities (
+    id, user_id, identity_data, provider, provider_id,
+    last_sign_in_at, created_at, updated_at
+  ) values (
+    v_auth,
+    v_auth,
+    jsonb_build_object('sub', v_auth::text, 'email', v_email),
+    'email',
+    v_auth::text,
+    now(),
+    now(),
+    now()
+  );
+
+  insert into members (
+    id, business_id, auth_user_id, role, display_name, phone, is_active
+  ) values (
+    v_member,
+    v_biz,
+    v_auth,
+    'customer',
+    v_shop,
+    v_member_phone,
+    false
+  );
+
+  insert into customers (
+    id, business_id, member_id, shop_name, phone, opening_balance
+  ) values (
+    v_id,
+    v_biz,
+    v_member,
+    v_shop,
+    v_phone,
+    0
+  );
+
+  return v_id;
+end;
+$$;
+
+revoke all on function resolve_billing_customer(jsonb) from public, anon, authenticated;
+
+-- Stale product UUIDs after a server reset must not fail the bill.
+-- Keep the name snapshot and drop the product link; never remap by name.
+create or replace function guard_bill_item_refs()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  bill_biz uuid;
+begin
+  select business_id into bill_biz from bills where id = NEW.bill_id;
+  if NEW.product_id is null then
+    return NEW;
+  end if;
+  if not exists (
+    select 1 from products where id = NEW.product_id and business_id = bill_biz
+  ) then
+    NEW.product_id := null;
+  end if;
+  return NEW;
+end;
+$$;

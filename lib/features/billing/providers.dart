@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/payments_repository.dart';
+import '../../data/sync/sync_providers.dart';
 import '../../domain/models/bill.dart';
 
 /// Bumped after bill/payment writes so paginated bill lists can refresh.
@@ -61,7 +62,21 @@ final billReceivedTotalProvider = FutureProvider.autoDispose
     });
 
 final todaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
+  ref.watch(
+    syncStatusProvider.select(
+      (s) => (s.value?.pendingCount, s.value?.failedCount, s.value?.state),
+    ),
+  );
   return ref.watch(billsRepositoryProvider).todaysSales();
+});
+
+final pendingTodaysSalesProvider = FutureProvider.autoDispose<int>((ref) {
+  ref.watch(
+    syncStatusProvider.select(
+      (s) => (s.value?.pendingCount, s.value?.failedCount, s.value?.state),
+    ),
+  );
+  return ref.watch(billsRepositoryProvider).unsyncedTodaysSales();
 });
 
 final todaysBillCountProvider = FutureProvider.autoDispose<int>((ref) {

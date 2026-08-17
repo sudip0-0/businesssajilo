@@ -9,6 +9,7 @@ class OwnerDashboardStats {
     required this.totalDues,
     required this.lowStockCount,
     required this.pendingOrders,
+    this.pendingSyncSales = 0,
   });
 
   final int? todaySales;
@@ -16,6 +17,10 @@ class OwnerDashboardStats {
   final int? totalDues;
   final int? lowStockCount;
   final int? pendingOrders;
+
+  /// Local uncommitted (pending/failed) bill totals for today. Never included
+  /// in [todaySales] — those are confirmed server/synced figures only.
+  final int pendingSyncSales;
 
   factory OwnerDashboardStats.fromJson(Map<String, dynamic> json) {
     int asInt(Object? v) => (v as num?)?.toInt() ?? 0;
@@ -25,6 +30,25 @@ class OwnerDashboardStats {
       totalDues: asInt(json['total_dues']),
       lowStockCount: asInt(json['low_stock_count']),
       pendingOrders: asInt(json['pending_orders']),
+      pendingSyncSales: asInt(json['pending_sync_sales']),
+    );
+  }
+
+  OwnerDashboardStats copyWith({
+    int? todaySales,
+    int? yesterdaySales,
+    int? totalDues,
+    int? lowStockCount,
+    int? pendingOrders,
+    int? pendingSyncSales,
+  }) {
+    return OwnerDashboardStats(
+      todaySales: todaySales ?? this.todaySales,
+      yesterdaySales: yesterdaySales ?? this.yesterdaySales,
+      totalDues: totalDues ?? this.totalDues,
+      lowStockCount: lowStockCount ?? this.lowStockCount,
+      pendingOrders: pendingOrders ?? this.pendingOrders,
+      pendingSyncSales: pendingSyncSales ?? this.pendingSyncSales,
     );
   }
 

@@ -1,9 +1,25 @@
 # BusinessSajilo — Full Codebase Audit Report
 
-**Date:** 2026-07-10 (scores refreshed 2026-07-23 after Phase 12 local verification)  
+**Date:** 2026-07-10 (scores refreshed 2026-07-23 after Phase 12 local verification; QoL/optimization work 2026-08-17)  
 **Scope:** Full multi-lens audit (read-only origin). Phase 12 added tests, docs, and local gate script.  
 **Prior docs consulted:** `Readme.md`, `Architecture.md`, `Agent.md`, `product.md`, `Design.md`, `tasks.md`, `docs/SECURITY.md`, `docs/LOCAL_TESTING.md`, `AUDIT_ARCHITECTURE.md`, `AUDIT_INVENTORY.md`  
 **Method:** Repo orientation + four parallel lens investigations + spot-verification; Phase 12 re-verified test counts and gate script.
+
+---
+
+## QoL and optimization (2026-08-17)
+
+Implemented in-repo; customer-balance **projection is gated** and not on the live read path.
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 0 Baseline | Done | Widget-test auth stubs; analyzer clean-up; Flutter SDK **3.44.8** pinned in CI/release; format + `build_runner` in local gate |
+| 1 Frontend QoL | Done | Retained shell tabs; debounced search; web autofill; Ctrl/Cmd+K; `SelectionArea`; deferred-route skeleton |
+| 2 Notifications | Done | Authoritative unread count; paginated inbox; `pushed_at` only after FCM success; storage cleanup pagination |
+| 3 Server filters | Done | Customer/product/bill filters on the server; `search_bills` RPC; unread partial index |
+| 4 Performance | Done | Page-bounded `WebDataTable`; signed image keep-alive; dashboard keep-alive; font/asset cache headers |
+| 5 Delivery | Done | `lang`/viewport; text scale 2.0×; Sentry tracing 10%; Deno + pgTAP + Playwright in CI; Dependabot; npm lockfile |
+| 6 Balances | Gated | Additive `customer_balance_projections` + drift view + `scripts/benchmark_customer_balances.sql`. App still reads `customer_balances`. |
 
 ---
 

@@ -20,8 +20,7 @@ SnackBar bsSnackBar(
       snackTheme.backgroundColor ??
       theme.colorScheme.inverseSurface;
   final fg =
-      snackTheme.contentTextStyle?.color ??
-      theme.colorScheme.onInverseSurface;
+      snackTheme.contentTextStyle?.color ?? theme.colorScheme.onInverseSurface;
   final maxWidth = math.min(420.0, MediaQuery.sizeOf(context).width - 32);
 
   return SnackBar(

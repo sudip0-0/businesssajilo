@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.44.8'
           channel: stable
           cache: true
       - run: flutter pub get
@@ -22,6 +23,59 @@ jobs:
       - run: flutter test
       - run: node --check scripts/e2e_web.mjs
 
+  e2e-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - uses: supabase/setup-cli@v1
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+      - name: Build and serve web, then run Playwright
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="${API_URL}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:-${PUBLISHABLE_KEY}}"
+          flutter build web --release --web-renderer canvaskit \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=FLAVOR=ci
+          python3 -m http.server 4173 --directory build/web --bind 127.0.0.1 &
+          sleep 2
+          export BASE_URL=http://127.0.0.1:4173
+          node scripts/e2e_web.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-web-artifacts
+          path: |
+            e2e-results.json
+            e2e-*.png
+          if-no-files-found: ignore
+
+  deno:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test supabase/functions/_shared/validation_test.ts --allow-read
+      - run: deno test supabase/functions/notify/push_policy_test.ts --allow-read
+
   supabase-db:
     runs-on: ubuntu-latest
     steps:
@@ -31,17 +85,24 @@ jobs:
       - run: supabase test db
 
   build-web:
-    needs: flutter
+    needs: [flutter, deno, supabase-db, e2e-web]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.44.8'
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter build web --release --web-renderer canvaskit
+      - name: Build web (CanvasKit)
+        run: |
+          flutter build web --release --web-renderer canvaskit \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=FLAVOR=prod
       - uses: actions/upload-artifact@v4
         with:
           name: web-build

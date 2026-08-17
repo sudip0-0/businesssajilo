@@ -9,11 +9,10 @@ final notificationMutePrefsProvider =
       return NotificationMutePrefs.load();
     });
 
-/// Single realtime subscription for the notifications inbox.
+/// Single realtime subscription for the notifications inbox (capped).
 ///
-/// Unread badge count is derived from this list so we never open a second
-/// Supabase `.stream()` on the same table (dual channels flap and the
-/// dropdown flickers between skeleton and data).
+/// Full history uses [notificationHistoryProvider] so we never open a second
+/// Supabase `.stream()` on the same table.
 final notificationListProvider =
     StreamProvider.autoDispose<List<NotificationItem>>((ref) {
       final prefs =
@@ -25,18 +24,25 @@ final notificationListProvider =
           .map((items) => excludeMutedNotifications(items, prefs));
     });
 
-/// Unread count from the shared inbox list (capped by the list page size).
-final unreadNotificationCountProvider = Provider.autoDispose<int>((ref) {
-  final items = ref.watch(notificationListProvider).value;
-  if (items == null) return 0;
-  return items.where((item) => item.isUnread).length;
+/// Authoritative unread badge count from the database, not the capped stream.
+final unreadNotificationCountProvider = FutureProvider.autoDispose<int>((
+  ref,
+) async {
+  final prefs =
+      ref.watch(notificationMutePrefsProvider).value ??
+      const NotificationMutePrefs();
+  ref.watch(notificationListProvider);
+  return ref
+      .watch(notificationsRepositoryProvider)
+      .unreadCount(excludedTypes: prefs.mutedTypes);
 });
 
 extension NotificationActions on WidgetRef {
-  /// Marks every notification read and refreshes the shared inbox stream.
+  /// Marks every notification read and refreshes inbox + badge.
   Future<void> markAllNotificationsRead() async {
     await read(notificationsRepositoryProvider).markAllRead();
     invalidate(notificationListProvider);
+    invalidate(unreadNotificationCountProvider);
   }
 }
 
@@ -46,6 +52,24 @@ List<NotificationItem> excludeMutedNotifications(
   NotificationMutePrefs prefs,
 ) {
   return items.where((item) => !prefs.mutes(item.type)).toList();
+}
+
+/// Merges live stream items into a paginated history without duplicates.
+List<NotificationItem> mergeNotificationPages({
+  required List<NotificationItem> live,
+  required List<NotificationItem> history,
+}) {
+  final seen = <String>{};
+  final merged = <NotificationItem>[];
+  for (final item in [...live, ...history]) {
+    if (seen.add(item.id)) merged.add(item);
+  }
+  merged.sort((a, b) {
+    final aAt = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    final bAt = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    return bAt.compareTo(aAt);
+  });
+  return merged;
 }
 
 /// Formats unread badge label (caps at 99+).

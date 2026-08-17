@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/pagination.dart';
@@ -88,5 +90,9 @@ final ownLedgerProvider = FutureProvider.autoDispose<List<LedgerEntry>>((
 });
 
 final totalDuesProvider = FutureProvider.autoDispose<int>((ref) {
+  ref.watch(authProvider.select((s) => s.value?.member?.id));
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(seconds: 45), link.close);
+  ref.onDispose(timer.cancel);
   return ref.watch(paymentsRepositoryProvider).totalDues();
 });

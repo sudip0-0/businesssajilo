@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { isUnregisteredTokenError, shouldStampPushedAt } from "./push_policy.ts";
 
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 if (!allowedOrigin) {
@@ -119,16 +120,31 @@ Deno.serve(async (req) => {
       ),
     );
 
-    await supabaseAdmin
-      .from("notifications")
-      .update({ pushed_at: new Date().toISOString() })
-      .eq("id", notificationId);
+    const sent = results.filter((r) => r.ok).length;
+    const failed = results.filter((r) => !r.ok).length;
+    const invalidTokens = results
+      .filter((r) => !r.ok && r.unregistered)
+      .map((r) => r.token);
+
+    if (invalidTokens.length > 0) {
+      await supabaseAdmin
+        .from("device_tokens")
+        .delete()
+        .in("token", invalidTokens);
+    }
+
+    if (shouldStampPushedAt(sent, failed)) {
+      await supabaseAdmin
+        .from("notifications")
+        .update({ pushed_at: new Date().toISOString() })
+        .eq("id", notificationId);
+    }
 
     return json({
-      pushed: true,
+      pushed: shouldStampPushedAt(sent, failed),
       notification_id: notificationId,
-      sent: results.filter((r) => r.ok).length,
-      failed: results.filter((r) => !r.ok).length,
+      sent,
+      failed,
     });
   } catch (err) {
     console.error("notify failed", err instanceof Error ? err.message : err);
@@ -244,7 +260,7 @@ async function sendFcmMessage(
   title: string,
   body: string,
   data: Record<string, unknown>,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; token: string; unregistered: boolean }> {
   const res = await fetch(
     `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
     {
@@ -264,7 +280,12 @@ async function sendFcmMessage(
       }),
     },
   );
-  return { ok: res.ok };
+  const bodyText = res.ok ? "" : await res.text();
+  return {
+    ok: res.ok,
+    token: deviceToken,
+    unregistered: !res.ok && isUnregisteredTokenError(res.status, bodyText),
+  };
 }
 
 function json(body: unknown, status = 200) {

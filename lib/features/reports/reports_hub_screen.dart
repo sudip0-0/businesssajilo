@@ -25,6 +25,7 @@ class ReportsHubScreen extends ConsumerWidget {
     final dues = ref.watch(duesAgingProvider);
     final stock = ref.watch(stockValuationProvider(false));
     final todaysSales = ref.watch(todaysSalesProvider);
+    final pendingTodaysSales = ref.watch(pendingTodaysSalesProvider);
     final totalDues = ref.watch(totalDuesProvider);
     final lowStock = ref.watch(lowStockCountProvider);
     final wide = MediaQuery.sizeOf(context).width >= 600;
@@ -35,6 +36,7 @@ class ReportsHubScreen extends ConsumerWidget {
         ref.invalidate(duesAgingProvider);
         ref.invalidate(stockValuationProvider(false));
         ref.invalidate(todaysSalesProvider);
+        ref.invalidate(pendingTodaysSalesProvider);
         ref.invalidate(totalDuesProvider);
         ref.invalidate(lowStockCountProvider);
       },
@@ -64,6 +66,15 @@ class ReportsHubScreen extends ConsumerWidget {
                   data: (d) => formatNpr(Paisa(d), showPaisa: false),
                   loading: () => '…',
                   error: (_, _) => '—',
+                ),
+                subtitle: pendingTodaysSales.when(
+                  data: (d) => d > 0
+                      ? l10n.pendingSyncSalesHint(
+                          formatNpr(Paisa(d), showPaisa: false),
+                        )
+                      : null,
+                  loading: () => null,
+                  error: (_, _) => null,
                 ),
                 icon: Icons.trending_up,
                 onTap: () => Navigator.push(

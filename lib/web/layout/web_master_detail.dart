@@ -51,11 +51,7 @@ class WebMasterDetail extends StatelessWidget {
         if (!useSplit) {
           final child = hasSelection && detail != null ? detail! : list;
           if (height == null) return child;
-          return SizedBox(
-            width: available,
-            height: height,
-            child: child,
-          );
+          return SizedBox(width: available, height: height, child: child);
         }
 
         return SizedBox(

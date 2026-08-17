@@ -57,10 +57,7 @@ class ProductImportParseException implements Exception {
 }
 
 class ProductImportRowError {
-  const ProductImportRowError({
-    required this.rowNumber,
-    required this.code,
-  });
+  const ProductImportRowError({required this.rowNumber, required this.code});
 
   final int rowNumber;
 
@@ -70,10 +67,7 @@ class ProductImportRowError {
 }
 
 class ProductImportParseResult {
-  const ProductImportParseResult({
-    required this.rows,
-    required this.errors,
-  });
+  const ProductImportParseResult({required this.rows, required this.errors});
 
   final List<ProductImportRow> rows;
   final List<ProductImportRowError> errors;
@@ -105,36 +99,9 @@ class ProductExcelImport {
   Uint8List buildSampleBytes() {
     return _xlsx.encode([
       productImportHeaders,
-      [
-        'Cola 1L',
-        'कोला १ लिटर',
-        '',
-        'piece',
-        '45',
-        '60',
-        '5',
-        '24',
-      ],
-      [
-        'Mineral Water',
-        'मिनरल वाटर',
-        '',
-        'piece',
-        '15',
-        '25',
-        '10',
-        '48',
-      ],
-      [
-        'Juice Pack',
-        'जुस प्याक',
-        '',
-        'piece',
-        '35',
-        '50',
-        '5',
-        '12',
-      ],
+      ['Cola 1L', 'कोला १ लिटर', '', 'piece', '45', '60', '5', '24'],
+      ['Mineral Water', 'मिनरल वाटर', '', 'piece', '15', '25', '10', '48'],
+      ['Juice Pack', 'जुस प्याक', '', 'piece', '35', '50', '5', '12'],
     ], sheetName: 'Products');
   }
 
@@ -296,8 +263,7 @@ class ProductExcelImport {
     };
   }
 
-  bool _isBlankRow(List<String> row) =>
-      row.every((c) => c.trim().isEmpty);
+  bool _isBlankRow(List<String> row) => row.every((c) => c.trim().isEmpty);
 
   /// Empty → 0. Invalid → null.
   int? _tryParseMoneyPaisa(String raw) {

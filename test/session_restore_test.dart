@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:businesssajilo/core/utils/session_cache.dart';
-import 'package:businesssajilo/data/repositories/auth_repository.dart';
 import 'package:businesssajilo/data/repositories/session_restore.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/auth_user.dart';
@@ -48,10 +47,8 @@ void main() {
       user: _user,
       cache: cache,
       timeout: const Duration(milliseconds: 20),
-      fetchMember: () => Future<Member?>.delayed(
-        const Duration(seconds: 2),
-        () => _member,
-      ),
+      fetchMember: () =>
+          Future<Member?>.delayed(const Duration(seconds: 2), () => _member),
     );
     expect(session.member?.id, 'm1');
     expect(session.isAuthenticated, isTrue);
@@ -73,10 +70,8 @@ void main() {
         user: _user,
         cache: cache,
         timeout: const Duration(milliseconds: 10),
-        fetchMember: () => Future<Member?>.delayed(
-          const Duration(seconds: 2),
-          () => _member,
-        ),
+        fetchMember: () =>
+            Future<Member?>.delayed(const Duration(seconds: 2), () => _member),
       ),
       throwsA(isA<TimeoutException>()),
     );

@@ -17,7 +17,7 @@
   "scripts": {
     "e2e:web": "node scripts/e2e_web.mjs",
     "integration:web": "powershell -ExecutionPolicy Bypass -File scripts/run_integration_web.ps1",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "deno test supabase/functions/_shared/validation_test.ts supabase/functions/notify/push_policy_test.ts --allow-read"
   },
   "keywords": [],
   "author": "",

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/validation/image_upload.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
 import '../repositories/products_repository.dart';
 import 'supabase_provider.dart';
@@ -22,8 +23,25 @@ class SupabaseProductsRepository implements ProductsRepository {
     int offset = 0,
     int? limit,
     String? query,
+    ProductStockFilter stockFilter = ProductStockFilter.all,
   }) async {
     final client = requireSupabaseClient(_client);
+    if (stockFilter != ProductStockFilter.all) {
+      final result = await client.rpc<dynamic>(
+        'list_products_page',
+        params: {
+          'p_active_only': activeOnly,
+          'p_query': query,
+          'p_stock_filter': stockFilter.name,
+          'p_offset': offset,
+          'p_limit': limit ?? 50,
+        },
+      );
+      final rows = result is List ? result : const [];
+      return rows
+          .map((row) => Product.fromJson(Map<String, dynamic>.from(row as Map)))
+          .toList();
+    }
     var built = client.from('products').select().eq('is_active', activeOnly);
     final q = query?.trim();
     if (q != null && q.isNotEmpty) {

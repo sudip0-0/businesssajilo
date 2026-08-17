@@ -72,20 +72,122 @@ void main() {
     });
   });
 
+  group('mapRpcObject', () {
+    test('accepts Map<dynamic, dynamic> from jsonDecode', () {
+      final raw = <dynamic, dynamic>{
+        'bill': {'bill_no': 'BS-0001', 'status': 'due'},
+        'created': true,
+      };
+      final mapped = mapRpcObject(raw);
+      expect(mapped['created'], isTrue);
+      expect((mapped['bill'] as Map)['bill_no'], 'BS-0001');
+    });
+
+    test('rejects non-maps', () {
+      expect(() => mapRpcObject(123), throwsFormatException);
+    });
+
+    test('accepts json string and a single-element list', () {
+      expect(mapRpcObject('{"created":true}')['created'], isTrue);
+      expect(
+        mapRpcObject([
+          {'created': true},
+        ])['created'],
+        isTrue,
+      );
+    });
+  });
+
+  group('sanitizeBillPayload', () {
+    test('turns empty uuid strings into null', () {
+      final sanitized = sanitizeBillPayload({
+        'customer_id': '  ',
+        'order_id': '',
+        'items': [
+          {'product_id': '', 'qty': 1},
+        ],
+      });
+      expect(sanitized['customer_id'], isNull);
+      expect(sanitized['order_id'], isNull);
+      expect((sanitized['items'] as List).first['product_id'], isNull);
+    });
+  });
+
+  group('withCustomerSnapshot', () {
+    test('fills shop name and phone when missing', () {
+      final tagged = withCustomerSnapshot(
+        {'customer_id': 'c1'},
+        shopName: 'Ram Store',
+        phone: '+9779811111111',
+      );
+      expect(tagged['customer_shop_name'], 'Ram Store');
+      expect(tagged['customer_phone'], '+9779811111111');
+    });
+
+    test('does not overwrite an existing snapshot', () {
+      final tagged = withCustomerSnapshot(
+        {'customer_shop_name': 'Kept', 'customer_phone': '1'},
+        shopName: 'Other',
+        phone: '2',
+      );
+      expect(tagged['customer_shop_name'], 'Kept');
+      expect(tagged['customer_phone'], '1');
+    });
+  });
+
+  group('syncCompletionOutcome', () {
+    test('reports all_synced when the queue is empty', () {
+      expect(
+        syncCompletionOutcome(retryableCount: 0, failedCount: 0),
+        'all_synced',
+      );
+    });
+
+    test('reports pending retryable items', () {
+      expect(
+        syncCompletionOutcome(retryableCount: 2, failedCount: 0),
+        'pending_retryable_remain',
+      );
+    });
+
+    test('reports terminal failures', () {
+      expect(
+        syncCompletionOutcome(retryableCount: 0, failedCount: 1),
+        'terminal_failures_remain',
+      );
+    });
+  });
+
+  group('extractSyncErrorDetail', () {
+    test('extracts Postgrest message without stack traces', () {
+      expect(
+        extractSyncErrorDetail(
+          'PostgrestException(message: customer not found, code: P0001)',
+        ),
+        'customer not found',
+      );
+    });
+
+    test('drops URLs and tokens', () {
+      expect(
+        extractSyncErrorDetail('Bearer abc at https://example.com'),
+        isNull,
+      );
+    });
+  });
+
   group('stampOccurredAt', () {
     test('adds created_at when missing', () {
-      final stamped = stampOccurredAt(
-        {'id': 'b1'},
-        DateTime.utc(2026, 8, 16, 4, 15),
-      );
+      final stamped = stampOccurredAt({
+        'id': 'b1',
+      }, DateTime.utc(2026, 8, 16, 4, 15));
       expect(stamped['created_at'], '2026-08-16T04:15:00.000Z');
     });
 
     test('does not overwrite an existing created_at', () {
-      final stamped = stampOccurredAt(
-        {'created_at': '2026-08-15T00:00:00.000Z'},
-        DateTime.utc(2026, 8, 16),
-      );
+      final stamped = stampOccurredAt({
+        'created_at': '2026-08-15T00:00:00.000Z',
+      }, DateTime.utc(2026, 8, 16));
       expect(stamped['created_at'], '2026-08-15T00:00:00.000Z');
     });
   });

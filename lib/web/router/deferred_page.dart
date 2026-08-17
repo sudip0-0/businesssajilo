@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/ui/error_state.dart';
+import '../ui/web_skeleton.dart';
+
 /// Loads a deferred library, then builds the page.
 ///
 /// Use with Flutter deferred imports:
@@ -20,7 +23,7 @@ class DeferredPage extends StatefulWidget {
 }
 
 class _DeferredPageState extends State<DeferredPage> {
-  late final Future<void> _loading;
+  late Future<void> _loading;
 
   @override
   void initState() {
@@ -34,13 +37,15 @@ class _DeferredPageState extends State<DeferredPage> {
       future: _loading,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: WebListSkeleton());
         }
         if (snapshot.hasError) {
           return Scaffold(
-            body: Center(child: Text('Failed to load page: ${snapshot.error}')),
+            body: ErrorState(
+              onRetry: () {
+                setState(() => _loading = widget.load());
+              },
+            ),
           );
         }
         return widget.builder();

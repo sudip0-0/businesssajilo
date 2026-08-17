@@ -47,30 +47,32 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
     final l10n = AppLocalizations.of(context);
     await runInlineFormAction(
       action: () async {
-        await ref.read(membersRepositoryProvider).createMember(
-          email: _emailController.text.trim().isEmpty
-              ? null
-              : _emailController.text.trim(),
-          password: _passwordController.text,
-          role: _role,
-          displayName: _displayNameController.text.trim(),
-          phone: _phoneController.text.trim().isEmpty
-              ? null
-              : _phoneController.text.trim(),
-          shopName: _role == Role.customer
-              ? _shopNameController.text.trim()
-              : null,
-          contactName:
-              _role == Role.customer &&
-                  _contactNameController.text.trim().isNotEmpty
-              ? _contactNameController.text.trim()
-              : null,
-          address:
-              _role == Role.customer &&
-                  _addressController.text.trim().isNotEmpty
-              ? _addressController.text.trim()
-              : null,
-        );
+        await ref
+            .read(membersRepositoryProvider)
+            .createMember(
+              email: _emailController.text.trim().isEmpty
+                  ? null
+                  : _emailController.text.trim(),
+              password: _passwordController.text,
+              role: _role,
+              displayName: _displayNameController.text.trim(),
+              phone: _phoneController.text.trim().isEmpty
+                  ? null
+                  : _phoneController.text.trim(),
+              shopName: _role == Role.customer
+                  ? _shopNameController.text.trim()
+                  : null,
+              contactName:
+                  _role == Role.customer &&
+                      _contactNameController.text.trim().isNotEmpty
+                  ? _contactNameController.text.trim()
+                  : null,
+              address:
+                  _role == Role.customer &&
+                      _addressController.text.trim().isNotEmpty
+                  ? _addressController.text.trim()
+                  : null,
+            );
         if (mounted) Navigator.pop(context, true);
       },
       onState: ({required loading, error}) => setState(() {

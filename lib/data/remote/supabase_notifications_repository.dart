@@ -41,12 +41,17 @@ class SupabaseNotificationsRepository implements NotificationsRepository {
   }
 
   @override
-  Future<int> unreadCount() async {
+  Future<int> unreadCount({Iterable<String> excludedTypes = const []}) async {
     final client = requireSupabaseClient(_client);
-    return client
+    var query = client
         .from('notifications')
         .count(CountOption.exact)
         .isFilter('read_at', null);
+    final excluded = excludedTypes.where((t) => t.isNotEmpty).toList();
+    if (excluded.isNotEmpty) {
+      query = query.not('type', 'in', excluded);
+    }
+    return query;
   }
 
   @override

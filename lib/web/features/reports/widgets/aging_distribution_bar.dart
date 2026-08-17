@@ -66,7 +66,8 @@ class AgingDistributionBar extends StatelessWidget {
                                       ),
                                 child: AnimatedOpacity(
                                   duration: const Duration(milliseconds: 160),
-                                  opacity: selectedBucket == null ||
+                                  opacity:
+                                      selectedBucket == null ||
                                           selectedBucket == s.key
                                       ? 1
                                       : 0.35,
@@ -114,7 +115,8 @@ class AgingDistributionBar extends StatelessWidget {
                           s.label,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
-                                color: selectedBucket == null ||
+                                color:
+                                    selectedBucket == null ||
                                         selectedBucket == s.key
                                     ? WebPalette.ink
                                     : WebPalette.inkFaint,

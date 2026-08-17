@@ -182,44 +182,47 @@ void main() {
     expect(page.map((p) => p.name).toList(), ['Banana', 'Mango']);
   });
 
-  test('product list show-inactive returns only deactivated products', () async {
-    final now = DateTime.utc(2026, 1, 1);
-    await db
-        .into(db.localProducts)
-        .insert(
-          LocalProductsCompanion.insert(
-            id: 'active',
-            businessId: 'biz',
-            name: 'Active Tea',
-            unit: 'pcs',
-            updatedAt: now,
-          ),
-        );
-    await db
-        .into(db.localProducts)
-        .insert(
-          LocalProductsCompanion.insert(
-            id: 'inactive',
-            businessId: 'biz',
-            name: 'Inactive Coffee',
-            unit: 'pcs',
-            isActive: const Value(false),
-            updatedAt: now,
-          ),
-        );
-    final repo = CachedProductsRepository(
-      db: db,
-      remote: SupabaseProductsRepository(null),
-    );
-    final active = await repo.list(activeOnly: true);
-    expect(active.map((p) => p.id), ['active']);
-    final inactive = await repo.list(activeOnly: false);
-    expect(inactive.map((p) => p.id), ['inactive']);
-    final searched = await repo.list(activeOnly: false, query: 'coffee');
-    expect(searched.map((p) => p.id), ['inactive']);
-    final missed = await repo.list(activeOnly: false, query: 'tea');
-    expect(missed, isEmpty);
-  });
+  test(
+    'product list show-inactive returns only deactivated products',
+    () async {
+      final now = DateTime.utc(2026, 1, 1);
+      await db
+          .into(db.localProducts)
+          .insert(
+            LocalProductsCompanion.insert(
+              id: 'active',
+              businessId: 'biz',
+              name: 'Active Tea',
+              unit: 'pcs',
+              updatedAt: now,
+            ),
+          );
+      await db
+          .into(db.localProducts)
+          .insert(
+            LocalProductsCompanion.insert(
+              id: 'inactive',
+              businessId: 'biz',
+              name: 'Inactive Coffee',
+              unit: 'pcs',
+              isActive: const Value(false),
+              updatedAt: now,
+            ),
+          );
+      final repo = CachedProductsRepository(
+        db: db,
+        remote: SupabaseProductsRepository(null),
+      );
+      final active = await repo.list(activeOnly: true);
+      expect(active.map((p) => p.id), ['active']);
+      final inactive = await repo.list(activeOnly: false);
+      expect(inactive.map((p) => p.id), ['inactive']);
+      final searched = await repo.list(activeOnly: false, query: 'coffee');
+      expect(searched.map((p) => p.id), ['inactive']);
+      final missed = await repo.list(activeOnly: false, query: 'tea');
+      expect(missed, isEmpty);
+    },
+  );
 
   test('lowStockCount uses SQL comparison', () async {
     final now = DateTime.utc(2026, 1, 1);

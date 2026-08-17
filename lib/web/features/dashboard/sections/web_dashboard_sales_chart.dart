@@ -92,10 +92,7 @@ class WebDashboardSalesChart extends ConsumerWidget {
                   children: [
                     titleBlock,
                     const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: rangeToggle,
-                    ),
+                    Align(alignment: Alignment.centerLeft, child: rangeToggle),
                   ],
                 );
               }
@@ -132,10 +129,7 @@ class WebDashboardSalesChart extends ConsumerWidget {
             ),
             error: (_, _) => SizedBox(
               height: 200,
-              child: ErrorState(
-                message: l10n.loadingFailed,
-                onRetry: onRetry,
-              ),
+              child: ErrorState(message: l10n.loadingFailed, onRetry: onRetry),
             ),
           ),
         ],

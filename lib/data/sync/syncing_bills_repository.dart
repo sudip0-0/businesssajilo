@@ -36,9 +36,16 @@ class SyncingBillsRepository implements BillsRepository {
   static const _uuid = Uuid();
 
   @override
-  Future<List<Bill>> list({int offset = 0, int? limit}) async {
+  Future<List<Bill>> list({
+    int offset = 0,
+    int? limit,
+    BillStatus? status,
+  }) async {
     final query = _db.select(_db.localBills)
       ..orderBy([(b) => OrderingTerm.desc(b.createdAt)]);
+    if (status != null) {
+      query.where((b) => b.status.equals(status.name));
+    }
     if (limit != null) {
       query.limit(limit, offset: offset);
     }
@@ -76,15 +83,33 @@ class SyncingBillsRepository implements BillsRepository {
   Future<int> todaysSales() async {
     final net = await _netSalesFromReport(nptDayStartUtc());
     if (net != null) return net;
-    // Offline fallback: local bills only (credit notes are online-only).
+    // Offline fallback: confirmed local bills only. Pending/failed totals are
+    // exposed separately via [unsyncedTodaysSales] so they cannot be shown as
+    // committed sales.
+    return _todaysLocalSales(syncedOnly: true);
+  }
+
+  @override
+  Future<int> unsyncedTodaysSales() async {
+    return _todaysLocalSales(syncedOnly: false);
+  }
+
+  Future<int> _todaysLocalSales({required bool syncedOnly}) async {
     final start = nptDayStartUtc();
     final end = start.add(const Duration(days: 1));
-    final rows = await (_db.select(_db.localBills)..where(
-          (b) =>
-              b.createdAt.isBiggerOrEqualValue(start) &
-              b.createdAt.isSmallerThanValue(end),
-        ))
-        .get();
+    final rows =
+        await (_db.select(_db.localBills)..where((b) {
+              final inToday =
+                  b.createdAt.isBiggerOrEqualValue(start) &
+                  b.createdAt.isSmallerThanValue(end);
+              if (syncedOnly) {
+                return inToday & b.syncStatus.equals('synced');
+              }
+              return inToday &
+                  (b.syncStatus.equals('pending') |
+                      b.syncStatus.equals('failed'));
+            }))
+            .get();
     return rows.fold<int>(0, (sum, b) => sum + b.grandTotal);
   }
 
@@ -173,7 +198,12 @@ class SyncingBillsRepository implements BillsRepository {
   }
 
   @override
-  Future<List<Bill>> search(String query, {int limit = 50}) async {
+  Future<List<Bill>> search(
+    String query, {
+    int limit = 50,
+    int offset = 0,
+    BillStatus? status,
+  }) async {
     final q = query.trim();
     if (q.isEmpty) return list(limit: limit);
 
@@ -233,6 +263,7 @@ class SyncingBillsRepository implements BillsRepository {
     String? query,
     int offset = 0,
     int? limit,
+    BillStatus? status,
   }) async {
     final client = _client;
     if (client != null) {
@@ -243,6 +274,7 @@ class SyncingBillsRepository implements BillsRepository {
           query: query,
           offset: offset,
           limit: limit,
+          status: status,
         );
       } catch (_) {
         // Fall through to local.
@@ -289,11 +321,13 @@ class SyncingBillsRepository implements BillsRepository {
     final meta = await _db.select(_db.deviceMeta).getSingle();
     final provisionalNo = await _db.nextProvisionalBillNo();
     String? shopName;
+    String? customerPhone;
     if (customerId != null) {
       final customer = await (_db.select(
         _db.localCustomers,
       )..where((c) => c.id.equals(customerId))).getSingleOrNull();
       shopName = customer?.shopName;
+      customerPhone = customer?.phone;
     } else {
       final trimmed = guestName?.trim();
       if (trimmed != null && trimmed.isNotEmpty) {
@@ -348,7 +382,7 @@ class SyncingBillsRepository implements BillsRepository {
           await _decrementLocalStock(line.productId, line.qty);
         }
         itemRows.add({
-          'product_id': line.productId,
+          'product_id': line.productId.isEmpty ? null : line.productId,
           'name_snapshot': line.nameSnapshot,
           'qty': line.qty,
           'rate': line.rate,
@@ -406,6 +440,12 @@ class SyncingBillsRepository implements BillsRepository {
           'device_prefix': meta.devicePrefix,
           'created_at': createdAt.toIso8601String(),
           if (customerId == null && shopName != null) 'guest_name': shopName,
+          if (customerId != null && shopName != null && shopName.isNotEmpty)
+            'customer_shop_name': shopName,
+          if (customerId != null &&
+              customerPhone != null &&
+              customerPhone.isNotEmpty)
+            'customer_phone': customerPhone,
           'items': itemRows,
           'payment': ?paymentPayload,
         },
@@ -528,6 +568,8 @@ class SyncingBillsRepository implements BillsRepository {
           'ref_note': note,
           'device_prefix': meta.devicePrefix,
           'created_at': createdAt.toIso8601String(),
+          'customer_shop_name': ?shopName,
+          'customer_phone': ?customer?.phone,
           'payment': ?paymentPayload,
         },
       );

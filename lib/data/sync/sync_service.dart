@@ -71,8 +71,8 @@ class SyncService {
 
   Future<int> failedCount() => _db.failedCount();
 
-  Future<void> retryFailed() async {
-    await _db.retryFailed();
+  Future<void> retryFailed({int? queueRowId}) async {
+    await _db.retryFailed(queueRowId: queueRowId);
     await syncNow();
   }
 
@@ -131,26 +131,52 @@ class SyncService {
     addSyncStartBreadcrumb(pendingCount: pendingStart);
 
     try {
-      do {
-        _coalesce.clearQueued();
-        await _puller.pull();
-        if (initial) {
-          AppLog.info(
-            'initial_sync_pull_complete',
-            extras: {'bootstrapIncomplete': _puller.bootstrapIncomplete},
+      await tracedOp('sync.now', 'sync', () async {
+        Object? pullError;
+        do {
+          _coalesce.clearQueued();
+          // Push local bills even when pull fails (embed/schema errors used
+          // to abort the whole pass and leave new bills queued forever).
+          try {
+            await _puller.pull();
+            pullError = null;
+          } catch (e, st) {
+            pullError = e;
+            AppLog.warn('sync pull failed; continuing with push', e, st, {
+              'phase': 'sync_pull',
+            });
+          }
+          if (initial) {
+            AppLog.info(
+              'initial_sync_pull_complete',
+              extras: {'bootstrapIncomplete': _puller.bootstrapIncomplete},
+            );
+          }
+          final uploaded = await _pusher.push();
+          if (uploaded > 0) {
+            try {
+              await _puller.pull();
+              pullError = null;
+            } catch (e, st) {
+              pullError = e;
+              AppLog.warn('sync pull after push failed', e, st, {
+                'phase': 'sync_pull_after_push',
+              });
+            }
+          }
+          if (pullError != null) {
+            _armReachabilityRetry();
+          }
+        } while (_coalesce.shouldRepeat);
+        await _db.pruneSyncedQueue();
+        if (pullError == null) {
+          await _db.setMetaValue(
+            syncMetaLastSuccessAt,
+            DateTime.now().toUtc().toIso8601String(),
           );
+          _clearReachabilityRetry();
         }
-        final uploaded = await _pusher.push();
-        if (uploaded > 0) {
-          await _puller.pull();
-        }
-      } while (_coalesce.shouldRepeat);
-      await _db.pruneSyncedQueue();
-      await _db.setMetaValue(
-        syncMetaLastSuccessAt,
-        DateTime.now().toUtc().toIso8601String(),
-      );
-      _clearReachabilityRetry();
+      });
     } catch (e, st) {
       AppLog.warn('sync failed; will retry', e, st, {'phase': 'sync_now'});
       _armReachabilityRetry();
@@ -158,16 +184,28 @@ class SyncService {
     } finally {
       final duration = DateTime.now().toUtc().difference(started);
       final pendingEnd = await _db.pendingCount();
+      final retryableEnd = await _db.retryableCount();
+      final failedEnd = await _db.failedCount();
+      final outcome = syncCompletionOutcome(
+        retryableCount: retryableEnd,
+        failedCount: failedEnd,
+      );
       addSyncEndBreadcrumb(
         duration: duration,
         pendingCount: pendingEnd,
+        failedCount: failedEnd,
+        retryableCount: retryableEnd,
+        outcome: outcome,
         bootstrapIncomplete: _puller.bootstrapIncomplete,
       );
       AppLog.info(
         'sync_complete',
         extras: {
           'durationMs': duration.inMilliseconds,
+          'outcome': outcome,
           'pendingCount': pendingEnd,
+          'retryableCount': retryableEnd,
+          'failedCount': failedEnd,
           'bootstrapIncomplete': _puller.bootstrapIncomplete,
           'initial': initial,
         },

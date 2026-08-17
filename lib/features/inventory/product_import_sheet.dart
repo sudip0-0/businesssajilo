@@ -48,13 +48,15 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
     });
     try {
       final bytes = ref.read(productExcelImportProvider).buildSampleBytes();
-      await ref.read(exportShareServiceProvider).shareBytes(
-        filename: ProductExcelImport.sampleFileName,
-        bytes: bytes,
-        mimeType:
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        subject: l10n.downloadSampleExcel,
-      );
+      await ref
+          .read(exportShareServiceProvider)
+          .shareBytes(
+            filename: ProductExcelImport.sampleFileName,
+            bytes: bytes,
+            mimeType:
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            subject: l10n.downloadSampleExcel,
+          );
     } catch (_) {
       if (!mounted) return;
       showBsSnackBar(
@@ -116,7 +118,9 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
           _busy = false;
           _status = l10n.importNoRows;
           _errorLines = parsed.errors
-              .map((e) => l10n.importRowError(e.rowNumber, _rowCode(l10n, e.code)))
+              .map(
+                (e) => l10n.importRowError(e.rowNumber, _rowCode(l10n, e.code)),
+              )
               .toList();
         });
         return;
@@ -149,10 +153,7 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
           .toList();
 
       if (result.imported > 0 && result.failed == 0) {
-        showBsSnackBar(
-          context,
-          message: l10n.importSuccess(result.imported),
-        );
+        showBsSnackBar(context, message: l10n.importSuccess(result.imported));
         Navigator.of(context).pop(true);
         return;
       }
@@ -160,11 +161,7 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
       setState(() {
         _busy = false;
         _status = result.imported > 0
-            ? l10n.importPartial(
-                result.imported,
-                result.total,
-                result.failed,
-              )
+            ? l10n.importPartial(result.imported, result.total, result.failed)
             : l10n.importNoRows;
         _errorLines = errorLines;
       });
@@ -221,10 +218,7 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (!kIsWeb) ...[
-              Text(
-                l10n.importFromExcel,
-                style: theme.textTheme.titleLarge,
-              ),
+              Text(l10n.importFromExcel, style: theme.textTheme.titleLarge),
               const SizedBox(height: 8),
             ],
             Text(

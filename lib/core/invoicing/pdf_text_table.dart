@@ -45,12 +45,9 @@ pw.Table buildPdfTextTable({
   return pw.Table(
     columnWidths: columnWidths,
     border: const pw.TableBorder(
-      horizontalInside: const pw.BorderSide(
-        width: 0.4,
-        color: PdfColors.grey400,
-      ),
-      bottom: const pw.BorderSide(width: 0.6, color: PdfColors.grey600),
-      top: const pw.BorderSide(width: 0.6, color: PdfColors.grey600),
+      horizontalInside: pw.BorderSide(width: 0.4, color: PdfColors.grey400),
+      bottom: pw.BorderSide(width: 0.6, color: PdfColors.grey600),
+      top: pw.BorderSide(width: 0.6, color: PdfColors.grey600),
     ),
     children: rows,
   );

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,6 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="BusinessSajilo — inventory, quote-first ordering, billing and udharo tracking for Nepali dealers and distributors.">
   <meta name="theme-color" content="#0E1B2C">
 
@@ -38,13 +39,9 @@
   <title>BusinessSajilo — Your business, the easy way</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Preload the bundled "Digital Ledger" faces (Flutter web serves
-       pubspec assets under assets/) -->
-  <link rel="preload" href="assets/assets/fonts/Spectral-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/Barlow-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/Barlow-Medium.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/Barlow-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="assets/assets/fonts/IBMPlexMono-Medium.ttf" as="font" type="font/ttf" crossorigin>
+  <!-- Preload the faces needed on first paint. Serif/mono load with routes. -->
+  <link rel="preload" href="assets/assets/fonts/Inter-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/NotoSansDevanagari-Regular.ttf" as="font" type="font/ttf" crossorigin>
 
   <style>
     html, body {

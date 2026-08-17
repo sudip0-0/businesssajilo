@@ -193,10 +193,7 @@ class _StockBody extends StatelessWidget {
                   children: [
                     WebStatTile(
                       label: l10n.totalValuation,
-                      value: formatNpr(
-                        Paisa(totalValuation),
-                        showPaisa: false,
-                      ),
+                      value: formatNpr(Paisa(totalValuation), showPaisa: false),
                       icon: PhosphorIconsRegular.coins,
                     ),
                     WebStatTile(
@@ -261,10 +258,7 @@ class _StockBody extends StatelessWidget {
                     height: 420,
                     child: WebDataTable<StockValuationRow>(
                       columns: [
-                        DataColumn(
-                          label: Text(l10n.products),
-                          onSort: onSort,
-                        ),
+                        DataColumn(label: Text(l10n.products), onSort: onSort),
                         DataColumn(
                           label: Text(l10n.qty),
                           numeric: true,
@@ -280,10 +274,7 @@ class _StockBody extends StatelessWidget {
                           numeric: true,
                           onSort: onSort,
                         ),
-                        DataColumn(
-                          label: Text(l10n.status),
-                          onSort: onSort,
-                        ),
+                        DataColumn(label: Text(l10n.status), onSort: onSort),
                       ],
                       items: filtered,
                       sortColumnIndex: sortColumnIndex,
@@ -309,10 +300,7 @@ class _StockBody extends StatelessWidget {
                           ),
                           DataCell(
                             Text(
-                              formatNpr(
-                                Paisa(r.valuation),
-                                showPaisa: false,
-                              ),
+                              formatNpr(Paisa(r.valuation), showPaisa: false),
                               style: WebTypography.mono(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w600,

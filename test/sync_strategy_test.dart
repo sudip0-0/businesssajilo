@@ -46,10 +46,8 @@ void main() {
         startOffset: 100,
         budget: budget,
         pageSize: 50,
-        buildPage: (from, to) async => List.generate(
-          50,
-          (i) => {'customer_id': 'c-${from + i}'},
-        ),
+        buildPage: (from, to) async =>
+            List.generate(50, (i) => {'customer_id': 'c-${from + i}'}),
         onPage: (_) async {},
       );
 
@@ -115,11 +113,10 @@ void main() {
       );
 
       final queueRow = await db.pendingQueue();
-      await (db.update(db.syncQueue)..where((q) => q.id.equals(queueRow.single.id)))
-          .write(
-        const SyncQueueCompanion(
-          attempts: Value(syncMaxAttempts - 1),
-        ),
+      await (db.update(
+        db.syncQueue,
+      )..where((q) => q.id.equals(queueRow.single.id))).write(
+        const SyncQueueCompanion(attempts: Value(syncMaxAttempts - 1)),
       );
 
       final pusher = SyncPusher(
@@ -133,5 +130,47 @@ void main() {
       expect(after.single.status, 'failed');
       expect(after.single.attempts, syncMaxAttempts);
     });
+
+    test(
+      'failed item is not pushed again after nextAttemptAt passes',
+      () async {
+        final db = AppDatabase.forTesting(NativeDatabase.memory());
+        addTearDown(db.close);
+
+        await db.enqueue(
+          entityType: 'bill',
+          entityId: 'bill-terminal',
+          payload: {'id': 'bill-terminal', 'items': []},
+        );
+        final queued = await db.pendingQueue();
+        await (db.update(
+          db.syncQueue,
+        )..where((q) => q.id.equals(queued.single.id))).write(
+          SyncQueueCompanion(
+            status: const Value('failed'),
+            attempts: const Value(syncMaxAttempts),
+            nextAttemptAt: Value(
+              DateTime.now().toUtc().subtract(const Duration(minutes: 1)),
+            ),
+          ),
+        );
+
+        final pusher = SyncPusher(
+          db: db,
+          client: SupabaseClient('http://localhost', 'anon'),
+        );
+        expect(await pusher.push(), 0);
+
+        final after = await db.unsyncedQueue();
+        expect(after.single.status, 'failed');
+        expect(after.single.attempts, syncMaxAttempts);
+
+        await db.retryFailed(queueRowId: queued.single.id);
+        final retried = await db.pendingQueue();
+        expect(retried.single.status, 'pending');
+        expect(retried.single.attempts, 0);
+        expect(retried.single.nextAttemptAt, isNull);
+      },
+    );
   });
 }

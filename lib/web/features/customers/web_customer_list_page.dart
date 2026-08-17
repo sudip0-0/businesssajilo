@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/ui/paginated_list_state.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
+import '../../../domain/enums.dart';
 import '../../../domain/models/customer.dart';
 import '../../../core/ui/adaptive_sheet.dart';
 import '../../../features/customers/customer_detail_screen.dart';
@@ -43,15 +46,16 @@ class WebCustomerListPage extends ConsumerStatefulWidget {
       _WebCustomerListPageState();
 }
 
-enum _CustomerBalanceFilter { all, due, credit, settled }
-
 enum _CustomerSortField { name, balance, date }
 
 class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+
   String _query = '';
+  Timer? _searchDebounceTimer;
   PaginatedListState<Customer>? _pager;
   final _scrollController = ScrollController();
-  _CustomerBalanceFilter _filter = _CustomerBalanceFilter.all;
+  CustomerBalanceFilter _filter = CustomerBalanceFilter.all;
   _CustomerSortField _sortField = _CustomerSortField.name;
   bool _sortAscending = true;
 
@@ -69,6 +73,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
             offset: offset,
             limit: limit,
             query: _query.isEmpty ? null : _query,
+            balanceFilter: _filter,
           ),
       onChanged: () {
         if (mounted) setState(() {});
@@ -81,6 +86,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -97,33 +103,24 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   }
 
   void _onQueryChanged(String value) {
-    final next = value.trim().toLowerCase();
-    if (next == _query) return;
-    setState(() => _query = next);
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      final next = value.trim().toLowerCase();
+      if (next == _query) return;
+      setState(() => _query = next);
+      _pager?.refresh();
+    });
+  }
+
+  void _setFilter(CustomerBalanceFilter filter) {
+    if (_filter == filter) return;
+    setState(() => _filter = filter);
     _pager?.refresh();
   }
 
-  void _setFilter(_CustomerBalanceFilter filter) {
-    if (_filter == filter) return;
-    setState(() => _filter = filter);
-    if (filter != _CustomerBalanceFilter.all) {
-      // Balance filters are applied client-side, so make sure the whole
-      // customer list is loaded before showing a filtered view.
-      WidgetsBinding.instance.addPostFrameCallback((_) => _pager?.loadAll());
-    }
-  }
-
   List<Customer> get _filtered {
-    final items = _pager?.items ?? [];
-    final filtered = switch (_filter) {
-      _CustomerBalanceFilter.all => List<Customer>.from(items),
-      _CustomerBalanceFilter.due =>
-        items.where((c) => c.balanceDue > 0).toList(),
-      _CustomerBalanceFilter.credit =>
-        items.where((c) => c.balanceDue < 0).toList(),
-      _CustomerBalanceFilter.settled =>
-        items.where((c) => c.balanceDue == 0).toList(),
-    };
+    final filtered = List<Customer>.from(_pager?.items ?? []);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
         _CustomerSortField.name => a.shopName.toLowerCase().compareTo(
@@ -252,11 +249,11 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
                       runSpacing: 8,
                       children: [
                         for (final (filter, label) in [
-                          (_CustomerBalanceFilter.all, l10n.allCustomers),
-                          (_CustomerBalanceFilter.due, l10n.customerFilterDues),
-                          (_CustomerBalanceFilter.credit, l10n.creditBalance),
+                          (CustomerBalanceFilter.all, l10n.allCustomers),
+                          (CustomerBalanceFilter.due, l10n.customerFilterDues),
+                          (CustomerBalanceFilter.credit, l10n.creditBalance),
                           (
-                            _CustomerBalanceFilter.settled,
+                            CustomerBalanceFilter.settled,
                             l10n.customerFilterSettled,
                           ),
                         ])
@@ -305,7 +302,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     final items = _filtered;
     if (items.isEmpty) {
       final searching = _query.isNotEmpty;
-      final filtering = _filter != _CustomerBalanceFilter.all;
+      final filtering = _filter != CustomerBalanceFilter.all;
       return WebEmptyState(
         message: searching
             ? l10n.noSearchResults
@@ -322,7 +319,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
                 pager.refresh();
               }
             : (filtering
-                  ? () => _setFilter(_CustomerBalanceFilter.all)
+                  ? () => _setFilter(CustomerBalanceFilter.all)
                   : (widget.canEdit
                         ? () => context.go(
                             '${_webRolePrefix(context)}/customers/new',

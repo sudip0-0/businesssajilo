@@ -23,9 +23,7 @@ Future<void> _pump(WidgetTester tester, {required SyncStatus status}) async {
       child: MaterialApp(
         localizationsDelegates: _l10nDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          appBar: AppBar(actions: const [SyncBadgeAction()]),
-        ),
+        home: Scaffold(appBar: AppBar(actions: const [SyncBadgeAction()])),
       ),
     ),
   );

@@ -115,7 +115,9 @@ class PendingSyncScreen extends ConsumerWidget {
                         itemBuilder: (context, index) => _QueueTile(
                           item: items[index],
                           onRetry: () async {
-                            await bundle.sync.retryFailed();
+                            await bundle.sync.retryFailed(
+                              queueRowId: items[index].id,
+                            );
                             ref.invalidate(syncStatusProvider);
                           },
                         ),
@@ -148,13 +150,13 @@ class _QueueTile extends StatelessWidget {
       title: Text(
         '${syncEntityLabel(l10n, item.entityType)} · ${item.entityId}',
       ),
-      subtitle: item.lastError == null
-          ? Text(syncStatusLabel(l10n, item.status))
-          : Text(
-              '${l10n.syncFailed}: ${l10n.syncErrorGeneric}',
-              maxLines: 2,
+      subtitle: failed
+          ? Text(
+              '${l10n.syncFailed}: ${syncErrorDetail(l10n, item.lastError)}',
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
-            ),
+            )
+          : Text(syncStatusLabel(l10n, item.status)),
       trailing: failed
           ? TextButton(onPressed: onRetry, child: Text(l10n.retrySync))
           : null,

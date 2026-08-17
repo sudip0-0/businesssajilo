@@ -21,11 +21,12 @@ $env:HARDENING_GATE = "1"
 
 | Step | Required | Notes |
 |------|----------|-------|
-| `dart format --set-exit-if-changed` | Yes | Same as CI |
+| `dart format --set-exit-if-changed` | Yes | Same as CI (`lib test integration_test`) |
+| `dart run build_runner build` | Yes | Regenerates Drift/Freezed before analyze |
 | `flutter analyze` | Yes | Zero warnings policy |
 | `flutter test` | Yes | Passes `--dart-define=HARDENING_GATE=1` when gate is on |
-| `supabase db reset` + `supabase test db` | Optional* | Needs Docker + Supabase CLI |
-| `deno test supabase/functions/_shared/validation_test.ts` | Optional* | Edge Function input helpers |
+| `supabase db reset` + `supabase test db` | Optional* | Needs Docker + Supabase CLI; includes QoL filter + balance-projection pgTAP |
+| `deno test` validation + `notify/push_policy_test.ts` | Optional* | Edge Function input helpers and FCM push policy |
 | `flutter pub outdated` | Informational | Never fails the gate |
 
 \*Fails when `HARDENING_GATE=1` and Docker/Supabase/Deno is missing.
@@ -80,8 +81,30 @@ select
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Dart-defines for integration tests |
 | `E2E_EMAIL`, `E2E_PASSWORD` | Override seeded owner credentials |
 | `HARDENING_GATE=1` | Fail instead of skip for optional steps |
+| `SENTRY_TRACES_SAMPLE_RATE` | Optional 0–1 Sentry tracing rate (default 0.1) |
+
+## CI layers
+
+GitHub Actions (`ci.yml`, Flutter **3.44.8**) runs format, generated-code, analyze, unit/widget tests, Deno tests, pgTAP, and Playwright web E2E (`scripts/e2e_web.mjs`) against a local Supabase + CanvasKit web build. `release.yml` runs the same quality gates before `supabase db push` / function deploy / app builds, then a post-build smoke check.
+
+Local Playwright (needs a served web build + running Supabase):
+
+```powershell
+npm test                          # Deno Edge Function tests
+npm run e2e:web                   # requires BASE_URL + SUPABASE_ANON_KEY
+```
+
+## Customer-balance projection (gated)
+
+Live reads stay on `customer_balances`. Migration 37 adds `customer_balance_projections` plus `customer_balance_projection_drift` for parity checks. Do not switch repository reads until `scripts/benchmark_customer_balances.sql` shows acceptable latency **and** drift is zero. Rollback is to keep reading the view.
+
+```powershell
+Get-Content scripts\benchmark_customer_balances.sql -Raw |
+  docker exec -i supabase_db_businesssajilo psql -U postgres
+```
 
 ## Known gaps (honest)
 
 - UI order→quote→bill flow is documented but not fully pumped through screens yet (`ui_order_to_bill_flow_test.dart`).
 - Deno is not installed by default on Windows; install from [deno.land](https://deno.land) for Edge Function unit tests locally.
+- Customer-balance projection is additive and unused by the app until the benchmark gate passes.

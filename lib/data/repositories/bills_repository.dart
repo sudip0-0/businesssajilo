@@ -26,8 +26,13 @@ final billsRepositoryProvider = Provider<BillsRepository>((ref) {
 });
 
 abstract class BillsRepository {
-  Future<List<Bill>> list({int offset = 0, int? limit});
-  Future<List<Bill>> search(String query, {int limit = 50});
+  Future<List<Bill>> list({int offset = 0, int? limit, BillStatus? status});
+  Future<List<Bill>> search(
+    String query, {
+    int limit = 50,
+    int offset = 0,
+    BillStatus? status,
+  });
 
   /// Due / partial bills for a customer, oldest first (payment allocation).
   Future<List<Bill>> listOpenForCustomer(String customerId);
@@ -40,6 +45,7 @@ abstract class BillsRepository {
     String? query,
     int offset = 0,
     int? limit,
+    BillStatus? status,
   });
 
   Future<Bill> get(String id);
@@ -47,6 +53,11 @@ abstract class BillsRepository {
   Future<int> yesterdaysSales();
   Future<int> todaysBillCount();
   Future<List<Bill>> listTodaysBills({int limit = 20});
+
+  /// Grand total of locally queued bills dated today (NPT). Online-only
+  /// repos return 0 — the server figure already includes persisted bills.
+  Future<int> unsyncedTodaysSales();
+
   Future<Bill> create({
     required String createdByMemberId,
     String? customerId,

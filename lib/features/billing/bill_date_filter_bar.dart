@@ -55,9 +55,7 @@ class BillDateFilterBar extends StatelessWidget {
       cancelText: l10n.cancel,
     );
     if (range == null) return;
-    onChanged(
-      ReportPeriod.custom(fromDate: range.start, toDate: range.end),
-    );
+    onChanged(ReportPeriod.custom(fromDate: range.start, toDate: range.end));
   }
 
   String _customRangeLabel(ReportPeriod period) {

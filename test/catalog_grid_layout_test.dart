@@ -19,13 +19,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          catalogListProvider.overrideWith((ref) async => products),
-        ],
-        child: MaterialApp(
+        overrides: [catalogListProvider.overrideWith((ref) async => products)],
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: CatalogScreen()),
+          home: Scaffold(body: CatalogScreen()),
         ),
       ),
     );

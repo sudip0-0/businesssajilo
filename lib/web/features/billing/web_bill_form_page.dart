@@ -8,6 +8,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/testing/integration_keys.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
+import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../utils/before_unload.dart';
 import '../web_page_scaffold.dart';
 import 'web_bill_form_content.dart';
@@ -49,6 +50,7 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
     ref.invalidate(todaysBillCountProvider);
     ref.invalidate(todaysBillsProvider);
     ref.invalidate(totalDuesProvider);
+    invalidateOwnerDashboardWidget(ref);
     context.go(_billingListPath(context));
   }
 

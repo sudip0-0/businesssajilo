@@ -1564,6 +1564,18 @@ class AppLocalizationsNe extends AppLocalizations {
       'सिंक गर्न सकिएन। इन्टरनेट जाँच गरी फेरि प्रयास गर्नुहोस्।';
 
   @override
+  String get syncErrorCustomerNotFound =>
+      'ग्राहक मिलान हुन सकेन। पसलको नाम र फोन जाँच गरी पुनः प्रयास गर्नुहोस्।';
+
+  @override
+  String get syncErrorAmbiguousCustomer =>
+      'यही नाम वा फोनका एकभन्दा बढी ग्राहक छन्। सही ग्राहक तोकेपछि मात्र पुनः प्रयास गर्नुहोस्।';
+
+  @override
+  String get syncErrorStaleProduct =>
+      'यस बिलको उत्पादन क्याटलगमा छैन। बिल नाम सहित सिंक हुन सक्छ।';
+
+  @override
   String get sidebarExpand => 'साइडबार फुकाउनुहोस्';
 
   @override
@@ -1865,4 +1877,12 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get noSalesYetToday => 'आज बिक्री भएको छैन';
+
+  @override
+  String get pendingSyncSales => 'बाँकी सिंक बिक्री';
+
+  @override
+  String pendingSyncSalesHint(String amount) {
+    return '$amount सिंक हुन बाँकी — अहिलेसम्म पुष्टि भएको छैन';
+  }
 }

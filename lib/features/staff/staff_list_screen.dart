@@ -158,9 +158,6 @@ class _StaffListScreenState extends ConsumerState<StaffListScreen> {
     await ref.read(membersRepositoryProvider).activateMember(member.id);
     ref.invalidate(staffListProvider);
     if (!context.mounted) return;
-    showBsSnackBar(
-      context,
-      message: AppLocalizations.of(context).reactivate,
-    );
+    showBsSnackBar(context, message: AppLocalizations.of(context).reactivate);
   }
 }

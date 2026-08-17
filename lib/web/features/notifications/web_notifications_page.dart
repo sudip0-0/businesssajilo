@@ -4,7 +4,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/ui/async_body.dart';
+import '../../../core/ui/paginated_list_state.dart';
+import '../../../core/utils/app_prefs.dart';
 import '../../../core/utils/bs_date.dart';
 import '../../../data/repositories/notifications_repository.dart';
 import '../../../domain/models/notification_item.dart';
@@ -14,15 +15,55 @@ import '../../../features/notifications/providers.dart';
 import '../../navigation/web_notification_navigation.dart';
 import '../../theme/web_palette.dart';
 import '../../ui/web_empty_state.dart';
+import '../../ui/web_skeleton.dart';
 import '../web_page_scaffold.dart';
 
-class WebNotificationsPage extends ConsumerWidget {
+class WebNotificationsPage extends ConsumerStatefulWidget {
   const WebNotificationsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WebNotificationsPage> createState() =>
+      _WebNotificationsPageState();
+}
+
+class _WebNotificationsPageState extends ConsumerState<WebNotificationsPage> {
+  PaginatedListState<NotificationItem>? _pager;
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+  }
+
+  void _initPager() {
+    _pager = PaginatedListState<NotificationItem>(
+      loadPage: (offset, limit) => ref
+          .read(notificationsRepositoryProvider)
+          .list(offset: offset, limit: limit),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    )..attachScrollController(_scrollController);
+    _pager!.refresh();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final notificationsAsync = ref.watch(notificationListProvider);
+    final prefs =
+        ref.watch(notificationMutePrefsProvider).value ??
+        const NotificationMutePrefs();
+    final live = ref.watch(notificationListProvider).value ?? const [];
+    final history = excludeMutedNotifications(_pager?.items ?? const [], prefs);
+    final items = mergeNotificationPages(live: live, history: history);
+    final loading = _pager?.loading == true && items.isEmpty;
 
     return WebPageScaffold(
       title: l10n.notifications,
@@ -33,43 +74,48 @@ class WebNotificationsPage extends ConsumerWidget {
           child: Text(l10n.markAllRead),
         ),
       ],
-      body: AsyncBody(
-        value: notificationsAsync,
-        onRetry: () => ref.invalidate(notificationListProvider),
-        useSkeleton: false,
-        data: (items) {
-          if (items.isEmpty) {
-            return WebEmptyState(
+      body: loading
+          ? const WebListSkeleton()
+          : items.isEmpty
+          ? WebEmptyState(
               message: l10n.noNotifications,
               icon: PhosphorIconsRegular.bell,
-            );
-          }
-
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              color: WebPalette.card,
-              borderRadius: BorderRadius.circular(BsRadii.lg),
-              border: Border.all(color: WebPalette.hairline),
-              boxShadow: WebPalette.cardShadow,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(BsRadii.lg),
-              child: RefreshIndicator(
-                color: WebPalette.navy,
-                onRefresh: () async => ref.invalidate(notificationListProvider),
-                child: ListView.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) =>
-                      const Divider(height: 1, color: WebPalette.hairline),
-                  itemBuilder: (context, index) {
-                    return _WebNotificationRow(item: items[index]);
+            )
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: WebPalette.card,
+                borderRadius: BorderRadius.circular(BsRadii.lg),
+                border: Border.all(color: WebPalette.hairline),
+                boxShadow: WebPalette.cardShadow,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(BsRadii.lg),
+                child: RefreshIndicator(
+                  color: WebPalette.navy,
+                  onRefresh: () async {
+                    ref.invalidate(notificationListProvider);
+                    ref.invalidate(unreadNotificationCountProvider);
+                    await _pager?.refresh();
                   },
+                  child: ListView.separated(
+                    controller: _scrollController,
+                    itemCount:
+                        items.length + ((_pager?.hasMore ?? false) ? 1 : 0),
+                    separatorBuilder: (_, _) =>
+                        const Divider(height: 1, color: WebPalette.hairline),
+                    itemBuilder: (context, index) {
+                      if (index >= items.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      return _WebNotificationRow(item: items[index]);
+                    },
+                  ),
                 ),
               ),
             ),
-          );
-        },
-      ),
     );
   }
 }
@@ -91,6 +137,8 @@ class _WebNotificationRow extends ConsumerWidget {
         onTap: () async {
           if (item.isUnread) {
             await ref.read(notificationsRepositoryProvider).markRead(item.id);
+            ref.invalidate(unreadNotificationCountProvider);
+            ref.invalidate(notificationListProvider);
           }
           if (context.mounted) {
             final role = ref.read(authProvider).value?.member?.role;

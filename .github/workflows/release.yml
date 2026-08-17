@@ -6,7 +6,32 @@ on:
       - 'v*'
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --set-exit-if-changed lib test integration_test
+      - run: flutter gen-l10n
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze
+      - run: flutter test
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test supabase/functions/_shared/validation_test.ts --allow-read
+      - run: deno test supabase/functions/notify/push_policy_test.ts --allow-read
+      - uses: supabase/setup-cli@v1
+      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+      - run: supabase test db
+
   release:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +75,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.44.8'
           channel: stable
           cache: true
       - run: flutter pub get
@@ -78,6 +104,14 @@ jobs:
             --dart-define=FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
             --dart-define=FIREBASE_VAPID_KEY=${{ secrets.FIREBASE_VAPID_KEY }} \
             --dart-define=FLAVOR=prod
+      - name: Post-build configuration smoke check
+        run: |
+          set -euo pipefail
+          test -f build/web/index.html
+          test -f build/web/flutter_bootstrap.js
+          grep -q 'lang="en"' build/web/index.html
+          grep -q 'viewport' build/web/index.html
+          test -f build/app/outputs/bundle/release/app-release.aab
       - uses: actions/upload-artifact@v4
         with:
           name: release-builds

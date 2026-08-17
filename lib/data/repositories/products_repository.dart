@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
 import '../remote/supabase_products_repository.dart';
 import '../remote/supabase_provider.dart';
@@ -24,6 +25,7 @@ abstract class ProductsRepository {
     int offset = 0,
     int? limit,
     String? query,
+    ProductStockFilter stockFilter = ProductStockFilter.all,
   });
   Future<int> lowStockCount();
 

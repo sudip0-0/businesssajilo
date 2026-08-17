@@ -1567,6 +1567,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not sync. Check your connection and try again.';
 
   @override
+  String get syncErrorCustomerNotFound =>
+      'Customer could not be matched. Retry after checking shop name and phone, or contact support.';
+
+  @override
+  String get syncErrorAmbiguousCustomer =>
+      'More than one customer matches this name or phone. Retry is paused until the bill is assigned to the right customer.';
+
+  @override
+  String get syncErrorStaleProduct =>
+      'A product on this bill is no longer in the catalog. The bill can still sync as a named line.';
+
+  @override
   String get sidebarExpand => 'Expand sidebar';
 
   @override
@@ -1868,4 +1880,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSalesYetToday => 'No sales yet today';
+
+  @override
+  String get pendingSyncSales => 'Pending sync sales';
+
+  @override
+  String pendingSyncSalesHint(String amount) {
+    return '$amount pending sync — not yet confirmed';
+  }
 }

@@ -8,7 +8,8 @@ abstract final class BsBreakpoints {
   static const desktop = 1024.0;
   static const wide = 1280.0;
 
-  static double widthOf(BuildContext context) => MediaQuery.sizeOf(context).width;
+  static double widthOf(BuildContext context) =>
+      MediaQuery.sizeOf(context).width;
 
   static bool isPhoneCompact(BuildContext context) =>
       widthOf(context) < phoneCompact;

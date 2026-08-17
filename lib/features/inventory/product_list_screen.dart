@@ -11,16 +11,14 @@ import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/paginated_list_state.dart';
 import '../../core/ui/stock_badge.dart';
-import '../../core/utils/stock_status.dart';
 import '../../data/repositories/products_repository.dart';
+import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'product_import_sheet.dart';
 import 'providers.dart';
 import 'reorder_low_stock_sheet.dart';
-
-enum _StockFilter { all, low, out, inStock }
 
 enum _SortField { name, quantity, price }
 
@@ -46,7 +44,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   PaginatedListState<Product>? _pager;
   final _scrollController = ScrollController();
   bool _showInactive = false;
-  _StockFilter _stockFilter = _StockFilter.all;
+  ProductStockFilter _stockFilter = ProductStockFilter.all;
   _SortField _sortField = _SortField.name;
   bool _sortAscending = true;
 
@@ -65,6 +63,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             offset: offset,
             limit: limit,
             query: _query.trim().isEmpty ? null : _query.trim(),
+            stockFilter: _stockFilter,
           ),
       onChanged: () {
         if (mounted) setState(() {});
@@ -84,18 +83,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     });
   }
 
-  void _setStockFilter(_StockFilter filter) {
+  void _setStockFilter(ProductStockFilter filter) {
     if (_stockFilter == filter) return;
     setState(() => _stockFilter = filter);
-    if (filter != _StockFilter.all) {
-      // Status filters are applied client-side, so make sure the whole
-      // catalog is loaded before showing a filtered list.
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadAllForFilter());
-    }
-  }
-
-  Future<void> _loadAllForFilter() async {
-    await _pager?.loadAll();
+    _pager?.refresh();
   }
 
   Future<void> _setShowInactive(bool value) async {
@@ -113,18 +104,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   List<Product> get _filtered {
-    final items = (_pager?.items ?? []).where(
-      (p) => p.isActive == !_showInactive,
-    );
-    final filtered = switch (_stockFilter) {
-      _StockFilter.all => List<Product>.from(items),
-      _StockFilter.low =>
-        items.where((p) => stockLevelFor(p) == StockLevel.lowStock).toList(),
-      _StockFilter.out =>
-        items.where((p) => stockLevelFor(p) == StockLevel.outOfStock).toList(),
-      _StockFilter.inStock =>
-        items.where((p) => stockLevelFor(p) == StockLevel.inStock).toList(),
-    };
+    final filtered = List<Product>.from(_pager?.items ?? []);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
         _SortField.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
@@ -167,10 +147,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             child: Row(
               children: [
                 for (final (filter, label) in [
-                  (_StockFilter.all, l10n.allStock),
-                  (_StockFilter.low, l10n.stockFilterLow),
-                  (_StockFilter.out, l10n.stockFilterOut),
-                  (_StockFilter.inStock, l10n.stockFilterIn),
+                  (ProductStockFilter.all, l10n.allStock),
+                  (ProductStockFilter.low, l10n.stockFilterLow),
+                  (ProductStockFilter.out, l10n.stockFilterOut),
+                  (ProductStockFilter.inStock, l10n.stockFilterIn),
                 ])
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -302,7 +282,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     final filtered = _filtered;
     if (filtered.isEmpty) {
       final searching = _query.trim().isNotEmpty;
-      final filtering = _stockFilter != _StockFilter.all;
+      final filtering = _stockFilter != ProductStockFilter.all;
       return EmptyState(
         icon: Icons.inventory_2_outlined,
         message: searching

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeNotificationsRepository implements NotificationsRepository {
   _FakeNotificationsRepository(this._items);
@@ -27,8 +28,11 @@ class _FakeNotificationsRepository implements NotificationsRepository {
   }
 
   @override
-  Future<int> unreadCount() async =>
-      _items.where((item) => item.isUnread).length;
+  Future<int> unreadCount({Iterable<String> excludedTypes = const []}) async {
+    return _items
+        .where((item) => item.isUnread && !excludedTypes.contains(item.type))
+        .length;
+  }
 
   @override
   Future<void> markRead(String id) async {
@@ -70,13 +74,17 @@ const _l10nDelegates = [
 ];
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('notification bell renders without badge when unread is zero', (
     tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          unreadNotificationCountProvider.overrideWithValue(0),
+          unreadNotificationCountProvider.overrideWith((ref) async => 0),
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: const MaterialApp(
@@ -96,7 +104,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          unreadNotificationCountProvider.overrideWithValue(0),
+          unreadNotificationCountProvider.overrideWith((ref) async => 0),
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
         child: const MaterialApp(

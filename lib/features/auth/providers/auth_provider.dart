@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/logging/app_log.dart';
 import '../../../core/logging/sentry_scope.dart';
@@ -41,7 +42,10 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   AsyncValue<SessionState> build() {
     final repo = ref.read(authRepositoryProvider);
     _subscription?.cancel();
-    _subscription = repo.authStateChanges.listen((_) => unawaited(_reload()));
+    _subscription = repo.authStateChanges.listen((authState) {
+      if (authState.event == AuthChangeEvent.tokenRefreshed) return;
+      unawaited(_reload());
+    });
     ref.onDispose(() => _subscription?.cancel());
     unawaited(_reload());
     return const AsyncValue.loading();
@@ -102,7 +106,11 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
       state = const AsyncValue.loading();
     }
 
-    final result = await AsyncValue.guard(repo.loadSession);
+    final result = await tracedOp(
+      'auth.load_session',
+      'auth',
+      () => AsyncValue.guard(repo.loadSession),
+    );
     if (result.hasError) {
       if (state.value?.isAuthenticated == true &&
           result.error is! AccountDeactivatedException) {

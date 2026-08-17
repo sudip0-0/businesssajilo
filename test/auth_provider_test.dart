@@ -74,10 +74,9 @@ void main() {
     });
 
     await _waitForAuth(container);
-    await container.read(authProvider.notifier).updateOwnPassword(
-          'newpass123',
-          currentPassword: 'oldpass',
-        );
+    await container
+        .read(authProvider.notifier)
+        .updateOwnPassword('newpass123', currentPassword: 'oldpass');
 
     expect(container.read(authProvider).value?.mustChangePassword, isFalse);
   });
@@ -89,7 +88,9 @@ void main() {
         password: any(named: 'password'),
       ),
     ).thenAnswer((_) async {});
-    when(() => repo.loadSession()).thenThrow(const AccountDeactivatedException());
+    when(
+      () => repo.loadSession(),
+    ).thenThrow(const AccountDeactivatedException());
 
     await _waitForAuth(container);
     final controller = container.read(authProvider.notifier);

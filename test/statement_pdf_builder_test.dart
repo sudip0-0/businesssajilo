@@ -56,9 +56,12 @@ void main() {
   });
 
   test('statement amounts omit currency symbol and paisa', () {
-    expect(formatNpr(Paisa(10000), showSymbol: false, showPaisa: false), '100');
     expect(
-      formatNpr(Paisa(10000), showSymbol: true, showPaisa: false),
+      formatNpr(const Paisa(10000), showSymbol: false, showPaisa: false),
+      '100',
+    );
+    expect(
+      formatNpr(const Paisa(10000), showSymbol: true, showPaisa: false),
       isNot('100'),
     );
   });

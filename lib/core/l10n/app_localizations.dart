@@ -3080,6 +3080,24 @@ abstract class AppLocalizations {
   /// **'Could not sync. Check your connection and try again.'**
   String get syncErrorGeneric;
 
+  /// No description provided for @syncErrorCustomerNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer could not be matched. Retry after checking shop name and phone, or contact support.'**
+  String get syncErrorCustomerNotFound;
+
+  /// No description provided for @syncErrorAmbiguousCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'More than one customer matches this name or phone. Retry is paused until the bill is assigned to the right customer.'**
+  String get syncErrorAmbiguousCustomer;
+
+  /// No description provided for @syncErrorStaleProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'A product on this bill is no longer in the catalog. The bill can still sync as a named line.'**
+  String get syncErrorStaleProduct;
+
   /// No description provided for @sidebarExpand.
   ///
   /// In en, this message translates to:
@@ -3631,6 +3649,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No sales yet today'**
   String get noSalesYetToday;
+
+  /// No description provided for @pendingSyncSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync sales'**
+  String get pendingSyncSales;
+
+  /// No description provided for @pendingSyncSalesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} pending sync — not yet confirmed'**
+  String pendingSyncSalesHint(String amount);
 }
 
 class _AppLocalizationsDelegate

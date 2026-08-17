@@ -19,7 +19,9 @@ Future<void> main() async {
         await SentryFlutter.init((options) {
           options.dsn = Env.sentryDsn;
           options.environment = Env.flavor;
-          options.tracesSampleRate = 0.0;
+          options.tracesSampleRate = Env.hasSentry
+              ? Env.sentryTracesSampleRate
+              : 0.0;
         });
       }
 

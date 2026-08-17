@@ -41,16 +41,18 @@ class ReportPeriodPicker extends StatelessWidget {
       firstDate: DateTime(nowNpt.year - 3),
       lastDate: DateTime(nowNpt.year, nowNpt.month, nowNpt.day),
       initialDateRange: DateTimeRange(
-        start: DateTime(initialStart.year, initialStart.month, initialStart.day),
+        start: DateTime(
+          initialStart.year,
+          initialStart.month,
+          initialStart.day,
+        ),
         end: DateTime(initialEnd.year, initialEnd.month, initialEnd.day),
       ),
       helpText: l10n.periodCustom,
       cancelText: l10n.cancel,
     );
     if (range == null) return;
-    onChanged(
-      ReportPeriod.custom(fromDate: range.start, toDate: range.end),
-    );
+    onChanged(ReportPeriod.custom(fromDate: range.start, toDate: range.end));
   }
 
   @override
@@ -107,9 +109,9 @@ class ReportPeriodPicker extends StatelessWidget {
                 _customRangeLabel(value),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: WebPalette.inkSoft,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
               ),
             ),
           ],

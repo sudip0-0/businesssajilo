@@ -54,8 +54,10 @@ bool _matchesAmount(int grandTotalPaisa, String q) {
 
   // Only treat the query as an amount when it is money-like (digits / commas /
   // currency), not mixed tokens like bill numbers ("B-3").
-  if (!RegExp(r'^[\d,.\sरूrsNPR]*\d[\d,.\sरूrsNPR]*$', caseSensitive: false)
-      .hasMatch(q)) {
+  if (!RegExp(
+    r'^[\d,.\sरूrsNPR]*\d[\d,.\sरूrsNPR]*$',
+    caseSensitive: false,
+  ).hasMatch(q)) {
     return false;
   }
 

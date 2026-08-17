@@ -4,7 +4,6 @@ import 'package:businesssajilo/core/invoicing/invoice_paper_size.dart';
 import 'package:businesssajilo/core/invoicing/invoice_pdf_builder.dart';
 import 'package:businesssajilo/core/invoicing/pdf_fonts.dart';
 import 'package:businesssajilo/core/utils/money.dart';
-import 'package:businesssajilo/core/utils/rupees_in_words.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
 import 'package:businesssajilo/domain/models/bill_item.dart';
@@ -306,13 +305,16 @@ void main() {
   });
 
   test('print amounts use grouping without currency symbol or paisa', () {
-    expect(formatNpr(Paisa(10000), showSymbol: false, showPaisa: false), '100');
     expect(
-      formatNpr(Paisa(690000), showSymbol: false, showPaisa: false),
+      formatNpr(const Paisa(10000), showSymbol: false, showPaisa: false),
+      '100',
+    );
+    expect(
+      formatNpr(const Paisa(690000), showSymbol: false, showPaisa: false),
       '6,900',
     );
     expect(
-      formatNpr(Paisa(690000), showSymbol: false, showPaisa: false),
+      formatNpr(const Paisa(690000), showSymbol: false, showPaisa: false),
       isNot(contains('रू')),
     );
   });

@@ -16,29 +16,33 @@ void main() {
     await db.close();
   });
 
-  test('syncNow schedules a reachability retry when Supabase is down', () async {
-    final scheduled = <Duration>[];
-    void Function()? pending;
-    final sync = SyncService(
-      db: db,
-      client: SupabaseClient('http://localhost', 'anon'),
-      connectivityCheck: () async => const [ConnectivityResult.wifi],
-      reachabilityProbe: () async => false,
-      scheduleRetry: (delay, run) {
-        scheduled.add(delay);
-        pending = run;
-      },
-      cancelScheduledRetry: () => pending = null,
-    );
+  test(
+    'syncNow schedules a reachability retry when Supabase is down',
+    () async {
+      final scheduled = <Duration>[];
+      void Function()? pending;
+      final sync = SyncService(
+        db: db,
+        client: SupabaseClient('http://localhost', 'anon'),
+        connectivityCheck: () async => const [ConnectivityResult.wifi],
+        reachabilityProbe: () async => false,
+        scheduleRetry: (delay, run) {
+          scheduled.add(delay);
+          pending = run;
+        },
+        cancelScheduledRetry: () => pending = null,
+      );
 
-    await sync.syncNow();
-    expect(scheduled, [const Duration(seconds: 5)]);
+      await sync.syncNow();
+      expect(scheduled, [const Duration(seconds: 5)]);
 
-    await sync.syncNow();
-    expect(scheduled, [const Duration(seconds: 5)],
-        reason: 'already-armed retry must not stack');
+      await sync.syncNow();
+      expect(scheduled, [
+        const Duration(seconds: 5),
+      ], reason: 'already-armed retry must not stack');
 
-    sync.dispose();
-    expect(pending, isNull);
-  });
+      sync.dispose();
+      expect(pending, isNull);
+    },
+  );
 }

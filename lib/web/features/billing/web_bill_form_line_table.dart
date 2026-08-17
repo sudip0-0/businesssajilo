@@ -113,7 +113,9 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
   void initState() {
     super.initState();
     _qtyController = TextEditingController(text: '${widget.line.qty}');
-    _rateController = TextEditingController(text: _formatRate(widget.line.rate));
+    _rateController = TextEditingController(
+      text: _formatRate(widget.line.rate),
+    );
     _qtyFocus = FocusNode(debugLabel: 'billQty');
     _rateFocus = FocusNode(debugLabel: 'billRate');
     _qtyFocus.addListener(_onQtyFocusChange);
@@ -206,10 +208,7 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: _kSnWidth,
-            child: Text('${widget.index + 1}'),
-          ),
+          SizedBox(width: _kSnWidth, child: Text('${widget.index + 1}')),
           const SizedBox(width: _kColGap),
           Expanded(
             child: Column(

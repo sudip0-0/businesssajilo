@@ -15,7 +15,7 @@ class NotificationBellAction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final unread = ref.watch(unreadNotificationCountProvider);
+    final unread = ref.watch(unreadNotificationCountProvider).value ?? 0;
     final badgeLabel = formatUnreadBadge(unread);
     final semanticLabel = unread > 0
         ? '${l10n.notifications}, $unread unread'

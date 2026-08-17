@@ -20,10 +20,9 @@ void main() {
 
     test('drops dues reminders when mute is on', () {
       const muted = NotificationMutePrefs(dues: true);
-      expect(
-        excludeMutedNotifications([dues, chat], muted).map((n) => n.id),
-        ['n2'],
-      );
+      expect(excludeMutedNotifications([dues, chat], muted).map((n) => n.id), [
+        'n2',
+      ]);
     });
 
     test('keeps dues reminders when mute is off', () {

@@ -137,11 +137,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
                   if (!widget.ownOnly)
                     Text(
                       dateStr,

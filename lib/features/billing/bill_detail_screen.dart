@@ -474,10 +474,7 @@ class _BillLinesCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     _TotalRow(
                       label: l10n.discount,
-                        value: formatNpr(
-                          Paisa(lineDiscounts),
-                          showPaisa: false,
-                        ),
+                      value: formatNpr(Paisa(lineDiscounts), showPaisa: false),
                     ),
                   ],
                   if (bill.discount > 0) ...[

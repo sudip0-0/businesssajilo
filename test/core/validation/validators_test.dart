@@ -39,7 +39,12 @@ void main() {
     });
 
     test('accepts JPEG magic bytes', () {
-      final jpeg = Uint8List.fromList([0xFF, 0xD8, 0xFF, ...List.filled(20, 0)]);
+      final jpeg = Uint8List.fromList([
+        0xFF,
+        0xD8,
+        0xFF,
+        ...List.filled(20, 0),
+      ]);
       expect(ImageUpload.sniffMime(jpeg), 'image/jpeg');
       expect(ImageUpload.validate(jpeg), isNull);
     });

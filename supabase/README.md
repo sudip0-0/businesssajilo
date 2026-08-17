@@ -67,7 +67,16 @@ supabase secrets set FCM_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'
 
 In-app notifications work without FCM. When FCM is configured, either:
 
-1. Rely on the `pg_net` hook from migration `00007` (local default URL), or
+1. Rely on the `pg_net` hook from migration `00007` (local default URL is
+   `http://host.docker.internal:55021/functions/v1/notify`, matching
+   `[api].port` in `config.toml`). Override with:
+
+   ```sql
+   alter database postgres set app.settings.notify_function_url =
+     'http://host.docker.internal:55021/functions/v1/notify';
+   alter database postgres set app.settings.service_role_key = '<service_role>';
+   ```
+
 2. Create a **Database Webhook** on `notifications` INSERT → `https://<project>.supabase.co/functions/v1/notify` with `Authorization: Bearer <service_role_key>`.
 
 Flutter FCM is also optional — pass Firebase `--dart-define` values documented in `.env.example`.
@@ -102,3 +111,7 @@ supabase functions deploy
   the old shape in a later release (contract). Never rename or drop a
   live column in the same migration that apps still depend on.
 - Keep `supabase/tests/` pgTAP coverage green before tagging a release.
+
+## Customer balance projection (gated)
+
+`customer_balance_projections` is an additive table updated transactionally from bills/payments/credit notes/customers. Warehouse cannot SELECT it. Live app reads remain on `customer_balances` until `scripts/benchmark_customer_balances.sql` and `customer_balance_projection_drift` show parity. Rollback: keep reading the view.

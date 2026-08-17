@@ -13,7 +13,11 @@ class _ListGetBills implements BillsRepository {
   var getCalls = 0;
 
   @override
-  Future<List<Bill>> list({int offset = 0, int? limit}) async => listed;
+  Future<List<Bill>> list({
+    int offset = 0,
+    int? limit,
+    BillStatus? status,
+  }) async => listed;
 
   @override
   Future<Bill> get(String id) async {
@@ -37,11 +41,14 @@ Bill _bill({required String id, List<BillItem> items = const []}) {
 }
 
 void main() {
-  test('fetchLatestBillWithItems returns null when there are no bills', () async {
-    final repo = _ListGetBills(listed: const []);
-    expect(await fetchLatestBillWithItems(repo), isNull);
-    expect(repo.getCalls, 0);
-  });
+  test(
+    'fetchLatestBillWithItems returns null when there are no bills',
+    () async {
+      final repo = _ListGetBills(listed: const []);
+      expect(await fetchLatestBillWithItems(repo), isNull);
+      expect(repo.getCalls, 0);
+    },
+  );
 
   test('fetchLatestBillWithItems uses list when items are present', () async {
     final withItems = _bill(

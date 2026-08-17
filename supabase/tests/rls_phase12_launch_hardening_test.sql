@@ -19,13 +19,13 @@ values
   ('77777777-7777-7777-7777-777777777777', 'spare-b@test.com', crypt('pass', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated');
 
 insert into members (id, business_id, auth_user_id, role, display_name, phone, is_active) values
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'owner', 'Owner A', '+9779800000001', true),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'sales', 'Sales A', '+9779800000002', true),
-  ('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'customer', 'Cust A', '+9779800000003', true),
-  ('ffffffff-ffff-ffff-ffff-ffffffffffff', '99999999-9999-9999-9999-999999999999', '66666666-6666-6666-6666-666666666666', 'owner', 'Owner B', '+9779800000004', true);
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'owner', 'Owner A', '+9779811111101', true),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'sales', 'Sales A', '+9779811111102', true),
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'customer', 'Cust A', '+9779811111103', true),
+  ('ffffffff-ffff-ffff-ffff-ffffffffffff', '99999999-9999-9999-9999-999999999999', '66666666-6666-6666-6666-666666666666', 'owner', 'Owner B', '+9779811111104', true);
 
 insert into customers (id, business_id, member_id, shop_name, contact_name, phone) values
-  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Cust Shop', 'Ram', '+9779800000003');
+  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Cust Shop', 'Ram', '+9779811111103');
 
 create or replace function test_set_auth(uid uuid) returns void
 language plpgsql as $$
@@ -41,7 +41,7 @@ select throws_ok(
   $$insert into members (business_id, auth_user_id, role, display_name, phone)
     values ('99999999-9999-9999-9999-999999999999',
             '77777777-7777-7777-7777-777777777777',
-            'sales', 'Dup Phone', '+9779800000001')$$,
+            'sales', 'Dup Phone', '+9779811111101')$$,
   '23505',
   null,
   'phone numbers are globally unique across tenants'

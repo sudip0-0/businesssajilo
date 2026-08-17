@@ -29,9 +29,17 @@ function record(step, ok, detail = '') {
   console.log(`${ok ? 'PASS' : 'FAIL'} ${step}${detail ? `: ${detail}` : ''}`);
 }
 
-async function clickFlutter(page, x, y) {
-  await page.mouse.click(x, y);
-  await page.waitForTimeout(400);
+async function clickByAccessibleName(page, name) {
+  const loc = page.getByText(name, { exact: false }).first();
+  try {
+    if (await loc.count()) {
+      await loc.click({ timeout: 1500 });
+      return true;
+    }
+  } catch (_) {
+    // CanvasKit often hides DOM text; callers keep URL fallbacks.
+  }
+  return false;
 }
 
 async function fetchSession() {
@@ -146,35 +154,36 @@ async function main() {
     record('bill_form_route', page.url().includes('/billing/new'), page.url());
     record('bill_form_screenshot', screenshotLooksValid(billShot), billShot);
 
-    console.log('5. Dashboard header — New Bill button (canvas click)');
+    console.log('5. Dashboard header — New Bill');
     await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
     await waitForFlutter(page);
-    await clickFlutter(page, 1110, 125);
+    await clickByAccessibleName(page, 'New bill');
     await page.waitForTimeout(2500);
     const newBillViaClick = page.url().includes('/billing/new');
     record('dashboard_new_bill_nav', newBillViaClick, page.url());
     if (!newBillViaClick) {
-      // Flutter canvas hit targets vary in headless CI; URL nav is equivalent.
       await page.goto(`${BASE}/#/owner/billing/new`, { waitUntil: 'networkidle' });
       await waitForFlutter(page);
       record('dashboard_new_bill_nav_fallback', page.url().includes('/billing/new'), page.url());
     }
 
-    console.log('6. Bill form — Cancel button (canvas click)');
-    await clickFlutter(page, 780, 125);
+    console.log('6. Bill form — Cancel');
+    const cancelClicked = await clickByAccessibleName(page, 'Cancel');
     await page.waitForTimeout(2000);
     const cancelViaClick =
-      page.url().includes('/owner/billing') && !page.url().includes('/new');
+      cancelClicked &&
+      page.url().includes('/owner/billing') &&
+      !page.url().includes('/new');
     record('bill_form_cancel', cancelViaClick, page.url());
     if (!cancelViaClick) {
       await page.goto(`${BASE}/#/owner/billing`, { waitUntil: 'networkidle' });
       record('bill_form_cancel_fallback', page.url().includes('/owner/billing'), page.url());
     }
 
-    console.log('7. Dashboard header — Add Product button (canvas click)');
+    console.log('7. Dashboard header — Add Product');
     await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
     await waitForFlutter(page);
-    await clickFlutter(page, 900, 125);
+    await clickByAccessibleName(page, 'Add product');
     await page.waitForTimeout(2500);
     const addProductViaClick = page.url().includes('/inventory/new');
     record('dashboard_add_product_nav', addProductViaClick, page.url());
@@ -183,10 +192,10 @@ async function main() {
       record('dashboard_add_product_nav_fallback', page.url().includes('/inventory/new'), page.url());
     }
 
-    console.log('8. Sidebar — Billing tab (canvas click)');
+    console.log('8. Sidebar — Billing tab');
     await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
     await waitForFlutter(page);
-    await clickFlutter(page, 80, 175);
+    await clickByAccessibleName(page, 'Billing');
     await page.waitForTimeout(2000);
     const sidebarViaClick = page.url().includes('/owner/billing');
     record('sidebar_billing', sidebarViaClick, page.url());
@@ -198,7 +207,7 @@ async function main() {
     console.log('9. Language toggle');
     await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1500);
-    await clickFlutter(page, 990, 36);
+    await clickByAccessibleName(page, 'ने');
     await page.waitForTimeout(800);
     record('locale_toggle', true, 'clicked');
 

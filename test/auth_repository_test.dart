@@ -55,7 +55,9 @@ void main() {
     });
 
     test('deleteAccount requires password for self deletion', () async {
-      final repo = AuthRepository(SupabaseClient('http://localhost', 'anon-key'));
+      final repo = AuthRepository(
+        SupabaseClient('http://localhost', 'anon-key'),
+      );
       expect(
         () => repo.deleteAccount(password: null),
         throwsA(isA<AuthException>()),
@@ -67,7 +69,9 @@ void main() {
     });
 
     test('deleteAccount requires password for business deletion', () async {
-      final repo = AuthRepository(SupabaseClient('http://localhost', 'anon-key'));
+      final repo = AuthRepository(
+        SupabaseClient('http://localhost', 'anon-key'),
+      );
       expect(
         () => repo.deleteAccount(deleteBusiness: true, password: ''),
         throwsA(isA<AuthException>()),

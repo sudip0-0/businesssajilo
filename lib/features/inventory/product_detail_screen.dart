@@ -187,8 +187,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 const SizedBox(height: 8),
                 if (product.isActive)
                   OutlinedButton.icon(
-                    onPressed: () =>
-                        _deactivate(context, product.id, l10n),
+                    onPressed: () => _deactivate(context, product.id, l10n),
                     icon: const Icon(Icons.visibility_off_outlined),
                     label: Text(l10n.deactivateProduct),
                   )
@@ -326,9 +325,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
     final saved = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => ProductFormScreen(product: product),
-      ),
+      MaterialPageRoute(builder: (_) => ProductFormScreen(product: product)),
     );
     if (saved == true) {
       ref.invalidate(productDetailProvider(widget.productId));
@@ -450,9 +447,9 @@ class _MovementTile extends StatelessWidget {
       ),
       trailing: Text(
         '${l10n.balance}: $balance',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

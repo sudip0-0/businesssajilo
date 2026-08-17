@@ -108,11 +108,9 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   Future<void> _recordInitialStock(String productId, int qty) async {
     final memberId = ref.read(authProvider).value?.member?.id;
     if (memberId == null) return;
-    await ref.read(stockRepositoryProvider).stockIn(
-      productId: productId,
-      qty: qty,
-      createdByMemberId: memberId,
-    );
+    await ref
+        .read(stockRepositoryProvider)
+        .stockIn(productId: productId, qty: qty, createdByMemberId: memberId);
   }
 
   Future<void> _submit() async {

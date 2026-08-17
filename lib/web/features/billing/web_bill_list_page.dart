@@ -69,15 +69,25 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     });
   }
 
+  BillStatus? get _statusParam => switch (_statusFilter) {
+    _BillStatusFilter.all => null,
+    _BillStatusFilter.paid => BillStatus.paid,
+    _BillStatusFilter.partial => BillStatus.partial,
+    _BillStatusFilter.due => BillStatus.due,
+  };
+
   Future<List<Bill>> _searchBills(String query) {
     final repo = ref.read(billsRepositoryProvider);
     final period = _datePeriod;
-    if (period == null) return repo.search(query);
+    if (period == null) {
+      return repo.search(query, status: _statusParam);
+    }
     return repo.listInRange(
       from: period.from,
       to: period.to,
       query: query,
       limit: 50,
+      status: _statusParam,
     );
   }
 
@@ -85,13 +95,14 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     final repo = ref.read(billsRepositoryProvider);
     final period = _datePeriod;
     if (period == null) {
-      return repo.list(offset: offset, limit: limit);
+      return repo.list(offset: offset, limit: limit, status: _statusParam);
     }
     return repo.listInRange(
       from: period.from,
       to: period.to,
       offset: offset,
       limit: limit,
+      status: _statusParam,
     );
   }
 
@@ -139,20 +150,18 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
   void _onQueryChanged(String value) => _search?.onQueryChanged(value);
 
   List<Bill> _applyFilters(List<Bill> bills) {
-    final filtered = switch (_statusFilter) {
-      _BillStatusFilter.all => List<Bill>.from(bills),
-      _BillStatusFilter.paid =>
-        bills.where((b) => b.status == BillStatus.paid).toList(),
-      _BillStatusFilter.partial =>
-        bills.where((b) => b.status == BillStatus.partial).toList(),
-      _BillStatusFilter.due =>
-        bills.where((b) => b.status == BillStatus.due).toList(),
-    };
+    final filtered = List<Bill>.from(bills);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _BillSortField.date => (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+        _BillSortField.date =>
+          (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+          ),
         _BillSortField.amount => a.grandTotal.compareTo(b.grandTotal),
-        _BillSortField.customer => (a.customerShopName ?? '').toLowerCase().compareTo((b.customerShopName ?? '').toLowerCase()),
+        _BillSortField.customer =>
+          (a.customerShopName ?? '').toLowerCase().compareTo(
+            (b.customerShopName ?? '').toLowerCase(),
+          ),
       };
       return _sortAscending ? cmp : -cmp;
     });
@@ -271,9 +280,13 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
                               child: FilterChip(
                                 label: Text(label),
                                 selected: _statusFilter == filter,
-                                onSelected: (_) => setState(
-                                  () => _statusFilter = filter,
-                                ),
+                                onSelected: (_) {
+                                  setState(() => _statusFilter = filter);
+                                  _pager?.refresh();
+                                  if (_search?.isActive == true) {
+                                    _search!.retry();
+                                  }
+                                },
                               ),
                             ),
                         ],
@@ -311,10 +324,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
         return const WebListSkeleton();
       }
       if (search.phase == ListSearchPhase.error) {
-        return ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: search.retry,
-        );
+        return ErrorState(message: l10n.loadingFailed, onRetry: search.retry);
       }
       final results = _applyFilters(search.results ?? const <Bill>[]);
       if (results.isEmpty) {

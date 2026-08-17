@@ -27,10 +27,7 @@ void main() {
         billDetailPath(Role.warehouse, 'b1', forceWeb: true),
         '/warehouse/billing/b1',
       );
-      expect(
-        billDetailPath(null, 'b1', forceWeb: true),
-        '/owner/billing/b1',
-      );
+      expect(billDetailPath(null, 'b1', forceWeb: true), '/owner/billing/b1');
     });
   });
 }

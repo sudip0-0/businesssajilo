@@ -73,9 +73,7 @@ class BsSalesLineChart extends StatelessWidget {
     if (points.isEmpty) return l10n.noSalesInPeriod;
     final total = points.fold<int>(0, (sum, p) => sum + p.totalSales);
     if (total == 0) return l10n.noSalesInPeriod;
-    final peak = points.reduce(
-      (a, b) => a.totalSales >= b.totalSales ? a : b,
-    );
+    final peak = points.reduce((a, b) => a.totalSales >= b.totalSales ? a : b);
     return '${_periodLabel(l10n)} sales chart. '
         'Total ${formatNpr(Paisa(total), showPaisa: false)}. '
         'Peak ${formatNpr(Paisa(peak.totalSales), showPaisa: false)} '
@@ -124,7 +122,9 @@ class BsSalesLineChart extends StatelessWidget {
     if (points.isEmpty) {
       return Semantics(
         label: summary,
-        child: ExcludeSemantics(child: _emptyChart(context, l10n.noSalesInPeriod)),
+        child: ExcludeSemantics(
+          child: _emptyChart(context, l10n.noSalesInPeriod),
+        ),
       );
     }
 
@@ -134,7 +134,9 @@ class BsSalesLineChart extends StatelessWidget {
     if (maxSales == 0) {
       return Semantics(
         label: summary,
-        child: ExcludeSemantics(child: _emptyChart(context, l10n.noSalesInPeriod)),
+        child: ExcludeSemantics(
+          child: _emptyChart(context, l10n.noSalesInPeriod),
+        ),
       );
     }
 

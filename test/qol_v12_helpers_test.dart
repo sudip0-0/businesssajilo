@@ -104,10 +104,7 @@ void main() {
     });
 
     test('fromNotificationPrefs keeps dues muted when json is missing', () {
-      expect(
-        NotificationMutePrefs.fromNotificationPrefs(null).dues,
-        isTrue,
-      );
+      expect(NotificationMutePrefs.fromNotificationPrefs(null).dues, isTrue);
     });
   });
 }

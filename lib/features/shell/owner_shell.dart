@@ -169,9 +169,13 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         ? _mobilePageIndexes.indexOf(_index)
         : 4;
     final effectiveIndex = wide ? wideIndex : mobileIndex;
-    final body = wide
-        ? pages[wideIndex]
-        : (mobileIndex < 4 ? pages[_index] : const _MorePage());
+    final stackIndex = wide
+        ? wideIndex
+        : (mobileIndex < 4 ? _index : pages.length);
+    final body = IndexedStack(
+      index: stackIndex,
+      children: [...pages, const _MorePage()],
+    );
 
     return AdaptiveScaffold(
       selectedIndex: effectiveIndex,
@@ -243,6 +247,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
               bumpBillingRevision(ref);
               ref.invalidate(billListProvider);
               ref.invalidate(todaysSalesProvider);
+              ref.invalidate(pendingTodaysSalesProvider);
               ref.invalidate(todaysBillCountProvider);
               ref.invalidate(totalDuesProvider);
               ref.invalidate(ownerDashboardStatsProvider);

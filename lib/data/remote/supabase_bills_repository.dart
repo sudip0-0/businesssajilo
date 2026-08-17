@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/utils/bill_search_match.dart';
+import '../../core/logging/sentry_scope.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -21,16 +21,21 @@ class SupabaseBillsRepository implements BillsRepository {
   final SupabaseClient? _client;
 
   @override
-  Future<List<Bill>> list({int offset = 0, int? limit}) async {
+  Future<List<Bill>> list({
+    int offset = 0,
+    int? limit,
+    BillStatus? status,
+  }) async {
     final client = requireSupabaseClient(_client);
-    var query = client
-        .from('bills')
-        .select(_billSelect)
-        .order('created_at', ascending: false);
-    if (limit != null) {
-      query = query.range(offset, offset + limit - 1);
+    var query = client.from('bills').select(_billSelect);
+    if (status != null) {
+      query = query.eq('status', status.name);
     }
-    final rows = await query;
+    var ordered = query.order('created_at', ascending: false);
+    if (limit != null) {
+      ordered = ordered.range(offset, offset + limit - 1);
+    }
+    final rows = await ordered;
     return (rows as List).map(_mapBillRow).toList();
   }
 
@@ -47,58 +52,29 @@ class SupabaseBillsRepository implements BillsRepository {
   }
 
   @override
-  Future<List<Bill>> search(String query, {int limit = 50}) async {
+  Future<List<Bill>> search(
+    String query, {
+    int limit = 50,
+    int offset = 0,
+    BillStatus? status,
+  }) async {
     final client = requireSupabaseClient(_client);
     final q = query.trim();
-    if (q.isEmpty) return list(limit: limit);
+    if (q.isEmpty && status == null) return list(limit: limit, offset: offset);
 
-    final amountPaisa = billSearchAmountPaisa(q);
-    final customers = await client
-        .from('customers')
-        .select('id')
-        .ilike('shop_name', '%$q%')
-        .limit(100);
-    final customerIds = (customers as List)
-        .map((r) => (r as Map)['id'] as String)
-        .toList();
-
-    final orParts = <String>['bill_no.ilike.%$q%', 'guest_name.ilike.%$q%'];
-    if (customerIds.isNotEmpty) {
-      orParts.add('customer_id.in.(${customerIds.join(',')})');
-    }
-    if (amountPaisa != null) {
-      orParts.add('grand_total.eq.$amountPaisa');
-    }
-
-    const candidateLimit = 100;
-    final filteredRows = await client
-        .from('bills')
-        .select(_billSelect)
-        .or(orParts.join(','))
-        .order('created_at', ascending: false)
-        .limit(candidateLimit);
-    // Recent window so free-text dates can still match.
-    final recentRows = await client
-        .from('bills')
-        .select(_billSelect)
-        .order('created_at', ascending: false)
-        .limit(candidateLimit);
-
-    final byId = <String, Bill>{};
-    for (final row in [...filteredRows as List, ...recentRows as List]) {
-      final bill = _mapBillRow(row);
-      byId.putIfAbsent(bill.id, () => bill);
-    }
-    final matched = byId.values
-        .where((bill) => billMatchesSearch(bill, query: q))
-        .toList();
-    matched.sort((a, b) {
-      final aAt = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final bAt = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      return bAt.compareTo(aAt);
-    });
-    if (matched.length <= limit) return matched;
-    return matched.sublist(0, limit);
+    final result = await client.rpc<dynamic>(
+      'search_bills',
+      params: {
+        'p_query': q.isEmpty ? null : q,
+        'p_status': status?.name,
+        'p_from': null,
+        'p_to': null,
+        'p_offset': offset,
+        'p_limit': limit,
+      },
+    );
+    final rows = result is List ? result : const [];
+    return rows.map(_mapBillRow).toList();
   }
 
   @override
@@ -108,46 +84,33 @@ class SupabaseBillsRepository implements BillsRepository {
     String? query,
     int offset = 0,
     int? limit,
+    BillStatus? status,
   }) async {
     final client = requireSupabaseClient(_client);
+    final q = query?.trim();
+    if ((q != null && q.isNotEmpty) || status != null) {
+      final result = await client.rpc<dynamic>(
+        'search_bills',
+        params: {
+          'p_query': (q == null || q.isEmpty) ? null : q,
+          'p_status': status?.name,
+          'p_from': from.toUtc().toIso8601String(),
+          'p_to': to.toUtc().toIso8601String(),
+          'p_offset': offset,
+          'p_limit': limit ?? 50,
+        },
+      );
+      final rows = result is List ? result : const [];
+      return rows.map(_mapBillRow).toList();
+    }
+
     final fromIso = from.toUtc().toIso8601String();
     final toIso = to.toUtc().toIso8601String();
-    final q = query?.trim();
-
-    if (q == null || q.isEmpty) {
-      var request = client
-          .from('bills')
-          .select(_billSelect)
-          .gte('created_at', fromIso)
-          .lt('created_at', toIso)
-          .order('created_at', ascending: false);
-      if (limit != null) {
-        request = request.range(offset, offset + limit - 1);
-      }
-      final rows = await request;
-      return (rows as List).map(_mapBillRow).toList();
-    }
-
-    final customers = await client
-        .from('customers')
-        .select('id')
-        .ilike('shop_name', '%$q%')
-        .limit(100);
-    final customerIds = (customers as List)
-        .map((r) => (r as Map)['id'] as String)
-        .toList();
-
-    final orParts = <String>['bill_no.ilike.%$q%', 'guest_name.ilike.%$q%'];
-    if (customerIds.isNotEmpty) {
-      orParts.add('customer_id.in.(${customerIds.join(',')})');
-    }
-
     var request = client
         .from('bills')
         .select(_billSelect)
         .gte('created_at', fromIso)
         .lt('created_at', toIso)
-        .or(orParts.join(','))
         .order('created_at', ascending: false);
     if (limit != null) {
       request = request.range(offset, offset + limit - 1);
@@ -187,10 +150,12 @@ class SupabaseBillsRepository implements BillsRepository {
   Future<int> todaysBillCount() async {
     final client = requireSupabaseClient(_client);
     final start = nptDayStartUtc();
+    final end = start.add(const Duration(days: 1));
     final count = await client
         .from('bills')
         .count(CountOption.exact)
-        .gte('created_at', start.toIso8601String());
+        .gte('created_at', start.toIso8601String())
+        .lt('created_at', end.toIso8601String());
     return count;
   }
 
@@ -214,14 +179,19 @@ class SupabaseBillsRepository implements BillsRepository {
   Future<List<Bill>> listTodaysBills({int limit = 20}) async {
     final client = requireSupabaseClient(_client);
     final start = nptDayStartUtc();
+    final end = start.add(const Duration(days: 1));
     final rows = await client
         .from('bills')
         .select(_billSelect)
         .gte('created_at', start.toIso8601String())
+        .lt('created_at', end.toIso8601String())
         .order('created_at', ascending: false)
         .limit(limit);
     return (rows as List).map(_mapBillRow).toList();
   }
+
+  @override
+  Future<int> unsyncedTodaysSales() async => 0;
 
   @override
   Future<Bill> create({
@@ -315,7 +285,7 @@ class SupabaseBillsRepository implements BillsRepository {
       'items': lines
           .map(
             (line) => {
-              'product_id': line.productId,
+              'product_id': line.productId.isEmpty ? null : line.productId,
               'name_snapshot': line.nameSnapshot,
               'qty': line.qty,
               'rate': line.rate,
@@ -331,7 +301,11 @@ class SupabaseBillsRepository implements BillsRepository {
         },
     };
 
-    final result = await client.rpc('create_bill', params: {'p': payload});
+    final result = await tracedOp(
+      'rpc.create_bill',
+      'db.rpc',
+      () => client.rpc('create_bill', params: {'p': payload}),
+    );
     final billJson = Map<String, dynamic>.from((result as Map)['bill'] as Map);
     final bill = Bill.fromJson(billJson);
     // Re-fetch with joined customer + items for display.

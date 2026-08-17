@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Wraps web pages with Escape-to-close and focus traversal defaults.
+/// Wraps web pages with keyboard shortcuts and focus traversal defaults.
 class WebKeyboardScope extends StatelessWidget {
-  const WebKeyboardScope({super.key, required this.child, this.onEscape});
+  const WebKeyboardScope({
+    super.key,
+    required this.child,
+    this.onEscape,
+    this.bindings = const {},
+  });
 
   final Widget child;
   final VoidCallback? onEscape;
+  final Map<ShortcutActivator, VoidCallback> bindings;
 
   @override
   Widget build(BuildContext context) {
-    final bindings = <ShortcutActivator, VoidCallback>{};
+    final merged = <ShortcutActivator, VoidCallback>{...bindings};
     if (onEscape != null) {
-      bindings[const SingleActivator(LogicalKeyboardKey.escape)] = onEscape!;
+      merged[const SingleActivator(LogicalKeyboardKey.escape)] = onEscape!;
     }
 
     return CallbackShortcuts(
-      bindings: bindings,
+      bindings: merged,
       child: FocusTraversalGroup(
         policy: OrderedTraversalPolicy(),
         child: child,

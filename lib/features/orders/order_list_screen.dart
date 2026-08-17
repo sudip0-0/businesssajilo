@@ -130,9 +130,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   : Text(dateStr),
               trailing: StatusChip(order.status),
               onTap: () async {
-                final changed = await context.push<bool>(
-                  '/order/${order.id}',
-                );
+                final changed = await context.push<bool>('/order/${order.id}');
                 if (changed == true) await _refresh();
               },
             ),

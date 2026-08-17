@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
+import '../../core/utils/app_prefs.dart';
 import '../../core/utils/bs_date.dart';
-import '../../core/ui/async_body.dart';
 import '../../core/ui/empty_state.dart';
+import '../../core/ui/list_skeleton.dart';
+import '../../core/ui/paginated_list_state.dart';
 import '../../data/repositories/notifications_repository.dart';
 import '../../domain/models/notification_item.dart';
 import '../auth/providers/auth_provider.dart';
@@ -11,13 +13,53 @@ import 'notification_labels.dart';
 import 'notification_navigation.dart';
 import 'providers.dart';
 
-class NotificationListScreen extends ConsumerWidget {
+class NotificationListScreen extends ConsumerStatefulWidget {
   const NotificationListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationListScreen> createState() =>
+      _NotificationListScreenState();
+}
+
+class _NotificationListScreenState
+    extends ConsumerState<NotificationListScreen> {
+  PaginatedListState<NotificationItem>? _pager;
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+  }
+
+  void _initPager() {
+    _pager = PaginatedListState<NotificationItem>(
+      loadPage: (offset, limit) => ref
+          .read(notificationsRepositoryProvider)
+          .list(offset: offset, limit: limit),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    )..attachScrollController(_scrollController);
+    _pager!.refresh();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final notificationsAsync = ref.watch(notificationListProvider);
+    final prefs =
+        ref.watch(notificationMutePrefsProvider).value ??
+        const NotificationMutePrefs();
+    final live = ref.watch(notificationListProvider).value ?? const [];
+    final history = excludeMutedNotifications(_pager?.items ?? const [], prefs);
+    final items = mergeNotificationPages(live: live, history: history);
+    final loading = _pager?.loading == true && items.isEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -29,30 +71,34 @@ class NotificationListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: AsyncBody(
-        value: notificationsAsync,
-        onRetry: () => ref.invalidate(notificationListProvider),
-        data: (items) {
-          if (items.isEmpty) {
-            return EmptyState(
+      body: loading
+          ? const ListSkeleton()
+          : items.isEmpty
+          ? EmptyState(
               icon: Icons.notifications_none_outlined,
               message: l10n.noNotifications,
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(notificationListProvider),
-            child: ListView.separated(
-              itemCount: items.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return _NotificationTile(item: item);
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(notificationListProvider);
+                ref.invalidate(unreadNotificationCountProvider);
+                await _pager?.refresh();
               },
+              child: ListView.separated(
+                controller: _scrollController,
+                itemCount: items.length + ((_pager?.hasMore ?? false) ? 1 : 0),
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  if (index >= items.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  return _NotificationTile(item: items[index]);
+                },
+              ),
             ),
-          );
-        },
-      ),
     );
   }
 }
@@ -77,6 +123,8 @@ class _NotificationTile extends ConsumerWidget {
       onTap: () async {
         if (item.isUnread) {
           await ref.read(notificationsRepositoryProvider).markRead(item.id);
+          ref.invalidate(unreadNotificationCountProvider);
+          ref.invalidate(notificationListProvider);
         }
         if (context.mounted) {
           final role = ref.read(authProvider).value?.member?.role;

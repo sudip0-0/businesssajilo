@@ -56,6 +56,12 @@ class WebDashboardKpiGrid extends StatelessWidget {
             loading: () => null,
             error: (_, _) => null,
           ),
+          subtitle: stats.when(
+            data: (d) =>
+                formatPendingSyncSalesSubtitle(l10n, d.pendingSyncSales),
+            loading: () => null,
+            error: (_, _) => null,
+          ),
           onTap: () => context.go('/owner/reports/sales'),
         ),
         WebStatTile(
@@ -106,9 +112,8 @@ class WebDashboardKpiGrid extends StatelessWidget {
             error: (_, _) => null,
           ),
           trend: stats.when(
-            data: (d) => (d.pendingOrders ?? 0) > 0
-                ? WebTrendDirection.neutral
-                : null,
+            data: (d) =>
+                (d.pendingOrders ?? 0) > 0 ? WebTrendDirection.neutral : null,
             loading: () => null,
             error: (_, _) => null,
           ),

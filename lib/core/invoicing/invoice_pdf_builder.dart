@@ -355,11 +355,7 @@ class InvoicePdfBuilder {
     _Sizes fs,
     pw.TextStyle style,
   ) {
-    return _dataRow(
-      ['', '', '', label, _money(amountPaisa)],
-      fs,
-      style: style,
-    );
+    return _dataRow(['', '', '', label, _money(amountPaisa)], fs, style: style);
   }
 
   pw.Widget _dataRow(List<String> values, _Sizes fs, {pw.TextStyle? style}) {

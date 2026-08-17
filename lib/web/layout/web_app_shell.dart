@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../features/search/global_search_sheet.dart';
 import '../theme/web_tokens.dart';
 import '../ui/web_keyboard_scope.dart';
 import '../ui/web_paper.dart';
@@ -15,7 +18,7 @@ const _compactPrimaryCount = 4;
 const _compactMaxWithoutMore = 5;
 
 /// Persistent web shell: sidebar + top bar + routed content.
-class WebAppShell extends StatefulWidget {
+class WebAppShell extends ConsumerStatefulWidget {
   const WebAppShell({
     super.key,
     required this.navItems,
@@ -28,10 +31,10 @@ class WebAppShell extends StatefulWidget {
   final Widget Function(bool collapsed)? sidebarFooter;
 
   @override
-  State<WebAppShell> createState() => _WebAppShellState();
+  ConsumerState<WebAppShell> createState() => _WebAppShellState();
 }
 
-class _WebAppShellState extends State<WebAppShell> {
+class _WebAppShellState extends ConsumerState<WebAppShell> {
   bool _collapsed = false;
 
   void _openMobileDrawer() {
@@ -64,6 +67,12 @@ class _WebAppShellState extends State<WebAppShell> {
     final location = GoRouterState.of(context).uri.path;
 
     return WebKeyboardScope(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () =>
+            showGlobalSearch(context, ref),
+        const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () =>
+            showGlobalSearch(context, ref),
+      },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Row(
@@ -86,7 +95,9 @@ class _WebAppShellState extends State<WebAppShell> {
                   Expanded(
                     child: Stack(
                       children: [
-                        Positioned.fill(child: widget.child),
+                        Positioned.fill(
+                          child: SelectionArea(child: widget.child),
+                        ),
                         // Paper grain breaks the flatness of the canvas
                         // without ever intercepting input.
                         const Positioned.fill(child: WebPaperGrain()),
