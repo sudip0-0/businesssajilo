@@ -319,7 +319,7 @@ class InvoicePdfBuilder {
         child: _summaryRow(labels.total, doc.itemsGross, fs, boldCell),
       ),
       if (doc.lineDiscountsTotal > 0)
-        _summaryRow(labels.discount, -doc.lineDiscountsTotal, fs, boldCell),
+        _summaryRow(labels.discount, doc.lineDiscountsTotal, fs, boldCell),
       if (doc.discount > 0)
         _summaryRow(labels.billDiscount, -doc.discount, fs, boldCell),
       _summaryRow(labels.grandTotal, doc.grandTotal, fs, boldCell),

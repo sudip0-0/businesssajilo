@@ -113,7 +113,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   List<Product> get _filtered {
-    final items = _pager?.items ?? [];
+    final items = (_pager?.items ?? []).where(
+      (p) => p.isActive == !_showInactive,
+    );
     final filtered = switch (_stockFilter) {
       _StockFilter.all => List<Product>.from(items),
       _StockFilter.low =>

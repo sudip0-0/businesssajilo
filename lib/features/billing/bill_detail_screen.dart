@@ -190,14 +190,16 @@ class _BillActions extends ConsumerWidget {
         ) ??
         false;
     const actionStyle = ButtonStyle(
-      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
+      padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
       minimumSize: WidgetStatePropertyAll(Size(0, 48)),
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
     );
 
     return Row(
       children: [
         Expanded(
+          flex: 3,
           child: FilledButton(
             onPressed: () => exportBillAsPng(ref, context, bill),
             style: actionStyle,
@@ -208,8 +210,9 @@ class _BillActions extends ConsumerWidget {
           ),
         ),
         if (showReturn) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Expanded(
+            flex: 2,
             child: _ReturnItemsButton(
               bill: bill,
               embedded: embedded,
@@ -218,7 +221,7 @@ class _BillActions extends ConsumerWidget {
             ),
           ),
         ],
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Material(
           color: scheme.surface,
           shape: RoundedRectangleBorder(
@@ -471,8 +474,10 @@ class _BillLinesCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     _TotalRow(
                       label: l10n.discount,
-                      value:
-                          '-${formatNpr(Paisa(lineDiscounts), showPaisa: false)}',
+                        value: formatNpr(
+                          Paisa(lineDiscounts),
+                          showPaisa: false,
+                        ),
                     ),
                   ],
                   if (bill.discount > 0) ...[
@@ -600,15 +605,16 @@ class _ActionButtonLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-      ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Text(label, maxLines: 1, softWrap: false),
+        ],
+      ),
     );
   }
 }

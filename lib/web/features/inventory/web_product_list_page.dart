@@ -323,7 +323,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   }
 
   List<Product> _sorted(List<Product> items) {
-    final sorted = List<Product>.from(items);
+    final sorted = items.where((p) => p.isActive == !_showInactive).toList();
     sorted.sort((a, b) {
       final cmp = switch (_sortField) {
         _SortField.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),

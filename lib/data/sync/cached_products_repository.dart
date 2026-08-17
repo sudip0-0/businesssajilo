@@ -29,13 +29,13 @@ class CachedProductsRepository implements ProductsRepository {
       final rows = await _db
           .customSelect(
             'SELECT * FROM local_products '
-            'WHERE (? = 0 OR is_active = 1) '
+            'WHERE is_active = ? '
             'AND (lower(name) LIKE ? OR lower(ifnull(sku, \'\')) LIKE ? '
             'OR lower(ifnull(name_np, \'\')) LIKE ?) '
             'ORDER BY name ASC '
             'LIMIT ? OFFSET ?',
             variables: [
-              Variable.withInt(activeOnly ? 1 : 0),
+              Variable.withBool(activeOnly),
               Variable.withString(pattern),
               Variable.withString(pattern),
               Variable.withString(pattern),
@@ -49,10 +49,8 @@ class CachedProductsRepository implements ProductsRepository {
       return rows.map(mapLocalProduct).toList();
     }
     final select = _db.select(_db.localProducts)
-      ..orderBy([(p) => OrderingTerm.asc(p.name)]);
-    if (activeOnly) {
-      select.where((p) => p.isActive.equals(true));
-    }
+      ..orderBy([(p) => OrderingTerm.asc(p.name)])
+      ..where((p) => p.isActive.equals(activeOnly));
     if (limit != null) {
       select.limit(limit, offset: offset);
     }
@@ -147,10 +145,22 @@ class CachedProductsRepository implements ProductsRepository {
   }
 
   @override
-  Future<void> deactivate(String id) => _remote.deactivate(id);
+  Future<void> deactivate(String id) async {
+    await _remote.deactivate(id);
+    await _setLocalActive(id, false);
+  }
 
   @override
-  Future<void> activate(String id) => _remote.activate(id);
+  Future<void> activate(String id) async {
+    await _remote.activate(id);
+    await _setLocalActive(id, true);
+  }
+
+  Future<void> _setLocalActive(String id, bool isActive) {
+    return (_db.update(_db.localProducts)..where((p) => p.id.equals(id))).write(
+      LocalProductsCompanion(isActive: Value(isActive)),
+    );
+  }
 
   @override
   Future<String> uploadImage({

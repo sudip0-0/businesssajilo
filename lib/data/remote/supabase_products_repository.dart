@@ -24,10 +24,7 @@ class SupabaseProductsRepository implements ProductsRepository {
     String? query,
   }) async {
     final client = requireSupabaseClient(_client);
-    var built = client.from('products').select();
-    if (activeOnly) {
-      built = built.eq('is_active', true);
-    }
+    var built = client.from('products').select().eq('is_active', activeOnly);
     final q = query?.trim();
     if (q != null && q.isNotEmpty) {
       final pattern = '%${q.replaceAll(',', '')}%';
