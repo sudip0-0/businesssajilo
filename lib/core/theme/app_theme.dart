@@ -158,6 +158,11 @@ abstract final class AppTheme {
       cardTheme: _cardTheme(Colors.white),
       inputDecorationTheme: _inputTheme(Colors.white, scheme),
       appBarTheme: AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: BsColors.background,
+        foregroundColor: BsColors.textCharcoal,
+        surfaceTintColor: Colors.transparent,
         titleTextStyle: _textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
           color: BsColors.textCharcoal,
@@ -193,6 +198,9 @@ abstract final class AppTheme {
       fontFamilyFallback: _fontFallback,
       navigationBarTheme: NavigationBarThemeData(
         height: 64,
+        backgroundColor: BsColors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         indicatorColor: BsColors.secondary.withValues(alpha: 0.12),
         labelPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
