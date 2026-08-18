@@ -111,31 +111,20 @@ class BillSummary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _summaryRow(context, l10n.subtotal, itemsTotal),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.billDiscount,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    Text(
-                      l10n.discount,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
-                    ),
-                  ],
+                child: Text(
+                  l10n.billDiscount,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
               SizedBox(width: 96, child: discountField),
             ],
           ),
           if (discount > 0) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Align(
               alignment: Alignment.centerRight,
               child: Text(
@@ -147,9 +136,9 @@ class BillSummary extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: accent,
               borderRadius: BorderRadius.circular(BsRadii.lg),

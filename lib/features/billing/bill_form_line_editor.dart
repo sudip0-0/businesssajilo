@@ -29,32 +29,33 @@ class BillFormLineEditor extends StatefulWidget {
 class _BillFormLineEditorState extends State<BillFormLineEditor> {
   late bool _expanded = widget.initiallyExpanded;
 
+  static const _iconConstraints = BoxConstraints(minWidth: 32, minHeight: 32);
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final line = widget.line;
     final oversell = line.qty > line.product.stockCached;
-    final rateLabel = formatNpr(Paisa(line.rate), showPaisa: false);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: BsSpacing.sm),
+      padding: const EdgeInsets.only(bottom: BsSpacing.xs),
       child: Material(
         color: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BsRadii.xl),
+          borderRadius: BorderRadius.circular(BsRadii.lg),
           side: const BorderSide(color: BsColors.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+          padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ProductImage(storagePath: line.product.imageUrl, size: 48),
-                  const SizedBox(width: 10),
+                  ProductImage(storagePath: line.product.imageUrl, size: 36),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,10 +63,11 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                         Text(
                           line.product.name,
                           style: Theme.of(context).textTheme.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
                         Text(
-                          '$rateLabel · ${l10n.availableStock} ${line.product.stockCached}',
+                          '${l10n.availableStock} ${line.product.stockCached}',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: oversell
@@ -77,6 +79,9 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                     ),
                   ),
                   IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: _iconConstraints,
                     visualDensity: VisualDensity.compact,
                     icon: Icon(
                       _expanded
@@ -87,6 +92,9 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                     onPressed: () => setState(() => _expanded = !_expanded),
                   ),
                   IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: _iconConstraints,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(
                       Icons.delete_outline,
@@ -97,7 +105,7 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Row(
                 children: [
                   QtyStepper(
@@ -114,20 +122,24 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                     formatNpr(Paisa(line.lineTotal), showPaisa: false),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
+                  const SizedBox(width: 8),
                 ],
               ),
               if (line.discount > 0 && !_expanded)
                 Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '${l10n.discount} -${formatNpr(Paisa(line.discount), showPaisa: false)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
+                  padding: const EdgeInsets.only(top: 2, right: 8),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${l10n.discount} -${formatNpr(Paisa(line.discount), showPaisa: false)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ),
                 ),
               if (_expanded) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -173,13 +185,6 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${l10n.lineTotal}: ${formatNpr(Paisa(line.lineTotal), showPaisa: false)}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ],

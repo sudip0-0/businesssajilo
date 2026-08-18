@@ -4,9 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
-import '../../core/ui/sheet_select_field.dart';
-import '../../core/utils/money.dart';
-import '../../core/utils/payment_method_label.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../data/repositories/products_repository.dart';
@@ -14,7 +11,6 @@ import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/product.dart';
-import '../auth/providers/auth_provider.dart';
 import 'bill_form_customer_field.dart';
 import 'bill_form_draft.dart';
 import 'bill_form_leave_confirm.dart';
@@ -39,29 +35,12 @@ class BillFormScreen extends ConsumerStatefulWidget {
 class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   final _draft = BillFormDraft();
   final _billDiscountController = TextEditingController();
-  final _partialAmountController = TextEditingController();
   bool _loading = false;
   Customer? _selectedCustomer;
-  String? _lastAddedProductId;
-  BillStatus _status = BillStatus.paid;
-  PaymentMethod _method = PaymentMethod.cash;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final canRecord =
-          ref.read(authProvider).value?.member?.role.canRecordPayments ?? false;
-      if (!canRecord && mounted) {
-        setState(() => _status = BillStatus.due);
-      }
-    });
-  }
 
   @override
   void dispose() {
     _billDiscountController.dispose();
-    _partialAmountController.dispose();
     super.dispose();
   }
 
@@ -104,9 +83,6 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         _draft.loadFromBill(bill, catalog);
         _billDiscountController.text = _draft.billDiscountText;
         _selectedCustomer = customer;
-        _lastAddedProductId = _draft.lines.isEmpty
-            ? null
-            : _draft.lines.last.product.id;
       });
       _syncDirtyFlag();
       if (_draft.lines.isEmpty) {
@@ -122,10 +98,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   }
 
   void _addProduct(Product product) {
-    setState(() {
-      _draft.addProduct(product);
-      _lastAddedProductId = product.id;
-    });
+    setState(() => _draft.addProduct(product));
     _syncDirtyFlag();
   }
 
@@ -147,45 +120,33 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
   Future<Bill?> _save({BillStatus? forceStatus}) async {
     _syncDiscountText();
-    final l10n = AppLocalizations.of(context);
-    final walkIn = _selectedCustomer == null;
-    final status = forceStatus ?? _status;
-    final partialAmount = status == BillStatus.partial
-        ? parseNpr(_partialAmountController.text)?.value
-        : null;
-
-    final error = validateBillPayment(
-      status: status,
-      grandTotal: _draft.grandTotal,
-      walkIn: walkIn,
-      customerId: _selectedCustomer?.id,
-      partialAmountPaisa: partialAmount,
-    );
-    if (error != null) {
-      showBsSnackBar(
-        context,
-        message: _paymentValidationMessage(l10n, error),
-        backgroundColor: BsColors.danger,
+    if (forceStatus == BillStatus.due) {
+      final l10n = AppLocalizations.of(context);
+      final error = validateBillPayment(
+        status: BillStatus.due,
+        grandTotal: _draft.grandTotal,
+        walkIn: _selectedCustomer == null,
+        customerId: _selectedCustomer?.id,
       );
-      return null;
+      if (error != null) {
+        showBsSnackBar(
+          context,
+          message: error == BillPaymentValidationError.walkInCreditNotAllowed
+              ? l10n.selectCustomerForCredit
+              : l10n.selectCustomer,
+          backgroundColor: BsColors.danger,
+        );
+        return null;
+      }
     }
-
-    final payment = buildBillPaymentResult(
-      status: status,
-      grandTotal: _draft.grandTotal,
-      walkIn: walkIn,
-      customerId: _selectedCustomer?.id,
-      guestName: _draft.guestName,
-      partialAmountPaisa: partialAmount,
-      paymentMethod: _method,
-    );
 
     setState(() => _loading = true);
     final bill = await submitBillForm(
       ref: ref,
       context: context,
       draft: _draft,
-      payment: payment,
+      forceStatus: forceStatus,
+      initialCustomerName: _selectedCustomer?.shopName,
       onSaved: () {
         ref.read(billFormDirtyProvider.notifier).clear();
         widget.onSaved?.call();
@@ -194,20 +155,6 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     );
     if (mounted) setState(() => _loading = false);
     return bill;
-  }
-
-  String _paymentValidationMessage(
-    AppLocalizations l10n,
-    BillPaymentValidationError error,
-  ) {
-    return switch (error) {
-      BillPaymentValidationError.amountRequired => l10n.amountRequired,
-      BillPaymentValidationError.amountNotPositive => l10n.amountMustBePositive,
-      BillPaymentValidationError.amountExceedsTotal => l10n.amountExceedsTotal,
-      BillPaymentValidationError.selectCustomer => l10n.selectCustomer,
-      BillPaymentValidationError.walkInCreditNotAllowed =>
-        l10n.selectCustomerForCredit,
-    };
   }
 
   Future<void> _onWillPop() async {
@@ -338,162 +285,106 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   }
 
   Widget _buildBody(AppLocalizations l10n) {
-    final canRecordPayments =
-        ref.watch(authProvider).value?.member?.role.canRecordPayments ?? false;
-    final walkIn = _selectedCustomer == null;
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        BsSpacing.lg,
-        BsSpacing.sm,
-        BsSpacing.lg,
-        BsSpacing.xl,
-      ),
+    return Column(
       children: [
-        BillCustomerSearchField(
-          selectedCustomer: _selectedCustomer,
-          selectedName: _selectedCustomer?.shopName ?? _draft.guestName,
-          onCustomerSelected: (customer) {
-            setState(() {
-              _selectedCustomer = customer;
-              _draft.customerId = customer?.id;
-              if (customer != null) {
-                _draft.guestName = null;
-              }
-              if (customer == null &&
-                  (_status == BillStatus.due ||
-                      _status == BillStatus.partial) &&
-                  canRecordPayments) {
-                _status = BillStatus.paid;
-              }
-            });
-            _syncDirtyFlag();
-          },
-          onTextChanged: (text) {
-            if (_selectedCustomer == null) {
-              _draft.guestName = text.trim().isEmpty ? null : text.trim();
-              _syncDirtyFlag();
-            }
-          },
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Text(l10n.billItems, style: Theme.of(context).textTheme.titleSmall),
-            const Spacer(),
-            TextButton.icon(
-              onPressed: _loading ? null : _openProductPicker,
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(l10n.addItem),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              BsSpacing.lg,
+              BsSpacing.sm,
+              BsSpacing.lg,
+              BsSpacing.sm,
             ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        if (_draft.lines.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: BsSpacing.xl),
-            child: Center(
-              child: Text(
-                l10n.noBillLines,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
+            children: [
+              BillCustomerSearchField(
+                selectedCustomer: _selectedCustomer,
+                selectedName: _selectedCustomer?.shopName ?? _draft.guestName,
+                onCustomerSelected: (customer) {
+                  setState(() {
+                    _selectedCustomer = customer;
+                    _draft.customerId = customer?.id;
+                    if (customer != null) {
+                      _draft.guestName = null;
+                    }
+                  });
+                  _syncDirtyFlag();
+                },
+                onTextChanged: (text) {
+                  if (_selectedCustomer == null) {
+                    _draft.guestName = text.trim().isEmpty
+                        ? null
+                        : text.trim();
+                    _syncDirtyFlag();
+                  }
+                },
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    l10n.billItems,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _loading ? null : _openProductPicker,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(l10n.addItem),
+                  ),
+                ],
+              ),
+              if (_draft.lines.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: BsSpacing.md),
+                  child: Text(
+                    l10n.noBillLines,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
+                  ),
+                )
+              else
+                for (var i = 0; i < _draft.lines.length; i++)
+                  BillFormLineEditor(
+                    key: ValueKey(_draft.lines[i].product.id),
+                    line: _draft.lines[i],
+                    onChanged: () {
+                      setState(() {});
+                      _syncDirtyFlag();
+                    },
+                    onRemove: () {
+                      setState(() => _draft.removeLineAt(i));
+                      _syncDirtyFlag();
+                    },
+                  ),
+            ],
+          ),
+        ),
+        DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: BsColors.border)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              BsSpacing.lg,
+              BsSpacing.sm,
+              BsSpacing.lg,
+              BsSpacing.xs,
             ),
-          )
-        else
-          for (var i = 0; i < _draft.lines.length; i++)
-            BillFormLineEditor(
-              key: ValueKey(_draft.lines[i].product.id),
-              line: _draft.lines[i],
-              initiallyExpanded:
-                  _draft.lines[i].product.id == _lastAddedProductId,
-              onChanged: () {
+            child: BillSummary(
+              style: BillSummaryStyle.checkout,
+              itemsTotal: _draft.itemsTotal,
+              billDiscountController: _billDiscountController,
+              grandTotal: _draft.grandTotal,
+              onDiscountChanged: () {
+                _syncDiscountText();
                 setState(() {});
                 _syncDirtyFlag();
               },
-              onRemove: () {
-                setState(() {
-                  _draft.removeLineAt(i);
-                  if (_lastAddedProductId != null &&
-                      _draft.lines.every(
-                        (l) => l.product.id != _lastAddedProductId,
-                      )) {
-                    _lastAddedProductId = _draft.lines.isEmpty
-                        ? null
-                        : _draft.lines.last.product.id;
-                  }
-                });
-                _syncDirtyFlag();
-              },
             ),
-        if (_draft.lines.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          BillSummary(
-            style: BillSummaryStyle.checkout,
-            itemsTotal: _draft.itemsTotal,
-            billDiscountController: _billDiscountController,
-            grandTotal: _draft.grandTotal,
-            onDiscountChanged: () {
-              _syncDiscountText();
-              setState(() {});
-              _syncDirtyFlag();
-            },
-          ),
-        ],
-        const SizedBox(height: 20),
-        Text(
-          l10n.selectPaymentStatus,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: BsColors.outline,
-            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
-        SegmentedButton<BillStatus>(
-          showSelectedIcon: true,
-          segments: [
-            if (canRecordPayments || walkIn)
-              ButtonSegment(value: BillStatus.paid, label: Text(l10n.paid)),
-            if (canRecordPayments)
-              ButtonSegment(
-                value: BillStatus.partial,
-                label: Text(l10n.partial),
-              ),
-            ButtonSegment(value: BillStatus.due, label: Text(l10n.due)),
-          ],
-          selected: {_status},
-          onSelectionChanged: (s) {
-            setState(() {
-              _status = s.first;
-              if (_status == BillStatus.paid) {
-                _partialAmountController.text = formatNpr(
-                  Paisa(_draft.grandTotal),
-                  showSymbol: false,
-                  showPaisa: false,
-                );
-              }
-            });
-          },
-        ),
-        if (_status == BillStatus.partial) ...[
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _partialAmountController,
-            decoration: InputDecoration(labelText: l10n.amountPaid),
-            keyboardType: TextInputType.number,
-          ),
-        ],
-        if (_status != BillStatus.due) ...[
-          const SizedBox(height: 16),
-          SheetSelectField<PaymentMethod>(
-            label: l10n.paymentMethod,
-            value: _method,
-            items: PaymentMethod.values,
-            itemLabel: (m) => paymentMethodLabel(l10n, m),
-            onChanged: (v) => setState(() => _method = v),
-          ),
-        ],
       ],
     );
   }

@@ -17,8 +17,8 @@ import 'invoice_export_actions.dart';
 
 /// Shared bill-form submit: validate → payment sheet → persist → notify/export.
 ///
-/// Pass [payment] to skip the payment sheet (used by the mobile form, which
-/// collects status and method on the page itself).
+/// Pass [payment] to skip the payment sheet. Save-as-due uses [forceStatus]
+/// instead of collecting status on the form.
 Future<Bill?> submitBillForm({
   required WidgetRef ref,
   required BuildContext context,
