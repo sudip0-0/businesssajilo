@@ -314,6 +314,12 @@ class AppLocalizationsNe extends AppLocalizations {
   String get addProduct => 'उत्पादन थप्नुहोस्';
 
   @override
+  String get addItem => 'वस्तु थप्नुहोस्';
+
+  @override
+  String get billItems => 'वस्तुहरू';
+
+  @override
   String get importFromExcel => 'Excel बाट आयात';
 
   @override
@@ -1232,8 +1238,8 @@ class AppLocalizationsNe extends AppLocalizations {
       'सबै ग्राहक डाटा इन्क्रिप्टेड र सुरक्षित रूपमा भण्डारण गरिन्छ।';
 
   @override
-  String newBillCreated(String billNo) {
-    return 'नयाँ बिल #$billNo';
+  String newBillCreated(String shopName) {
+    return 'नयाँ बिल $shopName का लागि सिर्जना गरियो';
   }
 
   @override

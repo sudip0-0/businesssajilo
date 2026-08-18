@@ -78,7 +78,7 @@ class WebDashboardTransactionsTable extends StatelessWidget {
                     _headerCell(l10n.status, headerStyle),
                   ],
                 ),
-                for (final bill in bills)
+                for (final bill in bills.take(5))
                   TableRow(
                     decoration: const BoxDecoration(
                       border: Border(

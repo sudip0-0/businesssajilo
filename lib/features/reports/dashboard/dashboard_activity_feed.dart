@@ -1,4 +1,5 @@
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/utils/bill_customer_label.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
 import '../../../domain/models/product.dart';
@@ -35,7 +36,9 @@ List<DashboardActivityItem> buildDashboardActivityFeed({
       items.add(
         DashboardActivityItem(
           id: 'bill-${bill.id}',
-          text: l10n.newBillCreated(bill.billNo),
+          text: l10n.newBillCreated(
+            billCustomerLabel(bill, walkInLabel: l10n.walkInCustomer),
+          ),
           kind: DashboardActivityKind.bill,
           entityId: bill.id,
         ),

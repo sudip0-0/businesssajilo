@@ -314,6 +314,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addProduct => 'Add product';
 
   @override
+  String get addItem => 'Add Item';
+
+  @override
+  String get billItems => 'Items';
+
+  @override
   String get importFromExcel => 'Import from Excel';
 
   @override
@@ -1145,7 +1151,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveCustomer => 'Save Customer';
 
   @override
-  String get createNewBill => 'Create New Bill';
+  String get createNewBill => 'Create Bill';
 
   @override
   String get createBillSubtitle =>
@@ -1235,8 +1241,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'All customer data is encrypted and stored securely.';
 
   @override
-  String newBillCreated(String billNo) {
-    return 'New Bill Created #$billNo';
+  String newBillCreated(String shopName) {
+    return 'New bill created for $shopName';
   }
 
   @override

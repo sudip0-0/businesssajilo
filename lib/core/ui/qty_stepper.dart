@@ -11,12 +11,14 @@ class QtyStepper extends StatefulWidget {
     required this.onChanged,
     this.min = 0,
     this.max,
+    this.compact = false,
   });
 
   final int value;
   final ValueChanged<int> onChanged;
   final int min;
   final int? max;
+  final bool compact;
 
   @override
   State<QtyStepper> createState() => _QtyStepperState();
@@ -85,6 +87,11 @@ class _QtyStepperState extends State<QtyStepper> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
+    final buttonSize = widget.compact ? 36.0 : 48.0;
+    final constraints = BoxConstraints(
+      minWidth: buttonSize,
+      minHeight: buttonSize,
+    );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -92,21 +99,23 @@ class _QtyStepperState extends State<QtyStepper> {
           onPressed: widget.value > widget.min
               ? () => _setValue(widget.value - 1)
               : null,
-          icon: const Icon(Icons.remove),
+          icon: Icon(Icons.remove, size: widget.compact ? 18 : 24),
           tooltip: l10n.decreaseQuantity,
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          visualDensity: widget.compact ? VisualDensity.compact : null,
+          constraints: constraints,
         ),
         SizedBox(
-          width: 72,
+          width: widget.compact ? 44 : 72,
           child: TextField(
             controller: _controller,
             focusNode: _focusNode,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: widget.compact ? 14 : null,
+            ),
             decoration: const InputDecoration(
               isDense: true,
               border: InputBorder.none,
@@ -127,10 +136,11 @@ class _QtyStepperState extends State<QtyStepper> {
           onPressed: (widget.max == null || widget.value < widget.max!)
               ? () => _setValue(widget.value + 1)
               : null,
-          icon: const Icon(Icons.add),
+          icon: Icon(Icons.add, size: widget.compact ? 18 : 24),
           tooltip: l10n.increaseQuantity,
+          visualDensity: widget.compact ? VisualDensity.compact : null,
           style: IconButton.styleFrom(backgroundColor: scheme.primary),
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          constraints: constraints,
         ),
       ],
     );

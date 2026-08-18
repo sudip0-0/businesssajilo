@@ -344,14 +344,6 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
-            ),
-            child: Text(l10n.salesSummary),
-          ),
         ],
       ),
     );
@@ -484,7 +476,7 @@ class _TransactionsList extends StatelessWidget {
 
     return Column(
       children: [
-        for (final bill in bills.take(8))
+        for (final bill in bills.take(5))
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(

@@ -114,6 +114,8 @@
   "fulfillment": "Fulfillment",
   "stock": "Stock",
   "addProduct": "Add product",
+  "addItem": "Add Item",
+  "billItems": "Items",
   "importFromExcel": "Import from Excel",
   "downloadSampleExcel": "Download sample Excel",
   "importExcelHint": "Download the sample file, fill in your products (prices in NPR), then upload the Excel file.",
@@ -460,7 +462,7 @@
   "panVatNumber": "PAN/VAT Number",
   "creditLimit": "Credit Limit (NPR)",
   "saveCustomer": "Save Customer",
-  "createNewBill": "Create New Bill",
+  "createNewBill": "Create Bill",
   "createBillSubtitle": "Create a bill for a walk-in or credit customer.",
   "saveAsDue": "Save as Due",
   "unsavedBillTitle": "Discard this bill?",
@@ -488,10 +490,10 @@
   "verificationTip": "Always verify the PAN/VAT number for tax compliance.",
   "creditPolicyTip": "Set realistic credit limits based on transaction history.",
   "privacyTip": "All customer data is encrypted and stored securely.",
-  "newBillCreated": "New Bill Created #{billNo}",
+  "newBillCreated": "New bill created for {shopName}",
   "@newBillCreated": {
     "placeholders": {
-      "billNo": {
+      "shopName": {
         "type": "String"
       }
     }

@@ -11,6 +11,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customers/providers.dart';
+import 'bill_form_customer_field.dart';
 import 'validate_bill_payment.dart';
 
 export 'bill_payment_result.dart';
@@ -153,30 +154,10 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     showBsSnackBar(context, message: message, backgroundColor: BsColors.danger);
   }
 
-  List<Customer> _filterCustomers(List<Customer> customers, String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return customers;
-    return customers.where((c) {
-      return c.shopName.toLowerCase().contains(q) ||
-          (c.contactName?.toLowerCase().contains(q) ?? false) ||
-          (c.phone?.contains(q) ?? false);
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    // Search list by typed query, but keep the selected name visible even when
-    // that customer is outside the first page of an empty query.
-    final listQuery =
-        _customerId != null &&
-            _selectedShopName != null &&
-            _customerSearchController.text.trim().toLowerCase() ==
-                _selectedShopName!.toLowerCase()
-        ? ''
-        : _customerSearchController.text.trim();
-    final customersAsync = ref.watch(customerListProvider(listQuery));
 
     final initialId = widget.initialCustomerId;
     if (!_walkIn &&
@@ -284,86 +265,23 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   ),
                 ),
               ],
-              if (!_walkIn)
-                customersAsync.when(
-                  loading: () => _selectedShopName != null
-                      ? TextField(
-                          controller: _customerSearchController,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: l10n.selectCustomer,
-                            prefixIcon: const Icon(Icons.search),
-                          ),
-                        )
-                      : const LinearProgressIndicator(),
-                  error: (e, _) => Text(l10n.loadingFailed),
-                  data: (customers) => Autocomplete<Customer>(
-                    key: ValueKey(
-                      'bill-customer-${_customerId ?? 'none'}-'
-                      '${_selectedShopName ?? ''}',
-                    ),
-                    initialValue: TextEditingValue(
-                      text: _customerSearchController.text,
-                    ),
-                    displayStringForOption: (c) => c.shopName,
-                    optionsBuilder: (textEditingValue) {
-                      return _filterCustomers(customers, textEditingValue.text);
-                    },
-                    onSelected: _selectCustomer,
-                    fieldViewBuilder:
-                        (context, controller, focusNode, onFieldSubmitted) {
-                          return TextField(
-                            controller: controller,
-                            focusNode: focusNode,
-                            decoration: InputDecoration(
-                              labelText: l10n.selectCustomer,
-                              hintText: l10n.filterCustomers,
-                              prefixIcon: const Icon(Icons.search),
-                            ),
-                            onChanged: (v) {
-                              setState(() {
-                                _customerSearchController.text = v;
-                                if (_customerId != null &&
-                                    (_selectedShopName ?? '').toLowerCase() !=
-                                        v.trim().toLowerCase()) {
-                                  _customerId = null;
-                                  _selectedShopName = null;
-                                }
-                              });
-                            },
-                            onSubmitted: (_) => onFieldSubmitted(),
-                          );
-                        },
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
-                        child: Material(
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(BsRadii.md),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 240),
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: options.length,
-                              itemBuilder: (context, index) {
-                                final c = options.elementAt(index);
-                                return ListTile(
-                                  dense: true,
-                                  title: Text(c.shopName),
-                                  subtitle: Text(
-                                    c.phone ?? c.contactName ?? '',
-                                  ),
-                                  onTap: () => onSelected(c),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+              if (!_walkIn) ...[
+                const SizedBox(height: 8),
+                BillCustomerSearchField(
+                  selectedName: _selectedShopName,
+                  onCustomerSelected: (customer) {
+                    if (customer == null) {
+                      setState(() {
+                        _customerId = null;
+                        _selectedShopName = null;
+                        _customerSearchController.clear();
+                      });
+                      return;
+                    }
+                    _selectCustomer(customer);
+                  },
                 ),
+              ],
               if (_status == BillStatus.partial) ...[
                 const SizedBox(height: 12),
                 TextFormField(

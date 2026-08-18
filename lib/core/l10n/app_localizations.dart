@@ -698,6 +698,18 @@ abstract class AppLocalizations {
   /// **'Add product'**
   String get addProduct;
 
+  /// No description provided for @addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get addItem;
+
+  /// No description provided for @billItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get billItems;
+
   /// No description provided for @importFromExcel.
   ///
   /// In en, this message translates to:
@@ -2291,7 +2303,7 @@ abstract class AppLocalizations {
   /// No description provided for @createNewBill.
   ///
   /// In en, this message translates to:
-  /// **'Create New Bill'**
+  /// **'Create Bill'**
   String get createNewBill;
 
   /// No description provided for @createBillSubtitle.
@@ -2459,8 +2471,8 @@ abstract class AppLocalizations {
   /// No description provided for @newBillCreated.
   ///
   /// In en, this message translates to:
-  /// **'New Bill Created #{billNo}'**
-  String newBillCreated(String billNo);
+  /// **'New bill created for {shopName}'**
+  String newBillCreated(String shopName);
 
   /// No description provided for @lowStockAlert.
   ///

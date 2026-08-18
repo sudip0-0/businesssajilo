@@ -16,11 +16,15 @@ import 'bill_payment_sheet.dart';
 import 'invoice_export_actions.dart';
 
 /// Shared bill-form submit: validate → payment sheet → persist → notify/export.
+///
+/// Pass [payment] to skip the payment sheet (used by the mobile form, which
+/// collects status and method on the page itself).
 Future<Bill?> submitBillForm({
   required WidgetRef ref,
   required BuildContext context,
   required BillFormDraft draft,
   BillStatus? forceStatus,
+  BillPaymentResult? payment,
   String? fallbackCustomerId,
   String? initialCustomerName,
   String? orderId,
@@ -77,20 +81,22 @@ Future<Bill?> submitBillForm({
     if (proceed != true || !context.mounted) return null;
   }
 
-  BillPaymentResult? paymentResult;
-  if (forceStatus == BillStatus.due) {
-    paymentResult = duePaymentForDraft(draft);
-  } else {
-    paymentResult = await showAdaptiveSheet<BillPaymentResult>(
-      context: context,
-      title: l10n.saveBill,
-      child: BillPaymentSheet(
-        grandTotal: draft.grandTotal,
-        initialCustomerId: draft.customerId,
-        initialCustomerName: initialCustomerName,
-        initialGuestName: draft.guestName,
-      ),
-    );
+  BillPaymentResult? paymentResult = payment;
+  if (paymentResult == null) {
+    if (forceStatus == BillStatus.due) {
+      paymentResult = duePaymentForDraft(draft);
+    } else {
+      paymentResult = await showAdaptiveSheet<BillPaymentResult>(
+        context: context,
+        title: l10n.saveBill,
+        child: BillPaymentSheet(
+          grandTotal: draft.grandTotal,
+          initialCustomerId: draft.customerId,
+          initialCustomerName: initialCustomerName,
+          initialGuestName: draft.guestName,
+        ),
+      );
+    }
   }
   if (paymentResult == null) return null;
 

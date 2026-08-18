@@ -4,8 +4,8 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/money.dart';
 
-/// Visual treatment for [BillSummary] — dense bar (mobile) vs card (web).
-enum BillSummaryStyle { denseBar, card }
+/// Visual treatment for [BillSummary] — dense bar, card, or checkout block.
+enum BillSummaryStyle { denseBar, card, checkout }
 
 /// Shared bill totals: subtotal, discount editor, grand total.
 class BillSummary extends StatelessWidget {
@@ -105,6 +105,78 @@ class BillSummary extends StatelessWidget {
         ),
       ],
     );
+
+    if (style == BillSummaryStyle.checkout) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _summaryRow(context, l10n.subtotal, itemsTotal),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.billDiscount,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      l10n.discount,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 96, child: discountField),
+            ],
+          ),
+          if (discount > 0) ...[
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '- ${formatNpr(Paisa(discount), showPaisa: false)}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: BsColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(BsRadii.lg),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  l10n.grandTotal,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  formatNpr(Paisa(grandTotal), showPaisa: false),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
 
     if (style == BillSummaryStyle.card) {
       final bg = cardBackground ?? accent.withValues(alpha: 0.04);

@@ -454,7 +454,7 @@ class _DashboardPage extends StatelessWidget {
                           const _ActivityRow(
                             icon: PhosphorIconsRegular.receipt,
                             color: WebPalette.navy,
-                            text: 'New bill INV-0142 created',
+                            text: 'New bill created for Sagarmatha Traders',
                           ),
                           const SizedBox(height: 12),
                           const _ActivityRow(
