@@ -149,22 +149,25 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
         ),
         const SizedBox(height: 20),
         // Tab switcher
-        Row(
-          children: [
-            ChoiceChip(
-              label: Text(l10n.profitableProducts),
-              selected: _currentTab == _ProfitTab.products,
-              onSelected: (_) =>
-                  setState(() => _currentTab = _ProfitTab.products),
-            ),
-            const SizedBox(width: 8),
-            ChoiceChip(
-              label: Text(l10n.profitableCustomers),
-              selected: _currentTab == _ProfitTab.customers,
-              onSelected: (_) =>
-                  setState(() => _currentTab = _ProfitTab.customers),
-            ),
-          ],
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              ChoiceChip(
+                label: Text(l10n.profitableProducts),
+                selected: _currentTab == _ProfitTab.products,
+                onSelected: (_) =>
+                    setState(() => _currentTab = _ProfitTab.products),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: Text(l10n.profitableCustomers),
+                selected: _currentTab == _ProfitTab.customers,
+                onSelected: (_) =>
+                    setState(() => _currentTab = _ProfitTab.customers),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         if (_currentTab == _ProfitTab.products) ...[
