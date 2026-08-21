@@ -23,9 +23,10 @@ class DashboardStat {
 }
 
 class RoleDashboard extends ConsumerWidget {
-  const RoleDashboard({super.key, required this.stats});
+  const RoleDashboard({super.key, required this.stats, this.cta});
 
   final List<DashboardStat> stats;
+  final Widget? cta;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,6 +53,7 @@ class RoleDashboard extends ConsumerWidget {
           ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
         ),
         const SizedBox(height: 16),
+        if (cta != null) ...[cta!, const SizedBox(height: 16)],
         GridView.count(
           crossAxisCount: wide ? 3 : 2,
           shrinkWrap: true,

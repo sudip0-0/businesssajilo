@@ -17,6 +17,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
 import '../auth/providers/auth_provider.dart';
+import '../billing/new_bill_cta_card.dart';
 import '../billing/providers.dart';
 import '../inventory/providers.dart';
 import 'dashboard/dashboard_invalidation.dart';
@@ -93,6 +94,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
               context,
             ).textTheme.bodyMedium?.copyWith(color: BsColors.outline),
           ),
+          const SizedBox(height: 16),
+          const NewBillCtaCard(),
           const SizedBox(height: 16),
           GridView.count(
             crossAxisCount: wide ? 4 : 2,

@@ -8,6 +8,7 @@ import '../../core/ui/adaptive_sheet.dart';
 import '../../core/utils/money.dart';
 import '../billing/bill_form_screen.dart';
 import '../billing/bill_list_screen.dart';
+import '../billing/new_bill_cta_card.dart';
 import '../billing/providers.dart';
 import '../customers/customer_list_screen.dart';
 import '../customers/providers.dart';
@@ -45,6 +46,7 @@ class _SalesShellState extends ConsumerState<SalesShell> {
 
     final pages = [
       RoleDashboard(
+        cta: const NewBillCtaCard(),
         stats: [
           DashboardStat(
             icon: Icons.payments_outlined,
