@@ -137,6 +137,7 @@ class LocalStockMovements extends Table {
   TextColumn get type => text()();
   IntColumn get qtyDelta => integer()();
   TextColumn get reason => text().nullable()();
+  TextColumn get refBillId => text().nullable()();
   TextColumn get createdBy => text()();
   TextColumn get createdByName => text().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
@@ -169,7 +170,7 @@ class AppDatabase extends _$AppDatabase {
       AppDatabase(driftDatabase(name: 'businesssajilo_local'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -183,6 +184,9 @@ class AppDatabase extends _$AppDatabase {
         // TableMigration drop the product category columns.
         await m.deleteTable('local_categories');
         await m.alterTable(TableMigration(localProducts));
+      }
+      if (from < 4) {
+        await m.addColumn(localStockMovements, localStockMovements.refBillId);
       }
     },
   );

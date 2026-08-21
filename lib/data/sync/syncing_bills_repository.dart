@@ -380,6 +380,21 @@ class SyncingBillsRepository implements BillsRepository {
         // allowed (alert-only policy); amount-only lines have empty productId.
         if (line.productId.isNotEmpty) {
           await _decrementLocalStock(line.productId, line.qty);
+          await _db
+              .into(_db.localStockMovements)
+              .insert(
+                LocalStockMovementsCompanion.insert(
+                  id: _uuid.v4(),
+                  businessId: _businessId,
+                  productId: line.productId,
+                  type: 'dispatch',
+                  qtyDelta: -line.qty,
+                  reason: Value('Counter sale $provisionalNo'),
+                  refBillId: Value(billId),
+                  createdBy: createdByMemberId,
+                  createdAt: Value(createdAt),
+                ),
+              );
         }
         itemRows.add({
           'product_id': line.productId.isEmpty ? null : line.productId,

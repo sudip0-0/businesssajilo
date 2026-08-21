@@ -4,6 +4,7 @@ import 'package:businesssajilo/core/utils/report_range.dart';
 import 'package:businesssajilo/data/local/app_database.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
 import 'package:businesssajilo/data/repositories/payments_repository.dart';
+import 'package:businesssajilo/data/sync/pull/sync_pull_entities.dart';
 import 'package:businesssajilo/data/sync/sync_service.dart';
 import 'package:businesssajilo/data/sync/syncing_bills_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
@@ -132,6 +133,71 @@ void main() {
     )..where((p) => p.id.equals('prod-b'))).getSingle();
     expect(a.stockCached, 6);
     expect(b.stockCached, 1);
+
+    final movements = await db.select(db.localStockMovements).get();
+    expect(movements, hasLength(2));
+    expect(
+      movements.map(
+        (movement) => (movement.productId, movement.type, movement.qtyDelta),
+      ),
+      containsAll([('prod-a', 'dispatch', -4), ('prod-b', 'dispatch', -2)]),
+    );
+  });
+
+  test('remote bill movement replaces its local placeholder', () async {
+    await db.ensureDeviceMeta('device-1');
+    await db
+        .into(db.localProducts)
+        .insert(
+          LocalProductsCompanion.insert(
+            id: 'prod-a',
+            businessId: 'biz',
+            name: 'Cola',
+            unit: 'piece',
+            stockCached: const Value(10),
+            updatedAt: DateTime.utc(2026, 7, 1),
+          ),
+        );
+
+    final bill = await billsRepo().create(
+      createdByMemberId: 'member-1',
+      status: BillStatus.paid,
+      itemsTotal: 1000,
+      discount: 0,
+      grandTotal: 1000,
+      lines: const [
+        BillLineInput(
+          productId: 'prod-a',
+          nameSnapshot: 'Cola',
+          qty: 4,
+          rate: 250,
+          lineTotal: 1000,
+        ),
+      ],
+    );
+    final entities = SyncPullEntities(
+      db: db,
+      client: SupabaseClient('http://localhost', 'anon'),
+    );
+    await entities.upsertRemoteMovementsBatch([
+      {
+        'id': 'server-movement',
+        'business_id': 'biz',
+        'product_id': 'prod-a',
+        'type': 'dispatch',
+        'qty_delta': -4,
+        'reason': 'Counter sale BS-0001',
+        'ref_bill_id': bill.id,
+        'created_by': 'member-1',
+        'created_at': DateTime.utc(2026, 7, 1).toIso8601String(),
+      },
+    ], synced: true);
+
+    final movements = await db.select(db.localStockMovements).get();
+    expect(movements, hasLength(1));
+    expect(movements.single.id, 'server-movement');
+    expect(movements.single.refBillId, bill.id);
+    expect(movements.single.syncStatus, 'synced');
   });
 
   test('offline bill create allows negative stockCached', () async {

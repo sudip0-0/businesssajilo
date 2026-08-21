@@ -15,6 +15,7 @@ abstract class StockMovement with _$StockMovement {
     required int qtyDelta,
     String? reason,
     String? refOrderId,
+    String? refBillId,
     required String createdBy,
     DateTime? createdAt,
     String? createdByName,

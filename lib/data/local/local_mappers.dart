@@ -102,6 +102,7 @@ StockMovement mapLocalMovement(LocalStockMovement row) {
     },
     qtyDelta: row.qtyDelta,
     reason: row.reason,
+    refBillId: row.refBillId,
     createdBy: row.createdBy,
     createdByName: row.createdByName,
     createdAt: row.createdAt,

@@ -4896,6 +4896,17 @@ class $LocalStockMovementsTable extends LocalStockMovements
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _refBillIdMeta = const VerificationMeta(
+    'refBillId',
+  );
+  @override
+  late final GeneratedColumn<String> refBillId = GeneratedColumn<String>(
+    'ref_bill_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdByMeta = const VerificationMeta(
     'createdBy',
   );
@@ -4950,6 +4961,7 @@ class $LocalStockMovementsTable extends LocalStockMovements
     type,
     qtyDelta,
     reason,
+    refBillId,
     createdBy,
     createdByName,
     syncStatus,
@@ -5008,6 +5020,12 @@ class $LocalStockMovementsTable extends LocalStockMovements
       context.handle(
         _reasonMeta,
         reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    if (data.containsKey('ref_bill_id')) {
+      context.handle(
+        _refBillIdMeta,
+        refBillId.isAcceptableOrUnknown(data['ref_bill_id']!, _refBillIdMeta),
       );
     }
     if (data.containsKey('created_by')) {
@@ -5072,6 +5090,10 @@ class $LocalStockMovementsTable extends LocalStockMovements
         DriftSqlType.string,
         data['${effectivePrefix}reason'],
       ),
+      refBillId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ref_bill_id'],
+      ),
       createdBy: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_by'],
@@ -5105,6 +5127,7 @@ class LocalStockMovement extends DataClass
   final String type;
   final int qtyDelta;
   final String? reason;
+  final String? refBillId;
   final String createdBy;
   final String? createdByName;
   final String syncStatus;
@@ -5116,6 +5139,7 @@ class LocalStockMovement extends DataClass
     required this.type,
     required this.qtyDelta,
     this.reason,
+    this.refBillId,
     required this.createdBy,
     this.createdByName,
     required this.syncStatus,
@@ -5131,6 +5155,9 @@ class LocalStockMovement extends DataClass
     map['qty_delta'] = Variable<int>(qtyDelta);
     if (!nullToAbsent || reason != null) {
       map['reason'] = Variable<String>(reason);
+    }
+    if (!nullToAbsent || refBillId != null) {
+      map['ref_bill_id'] = Variable<String>(refBillId);
     }
     map['created_by'] = Variable<String>(createdBy);
     if (!nullToAbsent || createdByName != null) {
@@ -5151,6 +5178,9 @@ class LocalStockMovement extends DataClass
       reason: reason == null && nullToAbsent
           ? const Value.absent()
           : Value(reason),
+      refBillId: refBillId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(refBillId),
       createdBy: Value(createdBy),
       createdByName: createdByName == null && nullToAbsent
           ? const Value.absent()
@@ -5172,6 +5202,7 @@ class LocalStockMovement extends DataClass
       type: serializer.fromJson<String>(json['type']),
       qtyDelta: serializer.fromJson<int>(json['qtyDelta']),
       reason: serializer.fromJson<String?>(json['reason']),
+      refBillId: serializer.fromJson<String?>(json['refBillId']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
       createdByName: serializer.fromJson<String?>(json['createdByName']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
@@ -5188,6 +5219,7 @@ class LocalStockMovement extends DataClass
       'type': serializer.toJson<String>(type),
       'qtyDelta': serializer.toJson<int>(qtyDelta),
       'reason': serializer.toJson<String?>(reason),
+      'refBillId': serializer.toJson<String?>(refBillId),
       'createdBy': serializer.toJson<String>(createdBy),
       'createdByName': serializer.toJson<String?>(createdByName),
       'syncStatus': serializer.toJson<String>(syncStatus),
@@ -5202,6 +5234,7 @@ class LocalStockMovement extends DataClass
     String? type,
     int? qtyDelta,
     Value<String?> reason = const Value.absent(),
+    Value<String?> refBillId = const Value.absent(),
     String? createdBy,
     Value<String?> createdByName = const Value.absent(),
     String? syncStatus,
@@ -5213,6 +5246,7 @@ class LocalStockMovement extends DataClass
     type: type ?? this.type,
     qtyDelta: qtyDelta ?? this.qtyDelta,
     reason: reason.present ? reason.value : this.reason,
+    refBillId: refBillId.present ? refBillId.value : this.refBillId,
     createdBy: createdBy ?? this.createdBy,
     createdByName: createdByName.present
         ? createdByName.value
@@ -5230,6 +5264,7 @@ class LocalStockMovement extends DataClass
       type: data.type.present ? data.type.value : this.type,
       qtyDelta: data.qtyDelta.present ? data.qtyDelta.value : this.qtyDelta,
       reason: data.reason.present ? data.reason.value : this.reason,
+      refBillId: data.refBillId.present ? data.refBillId.value : this.refBillId,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       createdByName: data.createdByName.present
           ? data.createdByName.value
@@ -5250,6 +5285,7 @@ class LocalStockMovement extends DataClass
           ..write('type: $type, ')
           ..write('qtyDelta: $qtyDelta, ')
           ..write('reason: $reason, ')
+          ..write('refBillId: $refBillId, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdByName: $createdByName, ')
           ..write('syncStatus: $syncStatus, ')
@@ -5266,6 +5302,7 @@ class LocalStockMovement extends DataClass
     type,
     qtyDelta,
     reason,
+    refBillId,
     createdBy,
     createdByName,
     syncStatus,
@@ -5281,6 +5318,7 @@ class LocalStockMovement extends DataClass
           other.type == this.type &&
           other.qtyDelta == this.qtyDelta &&
           other.reason == this.reason &&
+          other.refBillId == this.refBillId &&
           other.createdBy == this.createdBy &&
           other.createdByName == this.createdByName &&
           other.syncStatus == this.syncStatus &&
@@ -5294,6 +5332,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
   final Value<String> type;
   final Value<int> qtyDelta;
   final Value<String?> reason;
+  final Value<String?> refBillId;
   final Value<String> createdBy;
   final Value<String?> createdByName;
   final Value<String> syncStatus;
@@ -5306,6 +5345,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
     this.type = const Value.absent(),
     this.qtyDelta = const Value.absent(),
     this.reason = const Value.absent(),
+    this.refBillId = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.createdByName = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -5319,6 +5359,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
     required String type,
     required int qtyDelta,
     this.reason = const Value.absent(),
+    this.refBillId = const Value.absent(),
     required String createdBy,
     this.createdByName = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -5337,6 +5378,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
     Expression<String>? type,
     Expression<int>? qtyDelta,
     Expression<String>? reason,
+    Expression<String>? refBillId,
     Expression<String>? createdBy,
     Expression<String>? createdByName,
     Expression<String>? syncStatus,
@@ -5350,6 +5392,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
       if (type != null) 'type': type,
       if (qtyDelta != null) 'qty_delta': qtyDelta,
       if (reason != null) 'reason': reason,
+      if (refBillId != null) 'ref_bill_id': refBillId,
       if (createdBy != null) 'created_by': createdBy,
       if (createdByName != null) 'created_by_name': createdByName,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -5365,6 +5408,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
     Value<String>? type,
     Value<int>? qtyDelta,
     Value<String?>? reason,
+    Value<String?>? refBillId,
     Value<String>? createdBy,
     Value<String?>? createdByName,
     Value<String>? syncStatus,
@@ -5378,6 +5422,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
       type: type ?? this.type,
       qtyDelta: qtyDelta ?? this.qtyDelta,
       reason: reason ?? this.reason,
+      refBillId: refBillId ?? this.refBillId,
       createdBy: createdBy ?? this.createdBy,
       createdByName: createdByName ?? this.createdByName,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -5407,6 +5452,9 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
     if (reason.present) {
       map['reason'] = Variable<String>(reason.value);
     }
+    if (refBillId.present) {
+      map['ref_bill_id'] = Variable<String>(refBillId.value);
+    }
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
     }
@@ -5434,6 +5482,7 @@ class LocalStockMovementsCompanion extends UpdateCompanion<LocalStockMovement> {
           ..write('type: $type, ')
           ..write('qtyDelta: $qtyDelta, ')
           ..write('reason: $reason, ')
+          ..write('refBillId: $refBillId, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdByName: $createdByName, ')
           ..write('syncStatus: $syncStatus, ')
@@ -7922,6 +7971,7 @@ typedef $$LocalStockMovementsTableCreateCompanionBuilder =
       required String type,
       required int qtyDelta,
       Value<String?> reason,
+      Value<String?> refBillId,
       required String createdBy,
       Value<String?> createdByName,
       Value<String> syncStatus,
@@ -7936,6 +7986,7 @@ typedef $$LocalStockMovementsTableUpdateCompanionBuilder =
       Value<String> type,
       Value<int> qtyDelta,
       Value<String?> reason,
+      Value<String?> refBillId,
       Value<String> createdBy,
       Value<String?> createdByName,
       Value<String> syncStatus,
@@ -7979,6 +8030,11 @@ class $$LocalStockMovementsTableFilterComposer
 
   ColumnFilters<String> get reason => $composableBuilder(
     column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get refBillId => $composableBuilder(
+    column: $table.refBillId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8042,6 +8098,11 @@ class $$LocalStockMovementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get refBillId => $composableBuilder(
+    column: $table.refBillId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdBy => $composableBuilder(
     column: $table.createdBy,
     builder: (column) => ColumnOrderings(column),
@@ -8091,6 +8152,9 @@ class $$LocalStockMovementsTableAnnotationComposer
 
   GeneratedColumn<String> get reason =>
       $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get refBillId =>
+      $composableBuilder(column: $table.refBillId, builder: (column) => column);
 
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
@@ -8158,6 +8222,7 @@ class $$LocalStockMovementsTableTableManager
                 Value<String> type = const Value.absent(),
                 Value<int> qtyDelta = const Value.absent(),
                 Value<String?> reason = const Value.absent(),
+                Value<String?> refBillId = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<String?> createdByName = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
@@ -8170,6 +8235,7 @@ class $$LocalStockMovementsTableTableManager
                 type: type,
                 qtyDelta: qtyDelta,
                 reason: reason,
+                refBillId: refBillId,
                 createdBy: createdBy,
                 createdByName: createdByName,
                 syncStatus: syncStatus,
@@ -8184,6 +8250,7 @@ class $$LocalStockMovementsTableTableManager
                 required String type,
                 required int qtyDelta,
                 Value<String?> reason = const Value.absent(),
+                Value<String?> refBillId = const Value.absent(),
                 required String createdBy,
                 Value<String?> createdByName = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
@@ -8196,6 +8263,7 @@ class $$LocalStockMovementsTableTableManager
                 type: type,
                 qtyDelta: qtyDelta,
                 reason: reason,
+                refBillId: refBillId,
                 createdBy: createdBy,
                 createdByName: createdByName,
                 syncStatus: syncStatus,

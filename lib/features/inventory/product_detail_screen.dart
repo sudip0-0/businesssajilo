@@ -145,19 +145,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            if (product.sku != null)
-              ListTile(title: Text(l10n.sku), trailing: Text(product.sku!)),
-            ListTile(title: Text(l10n.unit), trailing: Text(product.unit)),
-            ListTile(
-              title: Text(l10n.costPrice),
-              trailing: MoneyText(Paisa(product.costPrice)),
-            ),
-            ListTile(
-              title: Text(l10n.referencePrice),
-              trailing: MoneyText(Paisa(product.referencePrice)),
-            ),
+            _ProductFactsPanel(product: product, l10n: l10n),
             if (widget.canManageStock) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -413,6 +403,129 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (context.mounted && !widget.embedded) {
       showBsSnackBar(context, message: l10n.reactivate);
     }
+  }
+}
+
+class _ProductFactsPanel extends StatelessWidget {
+  const _ProductFactsPanel({required this.product, required this.l10n});
+
+  final Product product;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final valueStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final dividerColor = Theme.of(context).colorScheme.outlineVariant;
+
+    return Container(
+      key: const Key('product-facts-panel'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        border: Border.all(color: dividerColor),
+        borderRadius: BorderRadius.circular(BsRadii.lg),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _ProductFact(
+                    label: l10n.sku,
+                    value: Text(
+                      product.sku ?? '—',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: valueStyle,
+                    ),
+                  ),
+                ),
+                VerticalDivider(width: 1, thickness: 1, color: dividerColor),
+                Expanded(
+                  child: _ProductFact(
+                    label: l10n.unit,
+                    value: Text(
+                      product.unit,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: valueStyle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: dividerColor),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _ProductFact(
+                    label: l10n.costPrice,
+                    value: MoneyText(
+                      Paisa(product.costPrice),
+                      style: valueStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+                VerticalDivider(width: 1, thickness: 1, color: dividerColor),
+                Expanded(
+                  child: _ProductFact(
+                    label: l10n.referencePrice,
+                    value: MoneyText(
+                      Paisa(product.referencePrice),
+                      style: valueStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductFact extends StatelessWidget {
+  const _ProductFact({required this.label, required this.value});
+
+  final String label;
+  final Widget value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: BsColors.outline),
+          ),
+          const SizedBox(height: 3),
+          value,
+        ],
+      ),
+    );
   }
 }
 

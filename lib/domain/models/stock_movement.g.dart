@@ -15,6 +15,7 @@ _StockMovement _$StockMovementFromJson(Map<String, dynamic> json) =>
       qtyDelta: (json['qty_delta'] as num).toInt(),
       reason: json['reason'] as String?,
       refOrderId: json['ref_order_id'] as String?,
+      refBillId: json['ref_bill_id'] as String?,
       createdBy: json['created_by'] as String,
       createdAt: json['created_at'] == null
           ? null
@@ -31,6 +32,7 @@ Map<String, dynamic> _$StockMovementToJson(_StockMovement instance) =>
       'qty_delta': instance.qtyDelta,
       'reason': instance.reason,
       'ref_order_id': instance.refOrderId,
+      'ref_bill_id': instance.refBillId,
       'created_by': instance.createdBy,
       'created_at': instance.createdAt?.toIso8601String(),
       'created_by_name': instance.createdByName,

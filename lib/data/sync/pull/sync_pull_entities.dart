@@ -560,6 +560,16 @@ class SyncPullEntities {
         }
         final id = map['id'] as String;
         if (pendingIds.contains(id)) continue;
+        final refBillId = map['ref_bill_id'] as String?;
+        if (refBillId != null) {
+          await (_db.delete(_db.localStockMovements)..where(
+                (movement) =>
+                    movement.refBillId.equals(refBillId) &
+                    movement.productId.equals(map['product_id'] as String) &
+                    movement.syncStatus.equals('pending'),
+              ))
+              .go();
+        }
         await _db
             .into(_db.localStockMovements)
             .insertOnConflictUpdate(
@@ -570,6 +580,7 @@ class SyncPullEntities {
                 type: map['type'] as String,
                 qtyDelta: (map['qty_delta'] as num).toInt(),
                 reason: Value(map['reason'] as String?),
+                refBillId: Value(refBillId),
                 createdBy: map['created_by'] as String,
                 createdByName: Value(map['created_by_name'] as String?),
                 syncStatus: Value(synced ? 'synced' : 'pending'),

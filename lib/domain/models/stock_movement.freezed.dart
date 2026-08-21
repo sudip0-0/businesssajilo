@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StockMovement {
 
- String get id; String get businessId; String get productId; StockMovementType get type; int get qtyDelta; String? get reason; String? get refOrderId; String get createdBy; DateTime? get createdAt; String? get createdByName;
+ String get id; String get businessId; String get productId; StockMovementType get type; int get qtyDelta; String? get reason; String? get refOrderId; String? get refBillId; String get createdBy; DateTime? get createdAt; String? get createdByName;
 /// Create a copy of StockMovement
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StockMovementCopyWith<StockMovement> get copyWith => _$StockMovementCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockMovement&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.type, type) || other.type == type)&&(identical(other.qtyDelta, qtyDelta) || other.qtyDelta == qtyDelta)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.refOrderId, refOrderId) || other.refOrderId == refOrderId)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockMovement&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.type, type) || other.type == type)&&(identical(other.qtyDelta, qtyDelta) || other.qtyDelta == qtyDelta)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.refOrderId, refOrderId) || other.refOrderId == refOrderId)&&(identical(other.refBillId, refBillId) || other.refBillId == refBillId)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,productId,type,qtyDelta,reason,refOrderId,createdBy,createdAt,createdByName);
+int get hashCode => Object.hash(runtimeType,id,businessId,productId,type,qtyDelta,reason,refOrderId,refBillId,createdBy,createdAt,createdByName);
 
 @override
 String toString() {
-  return 'StockMovement(id: $id, businessId: $businessId, productId: $productId, type: $type, qtyDelta: $qtyDelta, reason: $reason, refOrderId: $refOrderId, createdBy: $createdBy, createdAt: $createdAt, createdByName: $createdByName)';
+  return 'StockMovement(id: $id, businessId: $businessId, productId: $productId, type: $type, qtyDelta: $qtyDelta, reason: $reason, refOrderId: $refOrderId, refBillId: $refBillId, createdBy: $createdBy, createdAt: $createdAt, createdByName: $createdByName)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StockMovementCopyWith<$Res>  {
   factory $StockMovementCopyWith(StockMovement value, $Res Function(StockMovement) _then) = _$StockMovementCopyWithImpl;
 @useResult
 $Res call({
- String id, String businessId, String productId, StockMovementType type, int qtyDelta, String? reason, String? refOrderId, String createdBy, DateTime? createdAt, String? createdByName
+ String id, String businessId, String productId, StockMovementType type, int qtyDelta, String? reason, String? refOrderId, String? refBillId, String createdBy, DateTime? createdAt, String? createdByName
 });
 
 
@@ -65,7 +65,7 @@ class _$StockMovementCopyWithImpl<$Res>
 
 /// Create a copy of StockMovement
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? productId = null,Object? type = null,Object? qtyDelta = null,Object? reason = freezed,Object? refOrderId = freezed,Object? createdBy = null,Object? createdAt = freezed,Object? createdByName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? businessId = null,Object? productId = null,Object? type = null,Object? qtyDelta = null,Object? reason = freezed,Object? refOrderId = freezed,Object? refBillId = freezed,Object? createdBy = null,Object? createdAt = freezed,Object? createdByName = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
@@ -74,6 +74,7 @@ as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non
 as StockMovementType,qtyDelta: null == qtyDelta ? _self.qtyDelta : qtyDelta // ignore: cast_nullable_to_non_nullable
 as int,reason: freezed == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
 as String?,refOrderId: freezed == refOrderId ? _self.refOrderId : refOrderId // ignore: cast_nullable_to_non_nullable
+as String?,refBillId: freezed == refBillId ? _self.refBillId : refBillId // ignore: cast_nullable_to_non_nullable
 as String?,createdBy: null == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String productId,  StockMovementType type,  int qtyDelta,  String? reason,  String? refOrderId,  String createdBy,  DateTime? createdAt,  String? createdByName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String businessId,  String productId,  StockMovementType type,  int qtyDelta,  String? reason,  String? refOrderId,  String? refBillId,  String createdBy,  DateTime? createdAt,  String? createdByName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StockMovement() when $default != null:
-return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDelta,_that.reason,_that.refOrderId,_that.createdBy,_that.createdAt,_that.createdByName);case _:
+return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDelta,_that.reason,_that.refOrderId,_that.refBillId,_that.createdBy,_that.createdAt,_that.createdByName);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDe
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String productId,  StockMovementType type,  int qtyDelta,  String? reason,  String? refOrderId,  String createdBy,  DateTime? createdAt,  String? createdByName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String businessId,  String productId,  StockMovementType type,  int qtyDelta,  String? reason,  String? refOrderId,  String? refBillId,  String createdBy,  DateTime? createdAt,  String? createdByName)  $default,) {final _that = this;
 switch (_that) {
 case _StockMovement():
-return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDelta,_that.reason,_that.refOrderId,_that.createdBy,_that.createdAt,_that.createdByName);case _:
+return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDelta,_that.reason,_that.refOrderId,_that.refBillId,_that.createdBy,_that.createdAt,_that.createdByName);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDe
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String productId,  StockMovementType type,  int qtyDelta,  String? reason,  String? refOrderId,  String createdBy,  DateTime? createdAt,  String? createdByName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String businessId,  String productId,  StockMovementType type,  int qtyDelta,  String? reason,  String? refOrderId,  String? refBillId,  String createdBy,  DateTime? createdAt,  String? createdByName)?  $default,) {final _that = this;
 switch (_that) {
 case _StockMovement() when $default != null:
-return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDelta,_that.reason,_that.refOrderId,_that.createdBy,_that.createdAt,_that.createdByName);case _:
+return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDelta,_that.reason,_that.refOrderId,_that.refBillId,_that.createdBy,_that.createdAt,_that.createdByName);case _:
   return null;
 
 }
@@ -218,7 +219,7 @@ return $default(_that.id,_that.businessId,_that.productId,_that.type,_that.qtyDe
 @JsonSerializable()
 
 class _StockMovement implements StockMovement {
-  const _StockMovement({required this.id, required this.businessId, required this.productId, required this.type, required this.qtyDelta, this.reason, this.refOrderId, required this.createdBy, this.createdAt, this.createdByName});
+  const _StockMovement({required this.id, required this.businessId, required this.productId, required this.type, required this.qtyDelta, this.reason, this.refOrderId, this.refBillId, required this.createdBy, this.createdAt, this.createdByName});
   factory _StockMovement.fromJson(Map<String, dynamic> json) => _$StockMovementFromJson(json);
 
 @override final  String id;
@@ -228,6 +229,7 @@ class _StockMovement implements StockMovement {
 @override final  int qtyDelta;
 @override final  String? reason;
 @override final  String? refOrderId;
+@override final  String? refBillId;
 @override final  String createdBy;
 @override final  DateTime? createdAt;
 @override final  String? createdByName;
@@ -245,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockMovement&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.type, type) || other.type == type)&&(identical(other.qtyDelta, qtyDelta) || other.qtyDelta == qtyDelta)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.refOrderId, refOrderId) || other.refOrderId == refOrderId)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockMovement&&(identical(other.id, id) || other.id == id)&&(identical(other.businessId, businessId) || other.businessId == businessId)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.type, type) || other.type == type)&&(identical(other.qtyDelta, qtyDelta) || other.qtyDelta == qtyDelta)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.refOrderId, refOrderId) || other.refOrderId == refOrderId)&&(identical(other.refBillId, refBillId) || other.refBillId == refBillId)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,businessId,productId,type,qtyDelta,reason,refOrderId,createdBy,createdAt,createdByName);
+int get hashCode => Object.hash(runtimeType,id,businessId,productId,type,qtyDelta,reason,refOrderId,refBillId,createdBy,createdAt,createdByName);
 
 @override
 String toString() {
-  return 'StockMovement(id: $id, businessId: $businessId, productId: $productId, type: $type, qtyDelta: $qtyDelta, reason: $reason, refOrderId: $refOrderId, createdBy: $createdBy, createdAt: $createdAt, createdByName: $createdByName)';
+  return 'StockMovement(id: $id, businessId: $businessId, productId: $productId, type: $type, qtyDelta: $qtyDelta, reason: $reason, refOrderId: $refOrderId, refBillId: $refBillId, createdBy: $createdBy, createdAt: $createdAt, createdByName: $createdByName)';
 }
 
 
@@ -265,7 +267,7 @@ abstract mixin class _$StockMovementCopyWith<$Res> implements $StockMovementCopy
   factory _$StockMovementCopyWith(_StockMovement value, $Res Function(_StockMovement) _then) = __$StockMovementCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String businessId, String productId, StockMovementType type, int qtyDelta, String? reason, String? refOrderId, String createdBy, DateTime? createdAt, String? createdByName
+ String id, String businessId, String productId, StockMovementType type, int qtyDelta, String? reason, String? refOrderId, String? refBillId, String createdBy, DateTime? createdAt, String? createdByName
 });
 
 
@@ -282,7 +284,7 @@ class __$StockMovementCopyWithImpl<$Res>
 
 /// Create a copy of StockMovement
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? productId = null,Object? type = null,Object? qtyDelta = null,Object? reason = freezed,Object? refOrderId = freezed,Object? createdBy = null,Object? createdAt = freezed,Object? createdByName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? businessId = null,Object? productId = null,Object? type = null,Object? qtyDelta = null,Object? reason = freezed,Object? refOrderId = freezed,Object? refBillId = freezed,Object? createdBy = null,Object? createdAt = freezed,Object? createdByName = freezed,}) {
   return _then(_StockMovement(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,businessId: null == businessId ? _self.businessId : businessId // ignore: cast_nullable_to_non_nullable
@@ -291,6 +293,7 @@ as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non
 as StockMovementType,qtyDelta: null == qtyDelta ? _self.qtyDelta : qtyDelta // ignore: cast_nullable_to_non_nullable
 as int,reason: freezed == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
 as String?,refOrderId: freezed == refOrderId ? _self.refOrderId : refOrderId // ignore: cast_nullable_to_non_nullable
+as String?,refBillId: freezed == refBillId ? _self.refBillId : refBillId // ignore: cast_nullable_to_non_nullable
 as String?,createdBy: null == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
