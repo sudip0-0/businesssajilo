@@ -1978,4 +1978,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesBreakdown => 'Sales Breakdown';
+
+  @override
+  String get profitAnalytics => 'Profit & Margins';
+
+  @override
+  String get grossProfit => 'Gross profit';
+
+  @override
+  String get profitMargin => 'Profit margin';
+
+  @override
+  String get totalCost => 'Total cost (COGS)';
+
+  @override
+  String get profitableProducts => 'Most profitable products';
+
+  @override
+  String get profitableCustomers => 'Most profitable customers';
+
+  @override
+  String get topProductsForCustomer => 'Top products bought by customer';
+
+  @override
+  String get topCustomersForProduct => 'Top buyers of this product';
+
+  @override
+  String get margin => 'Margin';
+
+  @override
+  String get profit => 'Profit';
+
+  @override
+  String get profitOverview => 'Profit analytics overview';
+
+  @override
+  String get profitSubtitle => 'Revenue, cost & margin analysis';
 }

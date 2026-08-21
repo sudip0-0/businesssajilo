@@ -45,6 +45,8 @@ import '../features/orders/web_order_list_page.dart' deferred as order_list;
 import '../features/reports/web_dues_aging_page.dart' deferred as dues_aging;
 import '../features/reports/web_fiscal_report_page.dart'
     deferred as fiscal_report;
+import '../features/reports/web_profit_report_page.dart'
+    deferred as profit_report;
 import '../features/reports/web_reports_hub_page.dart' deferred as reports_hub;
 import '../features/reports/web_sales_report_page.dart'
     deferred as sales_report;
@@ -323,6 +325,15 @@ ShellRoute _ownerRoutes() {
         builder: (_, state) => DeferredPage(
           load: sales_report.loadLibrary,
           builder: () => sales_report.WebSalesReportPage(
+            initialPeriod: state.uri.queryParameters['period'],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/owner/reports/profit',
+        builder: (_, state) => DeferredPage(
+          load: profit_report.loadLibrary,
+          builder: () => profit_report.WebProfitReportPage(
             initialPeriod: state.uri.queryParameters['period'],
           ),
         ),

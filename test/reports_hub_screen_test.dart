@@ -44,8 +44,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Business analytics overview'), findsOneWidget);
-    expect(find.byType(ListTile), findsNWidgets(4));
+    expect(find.byType(ListTile), findsNWidgets(5));
     expect(find.widgetWithText(ListTile, 'Sales summary'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Profit & Margins'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Outstanding Dues'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Stock valuation'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Fiscal summary (BS)'), findsOneWidget);

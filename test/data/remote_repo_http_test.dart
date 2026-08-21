@@ -530,6 +530,81 @@ void main() {
       expect(rows.single.billCount, 5);
       expect(rows.single.revenue, 450000);
     });
+
+    test('profitSummary maps RPC response to ProfitSummary model', () async {
+      final client = _client(
+        MockClient((request) async {
+          expect(request.url.path, contains('/rest/v1/rpc/report_profit_summary'));
+          return _json(request, {
+            'total_revenue': 50000,
+            'total_cogs': 35000,
+            'gross_profit': 15000,
+            'margin_pct': 30.0,
+            'total_bills': 12,
+          });
+        }),
+      );
+      final repo = SupabaseReportsRepository(client);
+      final summary = await repo.profitSummary(
+        from: DateTime.utc(2026, 8, 1),
+        to: DateTime.utc(2026, 8, 20),
+      );
+      expect(summary.totalRevenue, 50000);
+      expect(summary.totalCogs, 35000);
+      expect(summary.grossProfit, 15000);
+      expect(summary.marginPct, 30.0);
+      expect(summary.totalBills, 12);
+    });
+
+    test('topProfitableProducts maps RPC rows to ProfitableProductRow', () async {
+      final client = _client(
+        MockClient((request) async {
+          expect(request.url.path, contains('/rest/v1/rpc/report_top_profitable_products'));
+          return _json(request, [
+            {
+              'product_id': 'prod-1',
+              'name_snapshot': 'Biscuit',
+              'qty_sold': 10,
+              'revenue': 20000,
+              'cogs': 14000,
+              'gross_profit': 6000,
+              'margin_pct': 30.0,
+            },
+          ]);
+        }),
+      );
+      final repo = SupabaseReportsRepository(client);
+      final rows = await repo.topProfitableProducts(
+        from: DateTime.utc(2026, 8, 1),
+        to: DateTime.utc(2026, 8, 20),
+      );
+      expect(rows, hasLength(1));
+      expect(rows.single.nameSnapshot, 'Biscuit');
+      expect(rows.single.grossProfit, 6000);
+      expect(rows.single.marginPct, 30.0);
+    });
+
+    test('customerTopProducts and productTopCustomers map correctly', () async {
+      final client = _client(
+        MockClient((request) async {
+          return _json(request, [
+            {
+              'product_id': 'prod-1',
+              'name_snapshot': 'Chau Chau',
+              'qty_sold': 5,
+              'revenue': 10000,
+              'gross_profit': 3000,
+            },
+          ]);
+        }),
+      );
+      final repo = SupabaseReportsRepository(client);
+      final rows = await repo.customerTopProducts(customerId: 'cust-1');
+      expect(rows, hasLength(1));
+      expect(rows.single.id, 'prod-1');
+      expect(rows.single.label, 'Chau Chau');
+      expect(rows.single.grossProfit, 3000);
+    });
   });
 
   group('SupabaseCustomersRepository', () {

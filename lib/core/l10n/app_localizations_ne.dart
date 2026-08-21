@@ -1975,4 +1975,40 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get salesBreakdown => 'बिक्री विवरण';
+
+  @override
+  String get profitAnalytics => 'नाफा तथा मार्जिन';
+
+  @override
+  String get grossProfit => 'कुल नाफा';
+
+  @override
+  String get profitMargin => 'नाफा प्रतिशत';
+
+  @override
+  String get totalCost => 'कुल लागत (खरिद मूल्य)';
+
+  @override
+  String get profitableProducts => 'बढी नाफा दिने वस्तुहरू';
+
+  @override
+  String get profitableCustomers => 'बढी नाफा दिने ग्राहकहरू';
+
+  @override
+  String get topProductsForCustomer => 'यो ग्राहकले बढी किनेका सामान';
+
+  @override
+  String get topCustomersForProduct => 'यो सामान बढी किन्ने ग्राहकहरू';
+
+  @override
+  String get margin => 'मार्जिन';
+
+  @override
+  String get profit => 'नाफा';
+
+  @override
+  String get profitOverview => 'नाफा तथा मार्जिन विश्लेषण';
+
+  @override
+  String get profitSubtitle => 'बिक्री, लागत तथा नाफा विश्लेषण';
 }

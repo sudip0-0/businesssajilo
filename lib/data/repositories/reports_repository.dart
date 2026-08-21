@@ -1,8 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models/aging_customer_row.dart';
+import '../../domain/models/cross_entity_analytics_row.dart';
 import '../../domain/models/dues_aging_report.dart';
 import '../../domain/models/owner_dashboard_stats.dart';
+import '../../domain/models/profit_summary.dart';
+import '../../domain/models/profitable_customer_row.dart';
+import '../../domain/models/profitable_product_row.dart';
 import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
@@ -32,6 +36,37 @@ abstract class ReportsRepository {
   Future<List<TopCustomerRow>> topCustomers({
     required DateTime from,
     required DateTime to,
+    int limit = 10,
+  });
+
+  Future<ProfitSummary> profitSummary({
+    required DateTime from,
+    required DateTime to,
+  });
+
+  Future<List<ProfitableProductRow>> topProfitableProducts({
+    required DateTime from,
+    required DateTime to,
+    int limit = 10,
+  });
+
+  Future<List<ProfitableCustomerRow>> topProfitableCustomers({
+    required DateTime from,
+    required DateTime to,
+    int limit = 10,
+  });
+
+  Future<List<CrossEntityAnalyticsRow>> customerTopProducts({
+    required String customerId,
+    DateTime? from,
+    DateTime? to,
+    int limit = 10,
+  });
+
+  Future<List<CrossEntityAnalyticsRow>> productTopCustomers({
+    required String productId,
+    DateTime? from,
+    DateTime? to,
     int limit = 10,
   });
 

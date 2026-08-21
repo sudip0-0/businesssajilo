@@ -3841,6 +3841,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sales Breakdown'**
   String get salesBreakdown;
+
+  /// No description provided for @profitAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit & Margins'**
+  String get profitAnalytics;
+
+  /// No description provided for @grossProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross profit'**
+  String get grossProfit;
+
+  /// No description provided for @profitMargin.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit margin'**
+  String get profitMargin;
+
+  /// No description provided for @totalCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cost (COGS)'**
+  String get totalCost;
+
+  /// No description provided for @profitableProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Most profitable products'**
+  String get profitableProducts;
+
+  /// No description provided for @profitableCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Most profitable customers'**
+  String get profitableCustomers;
+
+  /// No description provided for @topProductsForCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Top products bought by customer'**
+  String get topProductsForCustomer;
+
+  /// No description provided for @topCustomersForProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Top buyers of this product'**
+  String get topCustomersForProduct;
+
+  /// No description provided for @margin.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin'**
+  String get margin;
+
+  /// No description provided for @profit.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get profit;
+
+  /// No description provided for @profitOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit analytics overview'**
+  String get profitOverview;
+
+  /// No description provided for @profitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue, cost & margin analysis'**
+  String get profitSubtitle;
 }
 
 class _AppLocalizationsDelegate

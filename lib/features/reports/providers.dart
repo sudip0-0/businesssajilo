@@ -11,8 +11,12 @@ import '../../data/repositories/products_repository.dart';
 import '../../data/repositories/reports_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
+import '../../domain/models/cross_entity_analytics_row.dart';
 import '../../domain/models/dues_aging_report.dart';
 import '../../domain/models/owner_dashboard_stats.dart';
+import '../../domain/models/profit_summary.dart';
+import '../../domain/models/profitable_customer_row.dart';
+import '../../domain/models/profitable_product_row.dart';
 import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
@@ -76,6 +80,48 @@ final topCustomersRangeProvider = FutureProvider.autoDispose
       return ref
           .watch(reportsRepositoryProvider)
           .topCustomers(from: period.from, to: period.to, limit: 10);
+    });
+
+final profitSummaryProvider = FutureProvider.autoDispose
+    .family<ProfitSummary, ReportPeriod>((ref, period) {
+      ref.watch(billingRevisionProvider);
+      return ref
+          .watch(reportsRepositoryProvider)
+          .profitSummary(from: period.from, to: period.to);
+    });
+
+final topProfitableProductsProvider = FutureProvider.autoDispose
+    .family<List<ProfitableProductRow>, ReportPeriod>((ref, period) {
+      ref.watch(billingRevisionProvider);
+      ref.watch(inventoryRevisionProvider);
+      return ref
+          .watch(reportsRepositoryProvider)
+          .topProfitableProducts(from: period.from, to: period.to, limit: 15);
+    });
+
+final topProfitableCustomersProvider = FutureProvider.autoDispose
+    .family<List<ProfitableCustomerRow>, ReportPeriod>((ref, period) {
+      ref.watch(billingRevisionProvider);
+      ref.watch(customersRevisionProvider);
+      return ref
+          .watch(reportsRepositoryProvider)
+          .topProfitableCustomers(from: period.from, to: period.to, limit: 15);
+    });
+
+final customerTopProductsProvider = FutureProvider.autoDispose
+    .family<List<CrossEntityAnalyticsRow>, String>((ref, customerId) {
+      ref.watch(billingRevisionProvider);
+      return ref
+          .watch(reportsRepositoryProvider)
+          .customerTopProducts(customerId: customerId, limit: 10);
+    });
+
+final productTopCustomersProvider = FutureProvider.autoDispose
+    .family<List<CrossEntityAnalyticsRow>, String>((ref, productId) {
+      ref.watch(billingRevisionProvider);
+      return ref
+          .watch(reportsRepositoryProvider)
+          .productTopCustomers(productId: productId, limit: 10);
     });
 
 final billsInRangeProvider = FutureProvider.autoDispose

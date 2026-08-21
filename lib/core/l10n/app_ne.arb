@@ -698,5 +698,18 @@
   "stockHealthOverview": "स्टक अवस्था सारांश",
   "healthyStock": "पर्याप्त स्टक",
   "criticalStock": "सकिएका सामानहरू",
-  "salesBreakdown": "बिक्री विवरण"
+  "salesBreakdown": "बिक्री विवरण",
+  "profitAnalytics": "नाफा तथा मार्जिन",
+  "grossProfit": "कुल नाफा",
+  "profitMargin": "नाफा प्रतिशत",
+  "totalCost": "कुल लागत (खरिद मूल्य)",
+  "profitableProducts": "बढी नाफा दिने वस्तुहरू",
+  "profitableCustomers": "बढी नाफा दिने ग्राहकहरू",
+  "topProductsForCustomer": "यो ग्राहकले बढी किनेका सामान",
+  "topCustomersForProduct": "यो सामान बढी किन्ने ग्राहकहरू",
+  "margin": "मार्जिन",
+  "cost": "लागत",
+  "profit": "नाफा",
+  "profitOverview": "नाफा तथा मार्जिन विश्लेषण",
+  "profitSubtitle": "बिक्री, लागत तथा नाफा विश्लेषण"
 }

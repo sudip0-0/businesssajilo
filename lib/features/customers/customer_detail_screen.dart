@@ -7,11 +7,13 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/ledger_row.dart';
 import '../../core/ui/list_skeleton.dart';
+import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../domain/models/customer.dart';
 import '../billing/bill_navigation.dart';
+import '../reports/providers.dart';
 import '../staff/reset_member_password_sheet.dart';
 import 'customer_form_screen.dart';
 import 'providers.dart';
@@ -233,6 +235,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            _CustomerTopProductsCard(customerId: customerId),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
@@ -541,4 +544,77 @@ Future<void> _setPortalLogin(
     memberId: memberId,
     memberName: customerName,
   );
+}
+
+class _CustomerTopProductsCard extends ConsumerWidget {
+  const _CustomerTopProductsCard({required this.customerId});
+
+  final String customerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final productsAsync = ref.watch(customerTopProductsProvider(customerId));
+
+    return productsAsync.maybeWhen(
+      data: (rows) {
+        if (rows.isEmpty) return const SizedBox.shrink();
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BsRadii.lg),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 18,
+                      color: BsColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.topProductsForCustomer,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                for (var i = 0; i < rows.length && i < 3; i++) ...[
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      rows[i].label,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      '${l10n.qtySold}: ${rows[i].qtySold} · ${l10n.revenue}: ${formatNpr(Paisa(rows[i].revenue), showPaisa: false)}',
+                    ),
+                    trailing: MoneyText(
+                      Paisa(rows[i].revenue),
+                      showPaisa: false,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  if (i < rows.length - 1 && i < 2) const Divider(height: 1),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
 }

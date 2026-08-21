@@ -16,6 +16,8 @@ import '../../data/repositories/stock_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
 import '../../domain/models/stock_movement.dart';
+import '../customers/customer_detail_screen.dart';
+import '../reports/providers.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'providers.dart';
@@ -193,6 +195,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
               ],
             ],
+            _TopBuyersCard(productId: product.id),
             const SizedBox(height: 16),
             Text(
               l10n.movementHistory,
@@ -568,6 +571,84 @@ class _MovementTile extends StatelessWidget {
           context,
         ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
       ),
+    );
+  }
+}
+
+class _TopBuyersCard extends ConsumerWidget {
+  const _TopBuyersCard({required this.productId});
+
+  final String productId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final buyersAsync = ref.watch(productTopCustomersProvider(productId));
+
+    return buyersAsync.maybeWhen(
+      data: (rows) {
+        if (rows.isEmpty) return const SizedBox.shrink();
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(top: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BsRadii.lg),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.star_outline, size: 18, color: BsColors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.topCustomersForProduct,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                for (var i = 0; i < rows.length && i < 3; i++) ...[
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      rows[i].label,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      '${l10n.qtySold}: ${rows[i].qtySold} · ${l10n.revenue}: ${formatNpr(Paisa(rows[i].revenue), showPaisa: false)}',
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: BsColors.outline,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              CustomerDetailScreen(customerId: rows[i].id),
+                        ),
+                      );
+                    },
+                  ),
+                  if (i < rows.length - 1 && i < 2) const Divider(height: 1),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }

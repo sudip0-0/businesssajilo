@@ -308,21 +308,47 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                     ),
                   );
 
+                  final profitCard = _ReportNavCard(
+                    icon: PhosphorIconsRegular.chartLineUp,
+                    title: l10n.profitAnalytics,
+                    color: WebPalette.navy,
+                    onTap: () => context.go('/owner/reports/profit'),
+                    child: Text(
+                      l10n.profitSubtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: WebPalette.inkSoft,
+                      ),
+                    ),
+                  );
+
                   if (wide) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    return Column(
                       children: [
-                        Expanded(child: salesCard),
-                        const SizedBox(width: 16),
-                        Expanded(child: duesCard),
-                        const SizedBox(width: 16),
-                        Expanded(child: stockCard),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: salesCard),
+                            const SizedBox(width: 16),
+                            Expanded(child: profitCard),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: duesCard),
+                            const SizedBox(width: 16),
+                            Expanded(child: stockCard),
+                          ],
+                        ),
                       ],
                     );
                   }
                   return Column(
                     children: [
                       salesCard,
+                      const SizedBox(height: 12),
+                      profitCard,
                       const SizedBox(height: 12),
                       duesCard,
                       const SizedBox(height: 12),

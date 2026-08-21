@@ -3,8 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/logging/sentry_scope.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/models/aging_customer_row.dart';
+import '../../domain/models/cross_entity_analytics_row.dart';
 import '../../domain/models/dues_aging_report.dart';
 import '../../domain/models/owner_dashboard_stats.dart';
+import '../../domain/models/profit_summary.dart';
+import '../../domain/models/profitable_customer_row.dart';
+import '../../domain/models/profitable_product_row.dart';
 import '../../domain/models/sales_period_point.dart';
 import '../../domain/models/stock_valuation_row.dart';
 import '../../domain/models/top_customer_row.dart';
@@ -103,6 +107,165 @@ class SupabaseReportsRepository implements ReportsRepository {
           shopName: map['shop_name']?.toString() ?? '',
           billCount: (map['bill_count'] as num?)?.toInt() ?? 0,
           revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<ProfitSummary> profitSummary({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    try {
+      final raw = await client.rpc(
+        'report_profit_summary',
+        params: {
+          'p_from': _dateOnly(from),
+          'p_to': _dateOnly(to),
+        },
+      );
+      final map = raw is Map
+          ? Map<String, dynamic>.from(raw)
+          : Map<String, dynamic>.from((raw as List).first as Map);
+      return ProfitSummary.fromJson(map);
+    } catch (_) {
+      return const ProfitSummary();
+    }
+  }
+
+  @override
+  Future<List<ProfitableProductRow>> topProfitableProducts({
+    required DateTime from,
+    required DateTime to,
+    int limit = 10,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    try {
+      final rows = await client.rpc(
+        'report_top_profitable_products',
+        params: {
+          'p_from': _dateOnly(from),
+          'p_to': _dateOnly(to),
+          'p_limit': limit,
+        },
+      );
+      if (rows == null) return const [];
+      return (rows as List).map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return ProfitableProductRow(
+          productId: map['product_id']?.toString() ?? '',
+          nameSnapshot: map['name_snapshot']?.toString() ?? '',
+          qtySold: (map['qty_sold'] as num?)?.toInt() ?? 0,
+          revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+          cogs: (map['cogs'] as num?)?.toInt() ?? 0,
+          grossProfit: (map['gross_profit'] as num?)?.toInt() ?? 0,
+          marginPct: (map['margin_pct'] as num?)?.toDouble() ?? 0.0,
+        );
+      }).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<List<ProfitableCustomerRow>> topProfitableCustomers({
+    required DateTime from,
+    required DateTime to,
+    int limit = 10,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    try {
+      final rows = await client.rpc(
+        'report_top_profitable_customers',
+        params: {
+          'p_from': _dateOnly(from),
+          'p_to': _dateOnly(to),
+          'p_limit': limit,
+        },
+      );
+      if (rows == null) return const [];
+      return (rows as List).map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return ProfitableCustomerRow(
+          customerId: map['customer_id']?.toString() ?? '',
+          shopName: map['shop_name']?.toString() ?? '',
+          billCount: (map['bill_count'] as num?)?.toInt() ?? 0,
+          revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+          cogs: (map['cogs'] as num?)?.toInt() ?? 0,
+          grossProfit: (map['gross_profit'] as num?)?.toInt() ?? 0,
+          marginPct: (map['margin_pct'] as num?)?.toDouble() ?? 0.0,
+        );
+      }).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<List<CrossEntityAnalyticsRow>> customerTopProducts({
+    required String customerId,
+    DateTime? from,
+    DateTime? to,
+    int limit = 10,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    try {
+      final rows = await client.rpc(
+        'report_customer_top_products',
+        params: {
+          'p_customer_id': customerId,
+          if (from != null) 'p_from': _dateOnly(from),
+          if (to != null) 'p_to': _dateOnly(to),
+          'p_limit': limit,
+        },
+      );
+      if (rows == null) return const [];
+      return (rows as List).map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return CrossEntityAnalyticsRow(
+          id: map['product_id']?.toString() ?? '',
+          label: map['name_snapshot']?.toString() ?? '',
+          qtySold: (map['qty_sold'] as num?)?.toInt() ?? 0,
+          revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+          grossProfit: (map['gross_profit'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<List<CrossEntityAnalyticsRow>> productTopCustomers({
+    required String productId,
+    DateTime? from,
+    DateTime? to,
+    int limit = 10,
+  }) async {
+    final client = requireSupabaseClient(_client);
+    try {
+      final rows = await client.rpc(
+        'report_product_top_customers',
+        params: {
+          'p_product_id': productId,
+          if (from != null) 'p_from': _dateOnly(from),
+          if (to != null) 'p_to': _dateOnly(to),
+          'p_limit': limit,
+        },
+      );
+      if (rows == null) return const [];
+      return (rows as List).map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return CrossEntityAnalyticsRow(
+          id: map['customer_id']?.toString() ?? '',
+          label: map['shop_name']?.toString() ?? '',
+          qtySold: (map['qty_sold'] as num?)?.toInt() ?? 0,
+          revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+          grossProfit: (map['gross_profit'] as num?)?.toInt() ?? 0,
         );
       }).toList();
     } catch (_) {

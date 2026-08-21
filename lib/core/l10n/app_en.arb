@@ -806,5 +806,18 @@
   "stockHealthOverview": "Stock Health Overview",
   "healthyStock": "Healthy stock",
   "criticalStock": "Out of stock items",
-  "salesBreakdown": "Sales Breakdown"
+  "salesBreakdown": "Sales Breakdown",
+  "profitAnalytics": "Profit & Margins",
+  "grossProfit": "Gross profit",
+  "profitMargin": "Profit margin",
+  "totalCost": "Total cost (COGS)",
+  "profitableProducts": "Most profitable products",
+  "profitableCustomers": "Most profitable customers",
+  "topProductsForCustomer": "Top products bought by customer",
+  "topCustomersForProduct": "Top buyers of this product",
+  "margin": "Margin",
+  "cost": "Cost",
+  "profit": "Profit",
+  "profitOverview": "Profit analytics overview",
+  "profitSubtitle": "Revenue, cost & margin analysis"
 }

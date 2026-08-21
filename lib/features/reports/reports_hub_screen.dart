@@ -12,6 +12,7 @@ import '../customers/providers.dart';
 import '../inventory/providers.dart';
 import 'dues_aging_screen.dart';
 import 'fiscal_summary_screen.dart';
+import 'profit_analytics_screen.dart';
 import 'providers.dart';
 import 'sales_summary_screen.dart';
 import 'stock_valuation_screen.dart';
@@ -166,6 +167,17 @@ class ReportsHubScreen extends ConsumerWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ReportNavCard(
+            icon: Icons.auto_graph_outlined,
+            title: l10n.profitAnalytics,
+            subtitle: l10n.profitSubtitle,
+            color: Colors.teal,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProfitAnalyticsScreen()),
             ),
           ),
           const SizedBox(height: 12),
