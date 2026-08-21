@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/bs_snackbar.dart';
+import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/ui/paginated_list_state.dart';
@@ -195,7 +196,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
               ],
             ],
-            _TopBuyersCard(productId: product.id),
             const SizedBox(height: 16),
             Text(
               l10n.movementHistory,
@@ -211,6 +211,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           appBar: AppBar(
             title: Text(product.name),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.analytics_outlined),
+                tooltip: l10n.topCustomersForProduct,
+                onPressed: () => _showProductTopCustomersSheet(
+                  context,
+                  productId: product.id,
+                  productName: product.name,
+                ),
+              ),
               if (widget.canEditProduct)
                 IconButton(
                   icon: const Icon(Icons.edit),
@@ -575,80 +584,131 @@ class _MovementTile extends StatelessWidget {
   }
 }
 
-class _TopBuyersCard extends ConsumerWidget {
-  const _TopBuyersCard({required this.productId});
-
-  final String productId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final buyersAsync = ref.watch(productTopCustomersProvider(productId));
-
-    return buyersAsync.maybeWhen(
-      data: (rows) {
-        if (rows.isEmpty) return const SizedBox.shrink();
-        return Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(top: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(BsRadii.lg),
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.star_outline, size: 18, color: BsColors.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.topCustomersForProduct,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+void _showProductTopCustomersSheet(
+  BuildContext context, {
+  required String productId,
+  required String productName,
+}) {
+  final l10n = AppLocalizations.of(context);
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.88,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Consumer(
+            builder: (context, ref, _) {
+              final buyersAsync =
+                  ref.watch(productTopCustomersProvider(productId));
+              return ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                for (var i = 0; i < rows.length && i < 3; i++) ...[
-                  ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      rows[i].label,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      '${l10n.qtySold}: ${rows[i].qtySold} · ${l10n.revenue}: ${formatNpr(Paisa(rows[i].revenue), showPaisa: false)}',
-                    ),
-                    trailing: const Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: BsColors.outline,
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              CustomerDetailScreen(customerId: rows[i].id),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    productName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
+                  ),
+                  Text(
+                    l10n.topCustomersForProduct,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: BsColors.outline,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  buyersAsync.when(
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    error: (_, _) => ErrorState(
+                      message: l10n.loadingFailed,
+                      onRetry: () =>
+                          ref.invalidate(productTopCustomersProvider(productId)),
+                    ),
+                    data: (rows) {
+                      if (rows.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: EmptyState(
+                            icon: Icons.people_outline,
+                            message: l10n.noSalesInPeriod,
+                          ),
+                        );
+                      }
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: rows.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final r = rows[index];
+                          return ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              radius: 12,
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ),
+                            title: Text(
+                              r.label,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              '${l10n.qtySold}: ${r.qtySold} · ${l10n.totalSales}: ${formatNpr(Paisa(r.revenue), showPaisa: false)}',
+                            ),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: BsColors.outline,
+                            ),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CustomerDetailScreen(
+                                    customerId: r.id,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       );
                     },
                   ),
-                  if (i < rows.length - 1 && i < 2) const Divider(height: 1),
                 ],
-              ],
-            ),
+              );
+            },
           ),
         );
       },
-      orElse: () => const SizedBox.shrink(),
-    );
-  }
+    ),
+  );
 }

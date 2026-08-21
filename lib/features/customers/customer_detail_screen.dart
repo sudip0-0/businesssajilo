@@ -146,6 +146,15 @@ class CustomerDetailScreen extends ConsumerWidget {
                       onPressed: () =>
                           showStatementShareSheet(context, customer: customer),
                     ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                      label: Text(l10n.topProducts),
+                      onPressed: () => _showCustomerTopProductsSheet(
+                        context,
+                        customerId: customerId,
+                        customerName: customer.shopName,
+                      ),
+                    ),
                     if (canEdit)
                       OutlinedButton.icon(
                         icon: const Icon(Icons.lock_reset_outlined, size: 18),
@@ -235,7 +244,6 @@ class CustomerDetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            _CustomerTopProductsCard(customerId: customerId),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
@@ -436,6 +444,12 @@ class _CustomerMoreMenu extends ConsumerWidget {
         switch (action) {
           case _CustomerMoreAction.share:
             await showStatementShareSheet(context, customer: customer);
+          case _CustomerMoreAction.topProducts:
+            _showCustomerTopProductsSheet(
+              context,
+              customerId: customerId,
+              customerName: customer.shopName,
+            );
           case _CustomerMoreAction.edit:
             await _openEditCustomer(context, ref, customerId: customerId);
           case _CustomerMoreAction.resetPassword:
@@ -467,6 +481,10 @@ class _CustomerMoreMenu extends ConsumerWidget {
           value: _CustomerMoreAction.share,
           child: Text(l10n.shareStatement),
         ),
+        PopupMenuItem(
+          value: _CustomerMoreAction.topProducts,
+          child: Text(l10n.topProductsForCustomer),
+        ),
         if (canEdit)
           PopupMenuItem(
             value: _CustomerMoreAction.edit,
@@ -495,6 +513,7 @@ class _CustomerMoreMenu extends ConsumerWidget {
 
 enum _CustomerMoreAction {
   share,
+  topProducts,
   edit,
   resetPassword,
   disablePortal,
@@ -546,75 +565,121 @@ Future<void> _setPortalLogin(
   );
 }
 
-class _CustomerTopProductsCard extends ConsumerWidget {
-  const _CustomerTopProductsCard({required this.customerId});
-
-  final String customerId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final productsAsync = ref.watch(customerTopProductsProvider(customerId));
-
-    return productsAsync.maybeWhen(
-      data: (rows) {
-        if (rows.isEmpty) return const SizedBox.shrink();
-        return Card(
-          elevation: 0,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(BsRadii.lg),
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 18,
-                      color: BsColors.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.topProductsForCustomer,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+void _showCustomerTopProductsSheet(
+  BuildContext context, {
+  required String customerId,
+  required String customerName,
+}) {
+  final l10n = AppLocalizations.of(context);
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.88,
+      minChildSize: 0.4,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Consumer(
+            builder: (context, ref, _) {
+              final productsAsync =
+                  ref.watch(customerTopProductsProvider(customerId));
+              return ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                for (var i = 0; i < rows.length && i < 3; i++) ...[
-                  ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      rows[i].label,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      '${l10n.qtySold}: ${rows[i].qtySold} · ${l10n.revenue}: ${formatNpr(Paisa(rows[i].revenue), showPaisa: false)}',
-                    ),
-                    trailing: MoneyText(
-                      Paisa(rows[i].revenue),
-                      showPaisa: false,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
                   ),
-                  if (i < rows.length - 1 && i < 2) const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Text(
+                    customerName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text(
+                    l10n.topProductsForCustomer,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: BsColors.outline,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  productsAsync.when(
+                    loading: () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    error: (_, _) => ErrorState(
+                      message: l10n.loadingFailed,
+                      onRetry: () =>
+                          ref.invalidate(customerTopProductsProvider(customerId)),
+                    ),
+                    data: (rows) {
+                      if (rows.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: EmptyState(
+                            icon: Icons.shopping_bag_outlined,
+                            message: l10n.noSalesInPeriod,
+                          ),
+                        );
+                      }
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: rows.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final r = rows[index];
+                          return ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              radius: 12,
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                            ),
+                            title: Text(
+                              r.label,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              '${l10n.qtySold}: ${r.qtySold} · ${l10n.totalSales}: ${formatNpr(Paisa(r.revenue), showPaisa: false)}',
+                            ),
+                            trailing: MoneyText(
+                              Paisa(r.revenue),
+                              showPaisa: false,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ],
-              ],
-            ),
+              );
+            },
           ),
         );
       },
-      orElse: () => const SizedBox.shrink(),
-    );
-  }
+    ),
+  );
 }

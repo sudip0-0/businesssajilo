@@ -271,6 +271,8 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                       const SizedBox(height: 2),
                                       Text(
                                         '${l10n.qtySold}: ${p.qtySold} · ${l10n.totalSales}: ${formatNpr(Paisa(p.revenue), showPaisa: false)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -448,6 +450,8 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                       const SizedBox(height: 2),
                                       Text(
                                         '${c.billCount} ${l10n.bills.toLowerCase()} · ${l10n.totalSales}: ${formatNpr(Paisa(c.revenue), showPaisa: false)}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
