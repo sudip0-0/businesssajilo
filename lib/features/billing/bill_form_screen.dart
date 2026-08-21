@@ -36,6 +36,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   final _draft = BillFormDraft();
   final _billDiscountController = TextEditingController();
   bool _loading = false;
+  bool _isCustomerSearchActive = false;
   Customer? _selectedCustomer;
 
   @override
@@ -311,11 +312,12 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                 },
                 onTextChanged: (text) {
                   if (_selectedCustomer == null) {
-                    _draft.guestName = text.trim().isEmpty
-                        ? null
-                        : text.trim();
+                    _draft.guestName = text.trim().isEmpty ? null : text.trim();
                     _syncDirtyFlag();
                   }
+                },
+                onSearchActiveChanged: (active) {
+                  setState(() => _isCustomerSearchActive = active);
                 },
               ),
               const SizedBox(height: 12),
@@ -360,31 +362,32 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
             ],
           ),
         ),
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: BsColors.border)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              BsSpacing.lg,
-              BsSpacing.sm,
-              BsSpacing.lg,
-              BsSpacing.xs,
+        if (!_isCustomerSearchActive)
+          DecoratedBox(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: BsColors.border)),
             ),
-            child: BillSummary(
-              style: BillSummaryStyle.checkout,
-              itemsTotal: _draft.itemsTotal,
-              billDiscountController: _billDiscountController,
-              grandTotal: _draft.grandTotal,
-              onDiscountChanged: () {
-                _syncDiscountText();
-                setState(() {});
-                _syncDirtyFlag();
-              },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                BsSpacing.lg,
+                BsSpacing.sm,
+                BsSpacing.lg,
+                BsSpacing.xs,
+              ),
+              child: BillSummary(
+                style: BillSummaryStyle.checkout,
+                itemsTotal: _draft.itemsTotal,
+                billDiscountController: _billDiscountController,
+                grandTotal: _draft.grandTotal,
+                onDiscountChanged: () {
+                  _syncDiscountText();
+                  setState(() {});
+                  _syncDirtyFlag();
+                },
+              ),
             ),
           ),
-        ),
       ],
     );
   }

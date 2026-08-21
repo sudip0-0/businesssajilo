@@ -56,4 +56,42 @@ void main() {
     expect(find.text('Paid'), findsNothing);
     expect(find.text('Cash'), findsNothing);
   });
+
+  testWidgets('customer search hides bill totals until selection closes it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_OwnerAuth.new),
+          customerListProvider.overrideWith((ref, query) async => const []),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BillFormScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+
+    expect(find.text('Subtotal'), findsNothing);
+    expect(find.text('Bill discount'), findsNothing);
+    expect(find.text('Grand Total'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ListTile, 'Walk-in Customer'));
+    await tester.pump();
+
+    expect(find.text('Subtotal'), findsOneWidget);
+    expect(find.text('Bill discount'), findsOneWidget);
+    expect(find.text('Grand Total'), findsOneWidget);
+  });
 }

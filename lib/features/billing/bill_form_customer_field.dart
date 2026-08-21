@@ -17,6 +17,7 @@ class BillCustomerSearchField extends ConsumerStatefulWidget {
     this.selectedName,
     required this.onCustomerSelected,
     this.onTextChanged,
+    this.onSearchActiveChanged,
     this.enabled = true,
   });
 
@@ -26,6 +27,7 @@ class BillCustomerSearchField extends ConsumerStatefulWidget {
   final String? selectedName;
   final ValueChanged<Customer?> onCustomerSelected;
   final ValueChanged<String>? onTextChanged;
+  final ValueChanged<bool>? onSearchActiveChanged;
   final bool enabled;
 
   @override
@@ -81,7 +83,9 @@ class _BillCustomerSearchFieldState
   }
 
   void _onFocusChange() {
-    setState(() => _showSuggestions = _focus.hasFocus);
+    final active = _focus.hasFocus;
+    setState(() => _showSuggestions = active);
+    widget.onSearchActiveChanged?.call(active);
   }
 
   void _onQueryChanged(String raw) {
