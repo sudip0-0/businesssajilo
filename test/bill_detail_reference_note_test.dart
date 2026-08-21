@@ -55,4 +55,66 @@ void main() {
     expect(find.text('Reference note'), findsOneWidget);
     expect(find.text('Deliver Friday afternoon'), findsOneWidget);
   });
+
+  testWidgets('bill detail displays Pay Bill button for due customer bill', (tester) async {
+    const bill = Bill(
+      id: 'bill-2',
+      businessId: 'business-1',
+      customerId: 'cust-1',
+      customerShopName: 'Ram Store',
+      billNo: 'BS-0002',
+      status: BillStatus.due,
+      grandTotal: 15000,
+      createdBy: 'owner-1',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_OwnerAuth.new),
+          billDetailProvider(bill.id).overrideWith((ref) async => bill),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BillDetailScreen(billId: 'bill-2'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ram Store'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Record payment'), findsOneWidget);
+  });
+
+  testWidgets('bill detail customer name is clickable', (tester) async {
+    const bill = Bill(
+      id: 'bill-3',
+      businessId: 'business-1',
+      customerId: 'cust-1',
+      customerShopName: 'Ram Store',
+      billNo: 'BS-0003',
+      status: BillStatus.paid,
+      grandTotal: 15000,
+      createdBy: 'owner-1',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_OwnerAuth.new),
+          billDetailProvider(bill.id).overrideWith((ref) async => bill),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BillDetailScreen(billId: 'bill-3'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final inkWell = find.widgetWithText(InkWell, 'Ram Store');
+    expect(inkWell, findsOneWidget);
+  });
 }

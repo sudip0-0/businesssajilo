@@ -21,11 +21,15 @@ class RecordPaymentSheet extends ConsumerStatefulWidget {
     this.customerId,
     this.customerName,
     this.showCustomerPicker = false,
+    this.initialAmountPaisa,
+    this.billId,
   });
 
   final String? customerId;
   final String? customerName;
   final bool showCustomerPicker;
+  final int? initialAmountPaisa;
+  final String? billId;
 
   @override
   ConsumerState<RecordPaymentSheet> createState() => _RecordPaymentSheetState();
@@ -45,6 +49,16 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
   void initState() {
     super.initState();
     _selectedCustomerId = widget.customerId;
+    if (widget.initialAmountPaisa != null && widget.initialAmountPaisa! > 0) {
+      _amountController.text = formatNpr(
+        Paisa(widget.initialAmountPaisa!),
+        showPaisa: false,
+      );
+    }
+    if (widget.billId != null) {
+      _billId = widget.billId;
+      _allocation = PaymentAllocateMode.bill;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _amountFocus.requestFocus();
     });

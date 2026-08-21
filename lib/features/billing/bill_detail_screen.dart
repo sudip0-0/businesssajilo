@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/utils/bill_customer_label.dart';
@@ -14,7 +16,9 @@ import '../../core/utils/role_label.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../auth/providers/auth_provider.dart';
+import '../customers/customer_detail_screen.dart';
 import '../customers/providers.dart';
+import '../customers/record_payment_sheet.dart';
 import 'credit_note_form_screen.dart';
 import 'credit_note_providers.dart';
 import 'invoice_export_actions.dart';
@@ -173,10 +177,45 @@ class _BillActions extends ConsumerWidget {
   final bool embedded;
   final VoidCallback onChanged;
 
+  Future<void> _payBill(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final receivedAsync = bill.status == BillStatus.partial
+        ? ref.read(billReceivedTotalProvider(bill.id))
+        : null;
+    final amountReceived = receivedAsync?.value ?? 0;
+    final remainingAmount = bill.grandTotal - amountReceived;
+
+    final saved = await showAdaptiveSheet<bool>(
+      context: context,
+      title: l10n.recordPayment,
+      child: RecordPaymentSheet(
+        customerId: bill.customerId,
+        customerName: bill.customerShopName,
+        initialAmountPaisa:
+            remainingAmount > 0 ? remainingAmount : bill.grandTotal,
+        billId: bill.id,
+      ),
+    );
+    if (saved == true) {
+      onChanged();
+      ref.invalidate(billDetailProvider(bill.id));
+      ref.invalidate(billReceivedTotalProvider(bill.id));
+      if (bill.customerId != null) {
+        ref.invalidate(customerLedgerProvider(bill.customerId!));
+        ref.invalidate(customerDetailProvider(bill.customerId!));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final role = ref.watch(authProvider).value?.member?.role;
+    final canRecordPayment = (role?.canRecordPayments == true) &&
+        (bill.status == BillStatus.due || bill.status == BillStatus.partial) &&
+        bill.customerId != null;
+
     final returnedAsync = canReturn && bill.customerId != null
         ? ref.watch(billReturnedQtyProvider(bill.id))
         : null;
@@ -198,16 +237,39 @@ class _BillActions extends ConsumerWidget {
 
     return Row(
       children: [
-        Expanded(
-          flex: 3,
-          child: FilledButton(
-            onPressed: () => exportBillAsPng(ref, context, bill),
-            style: actionStyle,
-            child: _ActionButtonLabel(
-              icon: Icons.chat_outlined,
-              label: l10n.shareViaWhatsApp,
+        if (canRecordPayment) ...[
+          Expanded(
+            flex: 3,
+            child: FilledButton(
+              onPressed: () => _payBill(context, ref),
+              style: actionStyle,
+              child: _ActionButtonLabel(
+                icon: Icons.payments_outlined,
+                label: l10n.recordPayment,
+              ),
             ),
           ),
+          const SizedBox(width: 6),
+        ],
+        Expanded(
+          flex: canRecordPayment ? 2 : 3,
+          child: canRecordPayment
+              ? FilledButton.tonal(
+                  onPressed: () => exportBillAsPng(ref, context, bill),
+                  style: actionStyle,
+                  child: _ActionButtonLabel(
+                    icon: Icons.chat_outlined,
+                    label: l10n.shareViaWhatsApp,
+                  ),
+                )
+              : FilledButton(
+                  onPressed: () => exportBillAsPng(ref, context, bill),
+                  style: actionStyle,
+                  child: _ActionButtonLabel(
+                    icon: Icons.chat_outlined,
+                    label: l10n.shareViaWhatsApp,
+                  ),
+                ),
         ),
         if (showReturn) ...[
           const SizedBox(width: 6),
@@ -237,6 +299,8 @@ class _BillActions extends ConsumerWidget {
               icon: Icon(Icons.more_horiz, color: scheme.onSurface),
               onSelected: (value) {
                 switch (value) {
+                  case 'pay':
+                    _payBill(context, ref);
                   case 'print':
                     exportBillPrint(ref, context, bill);
                   case 'copyImage':
@@ -246,6 +310,17 @@ class _BillActions extends ConsumerWidget {
                 }
               },
               itemBuilder: (context) => [
+                if (canRecordPayment)
+                  PopupMenuItem(
+                    value: 'pay',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.payments_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.recordPayment),
+                      ],
+                    ),
+                  ),
                 PopupMenuItem(value: 'print', child: Text(l10n.printInvoice)),
                 PopupMenuItem(
                   value: 'copyImage',
@@ -323,13 +398,58 @@ class _BillSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            Text(
-              billCustomerLabel(bill, walkInLabel: l10n.walkIn),
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
+            if (bill.customerId != null)
+              InkWell(
+                onTap: () {
+                  if (isWideLayout(context)) {
+                    context.go('/owner/customers/${bill.customerId}');
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CustomerDetailScreen(
+                          customerId: bill.customerId!,
+                        ),
+                      ),
+                    );
+                  }
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          billCustomerLabel(bill, walkInLabel: l10n.walkIn),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: scheme.primary,
+                            decoration: TextDecoration.underline,
+                            decorationColor:
+                                scheme.primary.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.open_in_new,
+                        size: 14,
+                        color: scheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Text(
+                billCustomerLabel(bill, walkInLabel: l10n.walkIn),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
               ),
-            ),
             if (bill.customerId != null)
               _CustomerContactLine(customerId: bill.customerId!),
             if (creator != null) ...[
