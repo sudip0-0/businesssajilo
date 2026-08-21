@@ -98,7 +98,13 @@ select is(
 
 reset role;
 select is(
-  (select count(*)::int from notifications where type = 'low_stock'),
+  (select count(*)::int
+     from notifications
+    where type = 'low_stock'
+      and recipient_member_id in (
+        'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        'cccccccc-cccc-cccc-cccc-cccccccccccc'
+      )),
   2,
   'low_stock notifications created for owner and warehouse'
 );

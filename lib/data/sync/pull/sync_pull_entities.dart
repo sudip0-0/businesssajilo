@@ -438,6 +438,7 @@ class SyncPullEntities {
                   ? Value(map['customer_id'] as String)
                   : const Value.absent(),
               customerShopName: Value(shopName),
+              referenceNote: Value(map['reference_note'] as String?),
             ),
           );
           await _db.markQueueSyncedForEntity(billId);
@@ -460,6 +461,7 @@ class SyncPullEntities {
                 status: map['status'] as String,
                 createdBy: map['created_by'] as String,
                 customerShopName: Value(shopName),
+                referenceNote: Value(map['reference_note'] as String?),
                 syncStatus: const Value('synced'),
                 createdAt: Value(
                   preferOccurredAt(

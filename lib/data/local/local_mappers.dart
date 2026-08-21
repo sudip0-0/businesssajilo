@@ -22,6 +22,7 @@ Bill mapLocalBill(LocalBill row, List<LocalBillItem> items) {
     createdBy: row.createdBy,
     createdAt: row.createdAt,
     customerShopName: row.customerShopName,
+    referenceNote: row.referenceNote,
     pendingSync: row.syncStatus != 'synced',
     items: items
         .map(

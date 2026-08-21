@@ -325,6 +325,7 @@ void main() {
       itemsTotal: 100,
       discount: 0,
       grandTotal: 100,
+      paymentRefNote: 'Deliver Friday',
       lines: const [
         BillLineInput(
           productId: 'prod-1',
@@ -345,6 +346,9 @@ void main() {
     expect(payload['customer_shop_name'], 'Ram Store');
     expect(payload['customer_phone'], '+9779811111111');
     expect(payload['created_at'], isNotEmpty);
+    expect(payload['reference_note'], 'Deliver Friday');
+    final localBill = await db.select(db.localBills).getSingle();
+    expect(localBill.referenceNote, 'Deliver Friday');
   });
 
   test('todaysSales ignores bills from the previous NPT day', () async {

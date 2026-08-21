@@ -13,7 +13,7 @@ import 'supabase_provider.dart';
 const _billSelect =
     '*, customers(shop_name), members!bills_created_by_fkey(display_name, role)';
 const _billSelectWithItems =
-    '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)';
+    '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*), payments(ref_note, created_at)';
 
 class SupabaseBillsRepository implements BillsRepository {
   SupabaseBillsRepository(this._client, PaymentsRepository payments);
@@ -280,6 +280,7 @@ class SupabaseBillsRepository implements BillsRepository {
       'order_id': orderId,
       'discount': discount,
       'status': status.name,
+      'reference_note': paymentRefNote?.trim(),
       if (customerId == null && trimmedGuest != null && trimmedGuest.isNotEmpty)
         'guest_name': trimmedGuest,
       'items': lines
@@ -364,6 +365,17 @@ class SupabaseBillsRepository implements BillsRepository {
       }
     }
     final itemsRaw = map.remove('bill_items');
+    final paymentsRaw = map.remove('payments');
+    final billNote = (map['reference_note'] as String?)?.trim();
+    if ((billNote == null || billNote.isEmpty) && paymentsRaw is List) {
+      for (final payment in paymentsRaw) {
+        final note = ((payment as Map)['ref_note'] as String?)?.trim();
+        if (note != null && note.isNotEmpty) {
+          map['reference_note'] = note;
+          break;
+        }
+      }
+    }
     final bill = Bill.fromJson(map);
     if (itemsRaw is List) {
       final items = itemsRaw.map((i) {

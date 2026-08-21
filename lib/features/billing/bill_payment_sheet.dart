@@ -300,12 +300,12 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   itemLabel: (m) => paymentMethodLabel(l10n, m),
                   onChanged: (v) => setState(() => _method = v),
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _refController,
-                  decoration: InputDecoration(labelText: l10n.paymentRef),
-                ),
               ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _refController,
+                decoration: InputDecoration(labelText: l10n.paymentRef),
+              ),
               const SizedBox(height: 24),
               FilledButton(onPressed: _submit, child: Text(l10n.saveBill)),
             ],

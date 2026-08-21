@@ -24,6 +24,7 @@ _Bill _$BillFromJson(Map<String, dynamic> json) => _Bill(
       ? null
       : DateTime.parse(json['created_at'] as String),
   customerShopName: json['customer_shop_name'] as String?,
+  referenceNote: json['reference_note'] as String?,
   items:
       (json['items'] as List<dynamic>?)
           ?.map((e) => BillItem.fromJson(e as Map<String, dynamic>))
@@ -48,6 +49,7 @@ Map<String, dynamic> _$BillToJson(_Bill instance) => <String, dynamic>{
   'created_by_role': instance.createdByRole,
   'created_at': instance.createdAt?.toIso8601String(),
   'customer_shop_name': instance.customerShopName,
+  'reference_note': instance.referenceNote,
   'items': instance.items.map((e) => e.toJson()).toList(),
   'pending_sync': instance.pendingSync,
 };

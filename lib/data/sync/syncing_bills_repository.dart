@@ -76,7 +76,20 @@ class SyncingBillsRepository implements BillsRepository {
     final items = await (_db.select(
       _db.localBillItems,
     )..where((i) => i.billId.equals(id))).get();
-    return mapLocalBill(bill, items);
+    final mapped = mapLocalBill(bill, items);
+    if (mapped.referenceNote != null) return mapped;
+    final payments =
+        await (_db.select(_db.localPayments)
+              ..where((payment) => payment.billId.equals(id))
+              ..orderBy([(payment) => OrderingTerm.asc(payment.createdAt)]))
+            .get();
+    for (final payment in payments) {
+      final note = payment.refNote?.trim();
+      if (note != null && note.isNotEmpty) {
+        return mapped.copyWith(referenceNote: note);
+      }
+    }
+    return mapped;
   }
 
   @override
@@ -336,6 +349,13 @@ class SyncingBillsRepository implements BillsRepository {
     }
 
     final createdAt = DateTime.now().toUtc();
+    final trimmedReference = paymentRefNote?.trim();
+    final billReference =
+        (customerId == null || status == BillStatus.due) &&
+            trimmedReference != null &&
+            trimmedReference.isNotEmpty
+        ? trimmedReference
+        : null;
     await _db.transaction(() async {
       await _db
           .into(_db.localBills)
@@ -353,6 +373,7 @@ class SyncingBillsRepository implements BillsRepository {
               status: status.name,
               createdBy: createdByMemberId,
               customerShopName: Value(shopName),
+              referenceNote: Value(billReference),
               syncStatus: const Value('pending'),
               createdAt: Value(createdAt),
             ),
@@ -454,6 +475,7 @@ class SyncingBillsRepository implements BillsRepository {
           'status': status.name,
           'device_prefix': meta.devicePrefix,
           'created_at': createdAt.toIso8601String(),
+          'reference_note': trimmedReference,
           if (customerId == null && shopName != null) 'guest_name': shopName,
           if (customerId != null && shopName != null && shopName.isNotEmpty)
             'customer_shop_name': shopName,

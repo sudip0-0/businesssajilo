@@ -93,6 +93,7 @@ class LocalBills extends Table {
   TextColumn get status => text()();
   TextColumn get createdBy => text()();
   TextColumn get customerShopName => text().nullable()();
+  TextColumn get referenceNote => text().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
@@ -170,7 +171,7 @@ class AppDatabase extends _$AppDatabase {
       AppDatabase(driftDatabase(name: 'businesssajilo_local'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -187,6 +188,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.addColumn(localStockMovements, localStockMovements.refBillId);
+      }
+      if (from < 5) {
+        await m.addColumn(localBills, localBills.referenceNote);
       }
     },
   );

@@ -2993,6 +2993,17 @@ class $LocalBillsTable extends LocalBills
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _referenceNoteMeta = const VerificationMeta(
+    'referenceNote',
+  );
+  @override
+  late final GeneratedColumn<String> referenceNote = GeneratedColumn<String>(
+    'reference_note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _syncStatusMeta = const VerificationMeta(
     'syncStatus',
   );
@@ -3032,6 +3043,7 @@ class $LocalBillsTable extends LocalBills
     status,
     createdBy,
     customerShopName,
+    referenceNote,
     syncStatus,
     createdAt,
   ];
@@ -3141,6 +3153,15 @@ class $LocalBillsTable extends LocalBills
         ),
       );
     }
+    if (data.containsKey('reference_note')) {
+      context.handle(
+        _referenceNoteMeta,
+        referenceNote.isAcceptableOrUnknown(
+          data['reference_note']!,
+          _referenceNoteMeta,
+        ),
+      );
+    }
     if (data.containsKey('sync_status')) {
       context.handle(
         _syncStatusMeta,
@@ -3214,6 +3235,10 @@ class $LocalBillsTable extends LocalBills
         DriftSqlType.string,
         data['${effectivePrefix}customer_shop_name'],
       ),
+      referenceNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_note'],
+      ),
       syncStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sync_status'],
@@ -3245,6 +3270,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
   final String status;
   final String createdBy;
   final String? customerShopName;
+  final String? referenceNote;
   final String syncStatus;
   final DateTime createdAt;
   const LocalBill({
@@ -3261,6 +3287,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
     required this.status,
     required this.createdBy,
     this.customerShopName,
+    this.referenceNote,
     required this.syncStatus,
     required this.createdAt,
   });
@@ -3289,6 +3316,9 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
     map['created_by'] = Variable<String>(createdBy);
     if (!nullToAbsent || customerShopName != null) {
       map['customer_shop_name'] = Variable<String>(customerShopName);
+    }
+    if (!nullToAbsent || referenceNote != null) {
+      map['reference_note'] = Variable<String>(referenceNote);
     }
     map['sync_status'] = Variable<String>(syncStatus);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -3320,6 +3350,9 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
       customerShopName: customerShopName == null && nullToAbsent
           ? const Value.absent()
           : Value(customerShopName),
+      referenceNote: referenceNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceNote),
       syncStatus: Value(syncStatus),
       createdAt: Value(createdAt),
     );
@@ -3346,6 +3379,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
       status: serializer.fromJson<String>(json['status']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
       customerShopName: serializer.fromJson<String?>(json['customerShopName']),
+      referenceNote: serializer.fromJson<String?>(json['referenceNote']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -3367,6 +3401,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
       'status': serializer.toJson<String>(status),
       'createdBy': serializer.toJson<String>(createdBy),
       'customerShopName': serializer.toJson<String?>(customerShopName),
+      'referenceNote': serializer.toJson<String?>(referenceNote),
       'syncStatus': serializer.toJson<String>(syncStatus),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -3386,6 +3421,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
     String? status,
     String? createdBy,
     Value<String?> customerShopName = const Value.absent(),
+    Value<String?> referenceNote = const Value.absent(),
     String? syncStatus,
     DateTime? createdAt,
   }) => LocalBill(
@@ -3406,6 +3442,9 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
     customerShopName: customerShopName.present
         ? customerShopName.value
         : this.customerShopName,
+    referenceNote: referenceNote.present
+        ? referenceNote.value
+        : this.referenceNote,
     syncStatus: syncStatus ?? this.syncStatus,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -3438,6 +3477,9 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
       customerShopName: data.customerShopName.present
           ? data.customerShopName.value
           : this.customerShopName,
+      referenceNote: data.referenceNote.present
+          ? data.referenceNote.value
+          : this.referenceNote,
       syncStatus: data.syncStatus.present
           ? data.syncStatus.value
           : this.syncStatus,
@@ -3461,6 +3503,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
           ..write('status: $status, ')
           ..write('createdBy: $createdBy, ')
           ..write('customerShopName: $customerShopName, ')
+          ..write('referenceNote: $referenceNote, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3482,6 +3525,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
     status,
     createdBy,
     customerShopName,
+    referenceNote,
     syncStatus,
     createdAt,
   );
@@ -3502,6 +3546,7 @@ class LocalBill extends DataClass implements Insertable<LocalBill> {
           other.status == this.status &&
           other.createdBy == this.createdBy &&
           other.customerShopName == this.customerShopName &&
+          other.referenceNote == this.referenceNote &&
           other.syncStatus == this.syncStatus &&
           other.createdAt == this.createdAt);
 }
@@ -3520,6 +3565,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
   final Value<String> status;
   final Value<String> createdBy;
   final Value<String?> customerShopName;
+  final Value<String?> referenceNote;
   final Value<String> syncStatus;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -3537,6 +3583,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
     this.status = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.customerShopName = const Value.absent(),
+    this.referenceNote = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3555,6 +3602,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
     required String status,
     required String createdBy,
     this.customerShopName = const Value.absent(),
+    this.referenceNote = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3577,6 +3625,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
     Expression<String>? status,
     Expression<String>? createdBy,
     Expression<String>? customerShopName,
+    Expression<String>? referenceNote,
     Expression<String>? syncStatus,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -3595,6 +3644,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
       if (status != null) 'status': status,
       if (createdBy != null) 'created_by': createdBy,
       if (customerShopName != null) 'customer_shop_name': customerShopName,
+      if (referenceNote != null) 'reference_note': referenceNote,
       if (syncStatus != null) 'sync_status': syncStatus,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -3615,6 +3665,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
     Value<String>? status,
     Value<String>? createdBy,
     Value<String?>? customerShopName,
+    Value<String?>? referenceNote,
     Value<String>? syncStatus,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -3633,6 +3684,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
       status: status ?? this.status,
       createdBy: createdBy ?? this.createdBy,
       customerShopName: customerShopName ?? this.customerShopName,
+      referenceNote: referenceNote ?? this.referenceNote,
       syncStatus: syncStatus ?? this.syncStatus,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -3681,6 +3733,9 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
     if (customerShopName.present) {
       map['customer_shop_name'] = Variable<String>(customerShopName.value);
     }
+    if (referenceNote.present) {
+      map['reference_note'] = Variable<String>(referenceNote.value);
+    }
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
@@ -3709,6 +3764,7 @@ class LocalBillsCompanion extends UpdateCompanion<LocalBill> {
           ..write('status: $status, ')
           ..write('createdBy: $createdBy, ')
           ..write('customerShopName: $customerShopName, ')
+          ..write('referenceNote: $referenceNote, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -7011,6 +7067,7 @@ typedef $$LocalBillsTableCreateCompanionBuilder =
       required String status,
       required String createdBy,
       Value<String?> customerShopName,
+      Value<String?> referenceNote,
       Value<String> syncStatus,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -7030,6 +7087,7 @@ typedef $$LocalBillsTableUpdateCompanionBuilder =
       Value<String> status,
       Value<String> createdBy,
       Value<String?> customerShopName,
+      Value<String?> referenceNote,
       Value<String> syncStatus,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -7106,6 +7164,11 @@ class $$LocalBillsTableFilterComposer
 
   ColumnFilters<String> get customerShopName => $composableBuilder(
     column: $table.customerShopName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceNote => $composableBuilder(
+    column: $table.referenceNote,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7194,6 +7257,11 @@ class $$LocalBillsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get referenceNote => $composableBuilder(
+    column: $table.referenceNote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
     builder: (column) => ColumnOrderings(column),
@@ -7267,6 +7335,11 @@ class $$LocalBillsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get referenceNote => $composableBuilder(
+    column: $table.referenceNote,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
     builder: (column) => column,
@@ -7320,6 +7393,7 @@ class $$LocalBillsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String> createdBy = const Value.absent(),
                 Value<String?> customerShopName = const Value.absent(),
+                Value<String?> referenceNote = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7337,6 +7411,7 @@ class $$LocalBillsTableTableManager
                 status: status,
                 createdBy: createdBy,
                 customerShopName: customerShopName,
+                referenceNote: referenceNote,
                 syncStatus: syncStatus,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -7356,6 +7431,7 @@ class $$LocalBillsTableTableManager
                 required String status,
                 required String createdBy,
                 Value<String?> customerShopName = const Value.absent(),
+                Value<String?> referenceNote = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7373,6 +7449,7 @@ class $$LocalBillsTableTableManager
                 status: status,
                 createdBy: createdBy,
                 customerShopName: customerShopName,
+                referenceNote: referenceNote,
                 syncStatus: syncStatus,
                 createdAt: createdAt,
                 rowid: rowid,

@@ -336,6 +336,34 @@ class _BillSummaryCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text('${l10n.billCreatedBy}: $creator', style: muted),
             ],
+            if (bill.referenceNote?.trim().isNotEmpty == true) ...[
+              const SizedBox(height: 8),
+              Container(
+                key: const Key('bill-reference-note'),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(BsRadii.lg),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.paymentRef, style: muted),
+                    const SizedBox(height: 2),
+                    Text(
+                      bill.referenceNote!.trim(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             Wrap(
               spacing: 12,

@@ -24,6 +24,7 @@ abstract class Bill with _$Bill {
     String? createdByRole,
     DateTime? createdAt,
     String? customerShopName,
+    String? referenceNote,
     @Default([]) List<BillItem> items,
     @Default(false) bool pendingSync,
   }) = _Bill;

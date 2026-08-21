@@ -65,6 +65,22 @@ void main() {
     expect(find.text('Amount paid'), findsOneWidget);
   });
 
+  testWidgets('due bill keeps the reference note field', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        const BillPaymentSheet(
+          grandTotal: 10000,
+          initialCustomerId: 'customer-1',
+          initialCustomerName: 'Test Shop',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Due'), findsOneWidget);
+    expect(find.text('Reference note'), findsOneWidget);
+  });
+
   testWidgets('prefilled customer name shows in select customer field', (
     tester,
   ) async {

@@ -182,6 +182,9 @@ void main() {
             'discount': 0,
             'grand_total': 500,
             'customers': {'shop_name': 'Ram Store'},
+            'payments': [
+              {'ref_note': 'Cheque 123', 'created_at': '2026-08-21T00:00:00Z'},
+            ],
             'bill_items': [
               {
                 'id': 'item-1',
@@ -201,6 +204,7 @@ void main() {
       final bill = await repo.get('bill-1');
       expect(bill.billNo, 'BS-0001');
       expect(bill.customerShopName, 'Ram Store');
+      expect(bill.referenceNote, 'Cheque 123');
       expect(bill.items, hasLength(1));
       expect(capture.paths.single, contains('/rest/v1/bills'));
     });
@@ -250,6 +254,7 @@ void main() {
         itemsTotal: 1000,
         discount: 0,
         grandTotal: 1000,
+        paymentRefNote: 'Deliver Friday',
         lines: const [
           BillLineInput(
             productId: 'prod-1',
@@ -265,6 +270,7 @@ void main() {
       final rpcBody = jsonDecode(capture.bodies.first!) as Map;
       final payload = rpcBody['p'] as Map;
       expect(payload['status'], 'due');
+      expect(payload['reference_note'], 'Deliver Friday');
       expect(payload['items'], isA<List>());
       expect((payload['items'] as List).single['qty'], 2);
       expect(call, greaterThanOrEqualTo(2));
