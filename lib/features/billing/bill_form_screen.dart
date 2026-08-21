@@ -321,19 +321,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Text(
-                    l10n.billItems,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _loading ? null : _openProductPicker,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: Text(l10n.addItem),
-                  ),
-                ],
+              Text(
+                l10n.billItems,
+                style: Theme.of(context).textTheme.titleSmall,
               ),
               if (_draft.lines.isEmpty)
                 Padding(
@@ -359,6 +349,14 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                       _syncDirtyFlag();
                     },
                   ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _loading ? null : _openProductPicker,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(l10n.addItem),
+                ),
+              ),
             ],
           ),
         ),

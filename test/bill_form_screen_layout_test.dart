@@ -52,6 +52,12 @@ void main() {
     expect(find.text('Subtotal'), findsOneWidget);
     expect(find.text('Bill discount'), findsOneWidget);
     expect(find.text('Grand Total'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Add Item')).dy,
+      greaterThan(
+        tester.getBottomLeft(find.text('Add products to the bill')).dy,
+      ),
+    );
     expect(find.text('Payment status'), findsNothing);
     expect(find.text('Paid'), findsNothing);
     expect(find.text('Cash'), findsNothing);
