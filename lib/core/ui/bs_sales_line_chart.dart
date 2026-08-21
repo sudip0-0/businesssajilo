@@ -25,7 +25,7 @@ class BsSalesLineChart extends StatelessWidget {
   final SalesChartPeriod period;
   final String? errorMessage;
 
-  static const _leftAxisWidth = 52.0;
+  static const _axisGap = 8.0;
   static const _gridLines = 4;
 
   String _nptLabel(int index) {
@@ -146,6 +146,19 @@ class BsSalesLineChart extends StatelessWidget {
     final labelStyle = Theme.of(
       context,
     ).textTheme.labelSmall?.copyWith(color: BsColors.outline, fontSize: 10);
+    final axisLabels = [
+      for (var i = _gridLines; i >= 0; i--)
+        _formatAxisValue((effectiveMax * i / _gridLines).round()),
+    ];
+    var leftAxisWidth = 0.0;
+    for (final label in axisLabels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: labelStyle),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      if (painter.width > leftAxisWidth) leftAxisWidth = painter.width;
+    }
 
     return Semantics(
       label: summary,
@@ -159,22 +172,17 @@ class BsSalesLineChart extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  width: _leftAxisWidth,
+                  width: leftAxisWidth,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      for (var i = _gridLines; i >= 0; i--)
-                        Text(
-                          _formatAxisValue(
-                            (effectiveMax * i / _gridLines).round(),
-                          ),
-                          style: labelStyle,
-                        ),
+                      for (final label in axisLabels)
+                        Text(label, style: labelStyle),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: _axisGap),
                 Expanded(
                   child: CustomPaint(
                     painter: _SalesLinePainter(
@@ -193,7 +201,7 @@ class BsSalesLineChart extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.only(left: _leftAxisWidth + 8),
+            padding: EdgeInsets.only(left: leftAxisWidth + _axisGap),
             child: SizedBox(
               height: 16,
               child: period == SalesChartPeriod.weekly

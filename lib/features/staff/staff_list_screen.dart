@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/async_body.dart';
 import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/empty_state.dart';
@@ -10,6 +11,7 @@ import '../../core/utils/role_label.dart';
 import '../../data/repositories/members_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/member.dart';
+import 'add_member_sheet.dart';
 import 'reset_member_password_sheet.dart';
 
 final staffListProvider = FutureProvider.autoDispose<List<Member>>((ref) {
@@ -29,6 +31,16 @@ class StaffListScreen extends ConsumerStatefulWidget {
 class _StaffListScreenState extends ConsumerState<StaffListScreen> {
   bool _showInactive = true;
 
+  Future<void> _openAddMember() async {
+    final l10n = AppLocalizations.of(context);
+    final created = await showAdaptiveSheet<bool>(
+      context: context,
+      title: l10n.addMember,
+      child: const AddMemberSheet(),
+    );
+    if (created == true) ref.invalidate(staffListProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -37,11 +49,28 @@ class _StaffListScreenState extends ConsumerState<StaffListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SwitchListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
-          value: _showInactive,
-          onChanged: (v) => setState(() => _showInactive = v),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    _showInactive ? l10n.hideInactive : l10n.showInactive,
+                  ),
+                  value: _showInactive,
+                  onChanged: (v) => setState(() => _showInactive = v),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: _openAddMember,
+                icon: const Icon(Icons.person_add),
+                label: Text(l10n.addMember),
+              ),
+            ],
+          ),
         ),
         Expanded(
           child: AsyncBody(
@@ -56,6 +85,8 @@ class _StaffListScreenState extends ConsumerState<StaffListScreen> {
                 return EmptyState(
                   icon: Icons.people_outline,
                   message: l10n.noStaff,
+                  actionLabel: l10n.addMember,
+                  onAction: _openAddMember,
                 );
               }
               return ListView.separated(

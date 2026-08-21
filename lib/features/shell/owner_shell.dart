@@ -23,7 +23,6 @@ import '../reports/reports_hub_screen.dart';
 import '../search/global_search_sheet.dart';
 import '../settings/settings_screen.dart';
 import '../sync/sync_badge_action.dart';
-import '../staff/add_member_sheet.dart';
 import '../staff/staff_list_screen.dart';
 
 class OwnerShell extends ConsumerStatefulWidget {
@@ -255,20 +254,6 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
           },
           icon: const Icon(Icons.add),
           label: Text(l10n.newBill),
-        ),
-        5 => FloatingActionButton.extended(
-          backgroundColor: BsColors.secondary,
-          foregroundColor: BsColors.onSecondary,
-          onPressed: () async {
-            final created = await showAdaptiveSheet<bool>(
-              context: context,
-              title: l10n.addMember,
-              child: const AddMemberSheet(),
-            );
-            if (created == true) ref.invalidate(staffListProvider);
-          },
-          icon: const Icon(Icons.person_add),
-          label: Text(l10n.addMember),
         ),
         _ => null,
       },
