@@ -47,19 +47,20 @@ List<List<String>> salesReportCsvRows({
 
 List<List<String>> duesAgingCsvRows(DuesAgingReport report) {
   final rows = <List<String>>[
-    ['Customer', 'Phone', 'Bucket', 'Amount due', 'Age days'],
+    ['Customer', 'Phone', 'Amount due', 'Oldest due date'],
   ];
   for (final customer in report.customers) {
     rows.add([
       customer.shopName,
       customer.phone ?? '',
-      customer.bucket,
       formatNpr(Paisa(customer.balanceDue), showPaisa: false),
-      '${customer.ageDays}',
+      customer.oldestDueAt.toIso8601String().split('T').first,
     ]);
   }
   return rows;
 }
+
+List<List<String>> duesReportCsvRows(DuesAgingReport report) => duesAgingCsvRows(report);
 
 List<List<String>> stockValuationCsvRows(List<StockValuationRow> rows_) {
   final rows = <List<String>>[

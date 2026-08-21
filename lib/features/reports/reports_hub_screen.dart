@@ -99,9 +99,12 @@ class ReportsHubScreen extends ConsumerWidget {
               ),
               BsStatTile(
                 compact: !wide,
-                label: l10n.lowStock,
-                value: lowStock.when(
-                  data: (c) => '$c',
+                label: l10n.totalValuation,
+                value: stock.when(
+                  data: (rows) {
+                    final total = rows.fold<int>(0, (s, r) => s + r.valuation);
+                    return formatNpr(Paisa(total), showPaisa: false);
+                  },
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
@@ -109,26 +112,25 @@ class ReportsHubScreen extends ConsumerWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        const StockValuationScreen(lowStockOnly: true),
+                    builder: (_) => const StockValuationScreen(),
                   ),
                 ),
               ),
               BsStatTile(
                 compact: !wide,
-                label: l10n.duesAging,
-                value: dues.when(
-                  data: (d) => formatNpr(
-                    Paisa(d.bucket0to30 + d.bucket31to60 + d.bucket60plus),
-                    showPaisa: false,
-                  ),
+                label: l10n.lowStock,
+                value: lowStock.when(
+                  data: (c) => '$c',
                   loading: () => '…',
                   error: (_, _) => '—',
                 ),
-                icon: Icons.hourglass_bottom_outlined,
+                icon: Icons.warning_amber_rounded,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const DuesAgingScreen()),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const StockValuationScreen(lowStockOnly: true),
+                  ),
                 ),
               ),
             ],
@@ -179,11 +181,11 @@ class ReportsHubScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _ReportNavCard(
-            icon: Icons.hourglass_bottom_outlined,
+            icon: Icons.account_balance_wallet_outlined,
             title: l10n.duesAging,
             subtitle: dues.when(
               data: (d) =>
-                  '${d.customers.length} ${l10n.customers.toLowerCase()}',
+                  '${d.customers.length} ${l10n.customersWithDues.toLowerCase()}',
               loading: () => '…',
               error: (_, _) => '—',
             ),

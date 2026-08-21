@@ -1625,7 +1625,7 @@ abstract class AppLocalizations {
   /// No description provided for @duesAging.
   ///
   /// In en, this message translates to:
-  /// **'Dues aging'**
+  /// **'Outstanding Dues'**
   String get duesAging;
 
   /// No description provided for @stockValuation.
@@ -3679,6 +3679,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Monthly sales by BS calendar'**
   String get fiscalMonthlySales;
+
+  /// No description provided for @averageDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Average due'**
+  String get averageDue;
+
+  /// No description provided for @highestDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest due'**
+  String get highestDue;
+
+  /// No description provided for @topDebtor.
+  ///
+  /// In en, this message translates to:
+  /// **'Top debtor'**
+  String get topDebtor;
+
+  /// No description provided for @averageOrderValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg order value'**
+  String get averageOrderValue;
+
+  /// No description provided for @totalInvoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Total bills'**
+  String get totalInvoices;
+
+  /// No description provided for @totalUnitsSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Units sold'**
+  String get totalUnitsSold;
+
+  /// No description provided for @totalUnitsInStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Units in stock'**
+  String get totalUnitsInStock;
+
+  /// No description provided for @outOfStockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get outOfStockCount;
+
+  /// No description provided for @bestMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Best month'**
+  String get bestMonth;
+
+  /// No description provided for @monthlyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly average'**
+  String get monthlyAverage;
+
+  /// No description provided for @fiscalYearTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal year total'**
+  String get fiscalYearTotal;
+
+  /// No description provided for @qtySold.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty sold'**
+  String get qtySold;
+
+  /// No description provided for @contribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Contribution'**
+  String get contribution;
+
+  /// No description provided for @sortHighestDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest due'**
+  String get sortHighestDue;
+
+  /// No description provided for @sortLowestDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest due'**
+  String get sortLowestDue;
+
+  /// No description provided for @sortNameAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'Name A–Z'**
+  String get sortNameAZ;
+
+  /// No description provided for @viewCustomerLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'View ledger'**
+  String get viewCustomerLedger;
+
+  /// No description provided for @recordCustomerPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Record payment'**
+  String get recordCustomerPayment;
+
+  /// No description provided for @outstandingDuesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Dues Summary'**
+  String get outstandingDuesSummary;
+
+  /// No description provided for @customerDuesList.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers with Outstanding Balances'**
+  String get customerDuesList;
+
+  /// No description provided for @salesByPaymentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales by payment method'**
+  String get salesByPaymentType;
+
+  /// No description provided for @cashPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid (Cash/Online)'**
+  String get cashPaid;
+
+  /// No description provided for @creditSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit (Due)'**
+  String get creditSales;
+
+  /// No description provided for @stockHealthOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Health Overview'**
+  String get stockHealthOverview;
+
+  /// No description provided for @healthyStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy stock'**
+  String get healthyStock;
+
+  /// No description provided for @criticalStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock items'**
+  String get criticalStock;
+
+  /// No description provided for @salesBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Breakdown'**
+  String get salesBreakdown;
 }
 
 class _AppLocalizationsDelegate

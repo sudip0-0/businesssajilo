@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('WebDuesAgingPage shows bucket cards and customers', (
+  testWidgets('WebDuesAgingPage shows stats cards and customers', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
@@ -43,12 +43,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Dues aging'), findsWidgets);
+    expect(find.text('Outstanding Dues'), findsWidgets);
     expect(find.text('Ram Store'), findsOneWidget);
     expect(find.text('CUSTOMERS WITH DUES'), findsOneWidget);
   });
 
-  testWidgets('WebDuesAgingPage filters by bucket chip', (tester) async {
+  testWidgets('WebDuesAgingPage filters by search input', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -92,7 +92,8 @@ void main() {
     expect(find.text('Ram Store'), findsOneWidget);
     expect(find.text('Shyam Store'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, '60+ days'));
+    await tester.enterText(find.byType(TextField), 'Shyam');
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
 
     expect(find.text('Shyam Store'), findsOneWidget);

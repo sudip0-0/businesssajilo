@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'report_export_actions.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/money_text.dart';
 import '../../core/utils/money.dart';
-import '../../domain/models/aging_customer_row.dart';
+import '../customers/customer_detail_screen.dart';
 import 'providers.dart';
+import 'report_export_actions.dart';
+
+enum _DuesSortOption { highestDue, lowestDue, nameAZ }
 
 class DuesAgingScreen extends ConsumerStatefulWidget {
   const DuesAgingScreen({super.key, this.embedded = false});
@@ -22,9 +25,15 @@ class DuesAgingScreen extends ConsumerStatefulWidget {
 }
 
 class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
-  // Sort field + direction live in state; build only derives a sorted copy.
-  int? _sortColumnIndex;
-  bool _sortAscending = true;
+  _DuesSortOption _sortOption = _DuesSortOption.highestDue;
+  String _search = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +47,36 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
         onRetry: () => ref.invalidate(duesAgingProvider),
       ),
       data: (report) {
-        final sorted = _sortedCustomers(report.customers);
+        final totalDues = report.customers.fold<int>(
+          0,
+          (sum, c) => sum + c.balanceDue,
+        );
+        final customerCount = report.customers.length;
+        final avgDue = customerCount > 0 ? (totalDues ~/ customerCount) : 0;
+        final maxDue = report.customers.fold<int>(
+          0,
+          (max, c) => c.balanceDue > max ? c.balanceDue : max,
+        );
+
+        final filtered = report.customers.where((c) {
+          if (_search.isEmpty) return true;
+          final q = _search.toLowerCase();
+          return c.shopName.toLowerCase().contains(q) ||
+              (c.phone != null && c.phone!.contains(q));
+        }).toList();
+
+        filtered.sort((a, b) {
+          return switch (_sortOption) {
+            _DuesSortOption.highestDue => b.balanceDue.compareTo(a.balanceDue),
+            _DuesSortOption.lowestDue => a.balanceDue.compareTo(b.balanceDue),
+            _DuesSortOption.nameAZ => a.shopName.toLowerCase().compareTo(
+              b.shopName.toLowerCase(),
+            ),
+          };
+        });
+
+        final isWide = isWideLayout(context);
+
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -51,108 +89,192 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
                   icon: const Icon(Icons.download_outlined),
                 ),
               ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final stackBuckets = constraints.maxWidth < 360;
-                final cards = [
-                  _BucketCard(
-                    label: l10n.aging0to30,
-                    amount: report.bucket0to30,
+            // Summary Cards Bento
+            GridView.count(
+              crossAxisCount: isWide ? 4 : 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: isWide ? 2.0 : 1.35,
+              children: [
+                _StatCard(
+                  label: l10n.totalDues,
+                  value: formatNpr(Paisa(totalDues), showPaisa: false),
+                  icon: Icons.account_balance_wallet_outlined,
+                  color: BsColors.danger,
+                ),
+                _StatCard(
+                  label: l10n.customersWithDues,
+                  value: '$customerCount',
+                  icon: Icons.people_outline,
+                  color: BsColors.primary,
+                ),
+                _StatCard(
+                  label: l10n.averageDue,
+                  value: formatNpr(Paisa(avgDue), showPaisa: false),
+                  icon: Icons.calculate_outlined,
+                  color: Colors.deepPurple,
+                ),
+                _StatCard(
+                  label: l10n.highestDue,
+                  value: formatNpr(Paisa(maxDue), showPaisa: false),
+                  icon: Icons.priority_high,
+                  color: Colors.amber.shade800,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Search and sort bar
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      hintText: l10n.searchCustomersHint,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      suffixIcon: _search.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _search = '');
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (val) => setState(() => _search = val.trim()),
                   ),
-                  _BucketCard(
-                    label: l10n.aging31to60,
-                    amount: report.bucket31to60,
-                  ),
-                  _BucketCard(
-                    label: l10n.aging60plus,
-                    amount: report.bucket60plus,
-                  ),
-                ];
-                if (stackBuckets) {
-                  return Column(
-                    children: [
-                      for (var i = 0; i < cards.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 8),
-                        cards[i],
-                      ],
-                    ],
-                  );
-                }
-                return Row(
-                  children: [
-                    for (var i = 0; i < cards.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 8),
-                      Expanded(child: cards[i]),
-                    ],
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<_DuesSortOption>(
+                  tooltip: l10n.sortBy,
+                  icon: const Icon(Icons.sort),
+                  initialValue: _sortOption,
+                  onSelected: (opt) => setState(() => _sortOption = opt),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: _DuesSortOption.highestDue,
+                      child: Text(l10n.sortHighestDue),
+                    ),
+                    PopupMenuItem(
+                      value: _DuesSortOption.lowestDue,
+                      child: Text(l10n.sortLowestDue),
+                    ),
+                    PopupMenuItem(
+                      value: _DuesSortOption.nameAZ,
+                      child: Text(l10n.sortNameAZ),
+                    ),
                   ],
-                );
-              },
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            if (report.customers.isEmpty)
-              EmptyState(icon: Icons.hourglass_bottom, message: l10n.noDues)
-            else if (isWideLayout(context))
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  sortColumnIndex: _sortColumnIndex,
-                  sortAscending: _sortAscending,
-                  columns: [
-                    DataColumn(
-                      label: Text(l10n.customers),
-                      onSort: (_, asc) => _onSort(0, asc),
-                    ),
-                    DataColumn(
-                      label: Text(l10n.dues),
-                      numeric: true,
-                      onSort: (_, asc) => _onSort(1, asc),
-                    ),
-                    DataColumn(
-                      label: Text(l10n.ageDays),
-                      numeric: true,
-                      onSort: (_, asc) => _onSort(2, asc),
-                    ),
-                  ],
-                  rows: sorted
-                      .map(
-                        (c) => DataRow(
-                          cells: [
-                            DataCell(Text(c.shopName)),
-                            DataCell(
-                              Text(
-                                formatNpr(
-                                  Paisa(c.balanceDue),
-                                  showPaisa: false,
-                                ),
-                              ),
-                            ),
-                            DataCell(Text('${c.ageDays}')),
-                          ],
-                        ),
-                      )
-                      .toList(),
+            Text(
+              l10n.customerDuesList,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            if (filtered.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: EmptyState(
+                  icon: Icons.check_circle_outline,
+                  message: l10n.noDues,
                 ),
               )
-            else
-              ...sorted.map(
-                (c) => Column(
-                  children: [
-                    ListTile(
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      title: Text(c.shopName),
-                      subtitle: Text(l10n.ageDaysCount(c.ageDays)),
-                      trailing: MoneyText(
-                        Paisa(c.balanceDue),
-                        showPaisa: false,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+            else ...[
+              for (final c in filtered) ...[
+                Card(
+                  elevation: 0,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
+                    ),
+                    leading: CircleAvatar(
+                      backgroundColor: BsColors.danger.withValues(alpha: 0.12),
+                      child: Text(
+                        c.shopName.isNotEmpty
+                            ? c.shopName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: BsColors.danger,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const Divider(height: 1),
-                  ],
+                    title: Text(
+                      c.shopName,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: c.phone != null && c.phone!.isNotEmpty
+                        ? Text(c.phone!)
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            MoneyText(
+                              Paisa(c.balanceDue),
+                              showPaisa: false,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: BsColors.danger,
+                              ),
+                            ),
+                            Text(
+                              l10n.due,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: BsColors.outline),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: BsColors.outline,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              CustomerDetailScreen(customerId: c.customerId),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
+            ],
           ],
         );
       },
@@ -176,61 +298,62 @@ class _DuesAgingScreenState extends ConsumerState<DuesAgingScreen> {
       body: body,
     );
   }
-
-  void _onSort(int columnIndex, bool ascending) {
-    setState(() {
-      _sortColumnIndex = columnIndex;
-      _sortAscending = ascending;
-    });
-  }
-
-  List<AgingCustomerRow> _sortedCustomers(List<AgingCustomerRow> customers) {
-    final sorted = List<AgingCustomerRow>.from(customers);
-    if (_sortColumnIndex == null) return sorted;
-    sorted.sort((a, b) {
-      final cmp = switch (_sortColumnIndex) {
-        0 => a.shopName.compareTo(b.shopName),
-        1 => a.balanceDue.compareTo(b.balanceDue),
-        2 => a.ageDays.compareTo(b.ageDays),
-        _ => 0,
-      };
-      return _sortAscending ? cmp : -cmp;
-    });
-    return sorted;
-  }
 }
 
-class _BucketCard extends StatelessWidget {
-  const _BucketCard({required this.label, required this.amount});
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   final String label;
-  final int amount;
+  final String value;
+  final IconData icon;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: MoneyText(
-                Paisa(amount),
-                showPaisa: false,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

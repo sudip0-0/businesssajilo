@@ -790,7 +790,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesSummary => 'Sales summary';
 
   @override
-  String get duesAging => 'Dues aging';
+  String get duesAging => 'Outstanding Dues';
 
   @override
   String get stockValuation => 'Stock valuation';
@@ -1897,4 +1897,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fiscalMonthlySales => 'Monthly sales by BS calendar';
+
+  @override
+  String get averageDue => 'Average due';
+
+  @override
+  String get highestDue => 'Highest due';
+
+  @override
+  String get topDebtor => 'Top debtor';
+
+  @override
+  String get averageOrderValue => 'Avg order value';
+
+  @override
+  String get totalInvoices => 'Total bills';
+
+  @override
+  String get totalUnitsSold => 'Units sold';
+
+  @override
+  String get totalUnitsInStock => 'Units in stock';
+
+  @override
+  String get outOfStockCount => 'Out of stock';
+
+  @override
+  String get bestMonth => 'Best month';
+
+  @override
+  String get monthlyAverage => 'Monthly average';
+
+  @override
+  String get fiscalYearTotal => 'Fiscal year total';
+
+  @override
+  String get qtySold => 'Qty sold';
+
+  @override
+  String get contribution => 'Contribution';
+
+  @override
+  String get sortHighestDue => 'Highest due';
+
+  @override
+  String get sortLowestDue => 'Lowest due';
+
+  @override
+  String get sortNameAZ => 'Name A–Z';
+
+  @override
+  String get viewCustomerLedger => 'View ledger';
+
+  @override
+  String get recordCustomerPayment => 'Record payment';
+
+  @override
+  String get outstandingDuesSummary => 'Customer Dues Summary';
+
+  @override
+  String get customerDuesList => 'Customers with Outstanding Balances';
+
+  @override
+  String get salesByPaymentType => 'Sales by payment method';
+
+  @override
+  String get cashPaid => 'Paid (Cash/Online)';
+
+  @override
+  String get creditSales => 'Credit (Due)';
+
+  @override
+  String get stockHealthOverview => 'Stock Health Overview';
+
+  @override
+  String get healthyStock => 'Healthy stock';
+
+  @override
+  String get criticalStock => 'Out of stock items';
+
+  @override
+  String get salesBreakdown => 'Sales Breakdown';
 }

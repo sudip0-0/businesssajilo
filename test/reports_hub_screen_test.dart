@@ -46,7 +46,7 @@ void main() {
     expect(find.text('Business analytics overview'), findsOneWidget);
     expect(find.byType(ListTile), findsNWidgets(4));
     expect(find.widgetWithText(ListTile, 'Sales summary'), findsOneWidget);
-    expect(find.widgetWithText(ListTile, 'Dues aging'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Outstanding Dues'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Stock valuation'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Fiscal summary (BS)'), findsOneWidget);
   });

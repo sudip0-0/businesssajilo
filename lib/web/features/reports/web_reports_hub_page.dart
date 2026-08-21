@@ -16,7 +16,6 @@ import '../../layout/web_bento_grid.dart';
 import '../../theme/web_palette.dart';
 import '../../ui/web_stat_tile.dart';
 import '../web_page_scaffold.dart';
-import 'widgets/aging_distribution_bar.dart';
 
 class WebReportsHubPage extends ConsumerStatefulWidget {
   const WebReportsHubPage({super.key});
@@ -249,8 +248,10 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                     onTap: () => context.go('/owner/reports/dues'),
                     child: dues.when(
                       data: (d) {
-                        final total =
-                            d.bucket0to30 + d.bucket31to60 + d.bucket60plus;
+                        final total = d.customers.fold<int>(
+                          0,
+                          (s, c) => s + c.balanceDue,
+                        );
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -260,18 +261,9 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${d.customers.length} ${l10n.customers.toLowerCase()}',
+                              '${d.customers.length} ${l10n.customers.toLowerCase()} · ${l10n.customersWithDues}',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: WebPalette.inkSoft),
-                            ),
-                            const SizedBox(height: 10),
-                            AgingDistributionBar(
-                              bucket0to30: d.bucket0to30,
-                              bucket31to60: d.bucket31to60,
-                              bucket60plus: d.bucket60plus,
-                              height: 10,
-                              compact: true,
-                              showLegend: false,
                             ),
                           ],
                         );

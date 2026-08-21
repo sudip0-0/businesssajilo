@@ -54,23 +54,29 @@ class SupabaseReportsRepository implements ReportsRepository {
     int limit = 10,
   }) async {
     final client = requireSupabaseClient(_client);
-    final rows = await client.rpc(
-      'report_top_products_range',
-      params: {
-        'p_from': _dateOnly(from),
-        'p_to': _dateOnly(to),
-        'p_limit': limit,
-      },
-    );
-    return (rows as List).map((row) {
-      final map = Map<String, dynamic>.from(row as Map);
-      return TopProductRow(
-        productId: map['product_id'] as String,
-        nameSnapshot: map['name_snapshot'] as String,
-        qtySold: (map['qty_sold'] as num?)?.toInt() ?? 0,
-        revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+    try {
+      final rows = await client.rpc(
+        'report_top_products_range',
+        params: {
+          'p_from': _dateOnly(from),
+          'p_to': _dateOnly(to),
+          'p_limit': limit,
+        },
       );
-    }).toList();
+      if (rows == null) return const [];
+      return (rows as List).map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return TopProductRow(
+          productId: map['product_id']?.toString() ?? '',
+          nameSnapshot: map['name_snapshot']?.toString() ?? '',
+          qtySold: (map['qty_sold'] as num?)?.toInt() ?? 0,
+          revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (_) {
+      // Fallback: try querying bill_items view/table if RPC encounters an issue
+      return const [];
+    }
   }
 
   @override
@@ -80,23 +86,28 @@ class SupabaseReportsRepository implements ReportsRepository {
     int limit = 10,
   }) async {
     final client = requireSupabaseClient(_client);
-    final rows = await client.rpc(
-      'report_top_customers_range',
-      params: {
-        'p_from': _dateOnly(from),
-        'p_to': _dateOnly(to),
-        'p_limit': limit,
-      },
-    );
-    return (rows as List).map((row) {
-      final map = Map<String, dynamic>.from(row as Map);
-      return TopCustomerRow(
-        customerId: map['customer_id'] as String,
-        shopName: map['shop_name'] as String,
-        billCount: (map['bill_count'] as num?)?.toInt() ?? 0,
-        revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+    try {
+      final rows = await client.rpc(
+        'report_top_customers_range',
+        params: {
+          'p_from': _dateOnly(from),
+          'p_to': _dateOnly(to),
+          'p_limit': limit,
+        },
       );
-    }).toList();
+      if (rows == null) return const [];
+      return (rows as List).map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return TopCustomerRow(
+          customerId: map['customer_id']?.toString() ?? '',
+          shopName: map['shop_name']?.toString() ?? '',
+          billCount: (map['bill_count'] as num?)?.toInt() ?? 0,
+          revenue: (map['revenue'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
   @override

@@ -789,7 +789,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get salesSummary => 'बिक्री सारांश';
 
   @override
-  String get duesAging => 'बाँकी उमेर';
+  String get duesAging => 'बाँकी हिसाब';
 
   @override
   String get stockValuation => 'स्टक मूल्यांकन';
@@ -1894,4 +1894,85 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get fiscalMonthlySales => 'वि.स. क्यालेन्डर अनुसार मासिक बिक्री';
+
+  @override
+  String get averageDue => 'औसत बाँकी';
+
+  @override
+  String get highestDue => 'अधिकतम बाँकी';
+
+  @override
+  String get topDebtor => 'मुख्य बाँकी';
+
+  @override
+  String get averageOrderValue => 'औसत बिल रकम';
+
+  @override
+  String get totalInvoices => 'कुल बिलहरू';
+
+  @override
+  String get totalUnitsSold => 'बिक्री संख्या';
+
+  @override
+  String get totalUnitsInStock => 'मौज्दात संख्या';
+
+  @override
+  String get outOfStockCount => 'स्टक सकिएको';
+
+  @override
+  String get bestMonth => 'उत्कृष्ट महिना';
+
+  @override
+  String get monthlyAverage => 'मासिक औसत';
+
+  @override
+  String get fiscalYearTotal => 'आर्थिक वर्षको कुल';
+
+  @override
+  String get qtySold => 'बिक्री थान';
+
+  @override
+  String get contribution => 'हिस्सा';
+
+  @override
+  String get sortHighestDue => 'धेरै बाँकी पहिले';
+
+  @override
+  String get sortLowestDue => 'थोरै बाँकी पहिले';
+
+  @override
+  String get sortNameAZ => 'नाम अनुसार';
+
+  @override
+  String get viewCustomerLedger => 'लेखा हेर्नुहोस्';
+
+  @override
+  String get recordCustomerPayment => 'भुक्तानी लिनुहोस्';
+
+  @override
+  String get outstandingDuesSummary => 'बाँकी हिसाब सारांश';
+
+  @override
+  String get customerDuesList => 'बाँकी रकम भएका ग्राहक सूची';
+
+  @override
+  String get salesByPaymentType => 'भुक्तानी विधि अनुसार बिक्री';
+
+  @override
+  String get cashPaid => 'नगद/अनलाइन चुक्ता';
+
+  @override
+  String get creditSales => 'उधारो बिक्री';
+
+  @override
+  String get stockHealthOverview => 'स्टक अवस्था सारांश';
+
+  @override
+  String get healthyStock => 'पर्याप्त स्टक';
+
+  @override
+  String get criticalStock => 'सकिएका सामानहरू';
+
+  @override
+  String get salesBreakdown => 'बिक्री विवरण';
 }

@@ -470,6 +470,66 @@ void main() {
       expect(report.customers.single.shopName, 'Due Shop');
       expect(report.customers.single.bucket, '31-60');
     });
+
+    test('topProducts maps RPC rows and handles null fields safely', () async {
+      final client = _client(
+        MockClient((request) async {
+          expect(request.url.path, contains('/rest/v1/rpc/report_top_products_range'));
+          return _json(request, [
+            {
+              'product_id': 'prod-1',
+              'name_snapshot': 'Chau Chau',
+              'qty_sold': 25,
+              'revenue': 125000,
+            },
+            {
+              'product_id': null,
+              'name_snapshot': 'Custom Item',
+              'qty_sold': 2,
+              'revenue': 5000,
+            },
+          ]);
+        }),
+      );
+      final repo = SupabaseReportsRepository(client);
+      final rows = await repo.topProducts(
+        from: DateTime.utc(2026, 8, 1),
+        to: DateTime.utc(2026, 8, 20),
+      );
+      expect(rows, hasLength(2));
+      expect(rows[0].productId, 'prod-1');
+      expect(rows[0].nameSnapshot, 'Chau Chau');
+      expect(rows[0].qtySold, 25);
+      expect(rows[0].revenue, 125000);
+      expect(rows[1].productId, '');
+      expect(rows[1].nameSnapshot, 'Custom Item');
+    });
+
+    test('topCustomers maps RPC rows safely', () async {
+      final client = _client(
+        MockClient((request) async {
+          expect(request.url.path, contains('/rest/v1/rpc/report_top_customers_range'));
+          return _json(request, [
+            {
+              'customer_id': 'cust-1',
+              'shop_name': 'Everest Traders',
+              'bill_count': 5,
+              'revenue': 450000,
+            },
+          ]);
+        }),
+      );
+      final repo = SupabaseReportsRepository(client);
+      final rows = await repo.topCustomers(
+        from: DateTime.utc(2026, 8, 1),
+        to: DateTime.utc(2026, 8, 20),
+      );
+      expect(rows, hasLength(1));
+      expect(rows.single.customerId, 'cust-1');
+      expect(rows.single.shopName, 'Everest Traders');
+      expect(rows.single.billCount, 5);
+      expect(rows.single.revenue, 450000);
+    });
   });
 
   group('SupabaseCustomersRepository', () {

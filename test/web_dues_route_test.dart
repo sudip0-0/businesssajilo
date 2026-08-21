@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(WebDuesAgingPage), findsOneWidget);
-    expect(find.text('Dues aging'), findsWidgets);
+    expect(find.text('Outstanding Dues'), findsWidgets);
     expect(find.text('Ram Store'), findsOneWidget);
     expect(find.byType(WebReportsHubPage), findsNothing);
   });
