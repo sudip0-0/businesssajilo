@@ -1,10 +1,12 @@
 import 'package:businesssajilo/core/l10n/app_localizations.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/member.dart';
+import 'package:businesssajilo/domain/models/product.dart';
 import 'package:businesssajilo/domain/models/session_state.dart';
 import 'package:businesssajilo/features/auth/providers/auth_provider.dart';
 import 'package:businesssajilo/features/billing/bill_form_screen.dart';
 import 'package:businesssajilo/features/customers/providers.dart';
+import 'package:businesssajilo/features/inventory/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -99,5 +101,54 @@ void main() {
     expect(find.text('Subtotal'), findsOneWidget);
     expect(find.text('Bill discount'), findsOneWidget);
     expect(find.text('Grand Total'), findsOneWidget);
+  });
+
+  testWidgets('adding an item scrolls it into view', (tester) async {
+    tester.view.physicalSize = const Size(400, 500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_OwnerAuth.new),
+          customerListProvider.overrideWith((ref, query) async => const []),
+          productListProvider.overrideWith((ref, query) async {
+            return const [
+              Product(
+                id: 'product-1',
+                businessId: 'biz',
+                name: 'Test Product',
+                referencePrice: 10000,
+                stockCached: 10,
+              ),
+            ];
+          }),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BillFormScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add Item'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ListTile, 'Test Product'));
+    await tester.pumpAndSettle();
+
+    final scrollable = tester.state<ScrollableState>(
+      find.byType(Scrollable).first,
+    );
+    expect(find.text('Test Product'), findsOneWidget);
+    expect(scrollable.position.pixels, greaterThan(0));
   });
 }

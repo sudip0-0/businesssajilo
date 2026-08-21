@@ -35,6 +35,7 @@ class BillFormScreen extends ConsumerStatefulWidget {
 class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   final _draft = BillFormDraft();
   final _billDiscountController = TextEditingController();
+  final _itemsScrollController = ScrollController();
   bool _loading = false;
   bool _isCustomerSearchActive = false;
   Customer? _selectedCustomer;
@@ -42,6 +43,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   @override
   void dispose() {
     _billDiscountController.dispose();
+    _itemsScrollController.dispose();
     super.dispose();
   }
 
@@ -101,6 +103,14 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   void _addProduct(Product product) {
     setState(() => _draft.addProduct(product));
     _syncDirtyFlag();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_itemsScrollController.hasClients) return;
+      _itemsScrollController.animateTo(
+        _itemsScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   Future<void> _openProductPicker() async {
@@ -290,6 +300,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       children: [
         Expanded(
           child: ListView(
+            controller: _itemsScrollController,
             padding: const EdgeInsets.fromLTRB(
               BsSpacing.lg,
               BsSpacing.sm,
