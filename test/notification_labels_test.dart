@@ -39,7 +39,7 @@ void main() {
   });
 
   test('notificationIcon returns icon per type', () {
-    expect(notificationIcon('chat_message').codePoint, isNotNull);
+    expect(notificationIcon('quote_received').codePoint, isNotNull);
     expect(notificationIcon('unknown').codePoint, isNotNull);
   });
 }

@@ -705,12 +705,6 @@ class AppLocalizationsNe extends AppLocalizations {
   String get generateBill => 'बिल बनाउनुहोस्';
 
   @override
-  String get orderChat => 'अर्डर च्याट';
-
-  @override
-  String get typeMessage => 'सन्देश टाइप गर्नुहोस्';
-
-  @override
   String get billHistory => 'बिल इतिहास';
 
   @override
@@ -724,9 +718,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get requote => 'नयाँ कोटेशन पठाउनुहोस्';
-
-  @override
-  String get openChat => 'च्याट';
 
   @override
   String get emptyCatalog => 'सूचीमा उत्पादन छैन';
@@ -751,9 +742,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get fulfillmentQueue => 'पूर्ति गर्न बाँकी अर्डर';
-
-  @override
-  String get noMessages => 'अहिलेसम्म कुनै सन्देश छैन';
 
   @override
   String get attachImage => 'फोटो संलग्न';
@@ -787,9 +775,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get notifOrderStatus => 'अर्डर स्थिति अद्यावधिक';
-
-  @override
-  String get notifChatMessage => 'नयाँ च्याट सन्देश';
 
   @override
   String get notifPaymentRecorded => 'भुक्तानी रेकर्ड भयो';
@@ -977,9 +962,6 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get areYouSure => 'के तपाईं निश्चित हुनुहुन्छ?';
-
-  @override
-  String get messageSendFailed => 'सन्देश पठाउन सकिएन। फेरि प्रयास गर्नुहोस्।';
 
   @override
   String get openingBalanceLocked =>
@@ -1456,9 +1438,6 @@ class AppLocalizationsNe extends AppLocalizations {
   String get imageInvalidType => 'JPEG, PNG वा WebP मात्र अनुमति छ';
 
   @override
-  String get messageTooLong => 'सन्देश धेरै लामो छ';
-
-  @override
   String get changePassword => 'पासवर्ड परिवर्तन';
 
   @override
@@ -1824,9 +1803,6 @@ class AppLocalizationsNe extends AppLocalizations {
   }
 
   @override
-  String get muteChatNotifications => 'अर्डर च्याट सूचना बन्द';
-
-  @override
   String get muteDuesReminders => 'बाँकी रकम रिमाइन्डर बन्द';
 
   @override
@@ -1891,4 +1867,31 @@ class AppLocalizationsNe extends AppLocalizations {
   String pendingSyncSalesHint(String amount) {
     return '$amount सिंक हुन बाँकी — अहिलेसम्म पुष्टि भएको छैन';
   }
+
+  @override
+  String get quoteSuperseded => 'पुरानो भयो';
+
+  @override
+  String get quoteExpired => 'म्याद सकियो';
+
+  @override
+  String get respond => 'जवाफ दिनुहोस्';
+
+  @override
+  String get periodBsThisMonth => 'यो महिना (वि.स.)';
+
+  @override
+  String get periodBsLastMonth => 'गत महिना (वि.स.)';
+
+  @override
+  String get periodThisFiscalYear => 'चालु आर्थिक वर्ष';
+
+  @override
+  String get periodLastFiscalYear => 'गत आर्थिक वर्ष';
+
+  @override
+  String get fiscalSummary => 'आर्थिक वर्ष सारांश (वि.स.)';
+
+  @override
+  String get fiscalMonthlySales => 'वि.स. क्यालेन्डर अनुसार मासिक बिक्री';
 }

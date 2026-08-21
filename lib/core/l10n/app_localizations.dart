@@ -1454,18 +1454,6 @@ abstract class AppLocalizations {
   /// **'Generate bill'**
   String get generateBill;
 
-  /// No description provided for @orderChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Order chat'**
-  String get orderChat;
-
-  /// No description provided for @typeMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Type a message'**
-  String get typeMessage;
-
   /// No description provided for @billHistory.
   ///
   /// In en, this message translates to:
@@ -1495,12 +1483,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send new quote'**
   String get requote;
-
-  /// No description provided for @openChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat'**
-  String get openChat;
 
   /// No description provided for @emptyCatalog.
   ///
@@ -1549,12 +1531,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Orders to fulfill'**
   String get fulfillmentQueue;
-
-  /// No description provided for @noMessages.
-  ///
-  /// In en, this message translates to:
-  /// **'No messages yet'**
-  String get noMessages;
 
   /// No description provided for @attachImage.
   ///
@@ -1621,12 +1597,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order status updated'**
   String get notifOrderStatus;
-
-  /// No description provided for @notifChatMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'New chat message'**
-  String get notifChatMessage;
 
   /// No description provided for @notifPaymentRecorded.
   ///
@@ -1987,12 +1957,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure?'**
   String get areYouSure;
-
-  /// No description provided for @messageSendFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Message could not be sent. Try again.'**
-  String get messageSendFailed;
 
   /// No description provided for @openingBalanceLocked.
   ///
@@ -2876,12 +2840,6 @@ abstract class AppLocalizations {
   /// **'Only JPEG, PNG, or WebP images are allowed'**
   String get imageInvalidType;
 
-  /// No description provided for @messageTooLong.
-  ///
-  /// In en, this message translates to:
-  /// **'Message is too long'**
-  String get messageTooLong;
-
   /// No description provided for @changePassword.
   ///
   /// In en, this message translates to:
@@ -3572,12 +3530,6 @@ abstract class AppLocalizations {
   /// **'Expires {date}'**
   String quoteExpiresOn(String date);
 
-  /// No description provided for @muteChatNotifications.
-  ///
-  /// In en, this message translates to:
-  /// **'Mute order chat notifications'**
-  String get muteChatNotifications;
-
   /// No description provided for @muteDuesReminders.
   ///
   /// In en, this message translates to:
@@ -3673,6 +3625,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} pending sync — not yet confirmed'**
   String pendingSyncSalesHint(String amount);
+
+  /// No description provided for @quoteSuperseded.
+  ///
+  /// In en, this message translates to:
+  /// **'Superseded'**
+  String get quoteSuperseded;
+
+  /// No description provided for @quoteExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get quoteExpired;
+
+  /// No description provided for @respond.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond'**
+  String get respond;
+
+  /// No description provided for @periodBsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month (BS)'**
+  String get periodBsThisMonth;
+
+  /// No description provided for @periodBsLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Last month (BS)'**
+  String get periodBsLastMonth;
+
+  /// No description provided for @periodThisFiscalYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This fiscal year'**
+  String get periodThisFiscalYear;
+
+  /// No description provided for @periodLastFiscalYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Last fiscal year'**
+  String get periodLastFiscalYear;
+
+  /// No description provided for @fiscalSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal summary (BS)'**
+  String get fiscalSummary;
+
+  /// No description provided for @fiscalMonthlySales.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly sales by BS calendar'**
+  String get fiscalMonthlySales;
 }
 
 class _AppLocalizationsDelegate

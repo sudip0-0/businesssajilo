@@ -136,8 +136,8 @@ class CachedProductsRepository implements ProductsRepository {
     int costPrice = 0,
     int referencePrice = 0,
     int lowStockThreshold = 0,
-  }) {
-    return _remote.create(
+  }) async {
+    final product = await _remote.create(
       name: name,
       nameNp: nameNp,
       sku: sku,
@@ -146,6 +146,8 @@ class CachedProductsRepository implements ProductsRepository {
       referencePrice: referencePrice,
       lowStockThreshold: lowStockThreshold,
     );
+    await _upsertLocal(product);
+    return product;
   }
 
   @override
@@ -159,8 +161,8 @@ class CachedProductsRepository implements ProductsRepository {
     int referencePrice = 0,
     int lowStockThreshold = 0,
     String? imageUrl,
-  }) {
-    return _remote.update(
+  }) async {
+    final product = await _remote.update(
       id: id,
       name: name,
       nameNp: nameNp,
@@ -171,6 +173,33 @@ class CachedProductsRepository implements ProductsRepository {
       lowStockThreshold: lowStockThreshold,
       imageUrl: imageUrl,
     );
+    await _upsertLocal(product);
+    return product;
+  }
+
+  /// Mirrors a remote write into the local cache so mobile lists (which read
+  /// Drift) show the change immediately instead of waiting for delta pull.
+  Future<void> _upsertLocal(Product p) {
+    return _db
+        .into(_db.localProducts)
+        .insertOnConflictUpdate(
+          LocalProductsCompanion.insert(
+            id: p.id,
+            businessId: p.businessId,
+            name: p.name,
+            nameNp: Value(p.nameNp),
+            sku: Value(p.sku),
+            unit: p.unit,
+            costPrice: Value(p.costPrice),
+            referencePrice: Value(p.referencePrice),
+            imageUrl: Value(p.imageUrl),
+            lowStockThreshold: Value(p.lowStockThreshold),
+            stockCached: Value(p.stockCached),
+            isActive: Value(p.isActive),
+            updatedAt: p.updatedAt ?? DateTime.now().toUtc(),
+            createdAt: Value(p.createdAt),
+          ),
+        );
   }
 
   @override

@@ -4,7 +4,7 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 
 ## Project Snapshot
 
-- Multi-tenant SaaS for Nepali dealers/distributors: inventory, quote-first ordering, non-VAT billing, credit (udharo) ledger, order chat.
+- Multi-tenant SaaS for Nepali dealers/distributors: inventory, quote-first ordering, non-VAT billing, credit (udharo) ledger.
 - **Stack:** Flutter (Android/iOS/Web, single codebase) + Supabase (Postgres/RLS, Auth, Realtime, Storage, Edge Functions) + FCM. Offline-first via Drift on staff mobile only.
 - Roles: `owner`, `sales`, `warehouse`, `customer`. Permission matrix in `product.md` §4 — enforce in RLS first, UI second.
 

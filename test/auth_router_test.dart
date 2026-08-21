@@ -76,9 +76,8 @@ void main() {
   group('resolveNotificationTarget', () {
     test('routes each emitted type to a registered path', () {
       final cases = <(String, Map<String, dynamic>, String?)>[
-        ('chat_message', {'order_id': 'o1'}, '/order/o1'),
-        ('quote_received', {'order_id': 'o1'}, '/order/o1'),
-        ('quote_accepted', {'order_id': 'o1'}, '/order/o1'),
+        ('quote_received', {'order_id': 'o1'}, '/order/o1?tab=quote'),
+        ('quote_accepted', {'order_id': 'o1'}, '/order/o1?tab=quote'),
         ('payment_recorded', {'bill_id': 'b1'}, '/bill/b1'),
         ('low_stock', {'product_id': 'p1'}, '/product/p1'),
         ('negative_stock', {'product_id': 'p1'}, '/product/p1'),

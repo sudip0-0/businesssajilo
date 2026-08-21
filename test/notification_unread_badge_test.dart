@@ -11,24 +11,25 @@ void main() {
       recipientMemberId: 'm1',
       type: 'dues_reminder',
     );
-    const chat = NotificationItem(
+    const lowStock = NotificationItem(
       id: 'n2',
       businessId: 'b1',
       recipientMemberId: 'm1',
-      type: 'chat_message',
+      type: 'low_stock',
     );
 
     test('drops dues reminders when mute is on', () {
       const muted = NotificationMutePrefs(dues: true);
-      expect(excludeMutedNotifications([dues, chat], muted).map((n) => n.id), [
-        'n2',
-      ]);
+      expect(
+        excludeMutedNotifications([dues, lowStock], muted).map((n) => n.id),
+        ['n2'],
+      );
     });
 
     test('keeps dues reminders when mute is off', () {
       const unmuted = NotificationMutePrefs(dues: false);
       expect(
-        excludeMutedNotifications([dues, chat], unmuted).map((n) => n.id),
+        excludeMutedNotifications([dues, lowStock], unmuted).map((n) => n.id),
         ['n1', 'n2'],
       );
     });

@@ -87,11 +87,6 @@ class _NotificationPrefsSectionState
       mainAxisSize: MainAxisSize.min,
       children: [
         SwitchListTile(
-          title: Text(l10n.muteChatNotifications),
-          value: _prefs.chat,
-          onChanged: _saving ? null : (v) => _set(_prefs.copyWith(chat: v)),
-        ),
-        SwitchListTile(
           title: Text(l10n.muteDuesReminders),
           value: _prefs.dues,
           onChanged: _saving ? null : (v) => _set(_prefs.copyWith(dues: v)),

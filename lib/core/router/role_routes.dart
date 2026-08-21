@@ -29,7 +29,14 @@ bool pathAllowedForRole(String path, Role role) {
   if (path.startsWith('/product/')) {
     return role == Role.owner || role == Role.sales || role == Role.warehouse;
   }
+  if (path.startsWith('/order/') && path.endsWith('/quote/new')) {
+    return role.canQuote;
+  }
   if (path.startsWith('/order/')) {
+    return true;
+  }
+  // Quote detail deep links (RLS enforces ownership per role).
+  if (path.startsWith('/quote/')) {
     return true;
   }
   return false;

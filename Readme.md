@@ -11,7 +11,6 @@ A multi-platform (Android · iOS · Web) business app for small and medium deale
 - **Quote-first ordering** — customers browse the catalog (no prices), place orders; sales sends a quote; customer accepts; warehouse packs & dispatches; bill is generated.
 - **Simple billing (no VAT)** — itemized invoices, walk-in counter sales, per-business bill numbering.
 - **Credit / udharo ledger** — partial payments, running customer balances, dues aging.
-- **Order chat** — message threads tied to each order/quote, with push notifications.
 - **Offline-first staff app** — billing, payments, and stock ops work without internet and sync later.
 - **Bilingual** — English + Nepali UI, BS + AD dates, NPR formatting.
 - **Owner dashboard & reports** — sales summaries, outstanding dues, stock valuation.
@@ -67,7 +66,7 @@ flutter run \
 
 ## Status
 
-Phases 0–11 complete for app features (auth/roles, inventory, ledger, billing, orders/quotes/chat, notifications, offline sync, reports, credit notes, invoice/statement export, launch hardening flows). Store listing copy is drafted; production Auth/captcha/SMTP and web FCM remain ops checklist items — see [tasks.md](tasks.md) and [docs/SECURITY.md](docs/SECURITY.md).
+Phases 0–11 complete for app features (auth/roles, inventory, ledger, billing, orders/quotes, notifications, offline sync, reports, credit notes, invoice/statement export, launch hardening flows). Order chat was removed post-launch (migration 43). Store listing copy is drafted; production Auth/captcha/SMTP and web FCM remain ops checklist items — see [tasks.md](tasks.md) and [docs/SECURITY.md](docs/SECURITY.md).
 
 ## License
 

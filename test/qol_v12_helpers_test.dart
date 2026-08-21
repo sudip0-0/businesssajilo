@@ -65,7 +65,6 @@ void main() {
     test('mutes dues reminders by default', () {
       const prefs = NotificationMutePrefs();
       expect(prefs.dues, isTrue);
-      expect(prefs.chat, isFalse);
       expect(prefs.lowStock, isFalse);
       expect(prefs.mutedTypes, ['dues_reminder']);
     });
@@ -86,10 +85,9 @@ void main() {
 
     test('fromNotificationPrefs reads muted types from server json', () {
       final prefs = NotificationMutePrefs.fromNotificationPrefs({
-        'muted': ['dues_reminder', 'chat_message'],
+        'muted': ['dues_reminder'],
       });
       expect(prefs.dues, isTrue);
-      expect(prefs.chat, isTrue);
       expect(prefs.lowStock, isFalse);
       expect(prefs.mutes('dues_reminder'), isTrue);
       expect(prefs.mutes('low_stock'), isFalse);

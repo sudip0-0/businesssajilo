@@ -14,10 +14,14 @@ class WebOrderDetailPage extends ConsumerWidget {
     super.key,
     required this.orderId,
     this.ordersListPath = '/owner/orders',
+    this.anchorQuotes = false,
   });
 
   final String orderId;
   final String ordersListPath;
+
+  /// Scroll the quote section into view (`?tab=quote` deep links).
+  final bool anchorQuotes;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,7 +43,11 @@ class WebOrderDetailPage extends ConsumerWidget {
           label: Text(l10n.orders),
         ),
       ],
-      body: OrderDetailScreen(orderId: orderId, embedded: true),
+      body: OrderDetailScreen(
+        orderId: orderId,
+        embedded: true,
+        anchorQuotes: anchorQuotes,
+      ),
     );
   }
 }

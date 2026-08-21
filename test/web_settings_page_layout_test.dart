@@ -81,7 +81,7 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Phone'), findsOneWidget);
-      expect(find.text('Mute order chat notifications'), findsOneWidget);
+      expect(find.text('Mute dues reminders'), findsOneWidget);
       expect(find.text('Plan'), findsOneWidget);
 
       await tester.ensureVisible(find.text('Plan'));

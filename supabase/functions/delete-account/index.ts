@@ -133,8 +133,8 @@ Deno.serve(async (req) => {
 
       const businessId = caller.business_id as string;
 
-      // Remove tenant storage objects (product + chat images).
-      for (const bucket of ["product-images", "order-chat-images"]) {
+      // Remove tenant storage objects (product images).
+      for (const bucket of ["product-images"]) {
         try {
           await removeFolder(supabaseAdmin, bucket, businessId);
         } catch (e) {

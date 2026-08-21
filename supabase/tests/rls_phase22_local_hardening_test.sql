@@ -1,6 +1,7 @@
--- Phase 22: credit-note RPC-only, dues parity, message body cap, audit revoke.
+-- Phase 22: credit-note RPC-only, dues parity, audit revoke.
+-- (Message body cap tests removed with the chat feature.)
 begin;
-select plan(8);
+select plan(6);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -118,33 +119,7 @@ select is(
   'owner_dashboard_stats.total_dues matches total_dues'
 );
 
--- 6. Oversized chat body rejected.
-select throws_ok(
-  $$insert into messages (order_id, business_id, sender_member_id, body)
-    values (
-      'c1111111-1111-1111-1111-111111111111',
-      '11111111-1111-1111-1111-111111111111',
-      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-      repeat('x', 4001)
-    )$$,
-  '23514',
-  null,
-  'messages body longer than 4000 is rejected'
-);
-
--- 7. Body at the limit is accepted.
-select lives_ok(
-  $$insert into messages (order_id, business_id, sender_member_id, body)
-    values (
-      'c1111111-1111-1111-1111-111111111111',
-      '11111111-1111-1111-1111-111111111111',
-      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-      repeat('y', 4000)
-    )$$,
-  'messages body of exactly 4000 is accepted'
-);
-
--- 8. insert_audit_log rejects non-staff (function is still callable but forbidden).
+-- 6. insert_audit_log rejects non-staff (function is still callable but forbidden).
 select test_set_auth('55555555-5555-5555-5555-555555555555');
 select throws_ok(
   $$select insert_audit_log(

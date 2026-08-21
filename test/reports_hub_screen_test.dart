@@ -12,7 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('reports hub shows three report tiles', (tester) async {
+  testWidgets('reports hub shows report tiles', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1200, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -44,9 +44,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Business analytics overview'), findsOneWidget);
-    expect(find.byType(ListTile), findsNWidgets(3));
+    expect(find.byType(ListTile), findsNWidgets(4));
     expect(find.widgetWithText(ListTile, 'Sales summary'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Dues aging'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Stock valuation'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Fiscal summary (BS)'), findsOneWidget);
   });
 }

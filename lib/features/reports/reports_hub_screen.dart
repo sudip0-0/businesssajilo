@@ -11,6 +11,7 @@ import '../billing/providers.dart';
 import '../customers/providers.dart';
 import '../inventory/providers.dart';
 import 'dues_aging_screen.dart';
+import 'fiscal_summary_screen.dart';
 import 'providers.dart';
 import 'sales_summary_screen.dart';
 import 'stock_valuation_screen.dart';
@@ -163,6 +164,17 @@ class ReportsHubScreen extends ConsumerWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SalesSummaryScreen()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ReportNavCard(
+            icon: Icons.calendar_month_outlined,
+            title: l10n.fiscalSummary,
+            subtitle: l10n.fiscalMonthlySales,
+            color: BsColors.primary,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FiscalSummaryScreen()),
             ),
           ),
           const SizedBox(height: 12),

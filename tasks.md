@@ -40,19 +40,19 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Walk-in (no-customer) bills
 - ✅ Bill list + bill detail (immutable snapshot view)
 
-## Phase 5 — Orders, Quotes & Chat (customer app)
+## Phase 5 — Orders & Quotes (customer app)
 - ✅ DB: `orders`, `order_items`, `quotes`, `quote_items`, `messages` + RLS
 - ✅ Customer catalog (no prices), cart, place order with note
 - ✅ Staff order queue; quote builder (rates, discounts) + send
 - ✅ Customer quote view: accept/reject with comment; quote versioning on re-quote
 - ✅ Order status pipeline: confirmed → packed → dispatched (warehouse actions; auto stock deduction on dispatch)
 - ✅ Generate bill from dispatched order (prefilled from accepted quote)
-- ✅ Order chat thread (text + image) via Supabase Realtime
+- ✅ Order chat thread shipped in Phase 5; **removed post-launch** (migration 43 drops `messages`, trigger, and `order-chat-images` bucket)
 - ✅ Customer "My Dues" + own bill history
 
 ## Phase 6 — Notifications
 - ✅ FCM setup (Android/iOS/Web), token registration
-- ✅ Edge Function `notify` + DB webhooks for order/quote/chat/low-stock/payment events
+- ✅ Edge Function `notify` + DB webhooks for order/quote/low-stock/payment events
 - ✅ In-app notification center with read states
 
 ## Phase 7 — Offline Sync (staff mobile)

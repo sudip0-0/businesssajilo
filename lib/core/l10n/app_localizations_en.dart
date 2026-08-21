@@ -706,12 +706,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generateBill => 'Generate bill';
 
   @override
-  String get orderChat => 'Order chat';
-
-  @override
-  String get typeMessage => 'Type a message';
-
-  @override
   String get billHistory => 'Bill history';
 
   @override
@@ -725,9 +719,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requote => 'Send new quote';
-
-  @override
-  String get openChat => 'Chat';
 
   @override
   String get emptyCatalog => 'No products in catalog';
@@ -752,9 +743,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fulfillmentQueue => 'Orders to fulfill';
-
-  @override
-  String get noMessages => 'No messages yet';
 
   @override
   String get attachImage => 'Attach image';
@@ -788,9 +776,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifOrderStatus => 'Order status updated';
-
-  @override
-  String get notifChatMessage => 'New chat message';
 
   @override
   String get notifPaymentRecorded => 'Payment recorded';
@@ -979,9 +964,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get areYouSure => 'Are you sure?';
-
-  @override
-  String get messageSendFailed => 'Message could not be sent. Try again.';
 
   @override
   String get openingBalanceLocked =>
@@ -1458,9 +1440,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imageInvalidType => 'Only JPEG, PNG, or WebP images are allowed';
 
   @override
-  String get messageTooLong => 'Message is too long';
-
-  @override
   String get changePassword => 'Change password';
 
   @override
@@ -1827,9 +1806,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get muteChatNotifications => 'Mute order chat notifications';
-
-  @override
   String get muteDuesReminders => 'Mute dues reminders';
 
   @override
@@ -1894,4 +1870,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String pendingSyncSalesHint(String amount) {
     return '$amount pending sync — not yet confirmed';
   }
+
+  @override
+  String get quoteSuperseded => 'Superseded';
+
+  @override
+  String get quoteExpired => 'Expired';
+
+  @override
+  String get respond => 'Respond';
+
+  @override
+  String get periodBsThisMonth => 'This month (BS)';
+
+  @override
+  String get periodBsLastMonth => 'Last month (BS)';
+
+  @override
+  String get periodThisFiscalYear => 'This fiscal year';
+
+  @override
+  String get periodLastFiscalYear => 'Last fiscal year';
+
+  @override
+  String get fiscalSummary => 'Fiscal summary (BS)';
+
+  @override
+  String get fiscalMonthlySales => 'Monthly sales by BS calendar';
 }

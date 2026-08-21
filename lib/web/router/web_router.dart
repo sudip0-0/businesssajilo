@@ -43,11 +43,15 @@ import '../features/orders/web_catalog_page.dart' deferred as catalog;
 import '../features/orders/web_order_detail_page.dart' deferred as order_detail;
 import '../features/orders/web_order_list_page.dart' deferred as order_list;
 import '../features/reports/web_dues_aging_page.dart' deferred as dues_aging;
+import '../features/reports/web_fiscal_report_page.dart'
+    deferred as fiscal_report;
 import '../features/reports/web_reports_hub_page.dart' deferred as reports_hub;
 import '../features/reports/web_sales_report_page.dart'
     deferred as sales_report;
 import '../features/reports/web_stock_report_page.dart'
     deferred as stock_report;
+import '../features/quotes/web_quote_builder_page.dart' deferred as quote_builder;
+import '../features/quotes/web_quote_detail_page.dart' deferred as quote_detail;
 
 final webRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
@@ -273,11 +277,33 @@ ShellRoute _ownerRoutes() {
                 builder: () => order_detail.WebOrderDetailPage(
                   orderId: state.pathParameters['orderId']!,
                   ordersListPath: '/owner/orders',
+                  anchorQuotes:
+                      state.uri.queryParameters['tab'] == 'quote',
                 ),
               );
             },
+            routes: [
+              GoRoute(
+                path: 'quote/new',
+                builder: (_, state) => DeferredPage(
+                  load: quote_builder.loadLibrary,
+                  builder: () => quote_builder.WebQuoteBuilderPage(
+                    orderId: state.pathParameters['orderId']!,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/owner/quotes/:quoteId',
+        builder: (_, state) => DeferredPage(
+          load: quote_detail.loadLibrary,
+          builder: () => quote_detail.WebQuoteDetailPage(
+            quoteId: state.pathParameters['quoteId']!,
+          ),
+        ),
       ),
       GoRoute(
         path: '/owner/staff',
@@ -307,6 +333,15 @@ ShellRoute _ownerRoutes() {
           load: dues_aging.loadLibrary,
           builder: () => dues_aging.WebDuesAgingPage(
             initialBucket: state.uri.queryParameters['bucket'],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/owner/reports/fiscal',
+        builder: (_, state) => DeferredPage(
+          load: fiscal_report.loadLibrary,
+          builder: () => fiscal_report.WebFiscalReportPage(
+            initialPeriod: state.uri.queryParameters['period'],
           ),
         ),
       ),
@@ -399,11 +434,33 @@ ShellRoute _salesRoutes() {
                 builder: () => order_detail.WebOrderDetailPage(
                   orderId: state.pathParameters['orderId']!,
                   ordersListPath: '/sales/orders',
+                  anchorQuotes:
+                      state.uri.queryParameters['tab'] == 'quote',
                 ),
               );
             },
+            routes: [
+              GoRoute(
+                path: 'quote/new',
+                builder: (_, state) => DeferredPage(
+                  load: quote_builder.loadLibrary,
+                  builder: () => quote_builder.WebQuoteBuilderPage(
+                    orderId: state.pathParameters['orderId']!,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/sales/quotes/:quoteId',
+        builder: (_, state) => DeferredPage(
+          load: quote_detail.loadLibrary,
+          builder: () => quote_detail.WebQuoteDetailPage(
+            quoteId: state.pathParameters['quoteId']!,
+          ),
+        ),
       ),
       GoRoute(
         path: '/sales/customers',
@@ -575,6 +632,15 @@ ShellRoute _customerRoutes() {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/customer/quotes/:quoteId',
+        builder: (_, state) => DeferredPage(
+          load: quote_detail.loadLibrary,
+          builder: () => quote_detail.WebQuoteDetailPage(
+            quoteId: state.pathParameters['quoteId']!,
+          ),
+        ),
       ),
       GoRoute(
         path: '/customer/dues',

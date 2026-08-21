@@ -1,6 +1,7 @@
--- Phase 19 security hotfix: order-scoped chat storage, received_by, negative stock.
+-- Phase 19 security hotfix: received_by attribution, negative stock.
+-- (Order-scoped chat storage tests removed with the chat feature.)
 begin;
-select plan(7);
+select plan(3);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -9,25 +10,18 @@ insert into auth.users (id, email, encrypted_password, email_confirmed_at, raw_a
 values
   ('22222222-2222-2222-2222-222222222222', 'owner@test.com', crypt('pass', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated'),
   ('33333333-3333-3333-3333-333333333333', 'sales@test.com', crypt('pass', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated'),
-  ('55555555-5555-5555-5555-555555555555', 'cust_a@test.com', crypt('pass', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated'),
-  ('66666666-6666-6666-6666-666666666666', 'cust_b@test.com', crypt('pass', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated');
+  ('55555555-5555-5555-5555-555555555555', 'cust_a@test.com', crypt('pass', gen_salt('bf')), now(), '{}', '{}', 'authenticated', 'authenticated');
 
 insert into members (id, business_id, auth_user_id, role, display_name, is_active) values
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'owner', 'Owner', true),
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'sales', 'Sales', true),
-  ('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'customer', 'CustA', true),
-  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', '66666666-6666-6666-6666-666666666666', 'customer', 'CustB', true);
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'customer', 'CustA', true);
 
 insert into customers (id, business_id, member_id, shop_name, opening_balance) values
-  ('e1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Shop A', 0),
-  ('e2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Shop B', 0);
+  ('e1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Shop A', 0);
 
 insert into products (id, business_id, name, unit, reference_price, stock_cached) values
   ('b1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Cola', 'piece', 5000, 1);
-
-insert into orders (id, business_id, customer_id, status) values
-  ('c1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'placed'),
-  ('c2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'e2222222-2222-2222-2222-222222222222', 'placed');
 
 create or replace function test_set_auth(uid uuid) returns void
 language plpgsql as $$
@@ -37,63 +31,6 @@ begin
   set local role authenticated;
 end;
 $$;
-
--- Seed chat image objects under each customer's order as service role.
-set local role service_role;
-
-insert into storage.objects (bucket_id, name, owner, metadata)
-values
-  (
-    'order-chat-images',
-    '11111111-1111-1111-1111-111111111111/c1111111-1111-1111-1111-111111111111/img_a.jpg',
-    '55555555-5555-5555-5555-555555555555',
-    '{}'::jsonb
-  ),
-  (
-    'order-chat-images',
-    '11111111-1111-1111-1111-111111111111/c2222222-2222-2222-2222-222222222222/img_b.jpg',
-    '66666666-6666-6666-6666-666666666666',
-    '{}'::jsonb
-  );
-
--- Customer A can read own order image only.
-select test_set_auth('55555555-5555-5555-5555-555555555555');
-
-select is(
-  (select count(*)::int from storage.objects
-    where bucket_id = 'order-chat-images'
-      and name like '%/c1111111-1111-1111-1111-111111111111/%'),
-  1,
-  'customer A reads own order chat image'
-);
-
-select is(
-  (select count(*)::int from storage.objects
-    where bucket_id = 'order-chat-images'
-      and name like '%/c2222222-2222-2222-2222-222222222222/%'),
-  0,
-  'customer A cannot read customer B chat image'
-);
-
--- Owner can read both.
-select test_set_auth('22222222-2222-2222-2222-222222222222');
-
-select is(
-  (select count(*)::int from storage.objects where bucket_id = 'order-chat-images'),
-  2,
-  'owner reads all tenant chat images'
-);
-
--- Direct DELETE on storage.objects is blocked by storage.protect_delete;
--- owners must use the Storage API. RLS still allows the owner to see the row.
-select throws_ok(
-  $$delete from storage.objects
-    where bucket_id = 'order-chat-images'
-      and name = '11111111-1111-1111-1111-111111111111/c2222222-2222-2222-2222-222222222222/img_b.jpg'$$,
-  '42501',
-  null,
-  'direct storage.objects delete is blocked; use Storage API'
-);
 
 -- payments(bill_id) index exists.
 select ok(

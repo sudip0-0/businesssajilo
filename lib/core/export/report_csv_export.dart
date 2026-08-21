@@ -109,3 +109,18 @@ List<List<String>> todaysBillsCsvRows(List<Bill> bills) {
   }
   return rows;
 }
+
+/// BS-month buckets for the fiscal summary CSV (labels preformatted).
+List<List<String>> fiscalSummaryCsvRows(List<(String, int, int)> months) {
+  final rows = <List<String>>[
+    ['BS month', 'Bills', 'Total sales'],
+  ];
+  for (final (label, billCount, totalSales) in months) {
+    rows.add([
+      label,
+      '$billCount',
+      formatNpr(Paisa(totalSales), showPaisa: false),
+    ]);
+  }
+  return rows;
+}

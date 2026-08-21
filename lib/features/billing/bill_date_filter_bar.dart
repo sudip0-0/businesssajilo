@@ -23,6 +23,10 @@ class BillDateFilterBar extends StatelessWidget {
         ReportPeriodPreset.last7Days => l10n.periodLast7Days,
         ReportPeriodPreset.last30Days => l10n.periodLast30Days,
         ReportPeriodPreset.thisMonth => l10n.periodThisMonth,
+        ReportPeriodPreset.bsThisMonth => l10n.periodBsThisMonth,
+        ReportPeriodPreset.bsLastMonth => l10n.periodBsLastMonth,
+        ReportPeriodPreset.bsFiscalYear => l10n.periodThisFiscalYear,
+        ReportPeriodPreset.bsLastFiscalYear => l10n.periodLastFiscalYear,
         ReportPeriodPreset.custom => l10n.periodCustom,
       };
 

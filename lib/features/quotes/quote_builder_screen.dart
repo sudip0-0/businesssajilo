@@ -51,9 +51,10 @@ class _DraftLine {
 }
 
 class QuoteBuilderScreen extends ConsumerStatefulWidget {
-  const QuoteBuilderScreen({super.key, required this.orderId});
+  const QuoteBuilderScreen({super.key, required this.orderId, this.embedded = false});
 
   final String orderId;
+  final bool embedded;
 
   @override
   ConsumerState<QuoteBuilderScreen> createState() => _QuoteBuilderScreenState();
@@ -155,9 +156,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     final l10n = AppLocalizations.of(context);
     final orderAsync = ref.watch(orderDetailProvider(widget.orderId));
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.sendQuote)),
-      body: orderAsync.when(
+    final body = orderAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorState(
           message: l10n.loadingFailed,
@@ -292,7 +291,12 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
             ],
           );
         },
-      ),
+      );
+
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.sendQuote)),
+      body: body,
     );
   }
 }

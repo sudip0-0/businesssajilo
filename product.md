@@ -37,7 +37,6 @@ BusinessSajilo is a multi-tenant SaaS platform for small-to-medium dealers and d
 | Record payments | ✅ | ✅ | ❌ | ❌ |
 | View customer ledger / dues | ✅ | ✅ | ❌ | own ledger |
 | Place orders, accept/reject quotes | ❌ | ❌ | ❌ | ✅ |
-| Order-thread chat | ✅ | ✅ | ❌ | ✅ |
 | Reports & dashboard | ✅ | limited | ❌ | ❌ |
 
 Hard rule: **Warehouse Manager may create and view bills but must never see customer balances, payments, or the ledger.** Enforced at the database (RLS) level, not just UI.
@@ -49,7 +48,7 @@ Hard rule: **Warehouse Manager may create and view bills but must never see cust
 1. Customer browses catalog (products, **no prices shown** — pricing is negotiated per quote).
 2. Customer places an order (items + quantities + note).
 3. Sales/Owner receives notification, reviews, and sends a **Quote** (per-item rates, discounts, total).
-4. Customer **accepts** or **rejects** (with comment) the quote. Counter-discussion happens in the order's chat thread.
+4. Customer **accepts** or **rejects** (with comment) the quote. Re-quote / counter-offers happen by sending new quote versions.
 5. On acceptance, sales/owner (or warehouse) generates the **Bill** from the order. Payment recorded as full, partial (credit), or due.
 
 Order states (shipped): `placed → received → billed`. Quote discussion happens while the order is `placed` or `received`; `create_bill` moves it to `billed`.
@@ -77,12 +76,7 @@ Order states (shipped): `placed → received → billed`. Quote discussion happe
 - Low-stock alerts via push.
 - Out of scope v1: multi-warehouse, batches/expiry, unit conversions (carton↔piece) — see roadmap.
 
-### 5.5 Messaging
-
-- Chat threads **tied to orders/quotes only** (no general chat). Participants: customer + staff with sales rights.
-- Supports text + image attachments. Realtime via Supabase Realtime; push notification on new message.
-
-### 5.6 Reports & Dashboard (Owner)
+### 5.5 Reports & Dashboard (Owner)
 
 - Sales summary: daily / weekly / monthly, top products, top customers.
 - Outstanding dues with aging buckets (0–30 / 31–60 / 60+ days).
@@ -98,12 +92,12 @@ Order states (shipped): `placed → received → billed`. Quote discussion happe
 ## 7. Offline Strategy
 
 - **Staff apps (mobile): offline-first** for billing, payment recording, and stock operations. Local SQLite (Drift) with a sync queue; conflict policy = last-write-wins per field with audit log, stock movements are append-only events so they merge safely.
-- **Customer app: online-only** — catalog requires connectivity (no Drift cache in v1); placing orders, quotes, and chat also require connectivity.
+- **Customer app: online-only** — catalog requires connectivity (no Drift cache in v1); placing orders and quotes also require connectivity.
 - **Web: online-only.**
 
 ## 8. Notifications
 
-Push (FCM) for: order placed (staff), quote received / quote response (customer/staff), order status changes, new chat message, low stock (owner/warehouse), payment recorded (customer). In-app notification center mirrors all pushes.
+Push (FCM) for: order placed (staff), quote received / quote response (customer/staff), order status changes, low stock (owner/warehouse), payment recorded (customer). In-app notification center mirrors all pushes.
 
 ## 9. Platforms
 

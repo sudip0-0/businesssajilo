@@ -4,6 +4,7 @@ import '../../core/utils/bill_totals.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../data/repositories/products_repository.dart';
+import '../../data/repositories/quotes_repository.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_item.dart';
@@ -86,7 +87,9 @@ BillLineInput billLineWithEdits(
   );
 }
 
-/// Loads order items and product reference prices into a bill draft.
+/// Loads order items into a bill draft. Rates come from the accepted quote
+/// when one exists (PRD: bill from quoted order), falling back to product
+/// reference prices for anything the quote doesn't cover.
 Future<BillFromOrderDraft?> loadBillFromOrderDraft(
   Ref ref,
   String orderId,
@@ -94,8 +97,21 @@ Future<BillFromOrderDraft?> loadBillFromOrderDraft(
   final Order order = await ref.read(ordersRepositoryProvider).get(orderId);
   if (order.items.isEmpty) return null;
 
-  final productsRepo = ref.read(productsRepositoryProvider);
   final rates = <String, int>{};
+  try {
+    final accepted = await ref
+        .read(quotesRepositoryProvider)
+        .latestAccepted(orderId);
+    if (accepted != null) {
+      for (final item in accepted.items) {
+        rates[item.productId] = item.rate;
+      }
+    }
+  } catch (_) {
+    // Quote lookup is best-effort; reference prices still prefill below.
+  }
+
+  final productsRepo = ref.read(productsRepositoryProvider);
   for (final item in order.items) {
     if (rates.containsKey(item.productId)) continue;
     try {

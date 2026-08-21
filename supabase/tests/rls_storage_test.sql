@@ -67,7 +67,7 @@ select is(
 
 -- Cross-bucket access denied.
 select is(
-  (select count(*)::int from storage.objects where bucket_id = 'order-chat-images'),
+  (select count(*)::int from storage.objects where bucket_id = 'no-such-bucket'),
   0,
   'customer cannot read other buckets'
 );

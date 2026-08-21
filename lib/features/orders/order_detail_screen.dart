@@ -19,6 +19,7 @@ import '../../domain/models/order_item.dart';
 import '../auth/providers/auth_provider.dart';
 import '../billing/bill_from_order_sheet.dart';
 import '../inventory/product_image.dart';
+import '../quotes/order_quote_section.dart';
 import 'cart_sheet.dart';
 import 'catalog_screen.dart';
 import 'providers.dart';
@@ -28,10 +29,14 @@ class OrderDetailScreen extends ConsumerWidget {
     super.key,
     required this.orderId,
     this.embedded = false,
+    this.anchorQuotes = false,
   });
 
   final String orderId;
   final bool embedded;
+
+  /// Scroll the quote section into view (notification deep links).
+  final bool anchorQuotes;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,6 +112,7 @@ class OrderDetailScreen extends ConsumerWidget {
               );
             }),
             const SizedBox(height: 16),
+            if (anchorQuotes) _QuoteAnchor(orderId: orderId) else OrderQuoteSection(orderId: orderId),
             _ActionButtons(
               orderId: orderId,
               status: order.status,
@@ -125,6 +131,38 @@ class OrderDetailScreen extends ConsumerWidget {
       body: body,
     );
   }
+}
+
+/// Scrolls the quote section into view for `?tab=quote` deep links.
+class _QuoteAnchor extends StatefulWidget {
+  const _QuoteAnchor({required this.orderId});
+
+  final String orderId;
+
+  @override
+  State<_QuoteAnchor> createState() => _QuoteAnchorState();
+}
+
+class _QuoteAnchorState extends State<_QuoteAnchor> {
+  final _key = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _key.currentContext;
+      if (ctx != null && mounted) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 300),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Container(key: _key, child: OrderQuoteSection(orderId: widget.orderId));
 }
 
 class _ActionButtons extends ConsumerWidget {

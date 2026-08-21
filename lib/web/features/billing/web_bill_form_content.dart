@@ -16,6 +16,7 @@ import '../../../data/repositories/bills_repository.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../data/repositories/orders_repository.dart';
 import '../../../data/repositories/products_repository.dart';
+import '../../../data/repositories/quotes_repository.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
@@ -106,6 +107,20 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       final customer = await ref
           .read(customersRepositoryProvider)
           .get(order.customerId);
+      // Accepted-quote rates win; reference prices fill the rest.
+      final quotedRates = <String, int>{};
+      try {
+        final accepted = await ref
+            .read(quotesRepositoryProvider)
+            .latestAccepted(orderId);
+        if (accepted != null) {
+          for (final item in accepted.items) {
+            quotedRates[item.productId] = item.rate;
+          }
+        }
+      } catch (_) {
+        // Best-effort: fall back to reference prices below.
+      }
       final productsRepo = ref.read(productsRepositoryProvider);
       final lines = <BillDraftLine>[];
       for (final item in order.items) {
@@ -115,7 +130,8 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
             BillDraftLine(
               product: product,
               qty: item.qty,
-              rate: product.referencePrice,
+              rate:
+                  quotedRates[item.productId] ?? product.referencePrice,
             ),
           );
         } catch (_) {

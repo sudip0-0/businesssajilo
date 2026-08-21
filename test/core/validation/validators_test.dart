@@ -1,23 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:businesssajilo/core/validation/image_upload.dart';
-import 'package:businesssajilo/core/validation/message_validator.dart';
 import 'package:businesssajilo/core/validation/password_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('MessageValidator', () {
-    test('accepts body at max length', () {
-      final body = 'a' * MessageValidator.maxBodyLength;
-      expect(MessageValidator.isBodyTooLong(body), isFalse);
-    });
-
-    test('rejects body over max length', () {
-      final body = 'a' * (MessageValidator.maxBodyLength + 1);
-      expect(MessageValidator.isBodyTooLong(body), isTrue);
-    });
-  });
-
   group('PasswordValidator', () {
     test('rejects empty and oversized passwords', () {
       expect(PasswordValidator.validate(''), isNotNull);

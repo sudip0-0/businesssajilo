@@ -1,8 +1,22 @@
+import '../../core/utils/bs_calendar.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
 
 /// Preset or custom date window for owner web reports.
-enum ReportPeriodPreset { today, last7Days, last30Days, thisMonth, custom }
+///
+/// `bs*` presets are Bikram Sambat calendar windows (NPT day boundaries)
+/// converted to AD UTC instants; they reuse the same report RPCs.
+enum ReportPeriodPreset {
+  today,
+  last7Days,
+  last30Days,
+  thisMonth,
+  bsThisMonth,
+  bsLastMonth,
+  bsFiscalYear,
+  bsLastFiscalYear,
+  custom,
+}
 
 /// Immutable period selection used to key Riverpod report providers.
 class ReportPeriod {
@@ -31,6 +45,18 @@ class ReportPeriod {
         now: now,
       ),
       ReportPeriodPreset.thisMonth => dateRangeFor(ReportRange.month, now: now),
+      ReportPeriodPreset.bsThisMonth => BsCalendar.monthRange(
+        BsCalendar.currentBsMonth(now: now),
+      ),
+      ReportPeriodPreset.bsLastMonth => BsCalendar.monthRange(
+        BsCalendar.previousBsMonth(now: now),
+      ),
+      ReportPeriodPreset.bsFiscalYear => BsCalendar.fiscalYearRange(
+        BsCalendar.currentFiscalYearStartYear(now: now),
+      ),
+      ReportPeriodPreset.bsLastFiscalYear => BsCalendar.fiscalYearRange(
+        BsCalendar.currentFiscalYearStartYear(now: now) - 1,
+      ),
       ReportPeriodPreset.custom => throw StateError('Use ReportPeriod.custom'),
     };
     return ReportPeriod._(preset: preset, from: range.from, to: range.to);
@@ -70,6 +96,19 @@ class ReportPeriod {
         ReportPeriodPreset.thisMonth,
         now: now,
       ),
+      'bsMonth' => ReportPeriod.preset(
+        ReportPeriodPreset.bsThisMonth,
+        now: now,
+      ),
+      'bsLastMonth' => ReportPeriod.preset(
+        ReportPeriodPreset.bsLastMonth,
+        now: now,
+      ),
+      'bsFy' => ReportPeriod.preset(ReportPeriodPreset.bsFiscalYear, now: now),
+      'bsLastFy' => ReportPeriod.preset(
+        ReportPeriodPreset.bsLastFiscalYear,
+        now: now,
+      ),
       _ => ReportPeriod.preset(ReportPeriodPreset.last7Days, now: now),
     };
   }
@@ -79,6 +118,10 @@ class ReportPeriod {
     ReportPeriodPreset.last7Days => '7d',
     ReportPeriodPreset.last30Days => '30d',
     ReportPeriodPreset.thisMonth => 'month',
+    ReportPeriodPreset.bsThisMonth => 'bsMonth',
+    ReportPeriodPreset.bsLastMonth => 'bsLastMonth',
+    ReportPeriodPreset.bsFiscalYear => 'bsFy',
+    ReportPeriodPreset.bsLastFiscalYear => 'bsLastFy',
     ReportPeriodPreset.custom => 'custom',
   };
 

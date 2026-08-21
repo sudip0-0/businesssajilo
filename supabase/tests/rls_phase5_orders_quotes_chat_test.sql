@@ -1,6 +1,6 @@
--- RLS tests for simplified orders (placed → received → billed) + leftover chat RLS.
+-- RLS tests for simplified orders (placed → received → billed) + quotes.
 begin;
-select plan(9);
+select plan(7);
 
 insert into businesses (id, name) values
   ('11111111-1111-1111-1111-111111111111', 'Test Biz');
@@ -94,29 +94,6 @@ select is(
   (select count(*)::int from quotes),
   0,
   'warehouse cannot read quotes'
-);
-
--- Warehouse cannot insert messages.
-select throws_ok(
-  $$insert into messages (id, order_id, business_id, sender_member_id, body)
-    values ('05111111-1111-1111-1111-111111111111', '01111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'hi')$$,
-  '42501',
-  null,
-  'warehouse cannot insert messages'
-);
-
--- Customer and sales can chat (table retained; UI retired).
-select test_set_auth('55555555-5555-5555-5555-555555555555');
-
-insert into messages (id, order_id, business_id, sender_member_id, body)
-values ('06222222-2222-2222-2222-222222222222', '01111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Thanks');
-
-select test_set_auth('33333333-3333-3333-3333-333333333333');
-
-select is(
-  (select count(*)::int from messages where order_id = '01111111-1111-1111-1111-111111111111'),
-  1,
-  'sales reads order messages'
 );
 
 select * from finish();

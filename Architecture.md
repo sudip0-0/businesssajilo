@@ -27,7 +27,7 @@
             │        Supabase         │
             │  Postgres + RLS         │
             │  Auth (JWT + role claim)│
-            │  Realtime (chat/orders) │
+            │  Realtime (orders)      │
             │  Storage (images)       │
             │  Edge Functions         │──► FCM push
             └─────────────────────────┘
@@ -66,7 +66,6 @@ bill_items(id, bill_id, product_id, name_snapshot, qty, rate, discount, line_tot
 payments(id, business_id, customer_id, bill_id?, amount, method[cash|cheque|wallet|bank],
          ref_note, received_by, created_at)
 customer_ledger_entries(view: bills/credit notes as debit, payments as credit, running balance)
-messages(id, order_id, business_id, sender_member_id, body, image_url?, created_at)
 notifications(id, business_id, recipient_member_id, type, payload, read_at, created_at)
 ```
 
@@ -80,7 +79,7 @@ Notes:
 - **Local writes first**: bills, payments, stock movements written to Drift with `pending` flag and client-generated UUIDs.
 - **Push**: background worker drains the sync queue (ordered) to Supabase via PostgREST upserts; retries with exponential backoff.
 - **Pull**: delta sync using `updated_at > last_sync` per table.
-- **Conflicts**: append-only tables (movements, payments, messages) never conflict; mutable rows (product edits) use last-write-wins + `audit_log`.
+- **Conflicts**: append-only tables (movements, payments) never conflict; mutable rows (product edits) use last-write-wins + `audit_log`.
 - Customer app and web skip the sync layer entirely (direct online repo implementations behind the same repository interfaces).
 
 ### Offline matrix
@@ -96,14 +95,14 @@ Notes:
 | CustomersRepository | N (Supabase) | N | Y (`CachedCustomersRepository`) |
 | OrdersRepository | N | N | N (online-only) |
 | ReportsRepository | N | N | N (online-only) |
-| Credit notes / quotes / chat | N | N | N (intentionally online-only) |
+| Credit notes / quotes | N | N | N (intentionally online-only) |
 
-**Intentionally online-only:** credit notes, quotes, chat, orders, and reports (no Drift queue / cache). Owner dashboard KPIs use the `owner_dashboard_stats` RPC via `ownerDashboardStatsProvider`; if that call fails on staff mobile (offline / RPC unavailable), the provider falls back to existing local-capable methods (`todaysSales` / `yesterdaysSales` / `totalDues` / `lowStockCount`) plus online `pendingCount` when reachable — section lists (`todaysBillsProvider`, `lowStockAlertsProvider`, `recentCustomersProvider`, `salesDailyProvider`) stay separate loads.
+**Intentionally online-only:** credit notes, quotes, orders, and reports (no Drift queue / cache). Owner dashboard KPIs use the `owner_dashboard_stats` RPC via `ownerDashboardStatsProvider`; if that call fails on staff mobile (offline / RPC unavailable), the provider falls back to existing local-capable methods (`todaysSales` / `yesterdaysSales` / `totalDues` / `lowStockCount`) plus online `pendingCount` when reachable — section lists (`todaysBillsProvider`, `lowStockAlertsProvider`, `recentCustomersProvider`, `salesDailyProvider`) stay separate loads.
 
 ## 6. Realtime
 
-Supabase Realtime client streams are used for **chat messages** and the
-**notification feed** only (filtered by `order_id` / recipient). Order status
+Supabase Realtime client streams are used for the
+**notification feed** only (filtered by recipient). Order status
 and quote changes are pull/refresh based. Falls back to pull-to-refresh when
 offline.
 

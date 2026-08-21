@@ -11,13 +11,15 @@ import '../../core/utils/money.dart';
 import '../../data/repositories/quotes_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/quote.dart';
+import '../auth/providers/auth_provider.dart';
 import '../orders/providers.dart';
 import 'providers.dart';
 
 class QuoteDetailScreen extends ConsumerStatefulWidget {
-  const QuoteDetailScreen({super.key, required this.quoteId});
+  const QuoteDetailScreen({super.key, required this.quoteId, this.embedded = false});
 
   final String quoteId;
+  final bool embedded;
 
   @override
   ConsumerState<QuoteDetailScreen> createState() => _QuoteDetailScreenState();
@@ -106,10 +108,10 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final role = ref.watch(authProvider).value?.member?.role;
+    final canRespond = role == Role.customer;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.quoteDetail)),
-      body: FutureBuilder(
+    final body = FutureBuilder(
         key: ValueKey(_reloadToken),
         future: ref.read(quotesRepositoryProvider).get(widget.quoteId),
         builder: (context, snapshot) {
@@ -158,7 +160,7 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
                 '${l10n.grandTotal}: ${formatNpr(Paisa(quote.total), showPaisa: false)}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              if (quote.status == QuoteStatus.sent) ...[
+              if (quote.status == QuoteStatus.sent && canRespond) ...[
                 const SizedBox(height: 16),
                 TextField(
                   controller: _commentController,
@@ -184,10 +186,15 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
                   ],
                 ),
               ],
-            ],
-          );
-        },
-      ),
+             ],
+           );
+         },
+       );
+
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.quoteDetail)),
+      body: body,
     );
   }
 }

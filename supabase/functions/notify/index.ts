@@ -19,7 +19,6 @@ const TITLE_BY_TYPE: Record<string, string> = {
   quote_accepted: "Quote accepted",
   quote_rejected: "Quote rejected",
   order_status: "Order status updated",
-  chat_message: "New chat message",
   payment_recorded: "Payment recorded",
   low_stock: "Low stock alert",
   negative_stock: "Negative stock alert",

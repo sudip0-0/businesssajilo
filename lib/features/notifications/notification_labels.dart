@@ -12,7 +12,6 @@ String notificationTitle(AppLocalizations l10n, NotificationItem item) {
     'quote_accepted' => l10n.notifQuoteAccepted,
     'quote_rejected' => l10n.notifQuoteRejected,
     'order_status' => l10n.notifOrderStatus,
-    'chat_message' => l10n.notifChatMessage,
     'payment_recorded' => l10n.notifPaymentRecorded,
     'low_stock' => l10n.notifLowStock,
     'negative_stock' => l10n.notifNegativeStock,
@@ -30,7 +29,6 @@ IconData notificationIcon(String type) {
     'quote_received' ||
     'quote_accepted' ||
     'quote_rejected' => Icons.request_quote_outlined,
-    'chat_message' => Icons.chat_bubble_outline,
     'payment_recorded' => Icons.payments_outlined,
     'dues_reminder' => Icons.account_balance_wallet_outlined,
     'quote_stale' => Icons.schedule_outlined,

@@ -31,15 +31,13 @@ NotificationTarget resolveNotificationTarget(
   final canViewQuotes = role == null || role != Role.warehouse;
 
   switch (item.type) {
-    case 'chat_message':
-      if (ids.orderId == null) return const NotificationNonNavigable();
-      return NotificationNavigate('/order/${ids.orderId}');
     case 'quote_received':
     case 'quote_accepted':
     case 'quote_rejected':
       if (!canViewQuotes) return const NotificationNonNavigable();
       if (ids.orderId != null) {
-        return NotificationNavigate('/order/${ids.orderId}');
+        // `tab=quote` scrolls the order's quote section into view.
+        return NotificationNavigate('/order/${ids.orderId}?tab=quote');
       }
       return const NotificationNonNavigable();
     case 'payment_recorded':
@@ -99,18 +97,16 @@ String? webPathForNotificationTarget({
     if (inventoryPath == null) return null;
     return '$inventoryPath/$id';
   }
-  if (mobilePath.startsWith('/order/') && mobilePath.endsWith('/chat')) {
-    // Warehouse has no orders routes on web.
-    if (role == Role.warehouse) return null;
-    final orderId = mobilePath
-        .substring('/order/'.length)
-        .replaceAll('/chat', '');
-    return '$base/orders/$orderId?tab=1';
-  }
   if (mobilePath.startsWith('/order/')) {
     if (role == Role.warehouse) return null;
-    final id = mobilePath.substring('/order/'.length);
-    return '$base/orders/$id';
+    final raw = mobilePath.substring('/order/'.length);
+    final queryIndex = raw.indexOf('?');
+    final id = queryIndex == -1 ? raw : raw.substring(0, queryIndex);
+    final tab = queryIndex == -1
+        ? null
+        : Uri.splitQueryString(raw.substring(queryIndex))['tab'];
+    final suffix = tab == null ? '' : '?tab=$tab';
+    return '$base/orders/$id$suffix';
   }
   if (mobilePath.startsWith('/customers/')) {
     final id = mobilePath.substring('/customers/'.length);
@@ -124,8 +120,10 @@ String? webPathForNotificationTarget({
     return null;
   }
   if (mobilePath.startsWith('/quote/')) {
-    // No dedicated /quotes routes on web; quote notifs resolve to /order/.
-    return null;
+    // Warehouse has no quote routes on web.
+    if (role == Role.warehouse) return null;
+    final id = mobilePath.substring('/quote/'.length);
+    return '$base/quotes/$id';
   }
   if (mobilePath == '/notifications') {
     return '$base/notifications';
