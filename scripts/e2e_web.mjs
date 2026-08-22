@@ -9,7 +9,19 @@ if (!SUPABASE_ANON_KEY) {
   process.exit(1);
 }
 const EMAIL = process.env.E2E_EMAIL || 'e2e-owner@test.com';
-const PASSWORD = process.env.E2E_PASSWORD || 'password123';
+// Default seed password is acceptable ONLY against the local stack; against
+// any other host require explicit credentials so real ones never leak.
+const PASSWORD = process.env.E2E_PASSWORD;
+const isLocal = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:|$)/.test(BASE);
+if (!PASSWORD) {
+  if (isLocal && BASE.includes('localhost') || SUPABASE_URL.startsWith('http://127.0.0.1')) {
+    // fall through to local default below
+  } else {
+    console.error('E2E_PASSWORD is required when targeting a non-local URL');
+    process.exit(1);
+  }
+}
+const password = PASSWORD ?? 'password123';
 
 const routes = [
   '/owner/dashboard',
@@ -50,7 +62,7 @@ async function fetchSession() {
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+    body: JSON.stringify({ email: EMAIL, password }),
   });
   if (!res.ok) {
     throw new Error(`Auth failed: ${res.status} ${await res.text()}`);
