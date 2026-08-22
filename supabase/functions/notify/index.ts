@@ -184,16 +184,24 @@ function titleFor(_type: string, _payload: unknown): string {
   return TITLE_BY_TYPE[_type] ?? "BusinessSajilo";
 }
 
+// FCM OAuth tokens are valid ~1h; minting an RS256 JWT + token round-trip per
+// dispatch costs 200-500ms. Cache in module scope until shortly before expiry.
+let fcmTokenCache: { token: string; expiresAtMs: number } | null = null;
+
 async function getFcmAccessToken(serviceAccountJson: string): Promise<string> {
+  const now = Date.now();
+  if (fcmTokenCache && now < fcmTokenCache.expiresAtMs - 5 * 60_000) {
+    return fcmTokenCache.token;
+  }
   const sa = JSON.parse(serviceAccountJson);
-  const now = Math.floor(Date.now() / 1000);
+  const iat = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
   const claim = {
     iss: sa.client_email,
     scope: "https://www.googleapis.com/auth/firebase.messaging",
     aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
+    iat,
+    exp: iat + 3600,
   };
 
   const encoder = new TextEncoder();
@@ -239,7 +247,13 @@ async function getFcmAccessToken(serviceAccountJson: string): Promise<string> {
   }
 
   const tokenJson = await tokenRes.json();
-  return tokenJson.access_token as string;
+  const token = tokenJson.access_token as string;
+  fcmTokenCache = {
+    token,
+    // exp is iat+3600 in seconds; keep wall-clock ms with a safety margin
+    expiresAtMs: Date.now() + 55 * 60_000,
+  };
+  return token;
 }
 
 async function sendFcmMessage(
