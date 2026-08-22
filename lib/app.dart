@@ -77,18 +77,24 @@ final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
 );
 
 class LocaleNotifier extends Notifier<Locale> {
+  bool _loadCancelled = false;
+
   @override
   Locale build() {
+    _loadCancelled = false;
     _loadSaved();
     return const Locale('en');
   }
 
   Future<void> _loadSaved() async {
     final saved = await loadSavedLocale();
-    if (saved != null) state = saved;
+    // A user-initiated setLocale during the async load wins over the stale
+    // persisted value.
+    if (saved != null && !_loadCancelled) state = saved;
   }
 
   void setLocale(Locale locale) {
+    _loadCancelled = true;
     state = locale;
     saveLocale(locale);
   }
