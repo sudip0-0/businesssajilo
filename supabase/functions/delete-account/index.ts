@@ -104,6 +104,11 @@ Deno.serve(async (req) => {
         { p_member_id: caller.id },
       );
       if (error) throw error;
+      // Already-anonymized member (e.g. replayed request): the auth user is
+      // gone or unlinked — treat as success instead of deleteUser(undefined).
+      if (!authUserId) {
+        return json({ ok: true, already_deleted: true });
+      }
 
       const { error: deleteError } = await supabaseAdmin.auth.admin
         .deleteUser(authUserId as string);
@@ -187,12 +192,15 @@ async function removeFolder(
   bucket: string,
   folder: string,
 ) {
-  let offset = 0;
   const pageSize = 1000;
+  // Always re-list from offset 0: removing objects shifts list indices, so
+  // advancing `offset` between pages can skip entries in buckets with more
+  // than one page of objects. The loop terminates because each pass either
+  // deletes objects or recurses into (and empties) a subfolder.
   for (;;) {
     const { data: files } = await admin.storage.from(bucket).list(folder, {
       limit: pageSize,
-      offset,
+      offset: 0,
     });
     if (!files || files.length === 0) return;
     const nested = files.filter((f: { id?: string; name: string }) => !f.id);
@@ -206,7 +214,6 @@ async function removeFolder(
       await removeFolder(admin, bucket, `${folder}/${dir.name}`);
     }
     if (files.length < pageSize) return;
-    offset += pageSize;
   }
 }
 
