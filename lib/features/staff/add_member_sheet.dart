@@ -72,6 +72,10 @@ class _AddMemberSheetState extends ConsumerState<AddMemberSheet> {
                       _addressController.text.trim().isNotEmpty
                   ? _addressController.text.trim()
                   : null,
+              // Server now defaults members inactive; staff must be active
+              // immediately (customers are governed by the portal toggle in
+              // the customer creation flow, which passes its own value).
+              isActive: _role != Role.customer,
             );
         if (mounted) Navigator.pop(context, true);
       },

@@ -170,9 +170,10 @@ Deno.serve(async (req) => {
     }
     userId = authData.user.id;
 
-    // Portal-off customers are created inactive so random passwords cannot
-    // be used to sign in until the owner enables portal access.
-    const isActive = body.isActive === false ? false : true;
+    // Customers default to portal-off (inactive) so random passwords cannot
+    // be used to sign in until the owner explicitly enables portal access;
+    // staff roles default active. Callers can still override either way.
+    const isActive = body.isActive === true;
 
     const { data: member, error: memberError } = await supabaseAdmin
       .from("members")
