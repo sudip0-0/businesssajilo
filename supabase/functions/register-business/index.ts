@@ -18,9 +18,20 @@ const MAX_FIELD_LEN = 200;
 const attempts = new Map<string, { count: number; windowStart: number }>();
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 5;
+const MAX_TRACKED_KEYS = 10_000; // bound memory against IP-spoof floods
 
 function rateLimited(key: string): boolean {
   const now = Date.now();
+  // Evict expired entries (and hard-cap size) before recording a new one so
+  // the map cannot grow unbounded.
+  if (attempts.size > 0 && attempts.size % 100 === 0) {
+    for (const [k, v] of attempts) {
+      if (now - v.windowStart > WINDOW_MS) attempts.delete(k);
+    }
+  }
+  while (attempts.size >= MAX_TRACKED_KEYS) {
+    attempts.delete(attempts.keys().next().value);
+  }
   const entry = attempts.get(key);
   if (!entry || now - entry.windowStart > WINDOW_MS) {
     attempts.set(key, { count: 1, windowStart: now });
