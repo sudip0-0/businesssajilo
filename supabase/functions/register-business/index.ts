@@ -4,6 +4,14 @@ const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 if (!allowedOrigin) {
   throw new Error("ALLOWED_ORIGIN must be set");
 }
+if (allowedOrigin.trim() === "*") {
+  // Wildcard CORS defeats the origin allow-list model these functions are
+  // written for; refuse to serve it (config.toml defaults to a localhost
+  // origin for local dev).
+  throw new Error(
+    "ALLOWED_ORIGIN must be a concrete origin, not '*' — set it via `supabase secrets set ALLOWED_ORIGIN=https://…`",
+  );
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": allowedOrigin,
