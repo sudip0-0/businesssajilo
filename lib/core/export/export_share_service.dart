@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,7 +16,12 @@ class ExportShareService {
     required List<List<String>> rows,
     String? subject,
   }) async {
-    final csv = _csvWriter.build(rows);
+    // Large exports (full ledgers, year of bills) build thousands of rows;
+    // offload CSV serialization off the UI isolate above a threshold.
+    const isolateThreshold = 2000;
+    final csv = rows.length >= isolateThreshold
+        ? await Isolate.run(() => const CsvWriter().build(rows))
+        : _csvWriter.build(rows);
     final bytes = Uint8List.fromList(_csvWriter.encodeUtf8(csv));
     await shareBytes(
       filename: filename,
