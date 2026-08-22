@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { EMAIL_RE, MAX_FIELD_LEN, str } from "../_shared/validation.ts";
 
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 if (!allowedOrigin) {
@@ -154,7 +155,7 @@ Deno.serve(async (req) => {
     if (userId) {
       await supabaseAdmin.auth.admin.deleteUser(userId);
     }
-    return json({ error: "Registration failed. Please try again." }, 400);
+    return json({ error: "Registration failed. Please try again." }, 500);
   }
 });
 

@@ -11,6 +11,9 @@ export function str(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
 
+/** Pragmatic email shape check shared by create-member / register-business. */
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function isUuid(v: string): boolean {
   return UUID_RE.test(v);
 }

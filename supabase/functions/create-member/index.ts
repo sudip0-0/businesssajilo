@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { EMAIL_RE, MAX_FIELD_LEN, str } from "../_shared/validation.ts";
 
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 if (!allowedOrigin) {
@@ -18,8 +19,6 @@ const corsHeaders = {
 };
 
 const allowedRoles = ["sales", "warehouse", "customer"] as const;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_FIELD_LEN = 200;
 
 // Members without a real email log in by phone: the auth account is created
 // with a synthetic email derived from the normalized phone number. Must stay
@@ -229,13 +228,9 @@ Deno.serve(async (req) => {
     if (userId) {
       await supabaseAdmin.auth.admin.deleteUser(userId);
     }
-    return json({ error: "Could not create member. Please try again." }, 400);
+    return json({ error: "Could not create member. Please try again." }, 500);
   }
 });
-
-function str(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
-}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {

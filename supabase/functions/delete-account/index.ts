@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
       "delete-account failed",
       error instanceof Error ? error.message : error,
     );
-    return json({ error: "Could not delete account. Please try again." }, 400);
+    return json({ error: "Could not delete account. Please try again." }, 500);
   }
 });
 

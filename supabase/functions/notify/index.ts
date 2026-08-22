@@ -44,7 +44,14 @@ Deno.serve(async (req) => {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    const body = await req.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      // Malformed JSON is a client error, not a server fault — the outer
+      // catch-all maps to 500.
+      return json({ error: "Invalid request body" }, 400);
+    }
     const notificationId =
       body.notification_id ?? body.record?.id ?? body.id;
     if (!notificationId) {

@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
       "reset-member-password failed",
       error instanceof Error ? error.message : error,
     );
-    return json({ error: "Could not reset password. Please try again." }, 400);
+    return json({ error: "Could not reset password. Please try again." }, 500);
   }
 });
 
