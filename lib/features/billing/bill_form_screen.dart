@@ -21,6 +21,7 @@ import 'bill_summary.dart';
 import 'copy_last_bill.dart';
 import 'providers.dart';
 import 'validate_bill_payment.dart';
+import '../../core/logging/app_log.dart';
 
 class BillFormScreen extends ConsumerStatefulWidget {
   const BillFormScreen({super.key, this.embedded = false, this.onSaved});
@@ -79,7 +80,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           customer = await ref
               .read(customersRepositoryProvider)
               .get(bill.customerId!);
-        } catch (_) {}
+        } catch (e, st) {
+          AppLog.warn('Operation failed', e, st);
+        }
       }
       if (!mounted) return;
       setState(() {

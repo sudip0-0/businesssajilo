@@ -1,3 +1,4 @@
+import 'package:businesssajilo/core/utils/session_cache.dart';
 import 'package:businesssajilo/data/repositories/auth_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/member.dart';
@@ -5,6 +6,21 @@ import 'package:businesssajilo/domain/models/session_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// In-memory fake standing in for the secure-storage API used by SessionCache.
+class _FakeSecureStorage implements SecureKeyValueStore {
+  final Map<String, String> values = {};
+
+  @override
+  Future<String?> read(String key) => Future.value(values[key]);
+
+  @override
+  Future<void> write(String key, String? value) async =>
+      value == null ? values.remove(key) : (values[key] = value);
+
+  @override
+  Future<void> delete(String key) async => values.remove(key);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +66,10 @@ void main() {
 
   group('AuthRepository', () {
     test('loadSession returns empty when client is null', () async {
-      final repo = AuthRepository(null);
+      final repo = AuthRepository(
+        null,
+        sessionCache: SessionCache(storage: _FakeSecureStorage()),
+      );
       expect(await repo.loadSession(), SessionState.empty);
     });
 

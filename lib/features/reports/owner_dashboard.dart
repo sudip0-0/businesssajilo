@@ -28,6 +28,7 @@ import 'providers.dart';
 import 'report_export_actions.dart';
 import 'sales_summary_screen.dart';
 import 'stock_valuation_screen.dart';
+import '../../core/logging/app_log.dart';
 
 class OwnerDashboard extends ConsumerStatefulWidget {
   const OwnerDashboard({super.key, this.onOrdersTap});
@@ -47,7 +48,9 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         await ref.read(quotesRepositoryProvider).processOperationalNudges();
-      } catch (_) {}
+      } catch (e, st) {
+          AppLog.warn('Operation failed', e, st);
+        }
     });
   }
 

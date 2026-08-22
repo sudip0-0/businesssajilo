@@ -2,6 +2,7 @@ import '../../data/repositories/bills_repository.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/product.dart';
+import '../../core/logging/app_log.dart';
 
 /// Latest bill with line items. [BillsRepository.list] omits `bill_items`,
 /// so this follows up with [BillsRepository.get] when needed.
@@ -26,7 +27,9 @@ Future<List<Product>> productsForBillItems({
     if (id.isEmpty || byId.containsKey(id)) continue;
     try {
       byId[id] = await products.get(id);
-    } catch (_) {}
+    } catch (e, st) {
+          AppLog.warn('Operation failed', e, st);
+        }
   }
   return byId.values.toList();
 }

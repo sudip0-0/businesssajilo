@@ -19,9 +19,7 @@ final authProvider = NotifierProvider<AuthController, AsyncValue<SessionState>>(
 );
 
 /// Session-scoped business profile — lives with auth, not in the data layer.
-final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
-  ref,
-) async {
+final currentBusinessProvider = FutureProvider.autoDispose<Business?>((ref) async {
   final businessId = ref.watch(authProvider).value?.member?.businessId;
   if (businessId == null) return null;
   try {
@@ -29,7 +27,10 @@ final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
         .watch(businessesRepositoryProvider)
         .getById(businessId)
         .timeout(const Duration(seconds: 5));
-  } catch (_) {
+  } catch (e, st) {
+    // Distinguish "no business" from "load failed" — callers watching
+    // .value can't retry a swallowed failure.
+    AppLog.warn('currentBusinessProvider load failed', e, st);
     return null;
   }
 });
