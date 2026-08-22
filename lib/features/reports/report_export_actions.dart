@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/errors/app_failure.dart';
 import '../../core/export/export_share_service.dart';
@@ -19,6 +18,7 @@ import '../../domain/models/top_customer_row.dart';
 import '../../domain/models/top_product_row.dart';
 import '../billing/providers.dart';
 import 'providers.dart';
+import '../../core/utils/report_range.dart';
 
 Future<void> _shareCsvExport(
   BuildContext context,
@@ -49,7 +49,7 @@ Future<void> exportSalesReportCsv(
     final topProducts = await ref.read(topProductsProvider(range).future);
     final topCustomers = await ref.read(topCustomersProvider(range).future);
     final filename =
-        'businesssajilo-sales-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'businesssajilo-sales-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(
@@ -74,7 +74,7 @@ Future<void> exportSalesReportCsvFromData(
 }) async {
   await _shareCsvExport(context, () async {
     final filename =
-        'businesssajilo-sales-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'businesssajilo-sales-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(
@@ -97,7 +97,7 @@ Future<void> exportDuesAgingCsv(
   await _shareCsvExport(context, () async {
     final l10n = AppLocalizations.of(context);
     final filename =
-        'businesssajilo-dues-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'businesssajilo-dues-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(
@@ -116,7 +116,7 @@ Future<void> exportStockValuationCsv(
   await _shareCsvExport(context, () async {
     final l10n = AppLocalizations.of(context);
     final filename =
-        'businesssajilo-stock-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'businesssajilo-stock-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(
@@ -148,7 +148,7 @@ Future<void> exportLedgerCsv(
   await _shareCsvExport(context, () async {
     final l10n = AppLocalizations.of(context);
     final filename =
-        'businesssajilo-ledger-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'businesssajilo-ledger-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(
@@ -164,7 +164,7 @@ Future<void> exportTodaysBillsCsv(WidgetRef ref, BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final bills = await ref.read(todaysBillsProvider.future);
     final filename =
-        'businesssajilo-bills-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv';
+        'businesssajilo-bills-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(
