@@ -179,10 +179,13 @@ class _BillActions extends ConsumerWidget {
 
   Future<void> _payBill(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
-    final receivedAsync = bill.status == BillStatus.partial
-        ? ref.read(billReceivedTotalProvider(bill.id))
-        : null;
-    final amountReceived = receivedAsync?.value ?? 0;
+    // Await the received total so a partially-paid bill pre-fills the true
+    // remaining amount; a sync read here would see AsyncLoading -> 0 and
+    // pre-fill the full grand total.
+    final amountReceived = bill.status == BillStatus.partial
+        ? await ref.read(billReceivedTotalProvider(bill.id).future)
+        : 0;
+    if (!context.mounted) return;
     final remainingAmount = bill.grandTotal - amountReceived;
 
     final saved = await showAdaptiveSheet<bool>(
