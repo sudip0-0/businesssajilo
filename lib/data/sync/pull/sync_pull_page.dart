@@ -35,6 +35,29 @@ class SyncPullBudget {
   void recordPage() => pagesFetched++;
 }
 
+/// Tracks the maximum server-side timestamp observed in pulled rows so
+/// watermarks derive from SERVER time, never the (possibly skewed) device
+/// clock. A device clock ahead of the DB would otherwise skip rows until
+/// they change again — silent data loss.
+class ServerWatermarkTracker {
+  DateTime? _max;
+
+  void observe(Iterable<Map<String, dynamic>> rows) {
+    for (final row in rows) {
+      final raw = row['updated_at'] ?? row['created_at'];
+      if (raw is! String || raw.isEmpty) continue;
+      final ts = DateTime.tryParse(raw);
+      if (ts == null) continue;
+      if (_max == null || ts.isAfter(_max!)) _max = ts;
+    }
+  }
+
+  /// The watermark to persist: the newest server timestamp seen. Falls back
+  /// to [fallback] (previous watermark / pull start time) when no rows were
+  /// fetched, so an empty delta never regresses or jumps the clock.
+  DateTime watermarkOr(DateTime fallback) => _max ?? fallback;
+}
+
 /// Paged remote fetch helper shared by entity pull strategies.
 class SyncPullPage {
   const SyncPullPage();

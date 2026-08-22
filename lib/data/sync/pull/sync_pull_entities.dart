@@ -57,6 +57,7 @@ class SyncPullEntities {
   }
 
   Future<void> pullProductsDelta(String iso, DateTime ts) async {
+    final tracker = ServerWatermarkTracker();
     await _page.pullPaged(
       buildPage: (from, to) => _client
           .from('products')
@@ -64,9 +65,15 @@ class SyncPullEntities {
           .gt('updated_at', iso)
           .order('id')
           .range(from, to),
-      onPage: upsertProductsBatch,
+      onPage: (rows) async {
+        tracker.observe(rows);
+        await upsertProductsBatch(rows);
+      },
     );
-    await _db.setWatermark('products', ts);
+    // Server-derived watermark: newest updated_at seen this pass, falling
+    // back to the previous watermark so a quiet table never regresses.
+    final prev = await _db.watermark('products');
+    await _db.setWatermark('products', tracker.watermarkOr(prev ?? ts));
   }
 
   Future<PullPageResult> pullCustomerBalancesBootstrap(
@@ -86,11 +93,16 @@ class SyncPullEntities {
   }
 
   Future<void> pullCustomerBalancesDelta(String iso, DateTime ts) async {
+    final tracker = ServerWatermarkTracker();
     await _page.pullPaged(
       buildPage: (from, to) => _pullCustomerDeltaPage(from, to, iso),
-      onPage: upsertCustomerBalancesBatch,
+      onPage: (rows) async {
+        tracker.observe(rows);
+        await upsertCustomerBalancesBatch(rows);
+      },
     );
-    await _db.setWatermark('customers', ts);
+    final prev = await _db.watermark('customers');
+    await _db.setWatermark('customers', tracker.watermarkOr(prev ?? ts));
   }
 
   /// Owner/sales use balances; warehouse falls back to directory (no balances).
@@ -194,11 +206,16 @@ class SyncPullEntities {
   }
 
   Future<void> pullBillsDelta(String iso, DateTime ts) async {
+    final tracker = ServerWatermarkTracker();
     await _page.pullPaged(
       buildPage: (from, to) => _pullBillsDeltaPage(from, to, iso),
-      onPage: upsertRemoteBillsBatch,
+      onPage: (rows) async {
+        tracker.observe(rows);
+        await upsertRemoteBillsBatch(rows);
+      },
     );
-    await _db.setWatermark('bills', ts);
+    final prev = await _db.watermark('bills');
+    await _db.setWatermark('bills', tracker.watermarkOr(prev ?? ts));
   }
 
   Future<PullPageResult> pullPaymentsBootstrap(
@@ -219,6 +236,7 @@ class SyncPullEntities {
   }
 
   Future<void> pullPaymentsDelta(String iso, DateTime ts) async {
+    final tracker = ServerWatermarkTracker();
     await _page.pullPaged(
       buildPage: (from, to) => _client
           .from('payments')
@@ -226,9 +244,13 @@ class SyncPullEntities {
           .gt('created_at', iso)
           .order('id')
           .range(from, to),
-      onPage: (rows) => upsertRemotePaymentsBatch(rows, synced: true),
+      onPage: (rows) async {
+        tracker.observe(rows);
+        await upsertRemotePaymentsBatch(rows, synced: true);
+      },
     );
-    await _db.setWatermark('payments', ts);
+    final prev = await _db.watermark('payments');
+    await _db.setWatermark('payments', tracker.watermarkOr(prev ?? ts));
   }
 
   Future<PullPageResult> pullStockMovementsBootstrap(
@@ -252,6 +274,7 @@ class SyncPullEntities {
   }
 
   Future<void> pullStockMovementsDelta(String iso, DateTime ts) async {
+    final tracker = ServerWatermarkTracker();
     await _page.pullPaged(
       buildPage: (from, to) => _client
           .from('stock_movements')
@@ -259,9 +282,13 @@ class SyncPullEntities {
           .gt('created_at', iso)
           .order('id')
           .range(from, to),
-      onPage: (rows) => upsertRemoteMovementsBatch(rows, synced: true),
+      onPage: (rows) async {
+        tracker.observe(rows);
+        await upsertRemoteMovementsBatch(rows, synced: true);
+      },
     );
-    await _db.setWatermark('stock_movements', ts);
+    final prev = await _db.watermark('stock_movements');
+    await _db.setWatermark('stock_movements', tracker.watermarkOr(prev ?? ts));
   }
 
   Future<void> upsertProductsBatch(List<Map<String, dynamic>> rows) async {
