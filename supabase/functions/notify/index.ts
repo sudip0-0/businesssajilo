@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isUnregisteredTokenError, shouldStampPushedAt } from "./push_policy.ts";
+import { isUnregisteredTokenError } from "./push_policy.ts";
 
 const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
 if (!allowedOrigin) {
@@ -81,6 +81,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Atomic claim: only the invocation whose conditional update touches a
+    // row proceeds. Concurrent webhook deliveries (check-then-act race)
+    // lose here instead of double-sending.
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("notifications")
+      .update({ pushed_at: new Date().toISOString() })
+      .eq("id", notificationId)
+      .eq("pushed_at", null)
+      .select("id");
+    if (claimError || !claimed || claimed.length === 0) {
+      return json({
+        pushed: false,
+        reason: "already_pushed",
+        notification_id: notificationId,
+      });
+    }
+
     const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
     if (!fcmJson) {
       return json({
@@ -145,15 +162,10 @@ Deno.serve(async (req) => {
         .in("token", invalidTokens);
     }
 
-    if (shouldStampPushedAt(sent, failed)) {
-      await supabaseAdmin
-        .from("notifications")
-        .update({ pushed_at: new Date().toISOString() })
-        .eq("id", notificationId);
-    }
-
+    // pushed_at was already stamped by the atomic claim above — no need to
+    // re-stamp. Report partial failure so the webhook caller can see it.
     return json({
-      pushed: shouldStampPushedAt(sent, failed),
+      pushed: sent > 0,
       notification_id: notificationId,
       sent,
       failed,
