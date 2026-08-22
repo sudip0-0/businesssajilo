@@ -347,7 +347,15 @@ class ProductImportRunner {
     var failed = priorErrors.length;
     final errors = List<ProductImportRowError>.from(priorErrors);
 
+    // Chunked processing: each chunk runs its rows through create+stockIn
+    // sequentially (per-row error isolation requires one row at a time), but
+    // progress is emitted per chunk boundary so the UI updates less often on
+    // large sheets.
+    const chunkSize = 25;
     for (var i = 0; i < rows.length; i++) {
+      if (i % chunkSize == 0) {
+        await Future<void>.delayed(Duration.zero); // yield between chunks
+      }
       onProgress?.call(i + 1, rows.length);
       final row = rows[i];
       try {
