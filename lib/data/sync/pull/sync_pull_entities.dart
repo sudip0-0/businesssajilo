@@ -161,12 +161,14 @@ class SyncPullEntities {
           .from('bills')
           .select(_billsSelectWithMembers)
           .order('created_at', ascending: false)
+          .order('id', ascending: false)
           .range(from, to);
     } on PostgrestException {
       return await _client
           .from('bills')
           .select(_billsSelect)
           .order('created_at', ascending: false)
+          .order('id', ascending: false)
           .range(from, to);
     }
   }
@@ -178,6 +180,7 @@ class SyncPullEntities {
           .select(_billsSelectWithMembers)
           .gte('updated_at', iso)
           .order('created_at', ascending: false)
+          .order('id', ascending: false)
           .range(from, to);
     } on PostgrestException {
       return await _client
@@ -185,6 +188,7 @@ class SyncPullEntities {
           .select(_billsSelect)
           .gte('updated_at', iso)
           .order('created_at', ascending: false)
+          .order('id', ascending: false)
           .range(from, to);
     }
   }
