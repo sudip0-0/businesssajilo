@@ -159,10 +159,6 @@ Deno.serve(async (req) => {
   }
 });
 
-function str(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
-}
-
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
