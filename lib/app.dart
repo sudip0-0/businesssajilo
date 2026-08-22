@@ -15,6 +15,7 @@ import 'web/theme/web_theme.dart';
 import 'core/utils/locale_prefs.dart';
 import 'domain/models/notification_item.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'domain/models/session_state.dart';
 import 'features/notifications/notification_navigation.dart';
 import 'features/sync/sync_list_refresh.dart';
 
@@ -23,10 +24,21 @@ final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 bool get _useWebUi => kIsWeb || Env.forceWebUi;
 
 final pushNavigationBootstrapProvider = Provider<void>((ref) {
-  PushService.onNotificationTap = (data) {
+  PushService.onNotificationTap = (data) async {
     final navContext = rootNavigatorKey.currentContext;
     if (navContext == null) return;
-    final role = ref.read(authProvider).value?.member?.role;
+    // Wait for the auth state: on a cold-start tap the controller may still
+    // be loading, and reading .value would yield a null role -> wrong target.
+    SessionState? session;
+    for (var i = 0; i < 60; i++) {
+      final current = ref.read(authProvider);
+      if (!current.isLoading) {
+        session = current.value;
+        break;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    final role = session?.member?.role;
     final item = NotificationItem(
       id: data['notification_id'] as String? ?? '',
       businessId: data['business_id'] as String? ?? '',
@@ -34,6 +46,8 @@ final pushNavigationBootstrapProvider = Provider<void>((ref) {
       type: data['type'] as String? ?? '',
       payload: data,
     );
+    // The await above is an async gap — re-check the navigator context.
+    if (!navContext.mounted) return;
     if (_useWebUi) {
       openWebNotificationTarget(navContext, item, role: role);
     } else {
