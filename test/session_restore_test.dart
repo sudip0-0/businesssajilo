@@ -19,12 +19,29 @@ const _member = Member(
   displayName: 'Owner',
 );
 
+/// In-memory fake standing in for the secure-storage API used by SessionCache.
+class _FakeSecureStorage implements SecureKeyValueStore {
+  final Map<String, String> values = {};
+
+  @override
+  Future<String?> read(String key) => Future.value(values[key]);
+
+  @override
+  Future<void> write(String key, String? value) async =>
+      value == null ? values.remove(key) : (values[key] = value);
+
+  @override
+  Future<void> delete(String key) async => values.remove(key);
+}
+
 void main() {
   late SessionCache cache;
+  late _FakeSecureStorage storage;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    cache = SessionCache();
+    storage = _FakeSecureStorage();
+    cache = SessionCache(storage: storage);
   });
 
   test('peek returns null when nothing is cached', () async {
