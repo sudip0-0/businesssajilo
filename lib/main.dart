@@ -72,9 +72,10 @@ class ConfigErrorApp extends StatelessWidget {
                 Icon(Icons.settings_suggest, size: 56, color: Colors.redAccent),
                 SizedBox(height: 16),
                 Text(
-                  'App is not configured.\n'
-                  'Run with --dart-define=SUPABASE_URL=... '
-                  '--dart-define=SUPABASE_ANON_KEY=...',
+                  // Deliberately vague: setup instructions must not leak the
+                  // config posture of release builds. Details go to the log.
+                  'The app could not start due to a configuration problem.\n'
+                  'Please contact support.',
                   textAlign: TextAlign.center,
                 ),
               ],
