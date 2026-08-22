@@ -40,6 +40,17 @@ enum StockMovementType {
   return_,
 }
 
+/// DB wire value for [StockMovementType] — single source so payload
+/// constructors cannot drift from the SQL enum (`stock_movement_type`).
+extension StockMovementTypeDb on StockMovementType {
+  String get db => switch (this) {
+    StockMovementType.stockIn => 'stock_in',
+    StockMovementType.adjust => 'adjust',
+    StockMovementType.dispatch => 'dispatch',
+    StockMovementType.return_ => 'return',
+  };
+}
+
 /// Allowed order state transitions (validated server-side too).
 /// `placed|received → billed` is applied only by `create_bill`, not client updateStatus.
 const Map<OrderStatus, Set<OrderStatus>> orderTransitions = {

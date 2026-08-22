@@ -79,12 +79,7 @@ class SyncingStockRepository implements StockRepository {
     required String createdByMemberId,
   }) async {
     final id = _uuid.v4();
-    final typeDb = switch (type) {
-      StockMovementType.stockIn => 'stock_in',
-      StockMovementType.adjust => 'adjust',
-      StockMovementType.dispatch => 'dispatch',
-      StockMovementType.return_ => 'return',
-    };
+    final typeDb = type.db;
 
     await _db.transaction(() async {
       await _db

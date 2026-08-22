@@ -79,7 +79,7 @@ class SupabaseStockRepository implements StockRepository {
           'id': _uuid.v4(),
           'business_id': product['business_id'],
           'product_id': productId,
-          'type': _typeToDb(type),
+          'type': type.db,
           'qty_delta': qtyDelta,
           'reason': ?reason,
           'created_by': createdByMemberId,
@@ -88,13 +88,6 @@ class SupabaseStockRepository implements StockRepository {
         .single();
     return _mapMovement(row);
   }
-
-  String _typeToDb(StockMovementType type) => switch (type) {
-    StockMovementType.stockIn => 'stock_in',
-    StockMovementType.adjust => 'adjust',
-    StockMovementType.dispatch => 'dispatch',
-    StockMovementType.return_ => 'return',
-  };
 
   StockMovement _mapMovement(dynamic row) {
     final map = Map<String, dynamic>.from(row as Map);

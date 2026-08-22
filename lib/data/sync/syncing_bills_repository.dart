@@ -408,7 +408,7 @@ class SyncingBillsRepository implements BillsRepository {
                   id: _uuid.v4(),
                   businessId: _businessId,
                   productId: line.productId,
-                  type: 'dispatch',
+                  type: StockMovementType.dispatch.db,
                   qtyDelta: -line.qty,
                   reason: Value('Counter sale $provisionalNo'),
                   refBillId: Value(billId),
