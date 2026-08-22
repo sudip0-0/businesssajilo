@@ -121,19 +121,11 @@ Deno.serve(async (req) => {
   if (!EMAIL_RE.test(email) || email.length > MAX_FIELD_LEN) {
     return json({ error: "Invalid email address" }, 400);
   }
-  // Phone doubles as a global login identifier — enforce uniqueness early
-  // for a clear error (DB unique index is the backstop).
-  if (phone) {
-    const { data: phoneClash } = await supabaseAdmin
-      .from("members")
-      .select("id")
-      .eq("phone", phone)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (phoneClash) {
-      return json({ error: "Phone number already registered" }, 409);
-    }
-  }
+  // Phone doubles as a global login identifier. Do NOT pre-check across all
+  // businesses — that lets any caller enumerate which phones exist anywhere
+  // on the platform. The partial unique index (active rows only) is the
+  // backstop; a violation surfaces below as the same generic 409.
+
   if (password.length < 8 || password.length > 72) {
     return json({ error: "Password must be 8-72 characters" }, 400);
   }
@@ -187,7 +179,15 @@ Deno.serve(async (req) => {
       })
       .select("id")
       .single();
-    if (memberError) throw memberError;
+    if (memberError) {
+      // Postgres unique_violation on the partial phone index — same generic
+      // message regardless of which business owns the conflicting member.
+      if (memberError.code === "23505") {
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        return json({ error: "Phone number already registered" }, 409);
+      }
+      throw memberError;
+    }
 
     let customerId: string | null = null;
     if (role === "customer") {
