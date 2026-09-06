@@ -170,8 +170,11 @@ class QuotesRepository {
       final items = itemsRaw.map((raw) {
         final itemMap = Map<String, dynamic>.from(raw as Map);
         final product = itemMap.remove('products');
-        if (product is Map) {
-          itemMap['product_name'] = product['name'];
+        if (itemMap['product_name'] is! String ||
+            (itemMap['product_name'] as String).isEmpty) {
+          if (product is Map) {
+            itemMap['product_name'] = product['name'];
+          }
         }
         return QuoteItem.fromJson(itemMap);
       }).toList();

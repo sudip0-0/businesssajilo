@@ -1,4 +1,5 @@
 import 'package:businesssajilo/core/l10n/app_localizations.dart';
+import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/domain/models/product.dart';
 import 'package:businesssajilo/features/billing/bill_draft_line.dart';
 import 'package:businesssajilo/features/billing/bill_form_line_editor.dart';
@@ -7,6 +8,8 @@ import 'package:businesssajilo/features/billing/bill_form_draft.dart';
 import 'package:businesssajilo/features/billing/bill_form_validation.dart';
 import 'package:businesssajilo/features/inventory/product_form_screen.dart';
 import 'package:businesssajilo/web/features/billing/web_bill_form_line_table.dart';
+import 'package:businesssajilo/web/theme/web_theme.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +19,7 @@ void main() {
   Widget wrap(Widget child) {
     return ProviderScope(
       child: MaterialApp(
+        theme: kIsWeb ? WebTheme.light() : null,
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -229,5 +233,183 @@ void main() {
     expect(find.text('Line discount (रू)'), findsOneWidget);
     expect(find.text('Line total'), findsNothing);
     expect(find.text('Available 981'), findsOneWidget);
+  });
+
+  testWidgets('overflow qty keeps raw input, blocks validation, and recovers', (
+    tester,
+  ) async {
+    final draft = BillFormDraft()
+      ..lines.add(
+        BillDraftLine(
+          product: const Product(
+            id: 'p-overflow',
+            businessId: 'biz',
+            name: 'Overflow rice',
+            referencePrice: maxExactPaisa,
+          ),
+          qty: 1,
+          rate: maxExactPaisa,
+        ),
+      );
+    await tester.pumpWidget(
+      wrap(
+        StatefulBuilder(
+          builder: (context, setState) => BillFormLineEditor(
+            line: draft.lines.single,
+            initiallyExpanded: true,
+            onChanged: () => setState(() {}),
+            onRemove: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(draft.lines.single.qty, 2);
+    expect(draft.lines.single.rate, maxExactPaisa);
+    expect(find.text('2'), findsWidgets);
+    expect(find.text('Enter a valid number'), findsWidgets);
+    expect(find.text('Discount cannot exceed the line amount'), findsNothing);
+    expect(validateBillForm(draft), BillFormValidationError.invalidMoneyInput);
+    await tester.tap(find.byIcon(Icons.remove));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(draft.lines.single.qty, 1);
+    expect(validateBillForm(draft), isNull);
+    expect(find.text('Enter a valid number'), findsNothing);
+    expect(
+      find.text(formatNpr(const Paisa(maxExactPaisa), showPaisa: true)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('web overflow qty stays visible, blocks save, and recovers', (
+    tester,
+  ) async {
+    final draft = BillFormDraft()
+      ..lines.add(
+        BillDraftLine(
+          product: const Product(
+            id: 'p-overflow',
+            businessId: 'biz',
+            name: 'Overflow rice',
+            referencePrice: maxExactPaisa,
+            unit: 'kg',
+          ),
+          qty: 1,
+          rate: maxExactPaisa,
+        ),
+      );
+    Widget row() => wrap(
+      Builder(
+        builder: (context) => WebBillItemRow(
+          index: 0,
+          line: draft.lines.single,
+          l10n: AppLocalizations.of(context),
+          onChanged: () {},
+          onRemove: () {},
+        ),
+      ),
+    );
+    await tester.pumpWidget(row());
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.enterText(find.byType(TextField).first, '2');
+    await tester.pumpWidget(row());
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('2'), findsOneWidget);
+    expect(draft.lines.single.qty, 2);
+    expect(find.text('Enter a valid number'), findsWidgets);
+    expect(validateBillForm(draft), BillFormValidationError.invalidMoneyInput);
+    await tester.enterText(find.byType(TextField).first, '1');
+    await tester.pumpWidget(row());
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(validateBillForm(draft), isNull);
+    expect(find.text('Enter a valid number'), findsNothing);
+    expect(
+      find.text(formatNpr(const Paisa(maxExactPaisa), showPaisa: true)),
+      findsWidgets,
+    );
+  });
+
+  testWidgets('web combined line overflow shows error and recovers', (
+    tester,
+  ) async {
+    final half = maxExactPaisa ~/ 2 + 1;
+    final draft = BillFormDraft()
+      ..lines.add(
+        BillDraftLine(
+          product: Product(
+            id: 'p1',
+            businessId: 'biz',
+            name: 'Rice',
+            referencePrice: half,
+            unit: 'kg',
+          ),
+          qty: 1,
+          rate: half,
+        ),
+      )
+      ..lines.add(
+        BillDraftLine(
+          product: Product(
+            id: 'p2',
+            businessId: 'biz',
+            name: 'Dal',
+            referencePrice: half,
+            unit: 'kg',
+          ),
+          qty: 1,
+          rate: half,
+        ),
+      );
+    final discount = TextEditingController();
+    await tester.pumpWidget(
+      wrap(
+        StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  for (var i = 0; i < draft.lines.length; i++)
+                    WebBillItemRow(
+                      index: i,
+                      line: draft.lines[i],
+                      l10n: AppLocalizations.of(context),
+                      onChanged: () => setState(() {}),
+                      onRemove: () {},
+                    ),
+                  BillSummary(
+                    itemsTotal: draft.tryItemsTotal,
+                    billDiscountController: discount,
+                    grandTotal: draft.tryGrandTotal,
+                    onDiscountChanged: () => setState(() {}),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Rice'), findsOneWidget);
+    expect(find.text('Dal'), findsOneWidget);
+    expect(find.text('Enter a valid number'), findsWidgets);
+    expect(validateBillForm(draft), BillFormValidationError.invalidMoneyInput);
+    await tester.enterText(find.byType(TextField).at(3), '0');
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(validateBillForm(draft), isNull);
+    expect(find.text('Enter a valid number'), findsNothing);
+    expect(find.text(formatNpr(Paisa(half), showPaisa: true)), findsWidgets);
+    await tester.pumpWidget(const SizedBox());
+    discount.dispose();
   });
 }

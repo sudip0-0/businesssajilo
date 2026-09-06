@@ -6,11 +6,94 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/submit_action.dart';
+import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/bills_repository.dart';
 import 'bill_payment_sheet.dart';
 import 'create_bill_from_order.dart';
 import 'invalidate_billing.dart';
+
+int? _parseBillQty(String? value) {
+  final parsed = BigInt.tryParse(value?.trim() ?? '');
+  if (parsed == null || parsed < BigInt.one) return null;
+  if (parsed > BigInt.from(maxExactPaisa)) return null;
+  return parsed.toInt();
+}
+
+class _BillLineRow {
+  _BillLineRow(this.line)
+    : qtyText = '${line.qty}',
+      rateText = formatNpr(Paisa(line.rate), showSymbol: false),
+      discountText = formatNpr(Paisa(line.discount), showSymbol: false);
+
+  final Object slot = Object();
+  BillLineInput line;
+  String qtyText;
+  String rateText;
+  String discountText;
+}
+
+BillLineInput? _lineFromRaw(_BillLineRow row) {
+  final qty = _parseBillQty(row.qtyText);
+  final rate = parseNpr(row.rateText);
+  final discount = parseNpr(row.discountText);
+  if (qty == null ||
+      rate == null ||
+      rate.value < 0 ||
+      discount == null ||
+      discount.value < 0) {
+    return null;
+  }
+  if (!isValidLineDiscount(
+    qty: qty,
+    ratePaisa: rate.value,
+    discountPaisa: discount.value,
+  )) {
+    return null;
+  }
+  return billLineWithEdits(
+    row.line,
+    qty: qty,
+    rate: rate.value,
+    discount: discount.value,
+  );
+}
+
+String? _qtyError(AppLocalizations l10n, String? qtyText, String rateText) {
+  final qty = _parseBillQty(qtyText);
+  if (qty == null) return l10n.invalidNumber;
+  final rate = parseNpr(rateText);
+  if (rate == null || rate.value < 0) return null;
+  return tryLineGrossPaisa(qty: qty, ratePaisa: rate.value) == null
+      ? l10n.invalidNumber
+      : null;
+}
+
+String? _rateError(AppLocalizations l10n, String? rateText, String qtyText) {
+  final parsed = parseNpr(rateText ?? '');
+  if (parsed == null || parsed.value < 0) return l10n.invalidNumber;
+  final qty = _parseBillQty(qtyText);
+  if (qty == null) return null;
+  return tryLineGrossPaisa(qty: qty, ratePaisa: parsed.value) == null
+      ? l10n.invalidNumber
+      : null;
+}
+
+String? _discountError(
+  AppLocalizations l10n,
+  String? discountText,
+  String qtyText,
+  String rateText,
+) {
+  final parsed = parseNpr(discountText ?? '');
+  if (parsed == null || parsed.value < 0) return l10n.invalidNumber;
+  final qty = _parseBillQty(qtyText);
+  final rate = parseNpr(rateText);
+  if (qty == null || rate == null || rate.value < 0) return null;
+  final gross = tryLineGrossPaisa(qty: qty, ratePaisa: rate.value);
+  if (gross == null) return l10n.invalidNumber;
+  return parsed.value > gross ? l10n.discountExceedsLine : null;
+}
 
 class BillFromOrderSheet extends ConsumerStatefulWidget {
   const BillFromOrderSheet({
@@ -32,7 +115,7 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
   bool _draftLoading = true;
   bool _emptyDraft = false;
   Object? _draftError;
-  List<BillLineInput> _lines = const [];
+  final _rows = <_BillLineRow>[];
 
   @override
   void initState() {
@@ -53,8 +136,13 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
       );
       if (!mounted) return;
       setState(() {
-        _lines = List.of(draft?.lines ?? []);
-        _emptyDraft = _lines.isEmpty;
+        _rows
+          ..clear()
+          ..addAll([
+            for (final line in draft?.lines ?? const <BillLineInput>[])
+              _BillLineRow(line),
+          ]);
+        _emptyDraft = _rows.isEmpty;
       });
     } catch (e) {
       if (mounted) setState(() => _draftError = e);
@@ -63,37 +151,64 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
     }
   }
 
-  BillFromOrderDraft get _draft => BillFromOrderDraft(
-    lines: _lines,
-    itemsTotal: _lines.fold<int>(0, (sum, l) => sum + l.lineTotal),
-  );
+  BillFromOrderDraft? get _draft {
+    final itemsTotal = tryItemsTotalPaisa(
+      _rows.map((row) => row.line.lineTotal),
+    );
+    if (itemsTotal == null) return null;
+    return BillFromOrderDraft(
+      lines: [for (final row in _rows) row.line],
+      itemsTotal: itemsTotal,
+    );
+  }
 
-  void _updateLine(int index, BillLineInput line) {
+  List<BillLineInput>? get _resolvedLines {
+    final lines = <BillLineInput>[];
+    for (final row in _rows) {
+      final line = _lineFromRaw(row);
+      if (line == null) return null;
+      lines.add(line);
+    }
+    return lines;
+  }
+
+  void _updateRaw(
+    _BillLineRow row, {
+    String? qty,
+    String? rate,
+    String? discount,
+  }) {
     setState(() {
-      _lines = [..._lines]..[index] = line;
+      if (qty != null) row.qtyText = qty;
+      if (rate != null) row.rateText = rate;
+      if (discount != null) row.discountText = discount;
+      final resolved = _lineFromRaw(row);
+      if (resolved != null) row.line = resolved;
     });
   }
 
-  void _removeLine(int index) {
-    setState(() {
-      _lines = [..._lines]..removeAt(index);
-    });
+  void _removeRow(_BillLineRow row) {
+    setState(() => _rows.remove(row));
   }
 
   Future<void> _save() async {
     if (_loading || _draftLoading || _draftError != null) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final lines = _resolvedLines;
+    if (lines == null || lines.isEmpty) return;
+    final itemsTotal = tryItemsTotalPaisa(lines.map((line) => line.lineTotal));
+    if (itemsTotal == null) return;
+    final draft = BillFromOrderDraft(lines: lines, itemsTotal: itemsTotal);
     setState(() => _loading = true);
     try {
-      await _confirmAndSave();
+      await _confirmAndSave(draft);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _confirmAndSave() async {
+  Future<void> _confirmAndSave(BillFromOrderDraft draft) async {
     final l10n = AppLocalizations.of(context);
-    final draft = _draft;
     if (draft.lines.isEmpty) return;
 
     final payment = await showAdaptiveSheet<BillPaymentResult>(
@@ -168,28 +283,32 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
-                itemCount: _lines.length,
+                itemCount: _rows.length,
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final line = _lines[index];
+                  final row = _rows[index];
                   return _EditableBillLineTile(
-                    line: line,
-                    onChanged: (next) => _updateLine(index, next),
-                    onRemove: _lines.length > 1
-                        ? () => _removeLine(index)
-                        : null,
+                    key: ObjectKey(row.slot),
+                    row: row,
+                    onRawChanged: ({qty, rate, discount}) => _updateRaw(
+                      row,
+                      qty: qty,
+                      rate: rate,
+                      discount: discount,
+                    ),
+                    onRemove: _rows.length > 1 ? () => _removeRow(row) : null,
                   );
                 },
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              '${l10n.grandTotal}: ${formatNpr(Paisa(draft.grandTotal))}',
+              '${l10n.grandTotal}: ${draft == null ? l10n.invalidNumber : formatNpr(Paisa(draft.grandTotal))}',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: _loading || draft.lines.isEmpty ? null : _save,
+              onPressed: _loading || _rows.isEmpty ? null : _save,
               child: _loading
                   ? const SizedBox(
                       height: 20,
@@ -207,13 +326,15 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
 
 class _EditableBillLineTile extends StatelessWidget {
   const _EditableBillLineTile({
-    required this.line,
-    required this.onChanged,
+    super.key,
+    required this.row,
+    required this.onRawChanged,
     this.onRemove,
   });
 
-  final BillLineInput line;
-  final ValueChanged<BillLineInput> onChanged;
+  final _BillLineRow row;
+  final void Function({String? qty, String? rate, String? discount})
+  onRawChanged;
   final VoidCallback? onRemove;
 
   @override
@@ -228,7 +349,7 @@ class _EditableBillLineTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  line.nameSnapshot,
+                  row.line.nameSnapshot,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
@@ -245,66 +366,37 @@ class _EditableBillLineTile extends StatelessWidget {
             children: [
               Expanded(
                 child: TextFormField(
-                  initialValue: '${line.qty}',
+                  initialValue: row.qtyText,
                   decoration: InputDecoration(labelText: l10n.qty),
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (value) {
-                    final qty = int.tryParse(value) ?? 1;
-                    onChanged(billLineWithEdits(line, qty: qty < 1 ? 1 : qty));
-                  },
+                  validator: (value) => _qtyError(l10n, value, row.rateText),
+                  onChanged: (value) => onRawChanged(qty: value),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextFormField(
-                  initialValue: formatNpr(Paisa(line.rate), showSymbol: false),
+                  initialValue: row.rateText,
                   decoration: InputDecoration(labelText: l10n.rate),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  validator: (value) {
-                    final parsed = parseNpr(value ?? '');
-                    return parsed == null || parsed.value < 0
-                        ? l10n.invalidNumber
-                        : null;
-                  },
-                  onChanged: (value) {
-                    final parsed = parseNpr(value);
-                    if (parsed != null && parsed.value >= 0) {
-                      onChanged(billLineWithEdits(line, rate: parsed.value));
-                    }
-                  },
+                  validator: (value) => _rateError(l10n, value, row.qtyText),
+                  onChanged: (value) => onRawChanged(rate: value),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextFormField(
-                  initialValue: formatNpr(
-                    Paisa(line.discount),
-                    showSymbol: false,
-                  ),
+                  initialValue: row.discountText,
                   decoration: InputDecoration(labelText: l10n.discount),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  validator: (value) {
-                    final parsed = parseNpr(value ?? '');
-                    if (parsed == null || parsed.value < 0) {
-                      return l10n.invalidNumber;
-                    }
-                    return parsed.value > line.qty * line.rate
-                        ? l10n.discountExceedsLine
-                        : null;
-                  },
-                  onChanged: (value) {
-                    final parsed = parseNpr(value);
-                    if (parsed != null && parsed.value >= 0) {
-                      onChanged(
-                        billLineWithEdits(line, discount: parsed.value),
-                      );
-                    }
-                  },
+                  validator: (value) =>
+                      _discountError(l10n, value, row.qtyText, row.rateText),
+                  onChanged: (value) => onRawChanged(discount: value),
                 ),
               ),
             ],
@@ -313,7 +405,7 @@ class _EditableBillLineTile extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              formatNpr(Paisa(line.lineTotal)),
+              formatNpr(Paisa(row.line.lineTotal)),
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),

@@ -135,22 +135,25 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   Future<Bill?> _save({BillStatus? forceStatus}) async {
     _syncDiscountText();
     if (forceStatus == BillStatus.due) {
-      final l10n = AppLocalizations.of(context);
-      final error = validateBillPayment(
-        status: BillStatus.due,
-        grandTotal: _draft.grandTotal,
-        walkIn: _selectedCustomer == null,
-        customerId: _selectedCustomer?.id,
-      );
-      if (error != null) {
-        showBsSnackBar(
-          context,
-          message: error == BillPaymentValidationError.walkInCreditNotAllowed
-              ? l10n.selectCustomerForCredit
-              : l10n.selectCustomer,
-          backgroundColor: BsColors.danger,
+      final grandTotal = _draft.tryGrandTotal;
+      if (grandTotal != null) {
+        final l10n = AppLocalizations.of(context);
+        final error = validateBillPayment(
+          status: BillStatus.due,
+          grandTotal: grandTotal,
+          walkIn: _selectedCustomer == null,
+          customerId: _selectedCustomer?.id,
         );
-        return null;
+        if (error != null) {
+          showBsSnackBar(
+            context,
+            message: error == BillPaymentValidationError.walkInCreditNotAllowed
+                ? l10n.selectCustomerForCredit
+                : l10n.selectCustomer,
+            backgroundColor: BsColors.danger,
+          );
+          return null;
+        }
       }
     }
 
@@ -389,9 +392,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
               ),
               child: BillSummary(
                 style: BillSummaryStyle.checkout,
-                itemsTotal: _draft.itemsTotal,
+                itemsTotal: _draft.tryItemsTotal,
                 billDiscountController: _billDiscountController,
-                grandTotal: _draft.grandTotal,
+                grandTotal: _draft.tryGrandTotal,
                 onDiscountChanged: () {
                   _syncDiscountText();
                   setState(() {});

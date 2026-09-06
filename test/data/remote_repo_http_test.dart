@@ -11,6 +11,7 @@ import 'package:businesssajilo/data/remote/supabase_products_repository.dart';
 import 'package:businesssajilo/data/remote/supabase_reports_repository.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
 import 'package:businesssajilo/data/repositories/payments_repository.dart';
+import 'package:businesssajilo/data/repositories/quotes_repository.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/credit_note.dart';
 import 'package:businesssajilo/domain/models/payment.dart';
@@ -490,6 +491,77 @@ void main() {
       );
       expect(capture.bodies.single, contains('order'));
     });
+  });
+
+  group('QuotesRepository', () {
+    test(
+      'listForOrder prefers quote item snapshot over live product name',
+      () async {
+        final client = _client(
+          MockClient((request) async {
+            return _json(request, [
+              {
+                'id': 'q1',
+                'order_id': 'o1',
+                'version': 1,
+                'status': 'sent',
+                'total': 100,
+                'created_by': 'm1',
+                'quote_items': [
+                  {
+                    'id': 'qi1',
+                    'quote_id': 'q1',
+                    'product_id': 'p1',
+                    'qty': 1,
+                    'rate': 100,
+                    'discount': 0,
+                    'line_total': 100,
+                    'product_name': 'Rice',
+                    'products': {'name': 'Basmati'},
+                  },
+                ],
+              },
+            ]);
+          }),
+        );
+        final quotes = await QuotesRepository(client).listForOrder('o1');
+        expect(quotes.single.items.single.productName, 'Rice');
+      },
+    );
+
+    test(
+      'listForOrder falls back to live product name when snapshot is absent',
+      () async {
+        final client = _client(
+          MockClient((request) async {
+            return _json(request, [
+              {
+                'id': 'q2',
+                'order_id': 'o1',
+                'version': 1,
+                'status': 'sent',
+                'total': 100,
+                'created_by': 'm1',
+                'quote_items': [
+                  {
+                    'id': 'qi2',
+                    'quote_id': 'q2',
+                    'product_id': 'p1',
+                    'qty': 1,
+                    'rate': 100,
+                    'discount': 0,
+                    'line_total': 100,
+                    'products': {'name': 'Rice'},
+                  },
+                ],
+              },
+            ]);
+          }),
+        );
+        final quotes = await QuotesRepository(client).listForOrder('o1');
+        expect(quotes.single.items.single.productName, 'Rice');
+      },
+    );
   });
 
   group('SupabaseProductsRepository', () {

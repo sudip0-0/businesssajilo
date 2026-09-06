@@ -42,10 +42,29 @@ class BillFormDraft {
 
   int get itemsTotal => itemsTotalPaisa(lines.map((l) => l.lineTotal));
 
+  int? get tryItemsTotal {
+    final lineTotals = <int>[];
+    for (final line in lines) {
+      final total = line.tryLineTotal;
+      if (total == null) return null;
+      lineTotals.add(total);
+    }
+    return tryItemsTotalPaisa(lineTotals);
+  }
+
   int get billDiscount => _billDiscount;
 
   int get grandTotal =>
       grandTotalPaisa(itemsTotal: itemsTotal, billDiscountPaisa: billDiscount);
+
+  int? get tryGrandTotal {
+    final items = tryItemsTotal;
+    if (items == null) return null;
+    return tryGrandTotalPaisa(
+      itemsTotal: items,
+      billDiscountPaisa: billDiscount,
+    );
+  }
 
   int get taxableAmount => itemsTotal - billDiscount;
 

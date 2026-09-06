@@ -54,12 +54,17 @@ function Test-Command([string]$Name) {
 
 function Test-DockerAvailable {
     if (-not (Test-Command "docker")) { return $false }
+    $previousEap = $ErrorActionPreference
+    $exitCode = 0
     try {
+        $ErrorActionPreference = 'Continue'
+        $global:LASTEXITCODE = 0
         docker info *> $null
-        return $LASTEXITCODE -eq 0
-    } catch {
-        return $false
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousEap
     }
+    return $exitCode -eq 0
 }
 
 function Test-SupabaseCli {
@@ -67,8 +72,18 @@ function Test-SupabaseCli {
 }
 
 function Get-LocalSupabaseDartDefines {
-    $output = & supabase status -o env 2>$null
-    if ($LASTEXITCODE -ne 0) { return $null }
+    $previousEap = $ErrorActionPreference
+    $output = $null
+    $exitCode = 0
+    try {
+        $ErrorActionPreference = 'Continue'
+        $global:LASTEXITCODE = 0
+        $output = & supabase status -o env 2>$null
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousEap
+    }
+    if ($exitCode -ne 0) { return $null }
     $map = @{}
     foreach ($line in $output) {
         if ($line -match '^(API_URL|ANON_KEY|PUBLISHABLE_KEY|SUPABASE_URL|SUPABASE_ANON_KEY)=(.*)$') {
@@ -133,18 +148,31 @@ if ($dockerOk -and $supabaseOk) {
 }
 
 Invoke-Step "flutter test" {
-    $flutterArgs = @()
+    Invoke-Checked { flutter test }
+}
+
+if ($supabaseDefines) {
+    Invoke-Step "flutter test (live repositories)" {
+        $flutterArgs = @(
+            "--dart-define=HARDENING_GATE=1"
+            "--dart-define=SUPABASE_URL=$($supabaseDefines.Url)"
+            "--dart-define=SUPABASE_ANON_KEY=$($supabaseDefines.Key)"
+            "test/integration/repository_order_to_bill_test.dart"
+            "test/integration/repository_warehouse_billing_test.dart"
+            "test/integration/payment_allocation_concurrency_test.dart"
+        )
+        Invoke-Checked { flutter test @flutterArgs }
+    }
+} else {
+    $detail = "docker=$dockerOk supabase_cli=$supabaseOk"
+    if ($dockerOk -and $supabaseOk) {
+        $detail = "Supabase dart-defines unavailable"
+    }
     if ($HardeningGate) {
-        $flutterArgs += "--dart-define=HARDENING_GATE=1"
-        if ($dockerOk -and $supabaseOk -and -not $supabaseDefines) {
-            throw "Supabase dart-defines unavailable for strict live integration tests"
-        }
+        Record "flutter test (live repositories)" "FAIL" $detail
+    } else {
+        Record "flutter test (live repositories)" "SKIP" $detail
     }
-    if ($supabaseDefines) {
-        $flutterArgs += "--dart-define=SUPABASE_URL=$($supabaseDefines.Url)"
-        $flutterArgs += "--dart-define=SUPABASE_ANON_KEY=$($supabaseDefines.Key)"
-    }
-    Invoke-Checked { flutter test @flutterArgs }
 }
 
 if ($dockerOk -and $supabaseOk) {

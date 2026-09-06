@@ -10,6 +10,10 @@ import '../web_shell_accessibility_test.dart' as shell_tests;
 import '../warehouse_billing_privacy_test.dart' as warehouse_tests;
 import '../order_quote_section_test.dart' as order_tests;
 import '../notification_bell_test.dart' as notification_tests;
+import '../bill_form_line_editor_test.dart' as line_editor_tests;
+import '../copy_last_bill_test.dart' as bill_form_tests;
+import '../quote_builder_screen_test.dart' as quote_builder_tests;
+import '../integration/ui_order_to_bill_flow_test.dart' as order_bill_tests;
 
 @JS('businessSajiloTestResult')
 external set _testResult(JSString value);
@@ -19,7 +23,7 @@ void main() {
   binding.allTestsPassed.future.then((passed) {
     _testResult = jsonEncode({
       'passed': passed,
-      'expectedTests': 29,
+      'expectedTests': 68,
       'results': binding.results.map(
         (name, result) => MapEntry(name, result.toString()),
       ),
@@ -43,4 +47,8 @@ void main() {
   group('warehouse', warehouse_tests.main);
   group('orders', order_tests.main);
   group('notifications', notification_tests.main);
+  group('bill line validation', line_editor_tests.main);
+  group('bill forms', bill_form_tests.main);
+  group('quote validation', quote_builder_tests.main);
+  group('order billing', order_bill_tests.main);
 }

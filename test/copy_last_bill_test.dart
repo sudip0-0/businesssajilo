@@ -1,4 +1,5 @@
 import 'package:businesssajilo/core/l10n/app_localizations.dart';
+import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/data/repositories/customers_repository.dart';
 import 'package:businesssajilo/data/repositories/orders_repository.dart';
 import 'package:businesssajilo/data/repositories/products_repository.dart';
@@ -13,6 +14,8 @@ import 'package:businesssajilo/domain/models/session_state.dart';
 import 'package:businesssajilo/features/auth/providers/auth_provider.dart';
 import 'package:businesssajilo/features/inventory/providers.dart';
 import 'package:businesssajilo/web/features/billing/web_bill_form_content.dart';
+import 'package:businesssajilo/web/theme/web_theme.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
@@ -29,6 +32,10 @@ class _ListGetBills implements BillsRepository {
   final List<Bill> listed;
   final Bill? detailed;
   var getCalls = 0;
+  var createCalls = 0;
+  List<BillLineInput>? createdLines;
+  int? createdItemsTotal;
+  int? createdGrandTotal;
 
   @override
   Future<List<Bill>> list({
@@ -41,6 +48,50 @@ class _ListGetBills implements BillsRepository {
   Future<Bill> get(String id) async {
     getCalls++;
     return detailed ?? (throw StateError('missing $id'));
+  }
+
+  @override
+  Future<Bill> create({
+    required String createdByMemberId,
+    String? customerId,
+    String? guestName,
+    required BillStatus status,
+    required int itemsTotal,
+    required int discount,
+    required int grandTotal,
+    required List<BillLineInput> lines,
+    PaymentMethod paymentMethod = PaymentMethod.cash,
+    String? paymentRefNote,
+    int? paymentAmount,
+  }) async {
+    createCalls++;
+    createdLines = lines;
+    createdItemsTotal = itemsTotal;
+    createdGrandTotal = grandTotal;
+    return Bill(
+      id: 'created',
+      businessId: 'biz',
+      billNo: 'BS-0001',
+      createdBy: createdByMemberId,
+      customerId: customerId,
+      status: status,
+      itemsTotal: itemsTotal,
+      discount: discount,
+      grandTotal: grandTotal,
+      items: [
+        for (var i = 0; i < lines.length; i++)
+          BillItem(
+            id: 'li$i',
+            billId: 'created',
+            productId: lines[i].productId,
+            nameSnapshot: lines[i].nameSnapshot,
+            qty: lines[i].qty,
+            rate: lines[i].rate,
+            discount: lines[i].discount,
+            lineTotal: lines[i].lineTotal,
+          ),
+      ],
+    );
   }
 
   @override
@@ -86,8 +137,13 @@ class _BillingOrders implements OrdersRepository {
 
 class _BillingProducts implements ProductsRepository {
   @override
-  Future<Product> get(String id) async =>
-      Product(id: id, businessId: 'biz', name: 'Rice', referencePrice: 125050);
+  Future<Product> get(String id) async => Product(
+    id: id,
+    businessId: 'biz',
+    name: 'Rice',
+    referencePrice: 125050,
+    stockCached: 999,
+  );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -166,10 +222,11 @@ void main() {
                 _ListGetBills(listed: [bill], detailed: bill),
               ),
             ],
-            child: const MaterialApp(
+            child: MaterialApp(
+              theme: kIsWeb ? WebTheme.light() : null,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: BillFormScreen(),
+              home: const BillFormScreen(),
             ),
           ),
         );
@@ -208,6 +265,7 @@ void main() {
                 productListProvider.overrideWith((ref, query) async => []),
               ],
               child: MaterialApp(
+                theme: kIsWeb ? WebTheme.light() : null,
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
@@ -283,4 +341,230 @@ void main() {
     expect(result!.items, hasLength(1));
     expect(result.items.single.qty, 2);
   });
+
+  testWidgets(
+    'web bill form overflow qty stays visible, blocks save, and recovers',
+    (tester) async {
+      final bill = _bill(
+        id: 'bill',
+        items: const [
+          BillItem(
+            id: 'i1',
+            billId: 'bill',
+            productId: 'p1',
+            nameSnapshot: 'Rice',
+            qty: 1,
+            rate: maxExactPaisa,
+            discount: 0,
+            lineTotal: maxExactPaisa,
+          ),
+        ],
+      ).copyWith(customerId: 'customer');
+      final bills = _ListGetBills(listed: [bill], detailed: bill);
+      final key = GlobalKey<WebBillFormContentState>();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(() => _RoleAuth(Role.owner)),
+            customersRepositoryProvider.overrideWithValue(_BillingCustomers()),
+            ordersRepositoryProvider.overrideWithValue(_BillingOrders()),
+            productsRepositoryProvider.overrideWithValue(_BillingProducts()),
+            quotesRepositoryProvider.overrideWithValue(_BillingQuotes()),
+            billsRepositoryProvider.overrideWithValue(bills),
+            productListProvider.overrideWith((ref, query) async => []),
+          ],
+          child: MaterialApp(
+            theme: kIsWeb ? WebTheme.light() : null,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: WebBillFormContent(key: key)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await key.currentState!.copyLastBill();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Rice'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsNothing,
+      );
+
+      final qty = find.widgetWithText(TextField, '1');
+      expect(qty, findsOneWidget);
+      await tester.enterText(qty, '2');
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(find.text('2'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsWidgets,
+      );
+
+      await key.currentState!.saveBill();
+      await tester.pumpAndSettle();
+      expect(bills.createCalls, 0);
+      expect(bills.createdLines, isNull);
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsWidgets,
+      );
+
+      await tester.enterText(find.widgetWithText(TextField, '2'), '1');
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text(
+            formatNpr(const Paisa(maxExactPaisa), showPaisa: true),
+          ),
+        ),
+        findsWidgets,
+      );
+      expect(bills.createCalls, 0);
+
+      await key.currentState!.saveAsDue();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(bills.createCalls, 1);
+      expect(bills.createdLines, hasLength(1));
+      expect(bills.createdLines!.single.qty, 1);
+      expect(bills.createdLines!.single.rate, maxExactPaisa);
+      expect(bills.createdLines!.single.discount, 0);
+      expect(bills.createdGrandTotal, maxExactPaisa);
+      expect(bills.createdItemsTotal, maxExactPaisa);
+    },
+  );
+
+  testWidgets(
+    'web bill form combined totals overflow blocks save and recovers',
+    (tester) async {
+      final half = maxExactPaisa ~/ 2 + 1;
+      final bill = _bill(
+        id: 'bill',
+        items: [
+          BillItem(
+            id: 'i1',
+            billId: 'bill',
+            productId: 'p1',
+            nameSnapshot: 'Rice',
+            qty: 1,
+            rate: half,
+            discount: 0,
+            lineTotal: half,
+          ),
+          BillItem(
+            id: 'i2',
+            billId: 'bill',
+            productId: 'p2',
+            nameSnapshot: 'Dal',
+            qty: 1,
+            rate: half,
+            discount: 0,
+            lineTotal: half,
+          ),
+        ],
+      ).copyWith(customerId: 'customer');
+      final bills = _ListGetBills(listed: [bill], detailed: bill);
+      final key = GlobalKey<WebBillFormContentState>();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(() => _RoleAuth(Role.owner)),
+            customersRepositoryProvider.overrideWithValue(_BillingCustomers()),
+            ordersRepositoryProvider.overrideWithValue(_BillingOrders()),
+            productsRepositoryProvider.overrideWithValue(_BillingProducts()),
+            quotesRepositoryProvider.overrideWithValue(_BillingQuotes()),
+            billsRepositoryProvider.overrideWithValue(bills),
+            productListProvider.overrideWith((ref, query) async => []),
+          ],
+          child: MaterialApp(
+            theme: kIsWeb ? WebTheme.light() : null,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: WebBillFormContent(key: key)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await key.currentState!.copyLastBill();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Rice'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsWidgets,
+      );
+
+      await key.currentState!.saveBill();
+      await tester.pumpAndSettle();
+      expect(bills.createCalls, 0);
+      expect(bills.createdLines, isNull);
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsWidgets,
+      );
+
+      final rateText = formatNpr(Paisa(half), showSymbol: false);
+      await tester.enterText(
+        find.widgetWithText(TextField, rateText).last,
+        '0',
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text('Enter a valid number'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(WebBillFormContent),
+          matching: find.text(formatNpr(Paisa(half), showPaisa: true)),
+        ),
+        findsWidgets,
+      );
+      expect(bills.createCalls, 0);
+
+      await key.currentState!.saveAsDue();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(bills.createCalls, 1);
+      expect(bills.createdLines, hasLength(2));
+      expect(bills.createdLines![0].qty, 1);
+      expect(bills.createdLines![0].rate, half);
+      expect(bills.createdLines![1].qty, 1);
+      expect(bills.createdLines![1].rate, 0);
+      expect(bills.createdGrandTotal, half);
+      expect(bills.createdItemsTotal, half);
+    },
+  );
 }

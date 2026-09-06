@@ -21,9 +21,9 @@ class BillSummary extends StatelessWidget {
     this.cardBorderColor,
   });
 
-  final int itemsTotal;
+  final int? itemsTotal;
   final TextEditingController billDiscountController;
-  final int grandTotal;
+  final int? grandTotal;
   final VoidCallback onDiscountChanged;
   final BillSummaryStyle style;
 
@@ -39,11 +39,15 @@ class BillSummary extends StatelessWidget {
     final discount = parsed?.value ?? 0;
     final invalidInput =
         billDiscountController.text.trim().isNotEmpty && parsed == null;
-    final discountError = invalidInput
+    final totalsExact = itemsTotal != null && grandTotal != null;
+    final discountError = invalidInput || !totalsExact
         ? l10n.invalidNumber
-        : (discount < 0 || discount > itemsTotal)
+        : (discount < 0 || discount > itemsTotal!)
         ? l10n.discountExceedsItems
         : null;
+    String moneyOrInvalid(int? amount) => amount == null
+        ? l10n.invalidNumber
+        : formatNpr(Paisa(amount), showPaisa: true);
 
     final accent = accentColor ?? BsColors.primary;
     final compact = style == BillSummaryStyle.denseBar;
@@ -100,7 +104,7 @@ class BillSummary extends StatelessWidget {
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             Text(
-              formatNpr(Paisa(grandTotal), showPaisa: true),
+              moneyOrInvalid(grandTotal),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: accent,
@@ -159,7 +163,7 @@ class BillSummary extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  formatNpr(Paisa(grandTotal), showPaisa: true),
+                  moneyOrInvalid(grandTotal),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -201,10 +205,18 @@ class BillSummary extends StatelessWidget {
     );
   }
 
-  Widget _summaryRow(BuildContext context, String label, int amount) {
+  Widget _summaryRow(BuildContext context, String label, int? amount) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: true))],
+      children: [
+        Text(label),
+        Text(
+          amount == null
+              ? l10n.invalidNumber
+              : formatNpr(Paisa(amount), showPaisa: true),
+        ),
+      ],
     );
   }
 }

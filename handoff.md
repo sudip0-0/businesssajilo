@@ -4,7 +4,7 @@ Updated: 2026-09-06. Repository: `C:\Users\sudip\Desktop\Projects\businesssajilo
 
 ## Read this first
 
-Work is **uncommitted** and spans multiple hardening batches. Preserve the complete working tree and unsaved IDE buffers. No commit, push, hosted deployment, database reset, or deletion of user data was performed. Local integration tests created retained E2E accounts/documents; do not reset or remove those fixtures without approval.
+The original hardening work was already committed as `83bf56f` when the independent review began, with a clean working tree. The independent review changes in section 8 are **uncommitted**. Preserve the complete working tree and unsaved IDE buffers. This review performed no commit, push, hosted deployment, database reset, or deletion of user data. Local integration tests created retained E2E accounts/documents; do not reset or remove those fixtures without approval.
 
 **Not an all-finished or production-ready declaration.** Most core fixes are implemented and substantial verification passed, but the editor/filesystem mismatch below and several integration/automation gaps remain.
 
@@ -86,7 +86,7 @@ Import recovery is **not durable or atomic** across closing/reopening. See remai
 
 ## 3. Database migration state
 
-All versions through **58** are applied to local Supabase and appear in both columns of `supabase migration list --local`. This does not indicate a hosted deployment.
+All versions through **59** are applied to local Supabase and appear in both columns of `supabase migration list --local`. This does not indicate a hosted deployment.
 
 | Migration | Purpose |
 |---|---|
@@ -99,6 +99,7 @@ All versions through **58** are applied to local Supabase and appear in both col
 | 56 | Billing resolves existing customers only; no Auth/member/customer provisioning |
 | 57 | Explicit child business IDs, parent stamping, composite foreign keys and restrictive RLS |
 | 58 | Customer own-bill search, warehouse billing-draft RPC, warehouse audit-log SELECT removed |
+| 59 | Direct-client billed/quote-response guards and readable quote-item product-name snapshots |
 
 Migration57 covers `bill_items`, `order_items`, `quotes`, `quote_items`, `credit_note_items`, and `device_tokens`. `businesses.id` remains the tenant root. Existing parent FK names/cascade behavior are retained so PostgREST relationship hints still work.
 
@@ -112,7 +113,7 @@ Before/after fingerprints for migration57 matched after excluding the new tenant
 - Old clients doing direct order inserts will be denied after migration52. Coordinate client/backend rollout.
 - Do not rewrite applied history, reset databases, or deploy as a shortcut.
 
-## 4. Actual verification results
+## 4. Previous verification checkpoint (before independent review)
 
 Latest commands executed against the **filesystem version**:
 
@@ -132,7 +133,7 @@ Latest commands executed against the **filesystem version**:
 
 The full-suite skips include unconfigured live integrations and a printing-platform rasterization test. Live integrations were separately configured/run earlier; skips are not counted as passes. Browser results precede the final read-only SQLite native changes and should be rerun after buffer synchronization for a final combined sign-off.
 
-Focused sync/payment runs also passed malformed-acknowledgement, split-receipt and retry tests, but **not the latest unsaved payment-bootstrap additions** described in section 1.
+The payment-bootstrap additions described in section 1 are now on disk and were included in the independent full-suite review below; the older unsaved-buffer caveat is not a remaining filesystem test gap.
 
 Deno was unavailable in the local environment; do not mark `npm test` or a strict complete gate passed. Android/iOS device verification was not available. Build output still includes a Cupertino icon-font-family warning; test fixtures produce expected failure-path logs and Drift multiple-database debug warnings.
 
@@ -147,7 +148,7 @@ Deno was unavailable in the local environment; do not mark `npm test` or a stric
 - Quote section displays use `showPaisa: true`.
 - Quantity×rate and multi-line totals reject values past `maxExactPaisa`.
 - CI/release: no `--web-renderer canvaskit`; generated `git diff --exit-code`; browser widget harness; local-resource actual-app E2E before release deploy.
-- Local gate forwards Supabase dart-defines into Flutter tests; `pub outdated` is informational.
+- Local gate forwards Supabase dart-defines only into the dedicated live-repository test pass; the unit/widget pass stays unconfigured. `pub outdated` is informational.
 
 ### P2: recovery and convenience limitations
 
@@ -192,6 +193,47 @@ node scripts/run_web_search_tests.mjs
 
 See `docs/LOCAL_TESTING.md` for actual-app E2E and configured live integration commands. Use only loopback Supabase and disposable local fixtures. Never log keys, pass service-role credentials to Flutter, relax network/security assertions, or count missing services as passes.
 
-The untracked diagnostic `e2e-error-semantics.txt` was created by an early browser probe. It is not a deliverable; remove that specific artifact with an approved file operation before any commit. No permitted delete tool was available in this session, so it was left intact.
+The earlier `e2e-error-semantics.txt` diagnostic is absent from this checkout. The independent review did not delete any pre-existing files.
 
 No commit/push/deploy has been requested. Do not perform one automatically after reading this handoff.
+
+## 8. Independent review of Grok completion (2026-09-06)
+
+The checked work was not fully correct. Scoped Grok 4.6 CLI sessions implemented corrections; the supervising reviewer reproduced failures, reviewed the changes, corrected follow-up issues, and ran verification independently. Completion of a CLI session was not treated as proof of a fix.
+
+### Confirmed defects closed
+
+- Order-bill entry: invalid quantities no longer silently become one; overflowing line/combined totals do not throw or persist. Raw quantity/rate/discount are resolved together, so correcting a different field cannot save stale values. Removing one row preserves other rows' raw input. Four initial widget regressions failed before the fix; cross-field and deletion regressions were added during review.
+- Regular mobile/web bill and quote previews: nullable exact-money previews display localized validation instead of throwing before submit validation. Valid corrections recover without rounding or bypassing save/send checks.
+- Database authorization: nine new failing assertions exposed direct owner/sales updates to order `billed`, forged quote acceptance, and missing customer-readable quote names. Migration 59 blocks direct client billed transitions and staff accepted/rejected quote INSERT/UPDATE paths while preserving the trusted RPCs. Existing cross-tenant customer guards already passed and were not replaced.
+- Quote names: insert-time product-name snapshots are readable without granting customers raw-product access. Quote mapping, accepted-quote billing drafts, and web bill prefill retain the snapshot after a product rename. The migration backfills existing rows from current names; previously changed historical names cannot be reconstructed.
+- Web fonts: real E2E exposed a Google Noto Sans fetch caused by U+202F in localized dashboard times. Bundled Inter now participates in the production web fallback chain. No font download, text stripping, engine patch, or relaxed network assertion was used.
+- Windows gate: successful native stderr warnings no longer abort Supabase status capture or falsely report Docker unavailable. The full unit/widget suite runs without live configuration; a separate strict configured pass runs the three live repository tests. Mixing these layers had caused real-service calls and missing-plugin errors in VM tests.
+- Browser coverage: the supported harness now includes bill-line, quote-builder, bill-form, and order-to-bill regressions. Fixtures use the production web theme. The callback reports 68 widget results; four imported pure tests are also covered by the normal Flutter runner.
+
+### Latest verification
+
+| Check | Result |
+|---|---|
+| `flutter analyze` | No issues |
+| Full unconfigured Flutter suite | 620 passed, 10 skipped, 0 failed |
+| Separate strict live repository pass | 3 passed: order/quote/bill, warehouse privacy/billing, concurrent payment allocation |
+| `supabase test db --local` | 584 assertions across 37 files passed |
+| `supabase migration list --local` | Through 59 in both local-target columns |
+| Expanded build-based browser harness | 68/68 widget results successful; external requests remain forbidden |
+| Fresh actual-app release build + E2E | 17/17 checks passed, no external requests |
+| Windows Docker/Supabase detector fixtures | 20 passed, 0 failed |
+| Formatting | 537 Dart files checked, no changes needed |
+| Local hardening gate (`-SkipOutdated`) | Passed available steps; Deno explicitly skipped |
+
+The full-suite skips include the three live tests rerun separately, six plugin-backed web-button VM tests, and the printing rasterization test. Browser interaction coverage does not prove Android/iOS printing or device behavior. Generated outputs were regenerated and reviewed separately from intentional source changes.
+
+### Still not completed
+
+- Deno is absent; `npm test` and a fully strict gate are not verified.
+- No Android device/emulator is available, and iOS/macOS, real printing/share, hosted Auth/FCM/Sentry, store signing, backup/PITR and restore drills remain external sign-off.
+- Durable import/cart recovery, first-bill checklist, saved filters, broad accessibility review, stock-count UX and performance baselines remain the documented P2 limitations/candidates, not newly completed features.
+- This review did not expand warehouse order navigation or archived-product lookup behavior; unavailable required product lookups still fail closed.
+- The pre-existing Cupertino icon-font build warning remains. Migration 59, like 57, needs normal production backfill/deployment review before any hosted rollout.
+
+Only local migration application and retained local E2E fixtures were created. These changes are uncommitted; no reset, user-data deletion, push, or hosted deployment was performed.

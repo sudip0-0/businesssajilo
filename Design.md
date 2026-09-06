@@ -179,6 +179,8 @@ Brass is used sparingly (brand mark, selection tick, focus moments, rail footer 
 
 Helpers: `WebTypography.serif`, `mono`, `eyebrow`, `metricValue`.
 
+All web text styles share `WebTypography.fontFamilyFallback`: bundled Inter for missing Latin symbols/spacing (including the narrow no-break space emitted by localized times), then Noto Sans Devanagari. Keep these fallbacks on copied styles and data tables; the primary families above remain unchanged.
+
 ### Shell & layout (web)
 
 From `WebTokens.light`:

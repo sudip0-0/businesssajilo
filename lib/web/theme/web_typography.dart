@@ -15,7 +15,10 @@ abstract final class WebTypography {
   static const String serifFamily = 'Spectral';
   static const String monoFamily = 'IBM Plex Mono';
 
-  static const List<String> _fallback = ['Noto Sans Devanagari'];
+  static const List<String> fontFamilyFallback = [
+    'Inter',
+    'Noto Sans Devanagari',
+  ];
 
   static TextStyle _sans({
     double? fontSize,
@@ -27,7 +30,7 @@ abstract final class WebTypography {
   }) {
     return TextStyle(
       fontFamily: fontFamily,
-      fontFamilyFallback: _fallback,
+      fontFamilyFallback: fontFamilyFallback,
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
@@ -48,7 +51,7 @@ abstract final class WebTypography {
   }) {
     return TextStyle(
       fontFamily: serifFamily,
-      fontFamilyFallback: _fallback,
+      fontFamilyFallback: fontFamilyFallback,
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
@@ -68,7 +71,7 @@ abstract final class WebTypography {
   }) {
     return TextStyle(
       fontFamily: monoFamily,
-      fontFamilyFallback: _fallback,
+      fontFamilyFallback: fontFamilyFallback,
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
@@ -79,76 +82,78 @@ abstract final class WebTypography {
 
   static TextTheme textTheme(ColorScheme scheme) {
     final base = ThemeData(fontFamily: fontFamily).textTheme;
-    return base.copyWith(
-      displayLarge: serif(
-        fontSize: 40,
-        fontWeight: FontWeight.w600,
-        height: 1.15,
-        letterSpacing: -0.5,
-        color: scheme.onSurface,
-      ),
-      displayMedium: serif(
-        fontSize: 30,
-        fontWeight: FontWeight.w600,
-        height: 1.2,
-        letterSpacing: -0.3,
-        color: scheme.onSurface,
-      ),
-      headlineSmall: serif(
-        fontSize: 26,
-        fontWeight: FontWeight.w600,
-        height: 1.22,
-        letterSpacing: -0.2,
-        color: scheme.onSurface,
-      ),
-      titleLarge: serif(
-        fontSize: 21,
-        fontWeight: FontWeight.w600,
-        height: 1.28,
-        color: scheme.onSurface,
-      ),
-      titleMedium: _sans(
-        fontSize: 15.5,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
-      ),
-      titleSmall: _sans(
-        fontSize: 13.5,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
-      ),
-      bodyLarge: _sans(
-        fontSize: 15.5,
-        fontWeight: FontWeight.w400,
-        height: 1.55,
-        color: scheme.onSurface.withValues(alpha: 0.92),
-      ),
-      bodyMedium: _sans(
-        fontSize: 13.5,
-        fontWeight: FontWeight.w400,
-        height: 1.5,
-        color: scheme.onSurface.withValues(alpha: 0.88),
-      ),
-      bodySmall: _sans(
-        fontSize: 12.5,
-        fontWeight: FontWeight.w400,
-        height: 1.45,
-        color: scheme.onSurface.withValues(alpha: 0.72),
-      ),
-      labelLarge: _sans(
-        fontSize: 12.5,
-        fontWeight: FontWeight.w600,
-        height: 1.35,
-        letterSpacing: 0.35,
-      ),
-      labelSmall: _sans(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        height: 1.3,
-        letterSpacing: 0.9,
-        color: scheme.onSurface.withValues(alpha: 0.72),
-      ),
-    );
+    return base
+        .copyWith(
+          displayLarge: serif(
+            fontSize: 40,
+            fontWeight: FontWeight.w600,
+            height: 1.15,
+            letterSpacing: -0.5,
+            color: scheme.onSurface,
+          ),
+          displayMedium: serif(
+            fontSize: 30,
+            fontWeight: FontWeight.w600,
+            height: 1.2,
+            letterSpacing: -0.3,
+            color: scheme.onSurface,
+          ),
+          headlineSmall: serif(
+            fontSize: 26,
+            fontWeight: FontWeight.w600,
+            height: 1.22,
+            letterSpacing: -0.2,
+            color: scheme.onSurface,
+          ),
+          titleLarge: serif(
+            fontSize: 21,
+            fontWeight: FontWeight.w600,
+            height: 1.28,
+            color: scheme.onSurface,
+          ),
+          titleMedium: _sans(
+            fontSize: 15.5,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
+          titleSmall: _sans(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
+          bodyLarge: _sans(
+            fontSize: 15.5,
+            fontWeight: FontWeight.w400,
+            height: 1.55,
+            color: scheme.onSurface.withValues(alpha: 0.92),
+          ),
+          bodyMedium: _sans(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w400,
+            height: 1.5,
+            color: scheme.onSurface.withValues(alpha: 0.88),
+          ),
+          bodySmall: _sans(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w400,
+            height: 1.45,
+            color: scheme.onSurface.withValues(alpha: 0.72),
+          ),
+          labelLarge: _sans(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+            letterSpacing: 0.35,
+          ),
+          labelSmall: _sans(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            height: 1.3,
+            letterSpacing: 0.9,
+            color: scheme.onSurface.withValues(alpha: 0.72),
+          ),
+        )
+        .apply(fontFamilyFallback: fontFamilyFallback);
   }
 
   /// Small-caps eyebrow label — section markers, table headers, overlines.

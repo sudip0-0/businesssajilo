@@ -124,7 +124,7 @@ Implementation verified below; platform sign-off remains open.
 - [x] `flutter analyze`: no issues. Full Flutter suite: 433 passed, 10 skipped; the new live warehouse integration was also run separately with required local configuration and passed. Release web build passed with an existing icon-font warning. Changed Dart files pass formatting.
 - [ ] Android/iOS device verification; no Android device/emulator or iOS tooling available during this batch.
 - [x] The build-based browser harness subsequently passed 29 widget tests and the repaired actual-app runner passed 17 E2E checks, including real navigation, notification Escape/View All, and persisted EN/NE changes. Direct `flutter test --platform chrome` still encounters CanvasKit asset 404s; use the supported build-based harness.
-- [ ] Final combined verification after synchronizing all editor buffers; repository-wide formatting drift, CI wiring, and device sign-off remain open. Earlier batch counts above are historical checkpoints, not a final all-green claim.
+- [ ] Device and hosted-service sign-off remain open. Later on-disk verification is recorded in Audit batch 1C; unsaved IDE buffers cannot be verified from filesystem tests. Earlier counts above are historical checkpoints, not a release-ready claim.
 
 ## Audit batch 1B — Core reliability and verification (2026-09-06)
 
@@ -137,6 +137,16 @@ Implementation verified below; platform sign-off remains open.
 - [x] Payment bootstrap cursor reset is on disk in `sync_pusher.dart` with split-receipt/request-identity tests. Unsaved editor buffers were not available; the filesystem version now contains the intended additions.
 - [x] Approved CI/release workflow wiring: unsupported `--web-renderer canvaskit` removed, generated-source `git diff --exit-code`, build-based browser widget harness, local-resource actual-app E2E, local-gate dart-defines, informational `pub outdated`.
 - [x] Customer own-bill search, warehouse billing-draft RPC, warehouse audit-log deny, quote paisa display, and web safe-integer line/total checks. External/device/hosted sign-off remains in `handoff.md`. No overall release-ready claim is made.
+
+## Audit batch 1C — Independent Grok completion review (2026-09-06)
+
+- [x] Reproduced and fixed order-bill invalid quantities, exact-money overflow, cross-field stale values, and row-deletion state loss; valid corrections preserve accepted quote terms.
+- [x] Regular mobile/web bill and quote previews reject unsafe totals without throwing during rendering; submit validation remains authoritative.
+- [x] Migration 59 applied locally: direct-client billed/quote-response guards and customer-readable quote product-name snapshots. Renamed products do not replace snapshots in quote mapping or web order-bill prefill. Existing cross-tenant guards retained.
+- [x] Fixed localized-time U+202F font fallback using bundled Inter. Fresh actual-app E2E: 17/17, external requests still forbidden.
+- [x] Windows Docker/Supabase stderr detection: 20 fixture checks pass. Gate separates unconfigured unit/widget tests from three strict live-repository tests.
+- [x] Final on-disk verification: analyzer clean; 620 Flutter passes / 10 skips; three live repository tests pass separately; 584 pgTAP assertions / 37 files pass; 68 browser widget results pass; 537 Dart files pass formatting. Local gate passes available steps with Deno explicitly skipped. Details and migration caveats are in `handoff.md` section 8.
+- [ ] Deno, Android/iOS devices, actual printing/share and hosted-service/release sign-off remain unverified. Documented P2 limitations and deferred expansions remain out of this hardening batch.
 
 ## Backlog (post-launch, see product.md roadmap)
 - Customer self-edit of own profile (PRD matrix deferred from v1)

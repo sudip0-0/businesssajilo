@@ -23,9 +23,11 @@ The CLI's Local/Remote migration columns refer to the selected local target when
 .\scripts\local_hardening_gate.ps1 -SkipOutdated
 ```
 
-The script checks formatting without rewriting, generates code and l10n, runs analyze, applies/lists local migrations when Docker/Supabase are available, then runs Flutter tests (forwarding local `SUPABASE_URL` / `SUPABASE_ANON_KEY` dart-defines so live integration files can execute), pgTAP, and Deno validation/push-policy tests when available. Missing Docker/Supabase/Deno is recorded as SKIP normally and FAIL with `HARDENING_GATE=1`. Each native subcommand's exit status is checked separately. `flutter pub outdated` is informational and does not fail the gate; `-SkipOutdated` skips the network check.
+The script checks formatting without rewriting, generates code and l10n, runs analyze, and applies/lists local migrations when Docker/Supabase are available. The full Flutter unit/widget suite runs without backend dart-defines. A separate pass runs the three live repository tests with local `SUPABASE_URL` / `SUPABASE_ANON_KEY` and `HARDENING_GATE=1`; never inject live settings into ordinary unit tests or the plugin-backed web-button VM tests. The gate then runs pgTAP and Deno validation/push-policy tests when available. Missing live configuration or Docker/Supabase/Deno is recorded as SKIP normally and FAIL with `HARDENING_GATE=1`. Each native subcommand's exit status is checked separately. `flutter pub outdated` is informational and does not fail the gate; `-SkipOutdated` skips the network check.
 
 Browser widget and actual-app E2E layers remain separate commands below. They are wired into CI/release quality gates.
+
+Windows detector regression: `powershell.exe -NoProfile -File scripts/local_hardening_gate_supabase_defines_test.ps1`. This uses disposable command fixtures, not real credentials or databases. Successful Docker/Supabase stderr warnings must not abort the gate or make an available service look unavailable; nonzero exit codes still fail detection.
 
 ## Dart verification layers
 
@@ -66,7 +68,7 @@ flutter build web --debug --no-web-resources-cdn --no-wasm-dry-run --target=test
 node scripts/run_web_search_tests.mjs
 ```
 
-This runs real search, shell, warehouse billing, order-role, and notification widgets. The harness fails on missing tests, failed assertions, browser errors, or external network requests. `pubspec.yaml` aliases Flutter's default `Roboto` family to the existing Inter asset; the named mobile/web themes remain unchanged and test assets are not rewritten to hide network failures.
+This runs real search, shell, warehouse billing, order-role, notification, bill-input, quote-builder, and order-to-bill widgets. The integration callback reports 68 widget results; the imported suites also include four pure tests covered by the normal Flutter runner. Browser fixtures use the production web theme, including its bundled Inter/Devanagari fallbacks. The harness fails on missing widget results, failed assertions, browser errors, or external network requests; its larger bounded timeout accommodates the expanded suites. `pubspec.yaml` aliases Flutter's default `Roboto` family to the existing Inter asset. Test assets and network assertions must not be modified to hide font failures.
 
 ## Actual-app browser verification
 

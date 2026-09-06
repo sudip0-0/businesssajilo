@@ -69,6 +69,9 @@ class BillDraftLine {
   int get lineTotal =>
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
 
+  int? get tryLineTotal =>
+      tryLineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
+
   bool get discountValid =>
       isValidLineDiscount(qty: qty, ratePaisa: rate, discountPaisa: discount);
 

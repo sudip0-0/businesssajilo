@@ -36,9 +36,9 @@ try {
   const base = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ headless: true, timeout: 15000 });
   deadline = setTimeout(() => {
-    errors.push('Browser widget tests exceeded 120 seconds');
+    errors.push('Browser widget tests exceeded 240 seconds');
     void browser.close().catch(() => {});
-  }, 120000);
+  }, 240000);
   const context = await browser.newContext({ serviceWorkers: 'block' });
   await context.route('**/*', async (route) => {
     const url = new URL(route.request().url());
@@ -56,7 +56,7 @@ try {
     if (message.type() === 'error') errors.push(message.text());
   });
   await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 15000 });
-  await page.waitForFunction(() => typeof window.businessSajiloTestResult === 'string', { }, { timeout: 90000 });
+  await page.waitForFunction(() => typeof window.businessSajiloTestResult === 'string', { }, { timeout: 210000 });
   const result = JSON.parse(await page.evaluate(() => window.businessSajiloTestResult));
   console.log(JSON.stringify(result, null, 2));
   assert.equal(result.passed, true, 'Flutter widget tests failed');

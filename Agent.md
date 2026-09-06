@@ -40,6 +40,8 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 - Don't add dependencies without need; prefer the ones already listed in Architecture.md §1.
 - Warehouse privacy regressions: `supabase test db supabase/tests/rls_phase50_warehouse_customer_privacy_test.sql` and `flutter test test/warehouse_billing_privacy_test.dart`. The live `test/integration/repository_warehouse_billing_test.dart` requires local Supabase, `create-member`, and E2E owner/customer fixtures; it refuses non-loopback URLs and creates test staff/bills without deleting them. Billing identity reads use `customer_directory`, never restore warehouse SELECT on raw `customers`.
 
+- Windows gate detector regression: `powershell.exe -NoProfile -File scripts/local_hardening_gate_supabase_defines_test.ps1`. Native stderr warnings with exit code zero are not service failures; test Docker and Supabase detection without real credentials.
+
 ## Gotchas
 
 - Offline bill numbers are provisional (`D{n}-{seq}`) until the server assigns the final per-business sequence — never assume `bill_no` is final on a pending record.

@@ -56,7 +56,52 @@ void main() {
       _product(id: 'p1', name: 'Rice', referencePrice: maxExactPaisa),
     );
     draft.lines.single.setQty(2);
+    expect(draft.lines.single.qty, 2);
+    expect(draft.lines.single.rate, maxExactPaisa);
+    expect(draft.lines.single.tryLineTotal, isNull);
+    expect(draft.tryItemsTotal, isNull);
+    expect(draft.tryGrandTotal, isNull);
+    expect(() => draft.lines.single.lineTotal, throwsArgumentError);
+    expect(() => draft.itemsTotal, throwsArgumentError);
     expect(validateBillForm(draft), BillFormValidationError.invalidMoneyInput);
+    draft.lines.single.setQty(1);
+    expect(draft.tryItemsTotal, maxExactPaisa);
+    expect(draft.tryGrandTotal, maxExactPaisa);
+    expect(validateBillForm(draft), isNull);
+    expect(draft.itemsTotal, maxExactPaisa);
+  });
+
+  test('combined line totals overflow blocks validation without clamping', () {
+    final half = maxExactPaisa ~/ 2 + 1;
+    final draft = BillFormDraft();
+    draft.addProduct(_product(id: 'p1', name: 'Rice', referencePrice: half));
+    draft.addProduct(_product(id: 'p2', name: 'Dal', referencePrice: half));
+    expect(draft.lines[0].tryLineTotal, half);
+    expect(draft.lines[1].tryLineTotal, half);
+    expect(draft.tryItemsTotal, isNull);
+    expect(draft.tryGrandTotal, isNull);
+    expect(() => draft.itemsTotal, throwsArgumentError);
+    expect(validateBillForm(draft), BillFormValidationError.invalidMoneyInput);
+    draft.lines[1].rate = 0;
+    expect(validateBillForm(draft), isNull);
+    expect(draft.itemsTotal, half);
+    expect(draft.grandTotal, half);
+  });
+
+  test('tryGrandTotal is null when invalid discount subtraction overflows', () {
+    final draft = BillFormDraft();
+    draft.addProduct(_product(id: 'p1', name: 'Rice', referencePrice: 0));
+    draft.lines.single.discount = maxExactPaisa;
+    draft.billDiscountText = formatNpr(
+      const Paisa(maxExactPaisa),
+      showSymbol: false,
+    );
+    expect(draft.tryItemsTotal, -maxExactPaisa);
+    expect(draft.tryGrandTotal, isNull);
+    expect(
+      validateBillForm(draft),
+      BillFormValidationError.invalidLineDiscount,
+    );
   });
 
   test(

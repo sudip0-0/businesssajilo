@@ -270,7 +270,9 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
               textInputAction: TextInputAction.done,
               textAlign: TextAlign.end,
               decoration: _fieldDecoration.copyWith(
-                errorText: widget.line.rateInputValid
+                errorText:
+                    widget.line.rateInputValid &&
+                        widget.line.tryLineTotal != null
                     ? null
                     : widget.l10n.invalidNumber,
               ),
@@ -285,7 +287,12 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
           SizedBox(
             width: _kAmountWidth,
             child: Text(
-              formatNpr(Paisa(widget.line.lineTotal), showPaisa: true),
+              widget.line.tryLineTotal == null
+                  ? widget.l10n.invalidNumber
+                  : formatNpr(
+                      Paisa(widget.line.tryLineTotal!),
+                      showPaisa: true,
+                    ),
               textAlign: TextAlign.end,
               style: Theme.of(
                 context,

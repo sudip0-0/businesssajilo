@@ -31,7 +31,7 @@ abstract final class WebTheme {
       scaffoldBackgroundColor: WebPalette.paper,
       textTheme: textTheme,
       fontFamily: WebTypography.fontFamily,
-      fontFamilyFallback: const ['Noto Sans Devanagari'],
+      fontFamilyFallback: WebTypography.fontFamilyFallback,
       extensions: const [WebTokens.light],
       splashColor: WebPalette.navy.withValues(alpha: 0.07),
       hoverColor: WebPalette.navy.withValues(alpha: 0.04),
@@ -217,7 +217,7 @@ abstract final class WebTheme {
         headingTextStyle: WebTypography.eyebrow(),
         dataTextStyle: TextStyle(
           fontFamily: WebTypography.fontFamily,
-          fontFamilyFallback: const ['Noto Sans Devanagari'],
+          fontFamilyFallback: WebTypography.fontFamilyFallback,
           fontSize: 13,
           height: 1.4,
           color: scheme.onSurface,

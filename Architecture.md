@@ -60,7 +60,7 @@ orders(id, business_id, customer_id, status[placed|received|billed], customer_no
 order_items(id, business_id, order_id, product_id, qty, product_name)
 quotes(id, business_id, order_id, version, status[sent|accepted|rejected|superseded],
        total, expires_at, response_comment, created_by, created_at)
-quote_items(id, business_id, quote_id, product_id, qty, rate, discount, line_total)
+quote_items(id, business_id, quote_id, product_id, product_name, qty, rate, discount, line_total)
 bills(id, business_id, customer_id?, order_id?, bill_no, device_prefix, items_total,
       discount, grand_total, status[paid|partial|due], guest_name, reference_note, created_by, created_at)
 bill_items(id, business_id, bill_id, product_id?, name_snapshot, qty, rate, discount, line_total)
@@ -78,6 +78,8 @@ Notes:
 - **Stock level = SUM(stock_movements.qty_delta)** per product (materialized via trigger into `products.stock_cached` for fast reads). Append-only movements make offline merging conflict-free.
 - `bill_no` is per-business sequential; offline bills get `device_prefix` (e.g. `D2-`) and a final number assigned on sync to guarantee uniqueness.
 - Bill items snapshot product name/rate so historical bills are immutable.
+- Migration 59 snapshots quote-item product names on insert so customers do not need raw-product access. Accepted-quote billing and quote mapping prefer that snapshot over a renamed product. Existing quotes were backfilled from current product names; earlier names cannot be reconstructed.
+- Direct authenticated order updates cannot set `billed`, and staff cannot directly insert/update accepted or rejected quote responses. Security-invoker guards distinguish client SQL from the existing trusted RPC execution context; no client-set bypass flag is used.
 
 ## 5. Offline Sync (staff mobile)
 
@@ -145,7 +147,7 @@ lib/
 - Build-time environment values, including the flavor label and public API configuration, are passed through `--dart-define`; this is not a claim that native platform flavors or production services are configured.
 - CI (GitHub Actions `ci.yml`): `dart format`, generated-source cleanliness after `gen-l10n`/`build_runner`, `flutter analyze`, `flutter test`, `supabase test db`, build-based browser widget harness, local-resource actual-app E2E; web build artifact on `main` without the removed `--web-renderer` flag.
 - Release (`release.yml` on `v*` tags): quality job includes the same generated-source, browser-widget, and actual-app E2E checks, then Android AAB + local-resource web build with prod dart-defines; optional Vercel deploy when secrets are set. iOS IPA is not in CI yet (manual / future Codemagic or macOS runner).
-- **Local hardening gate:** `scripts/local_hardening_gate.ps1` mirrors CI checks, forwards local Supabase dart-defines into Flutter tests, and optionally runs pgTAP + Deno validation tests. See `docs/LOCAL_TESTING.md`.
+- **Local hardening gate:** `scripts/local_hardening_gate.ps1` checks the unit/widget suite without backend dart-defines, then runs the three live repository tests in a separate configured pass. It also runs local migrations, pgTAP, and Deno tests when available. Windows native stderr warnings do not imply service failure; missing prerequisites remain explicit skips/failures. See `docs/LOCAL_TESTING.md`.
 
 ### Verification layers
 

@@ -36,6 +36,9 @@ class _DraftLine {
   int get lineTotal =>
       lineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
 
+  int? get tryLineTotal =>
+      tryLineTotalPaisa(qty: qty, ratePaisa: rate, discountPaisa: discount);
+
   bool get discountValid =>
       isValidLineDiscount(qty: qty, ratePaisa: rate, discountPaisa: discount);
 
@@ -69,6 +72,16 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
 
   int get _total => itemsTotalPaisa(_lines.map((l) => l.lineTotal));
 
+  int? get _tryTotal {
+    final lineTotals = <int>[];
+    for (final line in _lines) {
+      final total = line.tryLineTotal;
+      if (total == null) return null;
+      lineTotals.add(total);
+    }
+    return tryItemsTotalPaisa(lineTotals);
+  }
+
   @override
   void dispose() {
     for (final line in _lines) {
@@ -83,6 +96,11 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     final l10n = AppLocalizations.of(context);
     final member = ref.read(authProvider).value?.member;
     if (member == null || _lines.isEmpty) return;
+
+    if (_tryTotal == null) {
+      showBsSnackBar(context, message: l10n.invalidNumber);
+      return;
+    }
 
     if (_lines.any((l) => !l.discountValid)) {
       showBsSnackBar(context, message: l10n.discountExceedsLine);
@@ -204,6 +222,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
         }
         return Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.always,
           child: Column(
             children: [
               Expanded(
@@ -250,11 +269,24 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                               controller: line.rateController,
                               validator: (value) {
                                 final parsed = parseNpr(value ?? '');
-                                return parsed == null || parsed.value < 0
-                                    ? l10n.invalidNumber
-                                    : null;
+                                if (parsed == null || parsed.value < 0) {
+                                  return l10n.invalidNumber;
+                                }
+                                if (tryLineGrossPaisa(
+                                      qty: line.qty,
+                                      ratePaisa: parsed.value,
+                                    ) ==
+                                    null) {
+                                  return l10n.invalidNumber;
+                                }
+                                return null;
                               },
-                              decoration: InputDecoration(labelText: l10n.rate),
+                              decoration: InputDecoration(
+                                labelText: l10n.rate,
+                                errorText: line.tryLineTotal == null
+                                    ? l10n.invalidNumber
+                                    : null,
+                              ),
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
@@ -269,13 +301,23 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                                 final parsed = parseNpr(
                                   value == null || value.isEmpty ? '0' : value,
                                 );
-                                return parsed == null || parsed.value < 0
-                                    ? l10n.invalidNumber
+                                if (parsed == null || parsed.value < 0) {
+                                  return l10n.invalidNumber;
+                                }
+                                final gross = tryLineGrossPaisa(
+                                  qty: line.qty,
+                                  ratePaisa: line.rate,
+                                );
+                                if (gross == null) return l10n.invalidNumber;
+                                return parsed.value > gross
+                                    ? l10n.discountExceedsLine
                                     : null;
                               },
                               decoration: InputDecoration(
                                 labelText: l10n.lineDiscount,
-                                errorText: line.discountValid
+                                errorText: line.tryLineTotal == null
+                                    ? l10n.invalidNumber
+                                    : line.discountValid
                                     ? null
                                     : l10n.discountExceedsLine,
                               ),
@@ -290,7 +332,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: Text(
-                                '${l10n.lineTotal}: ${formatNpr(Paisa(line.lineTotal))}',
+                                '${l10n.lineTotal}: ${line.tryLineTotal == null ? l10n.invalidNumber : formatNpr(Paisa(line.tryLineTotal!))}',
                               ),
                             ),
                           ],
@@ -306,7 +348,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '${l10n.grandTotal}: ${formatNpr(Paisa(_total))}',
+                      '${l10n.grandTotal}: ${_tryTotal == null ? l10n.invalidNumber : formatNpr(Paisa(_tryTotal!))}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),

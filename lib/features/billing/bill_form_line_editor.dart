@@ -119,7 +119,9 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                   ),
                   const Spacer(),
                   Text(
-                    formatNpr(Paisa(line.lineTotal), showPaisa: true),
+                    line.tryLineTotal == null
+                        ? l10n.invalidNumber
+                        : formatNpr(Paisa(line.tryLineTotal!), showPaisa: true),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(width: 8),
@@ -151,9 +153,10 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                         decoration: InputDecoration(
                           isDense: true,
                           labelText: '${l10n.rate} (रू)',
-                          errorText: line.rateInputValid
-                              ? null
-                              : l10n.invalidNumber,
+                          errorText:
+                              !line.rateInputValid || line.tryLineTotal == null
+                              ? l10n.invalidNumber
+                              : null,
                         ),
                         onChanged: (v) {
                           setState(() => line.setRateText(v));
@@ -171,7 +174,9 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                         decoration: InputDecoration(
                           isDense: true,
                           labelText: '${l10n.lineDiscount} (रू)',
-                          errorText: !line.discountInputValid
+                          errorText:
+                              !line.discountInputValid ||
+                                  line.tryLineTotal == null
                               ? l10n.invalidNumber
                               : line.discountValid
                               ? null

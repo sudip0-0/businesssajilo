@@ -28,6 +28,16 @@ int lineTotalPaisa({
   return lineGrossPaisa(qty: qty, ratePaisa: ratePaisa) - discountPaisa;
 }
 
+int? tryLineTotalPaisa({
+  required int qty,
+  required int ratePaisa,
+  int discountPaisa = 0,
+}) {
+  final gross = tryLineGrossPaisa(qty: qty, ratePaisa: ratePaisa);
+  if (gross == null) return null;
+  return gross - discountPaisa;
+}
+
 int lineDiscountsTotalPaisa(Iterable<int> lineDiscounts) =>
     itemsTotalPaisa(lineDiscounts);
 
@@ -74,6 +84,13 @@ int itemsTotalPaisa(Iterable<int> lineTotals) {
 
 int grandTotalPaisa({required int itemsTotal, int billDiscountPaisa = 0}) =>
     itemsTotal - billDiscountPaisa;
+
+int? tryGrandTotalPaisa({required int itemsTotal, int billDiscountPaisa = 0}) {
+  final total = BigInt.from(itemsTotal) - BigInt.from(billDiscountPaisa);
+  final limit = BigInt.from(maxExactPaisa);
+  if (total > limit || total < -limit) return null;
+  return total.toInt();
+}
 
 /// Remaining unpaid amount on a bill. Never negative.
 int remainingDuePaisa({required int grandTotal, required int amountReceived}) {

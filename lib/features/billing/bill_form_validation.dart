@@ -17,23 +17,22 @@ BillFormValidationError? validateBillForm(BillFormDraft draft) {
       draft.lines.any((l) => !l.rateInputValid || !l.discountInputValid)) {
     return BillFormValidationError.invalidMoneyInput;
   }
-  try {
-    if (draft.lines.any(
-      (l) => tryLineGrossPaisa(qty: l.qty, ratePaisa: l.rate) == null,
-    )) {
-      return BillFormValidationError.invalidMoneyInput;
-    }
-    if (draft.lines.any((l) => !l.discountValid)) {
-      return BillFormValidationError.invalidLineDiscount;
-    }
-    final discount = draft.billDiscount;
-    final items = draft.itemsTotal;
-    if (discount < 0 || discount > items) {
-      return BillFormValidationError.invalidBillDiscount;
-    }
-    if (draft.grandTotal < 0) return BillFormValidationError.negativeGrandTotal;
-  } on ArgumentError {
+  if (draft.lines.any((l) => l.tryLineTotal == null)) {
     return BillFormValidationError.invalidMoneyInput;
+  }
+  if (draft.lines.any((l) => !l.discountValid)) {
+    return BillFormValidationError.invalidLineDiscount;
+  }
+  final items = draft.tryItemsTotal;
+  if (items == null) {
+    return BillFormValidationError.invalidMoneyInput;
+  }
+  final discount = draft.billDiscount;
+  if (discount < 0 || discount > items) {
+    return BillFormValidationError.invalidBillDiscount;
+  }
+  if (grandTotalPaisa(itemsTotal: items, billDiscountPaisa: discount) < 0) {
+    return BillFormValidationError.negativeGrandTotal;
   }
   return null;
 }

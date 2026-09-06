@@ -1,4 +1,5 @@
 import 'package:businesssajilo/core/l10n/app_localizations.dart';
+import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/data/repositories/bills_repository.dart';
 import 'package:businesssajilo/data/repositories/orders_repository.dart';
 import 'package:businesssajilo/data/repositories/products_repository.dart';
@@ -24,6 +25,8 @@ import 'package:businesssajilo/features/quotes/quote_builder_screen.dart';
 import 'package:businesssajilo/features/quotes/quote_detail_screen.dart';
 import 'package:businesssajilo/web/features/billing/web_bill_form_content.dart';
 import 'package:businesssajilo/web/features/billing/web_bill_form_line_table.dart';
+import 'package:businesssajilo/web/theme/web_theme.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -106,10 +109,11 @@ class _Orders implements OrdersRepository {
 
 class _Products implements ProductsRepository {
   bool fail = false;
+  Product current = product;
   @override
   Future<Product> get(String id) async {
     if (fail) throw StateError('product lookup failed');
-    return product;
+    return current;
   }
 
   @override
@@ -119,7 +123,7 @@ class _Products implements ProductsRepository {
     int? limit,
     String? query,
     ProductStockFilter stockFilter = ProductStockFilter.all,
-  }) async => [product];
+  }) async => [current];
   @override
   Future<String?> signedImageUrl(String? storagePath) async => null;
   @override
@@ -161,7 +165,10 @@ class _Quotes extends QuotesRepository {
               id: 'qi',
               quoteId: 'quote-${versions.length + 1}',
               productId: line.productId,
-              productName: 'Rice',
+              productName: switch (line.productId) {
+                'product-2' => 'Dal',
+                _ => 'Rice',
+              },
               qty: line.qty,
               rate: line.rate,
               discount: line.discount,
@@ -273,6 +280,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
+          theme: kIsWeb ? WebTheme.light() : null,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -507,6 +515,7 @@ void main() {
       await quotes.accept(sent.id);
       (container.read(authProvider.notifier) as _Auth).asRole(Role.owner);
       final key = GlobalKey<WebBillFormContentState>();
+      products.current = product.copyWith(name: 'Renamed Rice');
       products.fail = true;
       await screen(tester, WebBillFormContent(key: key, orderId: 'order'));
       expect(find.text('Try again'), findsOneWidget);
@@ -519,12 +528,14 @@ void main() {
       expect(row.line.rate, 1255);
       expect(row.line.discount, 25);
       expect(row.line.lineTotal, 3740);
+      expect(row.line.product.name, 'Rice');
       expect(find.text('12.55'), findsOneWidget);
       await key.currentState!.saveAsDue();
       await tester.pumpAndSettle();
       expect(bills.saved!.grandTotal, 3740);
       expect(bills.savedLines!.single.discount, 25);
       expect(bills.savedLines!.single.qty, 3);
+      expect(bills.savedLines!.single.nameSnapshot, 'Rice');
       expect(bills.saved!.orderId, 'order');
     },
   );
@@ -597,6 +608,363 @@ void main() {
       expect(draft.lines.single.rate, 1255);
       expect(draft.lines.single.discount, 25);
       expect(draft.grandTotal, 3740);
+    },
+  );
+
+  String fieldText(WidgetTester tester, Finder field) {
+    return tester
+        .widget<EditableText>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        )
+        .controller
+        .text;
+  }
+
+  Finder qtyField(int lineIndex) =>
+      find.byType(TextFormField).at(lineIndex * 3);
+
+  Finder rateField(int lineIndex) =>
+      find.byType(TextFormField).at(lineIndex * 3 + 1);
+
+  Finder discountField(int lineIndex) =>
+      find.byType(TextFormField).at(lineIndex * 3 + 2);
+
+  Future<void> tapSave(WidgetTester tester) async {
+    tester
+        .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save bill'))
+        .onPressed!();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  Future<void> completePayment(WidgetTester tester) async {
+    expect(find.byType(BillPaymentSheet), findsOneWidget);
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(BillPaymentSheet),
+            matching: find.byType(FilledButton),
+          )
+          .last,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> openAcceptedQuoteBill(
+    WidgetTester tester, {
+    required List<QuoteLineInput> lines,
+  }) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    orders.order = Order(
+      id: 'order',
+      businessId: 'business',
+      customerId: customer.id,
+      status: OrderStatus.placed,
+      items: [
+        for (final line in lines)
+          OrderItem(
+            id: 'item-${line.productId}',
+            orderId: 'order',
+            productId: line.productId,
+            qty: line.qty,
+          ),
+      ],
+    );
+    final sent = await quotes.sendQuote(
+      orderId: 'order',
+      createdByMemberId: 'owner',
+      total: lines.first.lineTotal,
+      lines: lines,
+    );
+    await quotes.accept(sent.id);
+    (container.read(authProvider.notifier) as _Auth).asRole(Role.owner);
+    await screen(
+      tester,
+      BillFromOrderSheet(orderId: orders.order!.id, customerId: customer.id),
+    );
+  }
+
+  testWidgets(
+    'invalid quantity text stays visible, blocks save, and recovers quote terms',
+    (tester) async {
+      await openAcceptedQuoteBill(
+        tester,
+        lines: const [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 3,
+            rate: 1255,
+            discount: 25,
+            lineTotal: 3740,
+          ),
+        ],
+      );
+      final qty = qtyField(0);
+      for (final raw in ['', '0', '${maxExactPaisa + 1}']) {
+        await tester.enterText(qty, raw);
+        await tester.pump();
+        expect(fieldText(tester, qty), raw);
+        expect(tester.takeException(), isNull);
+        await tapSave(tester);
+        expect(find.byType(BillPaymentSheet), findsNothing);
+        expect(bills.saved, isNull);
+        expect(find.text('Enter a valid number'), findsWidgets);
+        expect(tester.takeException(), isNull);
+      }
+      await tester.enterText(qty, '3');
+      await tester.pump();
+      await tapSave(tester);
+      await completePayment(tester);
+      expect(bills.saved!.grandTotal, 3740);
+      expect(bills.savedLines!.single.qty, 3);
+      expect(bills.savedLines!.single.rate, 1255);
+      expect(bills.savedLines!.single.discount, 25);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'unsafe single-line gross keeps raw qty, blocks save, and recovers',
+    (tester) async {
+      await openAcceptedQuoteBill(
+        tester,
+        lines: const [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 1,
+            rate: maxExactPaisa,
+            discount: 0,
+            lineTotal: maxExactPaisa,
+          ),
+        ],
+      );
+      final qty = qtyField(0);
+      await tester.enterText(qty, '2');
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(fieldText(tester, qty), '2');
+      await tapSave(tester);
+      expect(find.byType(BillPaymentSheet), findsNothing);
+      expect(bills.saved, isNull);
+      expect(find.text('Enter a valid number'), findsWidgets);
+      expect(tester.takeException(), isNull);
+      await tester.enterText(qty, '1');
+      await tester.pump();
+      await tapSave(tester);
+      await completePayment(tester);
+      expect(bills.saved!.grandTotal, maxExactPaisa);
+      expect(bills.savedLines!.single.qty, 1);
+      expect(bills.savedLines!.single.rate, maxExactPaisa);
+      expect(bills.savedLines!.single.discount, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'combined line-total overflow blocks save without writing and recovers',
+    (tester) async {
+      final half = maxExactPaisa ~/ 2;
+      await openAcceptedQuoteBill(
+        tester,
+        lines: [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 1,
+            rate: half,
+            discount: 0,
+            lineTotal: half,
+          ),
+          QuoteLineInput(
+            productId: 'product-2',
+            qty: 1,
+            rate: half,
+            discount: 0,
+            lineTotal: half,
+          ),
+        ],
+      );
+      expect(find.text('Rice'), findsOneWidget);
+      expect(find.text('Dal'), findsOneWidget);
+      final qty = qtyField(1);
+      await tester.enterText(qty, '2');
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(fieldText(tester, qty), '2');
+      expect(find.textContaining('Enter a valid number'), findsWidgets);
+      await tapSave(tester);
+      expect(find.byType(BillPaymentSheet), findsNothing);
+      expect(bills.saved, isNull);
+      expect(tester.takeException(), isNull);
+      await tester.enterText(qty, '1');
+      await tester.pump();
+      await tapSave(tester);
+      await completePayment(tester);
+      expect(bills.savedLines, hasLength(2));
+      expect(bills.savedLines![0].qty, 1);
+      expect(bills.savedLines![0].rate, half);
+      expect(bills.savedLines![1].qty, 1);
+      expect(bills.savedLines![1].rate, half);
+      expect(bills.saved!.grandTotal, half + half);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'deleting a line does not transfer stale quantity text onto another row',
+    (tester) async {
+      await openAcceptedQuoteBill(
+        tester,
+        lines: const [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 3,
+            rate: 1255,
+            discount: 25,
+            lineTotal: 3740,
+          ),
+          QuoteLineInput(
+            productId: 'product-2',
+            qty: 5,
+            rate: 4000,
+            discount: 0,
+            lineTotal: 20000,
+          ),
+        ],
+      );
+      await tester.enterText(qtyField(0), '0');
+      await tester.pump();
+      expect(fieldText(tester, qtyField(0)), '0');
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pump();
+      expect(find.text('Rice'), findsNothing);
+      expect(find.text('Dal'), findsOneWidget);
+      expect(fieldText(tester, qtyField(0)), '5');
+      expect(find.text('Enter a valid number'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tapSave(tester);
+      await completePayment(tester);
+      expect(bills.savedLines!.single.productId, 'product-2');
+      expect(bills.savedLines!.single.qty, 5);
+      expect(bills.savedLines!.single.rate, 4000);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'overflow rate then lower qty saves raw rate, qty, and discount',
+    (tester) async {
+      await openAcceptedQuoteBill(
+        tester,
+        lines: const [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 3,
+            rate: 1255,
+            discount: 25,
+            lineTotal: 3740,
+          ),
+        ],
+      );
+      final rate = rateField(0);
+      await tester.enterText(rate, '90071992547409.91');
+      await tester.pump();
+      await tester.enterText(discountField(0), '0.40');
+      await tester.pump();
+      expect(fieldText(tester, rate), '90071992547409.91');
+      expect(fieldText(tester, discountField(0)), '0.40');
+      expect(tester.takeException(), isNull);
+      await tapSave(tester);
+      expect(find.byType(BillPaymentSheet), findsNothing);
+      expect(bills.saved, isNull);
+      expect(find.text('Enter a valid number'), findsWidgets);
+      await tester.enterText(qtyField(0), '1');
+      await tester.pump();
+      await tapSave(tester);
+      await completePayment(tester);
+      expect(bills.savedLines!.single.qty, 1);
+      expect(bills.savedLines!.single.rate, maxExactPaisa);
+      expect(bills.savedLines!.single.discount, 40);
+      expect(bills.saved!.grandTotal, maxExactPaisa - 40);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'overflow qty then lower rate saves raw qty, rate, and discount',
+    (tester) async {
+      await openAcceptedQuoteBill(
+        tester,
+        lines: const [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 1,
+            rate: maxExactPaisa,
+            discount: 0,
+            lineTotal: maxExactPaisa,
+          ),
+        ],
+      );
+      await tester.enterText(qtyField(0), '2');
+      await tester.pump();
+      await tester.enterText(discountField(0), '0.50');
+      await tester.pump();
+      expect(fieldText(tester, qtyField(0)), '2');
+      expect(fieldText(tester, discountField(0)), '0.50');
+      expect(tester.takeException(), isNull);
+      await tapSave(tester);
+      expect(find.byType(BillPaymentSheet), findsNothing);
+      expect(bills.saved, isNull);
+      await tester.enterText(rateField(0), '10');
+      await tester.pump();
+      await tapSave(tester);
+      await completePayment(tester);
+      expect(bills.savedLines!.single.qty, 2);
+      expect(bills.savedLines!.single.rate, 1000);
+      expect(bills.savedLines!.single.discount, 50);
+      expect(bills.saved!.grandTotal, 1950);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'invalid quantity on second row stays visible after deleting the first',
+    (tester) async {
+      await openAcceptedQuoteBill(
+        tester,
+        lines: const [
+          QuoteLineInput(
+            productId: 'product',
+            qty: 3,
+            rate: 1255,
+            discount: 25,
+            lineTotal: 3740,
+          ),
+          QuoteLineInput(
+            productId: 'product-2',
+            qty: 5,
+            rate: 4000,
+            discount: 0,
+            lineTotal: 20000,
+          ),
+        ],
+      );
+      await tester.enterText(qtyField(1), '0');
+      await tester.pump();
+      expect(fieldText(tester, qtyField(1)), '0');
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pump();
+      expect(find.text('Rice'), findsNothing);
+      expect(find.text('Dal'), findsOneWidget);
+      expect(fieldText(tester, qtyField(0)), '0');
+      expect(tester.takeException(), isNull);
+      await tapSave(tester);
+      expect(find.byType(BillPaymentSheet), findsNothing);
+      expect(bills.saved, isNull);
+      expect(find.text('Enter a valid number'), findsWidgets);
+      expect(tester.takeException(), isNull);
     },
   );
 }

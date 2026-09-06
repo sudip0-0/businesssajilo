@@ -129,7 +129,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         final product = await productsRepo.get(item.productId);
         lines.add(
           BillDraftLine(
-            product: product,
+            product: product.copyWith(name: item.nameSnapshot),
             qty: item.qty,
             rate: item.rate,
             discount: item.discount,
@@ -438,9 +438,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                 _syncDraftFields();
                 _syncDirtyFlag();
               },
-              itemsTotal: _draft.itemsTotal,
+              itemsTotal: _draft.tryItemsTotal,
               billDiscountController: _billDiscountController,
-              grandTotal: _draft.grandTotal,
+              grandTotal: _draft.tryGrandTotal,
               onDiscountChanged: () {
                 _syncDraftFields();
                 setState(() {});
@@ -769,9 +769,9 @@ class _CheckoutRail extends StatelessWidget {
   final ValueChanged<Customer> onCustomerSelected;
   final VoidCallback onCustomerCleared;
   final VoidCallback onGuestNameChanged;
-  final int itemsTotal;
+  final int? itemsTotal;
   final TextEditingController billDiscountController;
-  final int grandTotal;
+  final int? grandTotal;
   final VoidCallback onDiscountChanged;
   final bool showCustomerBalance;
 

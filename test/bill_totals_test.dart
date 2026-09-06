@@ -131,4 +131,34 @@ void main() {
       isNull,
     );
   });
+
+  test('tryLineTotalPaisa is null on overflow and does not clamp', () {
+    expect(
+      tryLineTotalPaisa(qty: 1, ratePaisa: maxExactPaisa, discountPaisa: 0),
+      maxExactPaisa,
+    );
+    expect(
+      tryLineTotalPaisa(qty: 2, ratePaisa: maxExactPaisa, discountPaisa: 0),
+      isNull,
+    );
+    expect(
+      () => lineTotalPaisa(qty: 2, ratePaisa: maxExactPaisa, discountPaisa: 0),
+      throwsArgumentError,
+    );
+  });
+
+  test('tryGrandTotalPaisa is null when subtraction leaves portable range', () {
+    expect(
+      tryGrandTotalPaisa(itemsTotal: maxExactPaisa, billDiscountPaisa: 0),
+      maxExactPaisa,
+    );
+    expect(
+      tryGrandTotalPaisa(itemsTotal: -maxExactPaisa, billDiscountPaisa: 1),
+      isNull,
+    );
+    expect(
+      grandTotalPaisa(itemsTotal: -maxExactPaisa, billDiscountPaisa: 1),
+      -maxExactPaisa - 1,
+    );
+  });
 }
