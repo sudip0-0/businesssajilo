@@ -46,6 +46,7 @@ dependencies:
   xml: ^7.0.1
   pasteboard: ^0.5.0
   flutter_secure_storage: ^10.3.1
+  sqlite3: 3.5.1
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +65,12 @@ flutter:
   uses-material-design: true
   generate: true
   fonts:
+    # Flutter web eagerly initializes its default family before named themes load.
+    # Reuse the bundled Inter face; no remote Roboto download or theme change.
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-Regular.ttf

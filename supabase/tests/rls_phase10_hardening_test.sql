@@ -165,11 +165,7 @@ select throws_ok(
 
 -- 14/15. send_quote: order flow, supersede prior sent quotes.
 select test_set_auth('55555555-5555-5555-5555-555555555555');
-insert into orders (id, business_id, customer_id, status)
-values ('01111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-        'e1111111-1111-1111-1111-111111111111', 'placed');
-insert into order_items (order_id, product_id, qty)
-values ('01111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 3);
+select place_order('{"id":"01111111-1111-1111-1111-111111111111","customer_id":"e1111111-1111-1111-1111-111111111111","items":[{"product_id":"b1111111-1111-1111-1111-111111111111","qty":3}]}');
 
 select test_set_auth('33333333-3333-3333-3333-333333333333');
 select is(

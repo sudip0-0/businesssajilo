@@ -93,7 +93,7 @@ select is(
 select test_set_auth('44444444-4444-4444-4444-444444444444');
 
 select isnt(
-  (select count(*)::int from customers),
+  (select count(*)::int from customer_directory),
   0,
   'warehouse can read customers for billing'
 );

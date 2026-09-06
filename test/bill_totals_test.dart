@@ -1,4 +1,5 @@
 import 'package:businesssajilo/core/utils/bill_totals.dart';
+import 'package:businesssajilo/core/utils/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -102,6 +103,32 @@ void main() {
         returnedQty: 2,
       ),
       0,
+    );
+  });
+
+  test('quantity times rate stays inside the web exact-integer range', () {
+    expect(lineGrossPaisa(qty: 1, ratePaisa: maxExactPaisa), maxExactPaisa);
+    expect(tryLineGrossPaisa(qty: 2, ratePaisa: maxExactPaisa), isNull);
+    expect(
+      () => lineGrossPaisa(qty: 2, ratePaisa: maxExactPaisa),
+      throwsArgumentError,
+    );
+    expect(
+      isValidLineDiscount(qty: 2, ratePaisa: maxExactPaisa, discountPaisa: 0),
+      isFalse,
+    );
+  });
+
+  test('multi-line accumulation rejects totals past the web integer limit', () {
+    expect(itemsTotalPaisa(const [maxExactPaisa, 0]), maxExactPaisa);
+    expect(tryItemsTotalPaisa(const [maxExactPaisa, 1]), isNull);
+    expect(
+      () => itemsTotalPaisa(const [maxExactPaisa, 1]),
+      throwsArgumentError,
+    );
+    expect(
+      tryItemsTotalPaisa([maxExactPaisa ~/ 2 + 1, maxExactPaisa ~/ 2 + 1]),
+      isNull,
     );
   });
 }

@@ -27,7 +27,7 @@
             │        Supabase         │
             │  Postgres + RLS         │
             │  Auth (JWT + role claim)│
-            │  Realtime (orders)      │
+            │  Realtime (notifications)│
             │  Storage (images)       │
             │  Edge Functions         │──► FCM push
             └─────────────────────────┘
@@ -37,10 +37,10 @@ There is **no** `lib/application/` use-case layer: feature providers and screens
 
 ## 3. Multi-Tenancy & Security
 
-- Every business table carries `business_id`. RLS helpers (`current_business_id()`, `current_role_name()`) resolve the active membership by querying `members` for `auth.uid()` — not by reading `auth.jwt()` claims directly.
+- `businesses.id` is the tenant root. Tenant-owned tables carry `business_id`; migration 57 adds explicit NOT NULL scope to the six child tables, with parent-derived stamping, composite foreign keys, and restrictive tenant policies. RLS helpers (`current_business_id()`, `current_role_name()`) resolve active membership by querying `members` for `auth.uid()`, not JWT role claims.
 - User role lives on the `members` row (`owner | sales | warehouse | customer`). Auth JWT `app_metadata` is synced for convenience, but policies use the SQL helpers above.
 - Example hard rules at DB level:
-  - `bills`: SELECT/INSERT only for role IN ('owner','sales'); customers can SELECT only their own bills.
+  - `bills`: staff (`owner`, `sales`, `warehouse`) can SELECT and create through `create_bill`; customers can SELECT only their own bills. Direct client inserts are denied by RLS. Warehouse cannot record payments.
   - `stock_movements`: INSERT only for role IN ('owner','warehouse').
   - `customers`: INSERT only owner.
 - Client UI also gates by role, but RLS is the source of truth.
@@ -54,18 +54,23 @@ members(id, business_id, auth_user_id, role, display_name, phone, is_active)
 customers(id, business_id, member_id not null unique, shop_name, contact_name, phone, address, opening_balance)
 products(id, business_id, name, name_np, sku, unit, cost_price,
          reference_price, image_url, low_stock_threshold, stock_cached, is_active)
-stock_movements(id, business_id, product_id, type[in|adjust|dispatch], qty_delta,
-                reason, ref_order_id?, created_by, created_at)        -- append-only
-orders(id, business_id, customer_id, status, customer_note, created_at, updated_at)
-order_items(id, order_id, product_id, qty)
-quotes(id, order_id, version, status[sent|accepted|rejected], total, created_by, created_at)
-quote_items(id, quote_id, product_id, qty, rate, discount)
+stock_movements(id, business_id, product_id, type[stock_in|adjust|dispatch|return], qty_delta,
+                reason, ref_bill_id?, created_by, created_at)        -- append-only
+orders(id, business_id, customer_id, status[placed|received|billed], customer_note, created_at, updated_at)
+order_items(id, business_id, order_id, product_id, qty, product_name)
+quotes(id, business_id, order_id, version, status[sent|accepted|rejected|superseded],
+       total, expires_at, response_comment, created_by, created_at)
+quote_items(id, business_id, quote_id, product_id, qty, rate, discount, line_total)
 bills(id, business_id, customer_id?, order_id?, bill_no, device_prefix, items_total,
-      discount, grand_total, status[paid|partial|due], created_by, created_at)
-bill_items(id, bill_id, product_id, name_snapshot, qty, rate, discount, line_total)
+      discount, grand_total, status[paid|partial|due], guest_name, reference_note, created_by, created_at)
+bill_items(id, business_id, bill_id, product_id?, name_snapshot, qty, rate, discount, line_total)
 payments(id, business_id, customer_id, bill_id?, amount, method[cash|cheque|wallet|bank],
          ref_note, received_by, created_at)
-customer_ledger_entries(view: bills/credit notes as debit, payments as credit, running balance)
+credit_notes(id, business_id, bill_id, customer_id, credit_no, grand_total, created_at)
+credit_note_items(id, business_id, credit_note_id, bill_item_id, product_id?, name_snapshot, qty_returned, rate, discount, line_total)
+customer_ledger_entries(view: opening/bills debit; payments/credit notes credit; running balance computed by client)
+customer_directory(view: role/tenant-filtered identity fields only; no financial columns)
+device_tokens(id, business_id, member_id, token, platform)
 notifications(id, business_id, recipient_member_id, type, payload, read_at, created_at)
 ```
 
@@ -77,9 +82,10 @@ Notes:
 ## 5. Offline Sync (staff mobile)
 
 - **Local writes first**: bills, payments, stock movements written to Drift with `pending` flag and client-generated UUIDs.
-- **Push**: background worker drains the sync queue (ordered) to Supabase via PostgREST upserts; retries with exponential backoff.
-- **Pull**: delta sync using `updated_at > last_sync` per table.
-- **Conflicts**: append-only tables (movements, payments) never conflict; mutable rows (product edits) use last-write-wins + `audit_log`.
+- **Push**: ordered, dependency-aware replay uses `create_bill` / `record_customer_sale` / `record_payment` RPCs and insert-if-absent stock movement upserts. RPC acknowledgements are validated before local success; retries use exponential backoff and bounded network awaits.
+- **Pull**: entity-specific server watermarks (`updated_at` or `created_at`), resumable bootstrap, and session-cancellation checks. Warehouse reads customer identities and does not pull payments.
+- **Conflicts**: product/customer writes are online-only; the unused product LWW RPC was removed in migration 20. Append-only writes remain subject to permissions, referential validation, and retry identity checks; append-only does not mean validation cannot fail.
+- **Cache ownership**: staff caches are scoped by business, member, and role. Recovery only imports verifiably owned and permitted pending work; unknown or forbidden legacy work is retained with localized recovery guidance. Source preservation is not permission to replay another member's transactions.
 - Customer app and web skip the sync layer entirely (direct online repo implementations behind the same repository interfaces).
 
 ### Offline matrix
@@ -110,7 +116,7 @@ offline.
 
 DB webhooks/triggers → Edge Function `notify` → FCM. Tokens stored per member/device in `device_tokens`. Notification fan-out rules derived from role + event type (see product.md §8).
 
-Web FCM uses a stub service worker (`web/firebase-messaging-sw.js`) until Firebase web config is wired for production; mobile push works when Firebase dart-defines are set.
+The web FCM service worker is implemented in `web/firebase-messaging-sw.js`, but its Firebase configuration must be supplied separately. Mobile Firebase dart-defines, web configuration/VAPID, server FCM credentials, and actual delivery all require operational verification. In-app notifications work independently of push delivery.
 
 ## 8. Flutter Project Structure
 
@@ -135,18 +141,20 @@ lib/
 
 ## 9. Environments & CI/CD
 
-- Supabase projects: `dev` and `prod`. Migrations in repo (`supabase/migrations`), applied via Supabase CLI.
-- Flutter flavors: `dev`, `prod` (API URLs/keys via `--dart-define`).
-- CI (GitHub Actions `ci.yml`): `dart format`, `build_runner`, `flutter analyze`, `flutter test`, `supabase test db`; CanvasKit web build artifact on `main`.
-- Release (`release.yml` on `v*` tags): Android AAB + web build with prod dart-defines; optional Vercel deploy when secrets are set. iOS IPA is not in CI yet (manual / future Codemagic or macOS runner).
-- **Local hardening gate:** `scripts/local_hardening_gate.ps1` mirrors CI checks and optionally runs pgTAP + Deno validation tests. See `docs/LOCAL_TESTING.md`.
+- Local Supabase is managed through the CLI; hosted dev/prod projects and their configuration require separate operational verification. Migrations live in `supabase/migrations`.
+- Build-time environment values, including the flavor label and public API configuration, are passed through `--dart-define`; this is not a claim that native platform flavors or production services are configured.
+- CI (GitHub Actions `ci.yml`): `dart format`, generated-source cleanliness after `gen-l10n`/`build_runner`, `flutter analyze`, `flutter test`, `supabase test db`, build-based browser widget harness, local-resource actual-app E2E; web build artifact on `main` without the removed `--web-renderer` flag.
+- Release (`release.yml` on `v*` tags): quality job includes the same generated-source, browser-widget, and actual-app E2E checks, then Android AAB + local-resource web build with prod dart-defines; optional Vercel deploy when secrets are set. iOS IPA is not in CI yet (manual / future Codemagic or macOS runner).
+- **Local hardening gate:** `scripts/local_hardening_gate.ps1` mirrors CI checks, forwards local Supabase dart-defines into Flutter tests, and optionally runs pgTAP + Deno validation tests. See `docs/LOCAL_TESTING.md`.
 
-### Test coverage (verified 2026-07-23)
+### Verification layers
 
-- **Dart:** ~214 unit/widget tests passing; 9 integration tests skip without local Supabase. Remote repository HTTP contracts in `test/data/remote_repo_http_test.dart`; auth lifecycle in `test/auth_*`; sync orchestration in `test/sync_*`.
-- **Postgres:** pgTAP suites under `supabase/tests/` (phases 1–8, 10–13, 15, 22 local hardening).
-- **Edge Functions:** Deno unit tests for `_shared/validation.ts`.
-- **Integration:** Repository-level order→quote→bill in `test/integration/repository_order_to_bill_test.dart`; UI stub in `ui_order_to_bill_flow_test.dart`.
+- **Dart:** unit/widget tests, mocked HTTP repository contracts, auth lifecycle, exact money/export math, and sync/recovery tests. Dated execution results and unresolved checks are recorded in `tasks.md` and `handoff.md`; test presence is not a pass.
+- **Postgres:** pgTAP suites in `supabase/tests/`, including warehouse privacy, atomic order/quote responses, allocation, and child-table tenancy.
+- **Edge Functions:** Deno tests for shared validation and notification push policy. Missing Deno is a blocked/skipped check, not success.
+- **UI flow:** `test/integration/ui_order_to_bill_flow_test.dart` pumps real cart/quote/acceptance/billing screens against deterministic test repositories. It is no longer bootstrap-only, but is not a live multi-device test.
+- **Live backend:** repository integration tests separately exercise local order/quote/bill, warehouse privacy, and concurrent payment allocation through real Supabase requests. They require local fixtures/configuration and reject non-local targets where they create data.
+- **Browser:** the supported build-based widget harness is `test/support/web_search_test_bootstrap.dart` + `scripts/run_web_search_tests.mjs`; actual-app navigation/locale checks are in `scripts/e2e_web.mjs`. Direct `flutter test --platform chrome` encountered missing CanvasKit assets on this machine, so do not confuse that runner with the verified build-based harness.
 
 ## 10. Key Risks & Mitigations
 

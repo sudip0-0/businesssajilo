@@ -220,10 +220,7 @@ class _DuesBody extends StatelessWidget {
                           numeric: true,
                           onSort: onSort,
                         ),
-                        DataColumn(
-                          label: Text(l10n.oldestDue),
-                          onSort: onSort,
-                        ),
+                        DataColumn(label: Text(l10n.oldestDue), onSort: onSort),
                         const DataColumn(label: Text('')),
                       ],
                       items: sorted,
@@ -246,10 +243,7 @@ class _DuesBody extends StatelessWidget {
                           DataCell(Text(c.phone ?? '—')),
                           DataCell(
                             Text(
-                              formatNpr(
-                                Paisa(c.balanceDue),
-                                showPaisa: false,
-                              ),
+                              formatNpr(Paisa(c.balanceDue), showPaisa: false),
                               style: WebTypography.mono(
                                 color: WebPalette.danger,
                                 fontWeight: FontWeight.bold,

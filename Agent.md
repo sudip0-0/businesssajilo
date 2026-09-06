@@ -13,7 +13,7 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 1. **Warehouse must never view customer balance or ledger** — DB-enforced (no `customer_balances` / payments / dues access). Warehouse **may** create and view bills.
 2. Every tenant table has `business_id` with an RLS policy; never query across tenants.
 3. Only the Owner creates customer/staff credentials, via the `create-member` Edge Function. Service role key never reaches client code.
-4. `stock_movements`, `payments`, `messages` are **append-only** — no UPDATE/DELETE; corrections are new compensating rows.
+4. `stock_movements` and `payments` are **append-only** — no UPDATE/DELETE; corrections are new compensating rows. Order chat and `messages` were removed; any retained legacy messages remain append-only and must not be resurrected as a feature.
 5. Bills are immutable after creation (item snapshots); changes go through returns/credit notes (v1.1).
 6. No VAT/tax logic in v1. Don't add tax fields speculatively.
 7. All user-facing strings go through ARB l10n (EN + NP). No hardcoded text.
@@ -38,6 +38,7 @@ Instructions for AI coding agents working on this repository. Read `product.md`,
 - Test on at least Android + Web for any UI change (layouts must be responsive).
 - Keep diffs focused; don't refactor unrelated code in feature PRs.
 - Don't add dependencies without need; prefer the ones already listed in Architecture.md §1.
+- Warehouse privacy regressions: `supabase test db supabase/tests/rls_phase50_warehouse_customer_privacy_test.sql` and `flutter test test/warehouse_billing_privacy_test.dart`. The live `test/integration/repository_warehouse_billing_test.dart` requires local Supabase, `create-member`, and E2E owner/customer fixtures; it refuses non-loopback URLs and creates test staff/bills without deleting them. Billing identity reads use `customer_directory`, never restore warehouse SELECT on raw `customers`.
 
 ## Gotchas
 

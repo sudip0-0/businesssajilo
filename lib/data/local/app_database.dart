@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../domain/enums.dart';
 
 part 'app_database.g.dart';
 
@@ -167,8 +170,25 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  factory AppDatabase.open() =>
-      AppDatabase(driftDatabase(name: 'businesssajilo_local'));
+  static String scopedName({
+    required String businessId,
+    required String memberId,
+    required Role role,
+  }) {
+    final scope = jsonEncode([businessId, memberId, role.name]);
+    final id = const Uuid().v5(Namespace.url.value, 'businesssajilo:$scope');
+    return 'businesssajilo_$id';
+  }
+
+  factory AppDatabase.open({
+    required String businessId,
+    required String memberId,
+    required Role role,
+  }) => AppDatabase(
+    driftDatabase(
+      name: scopedName(businessId: businessId, memberId: memberId, role: role),
+    ),
+  );
 
   @override
   int get schemaVersion => 5;
@@ -214,7 +234,10 @@ class AppDatabase extends _$AppDatabase {
   Future<List<SyncQueueData>> pendingQueue() {
     return (select(syncQueue)
           ..where((q) => q.status.equals('pending'))
-          ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+          ..orderBy([
+            (q) => OrderingTerm.asc(q.createdAt),
+            (q) => OrderingTerm.asc(q.id),
+          ]))
         .get();
   }
 
@@ -222,7 +245,10 @@ class AppDatabase extends _$AppDatabase {
   Future<List<SyncQueueData>> unsyncedQueue() {
     return (select(syncQueue)
           ..where((q) => q.status.equals('pending') | q.status.equals('failed'))
-          ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+          ..orderBy([
+            (q) => OrderingTerm.asc(q.createdAt),
+            (q) => OrderingTerm.asc(q.id),
+          ]))
         .get();
   }
 
@@ -230,7 +256,10 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<SyncQueueData>> watchUnsyncedQueue() {
     return (select(syncQueue)
           ..where((q) => q.status.equals('pending') | q.status.equals('failed'))
-          ..orderBy([(q) => OrderingTerm.asc(q.createdAt)]))
+          ..orderBy([
+            (q) => OrderingTerm.asc(q.createdAt),
+            (q) => OrderingTerm.asc(q.id),
+          ]))
         .watch();
   }
 
@@ -260,10 +289,14 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Marks queue rows for [entityId] synced (pull found the remote row).
-  Future<void> markQueueSyncedForEntity(String entityId) async {
+  Future<void> markQueueSyncedForEntity(
+    String entityId, {
+    required String entityType,
+  }) async {
     await (update(syncQueue)..where(
           (q) =>
               q.entityId.equals(entityId) &
+              q.entityType.equals(entityType) &
               (q.status.equals('pending') | q.status.equals('failed')),
         ))
         .write(const SyncQueueCompanion(status: Value('synced')));
@@ -356,6 +389,7 @@ class AppDatabase extends _$AppDatabase {
   /// Wipes every locally cached row, watermark, and queued mutation.
   Future<void> wipeAllLocalData() async {
     await transaction(() async {
+      await delete(syncMeta).go();
       await delete(syncQueue).go();
       await delete(syncWatermarks).go();
       await delete(localProducts).go();
@@ -370,10 +404,22 @@ class AppDatabase extends _$AppDatabase {
 
   /// Ensures the local cache belongs to [businessId]; wipes stale tenant data.
   /// Returns true if a wipe happened.
-  Future<bool> prepareForBusiness(String businessId) async {
+  Future<bool> prepareForBusiness(
+    String businessId, {
+    bool allowWipe = false,
+  }) async {
     const key = 'business_id';
     final stored = await metaValue(key);
     if (stored == businessId) return false;
+    if (!allowWipe) {
+      for (final table in allTables) {
+        if ((await (select(table)..limit(1)).get()).isNotEmpty) {
+          throw StateError(
+            'Unverified local cache retained; use a scoped database',
+          );
+        }
+      }
+    }
     if (stored != null) {
       await wipeAllLocalData();
     }

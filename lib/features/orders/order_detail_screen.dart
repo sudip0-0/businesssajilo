@@ -112,7 +112,10 @@ class OrderDetailScreen extends ConsumerWidget {
               );
             }),
             const SizedBox(height: 16),
-            if (anchorQuotes) _QuoteAnchor(orderId: orderId) else OrderQuoteSection(orderId: orderId),
+            if (anchorQuotes)
+              _QuoteAnchor(orderId: orderId)
+            else
+              OrderQuoteSection(orderId: orderId),
             _ActionButtons(
               orderId: orderId,
               status: order.status,
@@ -161,8 +164,10 @@ class _QuoteAnchorState extends State<_QuoteAnchor> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Container(key: _key, child: OrderQuoteSection(orderId: widget.orderId));
+  Widget build(BuildContext context) => Container(
+    key: _key,
+    child: OrderQuoteSection(orderId: widget.orderId),
+  );
 }
 
 class _ActionButtons extends ConsumerWidget {

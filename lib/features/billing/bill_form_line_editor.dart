@@ -119,7 +119,7 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                   ),
                   const Spacer(),
                   Text(
-                    formatNpr(Paisa(line.lineTotal), showPaisa: false),
+                    formatNpr(Paisa(line.lineTotal), showPaisa: true),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(width: 8),
@@ -131,7 +131,7 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Text(
-                      '${l10n.discount} -${formatNpr(Paisa(line.discount), showPaisa: false)}',
+                      '${l10n.discount} -${formatNpr(Paisa(line.discount), showPaisa: true)}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -144,18 +144,19 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        initialValue: formatNpr(
-                          Paisa(line.rate),
-                          showSymbol: false,
-                          showPaisa: false,
+                        initialValue: line.rateText,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
                         ),
-                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           isDense: true,
                           labelText: '${l10n.rate} (रू)',
+                          errorText: line.rateInputValid
+                              ? null
+                              : l10n.invalidNumber,
                         ),
                         onChanged: (v) {
-                          line.rate = parseNpr(v)?.value ?? line.rate;
+                          setState(() => line.setRateText(v));
                           widget.onChanged();
                         },
                       ),
@@ -163,23 +164,21 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextFormField(
-                        initialValue: line.discount == 0
-                            ? ''
-                            : formatNpr(
-                                Paisa(line.discount),
-                                showSymbol: false,
-                                showPaisa: false,
-                              ),
-                        keyboardType: TextInputType.number,
+                        initialValue: line.discountText,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
                           isDense: true,
                           labelText: '${l10n.lineDiscount} (रू)',
-                          errorText: line.discountValid
+                          errorText: !line.discountInputValid
+                              ? l10n.invalidNumber
+                              : line.discountValid
                               ? null
                               : l10n.discountExceedsLine,
                         ),
                         onChanged: (v) {
-                          line.discount = parseNpr(v)?.value ?? 0;
+                          setState(() => line.setDiscountText(v));
                           widget.onChanged();
                         },
                       ),

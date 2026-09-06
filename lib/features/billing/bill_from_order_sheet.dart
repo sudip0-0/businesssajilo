@@ -27,9 +27,11 @@ class BillFromOrderSheet extends ConsumerStatefulWidget {
 }
 
 class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
+  final _formKey = GlobalKey<FormState>();
   bool _loading = false;
   bool _draftLoading = true;
   bool _emptyDraft = false;
+  Object? _draftError;
   List<BillLineInput> _lines = const [];
 
   @override
@@ -39,22 +41,26 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
   }
 
   Future<void> _loadDraft() async {
-    final draft = await loadBillFromOrderDraft(
-      ref.read(billingRefProvider),
-      widget.orderId,
-    );
-    if (!mounted) return;
-    if (draft == null || draft.lines.isEmpty) {
-      setState(() {
-        _draftLoading = false;
-        _emptyDraft = true;
-      });
-      return;
-    }
     setState(() {
-      _lines = List.of(draft.lines);
-      _draftLoading = false;
+      _draftLoading = true;
+      _draftError = null;
+      _emptyDraft = false;
     });
+    try {
+      final draft = await loadBillFromOrderDraft(
+        ref.read(billingRefProvider),
+        widget.orderId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _lines = List.of(draft?.lines ?? []);
+        _emptyDraft = _lines.isEmpty;
+      });
+    } catch (e) {
+      if (mounted) setState(() => _draftError = e);
+    } finally {
+      if (mounted) setState(() => _draftLoading = false);
+    }
   }
 
   BillFromOrderDraft get _draft => BillFromOrderDraft(
@@ -75,6 +81,17 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
   }
 
   Future<void> _save() async {
+    if (_loading || _draftLoading || _draftError != null) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _loading = true);
+    try {
+      await _confirmAndSave();
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _confirmAndSave() async {
     final l10n = AppLocalizations.of(context);
     final draft = _draft;
     if (draft.lines.isEmpty) return;
@@ -112,6 +129,9 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
+    if (_draftError != null) {
+      return ErrorState(message: l10n.loadingFailed, onRetry: _loadDraft);
+    }
     if (_emptyDraft) {
       return Padding(
         padding: const EdgeInsets.all(16),
@@ -127,54 +147,59 @@ class _BillFromOrderSheetState extends ConsumerState<BillFromOrderSheet> {
 
     final draft = _draft;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.makeThisBill,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: _lines.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final line = _lines[index];
-                return _EditableBillLineTile(
-                  line: line,
-                  onChanged: (next) => _updateLine(index, next),
-                  onRemove: _lines.length > 1 ? () => _removeLine(index) : null,
-                );
-              },
+    return Form(
+      key: _formKey,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.makeThisBill,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '${l10n.grandTotal}: ${formatNpr(Paisa(draft.grandTotal), showPaisa: false)}',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: _loading || draft.lines.isEmpty ? null : _save,
-            child: _loading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.saveBill),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: _lines.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final line = _lines[index];
+                  return _EditableBillLineTile(
+                    line: line,
+                    onChanged: (next) => _updateLine(index, next),
+                    onRemove: _lines.length > 1
+                        ? () => _removeLine(index)
+                        : null,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '${l10n.grandTotal}: ${formatNpr(Paisa(draft.grandTotal))}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _loading || draft.lines.isEmpty ? null : _save,
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n.saveBill),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -233,17 +258,22 @@ class _EditableBillLineTile extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: TextFormField(
-                  initialValue: formatNpr(
-                    Paisa(line.rate),
-                    showPaisa: false,
-                  ).replaceAll(RegExp(r'[^\d]'), ''),
+                  initialValue: formatNpr(Paisa(line.rate), showSymbol: false),
                   decoration: InputDecoration(labelText: l10n.rate),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) {
+                    final parsed = parseNpr(value ?? '');
+                    return parsed == null || parsed.value < 0
+                        ? l10n.invalidNumber
+                        : null;
+                  },
                   onChanged: (value) {
-                    // Rate field is in whole NPR; convert to paisa.
-                    final npr = int.tryParse(value) ?? 0;
-                    onChanged(billLineWithEdits(line, rate: npr * 100));
+                    final parsed = parseNpr(value);
+                    if (parsed != null && parsed.value >= 0) {
+                      onChanged(billLineWithEdits(line, rate: parsed.value));
+                    }
                   },
                 ),
               ),
@@ -252,14 +282,28 @@ class _EditableBillLineTile extends StatelessWidget {
                 child: TextFormField(
                   initialValue: formatNpr(
                     Paisa(line.discount),
-                    showPaisa: false,
-                  ).replaceAll(RegExp(r'[^\d]'), ''),
+                    showSymbol: false,
+                  ),
                   decoration: InputDecoration(labelText: l10n.discount),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) {
+                    final parsed = parseNpr(value ?? '');
+                    if (parsed == null || parsed.value < 0) {
+                      return l10n.invalidNumber;
+                    }
+                    return parsed.value > line.qty * line.rate
+                        ? l10n.discountExceedsLine
+                        : null;
+                  },
                   onChanged: (value) {
-                    final npr = int.tryParse(value) ?? 0;
-                    onChanged(billLineWithEdits(line, discount: npr * 100));
+                    final parsed = parseNpr(value);
+                    if (parsed != null && parsed.value >= 0) {
+                      onChanged(
+                        billLineWithEdits(line, discount: parsed.value),
+                      );
+                    }
                   },
                 ),
               ),
@@ -269,7 +313,7 @@ class _EditableBillLineTile extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              formatNpr(Paisa(line.lineTotal), showPaisa: false),
+              formatNpr(Paisa(line.lineTotal)),
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),

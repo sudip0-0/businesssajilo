@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/feature_flags.dart';
 import '../../core/l10n/app_localizations.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/qty_stepper.dart';
@@ -22,11 +21,8 @@ class _DraftLine {
     required this.name,
     required this.qty,
     required this.rate,
-    this.rateLoadFailed = false,
   }) : discount = 0,
-       rateController = TextEditingController(
-         text: formatNpr(Paisa(rate), showPaisa: false),
-       ),
+       rateController = TextEditingController(text: formatNpr(Paisa(rate))),
        discountController = TextEditingController();
 
   final String productId;
@@ -34,7 +30,6 @@ class _DraftLine {
   int qty;
   int rate;
   int discount;
-  final bool rateLoadFailed;
   final TextEditingController rateController;
   final TextEditingController discountController;
 
@@ -51,7 +46,11 @@ class _DraftLine {
 }
 
 class QuoteBuilderScreen extends ConsumerStatefulWidget {
-  const QuoteBuilderScreen({super.key, required this.orderId, this.embedded = false});
+  const QuoteBuilderScreen({
+    super.key,
+    required this.orderId,
+    this.embedded = false,
+  });
 
   final String orderId;
   final bool embedded;
@@ -64,6 +63,9 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
   final _lines = <_DraftLine>[];
   bool _loading = false;
   bool _initialized = false;
+  bool _draftLoading = true;
+  Object? _draftError;
+  final _formKey = GlobalKey<FormState>();
 
   int get _total => itemsTotalPaisa(_lines.map((l) => l.lineTotal));
 
@@ -76,6 +78,8 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
   }
 
   Future<void> _sendQuote() async {
+    if (_loading || _draftLoading || _draftError != null) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     final l10n = AppLocalizations.of(context);
     final member = ref.read(authProvider).value?.member;
     if (member == null || _lines.isEmpty) return;
@@ -117,38 +121,53 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
   Future<void> _initLines(List<OrderItem> items) async {
     final productsRepo = ref.read(productsRepositoryProvider);
     final quotesRepo = ref.read(quotesRepositoryProvider);
-    final order = ref.read(orderDetailProvider(widget.orderId)).value;
-    final customerId = order?.customerId;
-    for (final item in items) {
-      var rate = 0;
-      var rateLoadFailed = false;
-      try {
+    final customerId = ref
+        .read(orderDetailProvider(widget.orderId))
+        .value
+        ?.customerId;
+    final loaded = <_DraftLine>[];
+    try {
+      for (final item in items) {
         final product = await productsRepo.get(item.productId);
-        int? lastQuoted;
-        if (customerId != null) {
-          lastQuoted = await quotesRepo.lastQuotedRate(
-            customerId: customerId,
+        final lastQuoted = customerId == null
+            ? null
+            : await quotesRepo.lastQuotedRate(
+                customerId: customerId,
+                productId: item.productId,
+              );
+        loaded.add(
+          _DraftLine(
             productId: item.productId,
-          );
-        }
-        rate = resolveQuoteRate(
-          lastQuotedPaisa: lastQuoted,
-          referencePaisa: product.referencePrice,
+            name: item.productName ?? product.name,
+            qty: item.qty,
+            rate: resolveQuoteRate(
+              lastQuotedPaisa: lastQuoted,
+              referencePaisa: product.referencePrice,
+            ),
+          ),
         );
-      } catch (_) {
-        rateLoadFailed = true;
       }
-      _lines.add(
-        _DraftLine(
-          productId: item.productId,
-          name: item.productName ?? '—',
-          qty: item.qty,
-          rate: rate,
-          rateLoadFailed: rateLoadFailed,
-        ),
-      );
+      if (!mounted) {
+        for (final line in loaded) {
+          line.dispose();
+        }
+        return;
+      }
+      setState(() {
+        _lines.addAll(loaded);
+        _draftLoading = false;
+      });
+    } catch (e) {
+      for (final line in loaded) {
+        line.dispose();
+      }
+      if (mounted) {
+        setState(() {
+          _draftError = e;
+          _draftLoading = false;
+        });
+      }
     }
-    if (mounted) setState(() {});
   }
 
   @override
@@ -157,35 +176,36 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
     final orderAsync = ref.watch(orderDetailProvider(widget.orderId));
 
     final body = orderAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorState(
-          message: l10n.loadingFailed,
-          onRetry: () => ref.invalidate(orderDetailProvider(widget.orderId)),
-        ),
-        data: (order) {
-          if (!_initialized) {
-            _initialized = true;
-            _initLines(order.items);
-          }
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => ErrorState(
+        message: l10n.loadingFailed,
+        onRetry: () => ref.invalidate(orderDetailProvider(widget.orderId)),
+      ),
+      data: (order) {
+        if (!_initialized) {
+          _initialized = true;
+          _initLines(order.items);
+        }
 
-          return Column(
+        if (_draftLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (_draftError != null) {
+          return ErrorState(
+            message: l10n.loadingFailed,
+            onRetry: () {
+              setState(() {
+                _draftError = null;
+                _draftLoading = true;
+              });
+              _initLines(order.items);
+            },
+          );
+        }
+        return Form(
+          key: _formKey,
+          child: Column(
             children: [
-              if (_lines.any((l) => l.rateLoadFailed))
-                Container(
-                  width: double.infinity,
-                  color: BsColors.accent.withValues(alpha: 0.15),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.warning_amber_outlined, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(l10n.quoteRatesLoadFailed)),
-                    ],
-                  ),
-                ),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -202,7 +222,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                               line.name,
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
-                            if (line.rate == 0 || line.rateLoadFailed)
+                            if (line.rate == 0)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
                                 child: Chip(
@@ -226,28 +246,43 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                                 ),
                               ],
                             ),
-                            TextField(
+                            TextFormField(
                               controller: line.rateController,
-                              decoration: InputDecoration(
-                                labelText: l10n.rate,
-                                errorText: line.rateLoadFailed && line.rate == 0
-                                    ? l10n.rateMissing
-                                    : null,
-                              ),
-                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                final parsed = parseNpr(value ?? '');
+                                return parsed == null || parsed.value < 0
+                                    ? l10n.invalidNumber
+                                    : null;
+                              },
+                              decoration: InputDecoration(labelText: l10n.rate),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               onChanged: (v) => setState(() {
                                 line.rate = parseNpr(v)?.value ?? line.rate;
                               }),
                             ),
-                            TextField(
+                            TextFormField(
                               controller: line.discountController,
+                              validator: (value) {
+                                final parsed = parseNpr(
+                                  value == null || value.isEmpty ? '0' : value,
+                                );
+                                return parsed == null || parsed.value < 0
+                                    ? l10n.invalidNumber
+                                    : null;
+                              },
                               decoration: InputDecoration(
                                 labelText: l10n.lineDiscount,
                                 errorText: line.discountValid
                                     ? null
                                     : l10n.discountExceedsLine,
                               ),
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               onChanged: (v) => setState(() {
                                 line.discount = parseNpr(v)?.value ?? 0;
                               }),
@@ -255,7 +290,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: Text(
-                                '${l10n.lineTotal}: ${formatNpr(Paisa(line.lineTotal), showPaisa: false)}',
+                                '${l10n.lineTotal}: ${formatNpr(Paisa(line.lineTotal))}',
                               ),
                             ),
                           ],
@@ -271,7 +306,7 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '${l10n.grandTotal}: ${formatNpr(Paisa(_total), showPaisa: false)}',
+                      '${l10n.grandTotal}: ${formatNpr(Paisa(_total))}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -289,9 +324,10 @@ class _QuoteBuilderScreenState extends ConsumerState<QuoteBuilderScreen> {
                 ),
               ),
             ],
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
 
     if (widget.embedded) return body;
     return Scaffold(

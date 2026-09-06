@@ -8,6 +8,7 @@ import '../../core/ui/submit_action.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/models/catalog_product.dart';
 import '../customers/providers.dart';
+import 'cart_provider.dart';
 
 class CartSheet extends ConsumerStatefulWidget {
   const CartSheet({
@@ -35,6 +36,16 @@ class _CartSheetState extends ConsumerState<CartSheet> {
   }
 
   Future<void> _placeOrder() async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      await runSubmitAction(context, action: _confirmAndPlaceOrder);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _confirmAndPlaceOrder() async {
     final l10n = AppLocalizations.of(context);
     final customer = await ref.read(ownCustomerProvider.future);
     if (!mounted) return;
@@ -90,6 +101,7 @@ class _CartSheetState extends ConsumerState<CartSheet> {
         await ref
             .read(ordersRepositoryProvider)
             .placeOrder(
+              id: ref.read(cartProvider.notifier).placementId,
               customerId: customer.id,
               lines: _qty.entries
                   .map((e) => OrderLineInput(productId: e.key, qty: e.value))

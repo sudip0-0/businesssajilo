@@ -49,14 +49,20 @@ class _GlobalSearchDelegate extends SearchDelegate<void> {
   }
 
   @override
-  Widget buildResults(BuildContext context) => _Results(query: query, ref: ref);
+  Widget buildResults(BuildContext context) => Consumer(
+    builder: (context, ref, _) => _Results(
+      query: query,
+      ref: ref,
+      role: ref.watch(authProvider).value?.member?.role,
+    ),
+  );
 
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.trim().length < kGlobalSearchMinChars) {
       return Center(child: Text(AppLocalizations.of(context).globalSearchHint));
     }
-    return _Results(query: query, ref: ref);
+    return buildResults(context);
   }
 }
 
@@ -74,17 +80,58 @@ class GlobalSearchHit {
   bool get isEmpty => products.isEmpty && customers.isEmpty && bills.isEmpty;
 }
 
+enum GlobalSearchCategory { products, customers, bills }
+
+bool globalSearchCategoryAllowed(Role? role, GlobalSearchCategory category) =>
+    switch (category) {
+      GlobalSearchCategory.products =>
+        role == Role.owner || role == Role.sales || role == Role.warehouse,
+      GlobalSearchCategory.customers =>
+        role == Role.owner || role == Role.sales,
+      GlobalSearchCategory.bills => role != null,
+    };
+
+String? globalSearchWebLocation(
+  Role? role,
+  GlobalSearchCategory category,
+  String id,
+) {
+  if (!globalSearchCategoryAllowed(role, category)) return null;
+  if (role == Role.customer) {
+    return '/customer/billing/${Uri.encodeComponent(id)}';
+  }
+  final section = switch (category) {
+    GlobalSearchCategory.products => role == Role.owner ? 'inventory' : 'stock',
+    GlobalSearchCategory.customers => 'customers',
+    GlobalSearchCategory.bills => 'billing',
+  };
+  return Uri(
+    path: '/${role!.name}/$section',
+    queryParameters: {'id': id},
+  ).toString();
+}
+
 Future<GlobalSearchHit> searchGlobalCatalog({
   required ProductsRepository products,
   required CustomersRepository customers,
   required BillsRepository bills,
   required String query,
+  required Role? role,
   int limit = 8,
 }) async {
   final q = query.trim();
+  if (q.length < kGlobalSearchMinChars || role == null) {
+    return const GlobalSearchHit(products: [], customers: [], bills: []);
+  }
   final results = await Future.wait<Object>([
-    products.list(query: q, limit: limit),
-    customers.list(query: q, limit: limit),
+    if (globalSearchCategoryAllowed(role, GlobalSearchCategory.products))
+      products.list(query: q, limit: limit)
+    else
+      Future.value(<Product>[]),
+    if (globalSearchCategoryAllowed(role, GlobalSearchCategory.customers))
+      customers.list(query: q, limit: limit, includeBalances: false)
+    else
+      Future.value(<Customer>[]),
     bills.search(q, limit: limit),
   ]);
   return GlobalSearchHit(
@@ -95,10 +142,11 @@ Future<GlobalSearchHit> searchGlobalCatalog({
 }
 
 class _Results extends StatefulWidget {
-  const _Results({required this.query, required this.ref});
+  const _Results({required this.query, required this.ref, required this.role});
 
   final String query;
   final WidgetRef ref;
+  final Role? role;
 
   @override
   State<_Results> createState() => _ResultsState();
@@ -120,7 +168,7 @@ class _ResultsState extends State<_Results> {
   @override
   void didUpdateWidget(covariant _Results oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.query != widget.query) {
+    if (oldWidget.query != widget.query || oldWidget.role != widget.role) {
       _scheduleSearch();
     }
   }
@@ -133,8 +181,10 @@ class _ResultsState extends State<_Results> {
 
   void _scheduleSearch() {
     _debounce?.cancel();
+    ++_requestId;
+    _hit = null;
     final q = widget.query.trim();
-    if (q.length < kGlobalSearchMinChars) {
+    if (q.length < kGlobalSearchMinChars || widget.role == null) {
       setState(() {
         _hit = null;
         _error = null;
@@ -158,6 +208,7 @@ class _ResultsState extends State<_Results> {
         customers: widget.ref.read(customersRepositoryProvider),
         bills: widget.ref.read(billsRepositoryProvider),
         query: q,
+        role: widget.role,
       );
       if (!mounted || id != _requestId) return;
       setState(() {
@@ -177,7 +228,7 @@ class _ResultsState extends State<_Results> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final role = widget.ref.read(authProvider).value?.member?.role;
+    final role = widget.role;
 
     if (_loading && _hit == null) {
       return const Center(child: CircularProgressIndicator());
@@ -222,7 +273,7 @@ class _ResultsState extends State<_Results> {
             subtitle: Text(formatNpr(Paisa(b.grandTotal), showPaisa: false)),
             onTap: () {
               Navigator.pop(context);
-              _openBill(context, b.id);
+              _openBill(context, b.id, role: role);
             },
           ),
       ],
@@ -231,9 +282,14 @@ class _ResultsState extends State<_Results> {
 }
 
 void _openProduct(BuildContext context, String id, {Role? role}) {
+  final location = globalSearchWebLocation(
+    role,
+    GlobalSearchCategory.products,
+    id,
+  );
+  if (location == null) return;
   if (kIsWeb) {
-    final prefix = role == Role.sales ? '/sales/stock' : '/owner/inventory';
-    context.go('$prefix/$id');
+    context.go(location);
     return;
   }
   Navigator.push(
@@ -249,9 +305,14 @@ void _openProduct(BuildContext context, String id, {Role? role}) {
 }
 
 void _openCustomer(BuildContext context, String id, {Role? role}) {
+  final location = globalSearchWebLocation(
+    role,
+    GlobalSearchCategory.customers,
+    id,
+  );
+  if (location == null) return;
   if (kIsWeb) {
-    final prefix = role == Role.sales ? '/sales' : '/owner';
-    context.go('$prefix/customers/$id');
+    context.go(location);
     return;
   }
   Navigator.push(
@@ -266,9 +327,15 @@ void _openCustomer(BuildContext context, String id, {Role? role}) {
   );
 }
 
-void _openBill(BuildContext context, String id) {
+void _openBill(BuildContext context, String id, {Role? role}) {
+  final location = globalSearchWebLocation(
+    role,
+    GlobalSearchCategory.bills,
+    id,
+  );
+  if (location == null) return;
   if (kIsWeb) {
-    context.go('/owner/billing/$id');
+    context.go(location);
     return;
   }
   Navigator.push(

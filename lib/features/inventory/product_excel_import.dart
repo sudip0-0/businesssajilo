@@ -57,13 +57,25 @@ class ProductImportParseException implements Exception {
 }
 
 class ProductImportRowError {
-  const ProductImportRowError({required this.rowNumber, required this.code});
+  const ProductImportRowError({
+    required this.rowNumber,
+    required this.code,
+    this.productId,
+    this.productName,
+    this.sku,
+  });
 
   final int rowNumber;
 
   /// Machine code: missing_name | invalid_cost | invalid_price |
   /// invalid_threshold | invalid_qty | create_failed
+  /// | create_unconfirmed | stock_unconfirmed | missing_member
   final String code;
+
+  /// Present when creation was acknowledged but opening stock was not.
+  final String? productId;
+  final String? productName;
+  final String? sku;
 }
 
 class ProductImportParseResult {
@@ -276,10 +288,12 @@ class ProductExcelImport {
   /// Empty → 0. Invalid → null.
   int? _tryParseNonNegInt(String raw) {
     if (raw.trim().isEmpty) return 0;
-    final cleaned = raw.replaceAll(',', '').trim();
-    final value = int.tryParse(cleaned) ?? double.tryParse(cleaned)?.round();
-    if (value == null || value < 0) return null;
-    return value;
+    // Reuse exact decimal/group validation, allowing only whole quantities.
+    final parsed = parseNpr(raw);
+    if (parsed == null || parsed.value < 0 || parsed.value % 100 != 0) {
+      return null;
+    }
+    return parsed.value ~/ 100;
   }
 
   List<List<String>> _parseCsv(String text) {
@@ -338,60 +352,100 @@ class ProductImportRunner {
   final StockRepository _stock;
   final String? _memberId;
 
+  // One runner is one import session. Row numbers identify rows in that file.
+  // Keep acknowledged and ambiguous writes so a resumed run only attempts rows
+  // that have not been sent. These repositories allocate IDs internally, so a
+  // lost response cannot safely be retried (especially append-only stock).
+  final _completed = <int>{};
+  final _unconfirmed = <int, ProductImportRowError>{};
+  bool _running = false;
+
   Future<ProductImportResult> run(
     List<ProductImportRow> rows, {
     List<ProductImportRowError> priorErrors = const [],
     void Function(int current, int total)? onProgress,
   }) async {
-    var imported = 0;
-    var failed = priorErrors.length;
-    final errors = List<ProductImportRowError>.from(priorErrors);
+    if (_running) throw StateError('Import session already running');
+    _running = true;
+    try {
+      var imported = 0;
+      final errors = List<ProductImportRowError>.from(priorErrors);
 
-    // Chunked processing: each chunk runs its rows through create+stockIn
-    // sequentially (per-row error isolation requires one row at a time), but
-    // progress is emitted per chunk boundary so the UI updates less often on
-    // large sheets.
-    const chunkSize = 25;
-    for (var i = 0; i < rows.length; i++) {
-      if (i % chunkSize == 0) {
-        await Future<void>.delayed(Duration.zero); // yield between chunks
-      }
-      onProgress?.call(i + 1, rows.length);
-      final row = rows[i];
-      try {
-        final created = await _products.create(
-          name: row.name,
-          nameNp: row.nameNp,
-          sku: row.sku ?? generateProductSku(),
-          unit: row.unit,
-          costPrice: row.costPrice,
-          referencePrice: row.referencePrice,
-          lowStockThreshold: row.lowStockThreshold,
-        );
-        if (row.initialQuantity > 0 && _memberId != null) {
-          await _stock.stockIn(
-            productId: created.id,
-            qty: row.initialQuantity,
-            createdByMemberId: _memberId,
-          );
+      // Chunked processing: each chunk runs its rows through create+stockIn
+      // sequentially (per-row error isolation requires one row at a time), but
+      // progress is emitted per chunk boundary so the UI updates less often on
+      // large sheets.
+      const chunkSize = 25;
+      for (var i = 0; i < rows.length; i++) {
+        if (i % chunkSize == 0) {
+          await Future<void>.delayed(Duration.zero); // yield between chunks
         }
-        imported++;
-      } catch (_) {
-        failed++;
-        errors.add(
-          ProductImportRowError(
+        onProgress?.call(i + 1, rows.length);
+        final row = rows[i];
+        if (_completed.contains(row.rowNumber)) {
+          imported++;
+          continue;
+        }
+        final previous = _unconfirmed[row.rowNumber];
+        if (previous != null) {
+          errors.add(previous);
+          continue;
+        }
+        if (row.initialQuantity > 0 &&
+            (_memberId == null || _memberId.isEmpty)) {
+          errors.add(
+            ProductImportRowError(
+              rowNumber: row.rowNumber,
+              code: 'missing_member',
+            ),
+          );
+          continue;
+        }
+        final sku = row.sku ?? generateProductSku();
+        String? productId;
+        try {
+          final created = await _products.create(
+            name: row.name,
+            nameNp: row.nameNp,
+            sku: sku,
+            unit: row.unit,
+            costPrice: row.costPrice,
+            referencePrice: row.referencePrice,
+            lowStockThreshold: row.lowStockThreshold,
+          );
+          productId = created.id;
+          if (row.initialQuantity > 0) {
+            await _stock.stockIn(
+              productId: productId,
+              qty: row.initialQuantity,
+              createdByMemberId: _memberId!,
+            );
+          }
+          _completed.add(row.rowNumber);
+          imported++;
+        } catch (_) {
+          final error = ProductImportRowError(
             rowNumber: row.rowNumber,
-            code: 'create_failed',
-          ),
-        );
+            code: productId == null
+                ? 'create_unconfirmed'
+                : 'stock_unconfirmed',
+            productId: productId,
+            productName: row.name,
+            sku: sku,
+          );
+          _unconfirmed[row.rowNumber] = error;
+          errors.add(error);
+        }
       }
-    }
 
-    return ProductImportResult(
-      imported: imported,
-      failed: failed,
-      errors: errors,
-    );
+      return ProductImportResult(
+        imported: imported,
+        failed: errors.length,
+        errors: errors,
+      );
+    } finally {
+      _running = false;
+    }
   }
 }
 

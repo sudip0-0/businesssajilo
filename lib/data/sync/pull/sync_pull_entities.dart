@@ -8,11 +8,18 @@ import 'sync_pull_page.dart';
 
 /// Per-entity pull + upsert strategies used by [SyncPuller].
 class SyncPullEntities {
-  SyncPullEntities({required AppDatabase db, required SupabaseClient client})
-    : _db = db,
-      _client = client,
-      _page = const SyncPullPage();
+  SyncPullEntities({
+    required AppDatabase db,
+    required SupabaseClient client,
+    bool includeCustomerBalances = true,
+    bool Function()? isActive,
+    Duration requestTimeout = const Duration(seconds: 15),
+  }) : _db = db,
+       _client = client,
+       _includeCustomerBalances = includeCustomerBalances,
+       _page = SyncPullPage(isActive: isActive, requestTimeout: requestTimeout);
 
+  final bool _includeCustomerBalances;
   final AppDatabase _db;
   final SupabaseClient _client;
   final SyncPullPage _page;
@@ -107,39 +114,26 @@ class SyncPullEntities {
 
   /// Owner/sales use balances; warehouse falls back to directory (no balances).
   Future<dynamic> _pullCustomerPage(int from, int to) async {
-    try {
-      return await _client
-          .from('customer_balances')
-          .select()
-          .order('customer_id')
-          .range(from, to);
-    } on PostgrestException {
-      final rows = await _client
-          .from('customer_directory')
-          .select()
-          .order('customer_id')
-          .range(from, to);
-      return _directoryRowsAsBalanceShape(rows as List);
-    }
+    final rows = await _client
+        .from(
+          _includeCustomerBalances ? 'customer_balances' : 'customer_directory',
+        )
+        .select()
+        .order('customer_id')
+        .range(from, to);
+    return _includeCustomerBalances ? rows : _directoryRowsAsBalanceShape(rows);
   }
 
   Future<dynamic> _pullCustomerDeltaPage(int from, int to, String iso) async {
-    try {
-      return await _client
-          .from('customer_balances')
-          .select()
-          .gt('updated_at', iso)
-          .order('customer_id')
-          .range(from, to);
-    } on PostgrestException {
-      final rows = await _client
-          .from('customer_directory')
-          .select()
-          .gt('updated_at', iso)
-          .order('customer_id')
-          .range(from, to);
-      return _directoryRowsAsBalanceShape(rows as List);
-    }
+    final rows = await _client
+        .from(
+          _includeCustomerBalances ? 'customer_balances' : 'customer_directory',
+        )
+        .select()
+        .gt('updated_at', iso)
+        .order('customer_id')
+        .range(from, to);
+    return _includeCustomerBalances ? rows : _directoryRowsAsBalanceShape(rows);
   }
 
   List<Map<String, dynamic>> _directoryRowsAsBalanceShape(List rows) {
@@ -152,8 +146,9 @@ class SyncPullEntities {
   }
 
   static const _billsSelectWithMembers =
-      '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)';
-  static const _billsSelect = '*, customers(shop_name), bill_items(*)';
+      '*, customers:customer_directory!bills_customer_id_fkey(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*)';
+  static const _billsSelect =
+      '*, customers:customer_directory!bills_customer_id_fkey(shop_name), bill_items(*)';
 
   Future<dynamic> _pullBillsPage(int from, int to) async {
     try {
@@ -441,6 +436,7 @@ class SyncPullEntities {
             : null;
         final itemsRaw = map.remove('bill_items');
         final billId = map['id'] as String;
+        validateSyncedBill(map, billId);
 
         final local = byId[billId];
         // Prefer joined shop name, then bill guest_name, then keep any local
@@ -472,7 +468,7 @@ class SyncPullEntities {
               referenceNote: Value(map['reference_note'] as String?),
             ),
           );
-          await _db.markQueueSyncedForEntity(billId);
+          await _db.markQueueSyncedForEntity(billId, entityType: 'bill');
           continue;
         }
 
@@ -534,18 +530,26 @@ class SyncPullEntities {
   }) async {
     if (rows.isEmpty) return;
     final ids = rows.map((r) => r['id'] as String).toList();
-    final existing = await (_db.select(
-      _db.localPayments,
-    )..where((p) => p.id.isIn(ids))).get();
-    final pendingIds = {
-      for (final e in existing)
-        if (e.syncStatus == 'pending') e.id,
-    };
-
     await _db.transaction(() async {
+      final existing = await (_db.select(
+        _db.localPayments,
+      )..where((p) => p.id.isIn(ids))).get();
+      final queued =
+          await (_db.select(_db.syncQueue)..where(
+                (q) =>
+                    q.entityType.equals('payment') &
+                    q.entityId.isIn(ids) &
+                    q.status.isIn(['pending', 'failed']),
+              ))
+              .get();
+      final protectedIds = {
+        for (final e in existing)
+          if (e.syncStatus == 'pending' || e.syncStatus == 'failed') e.id,
+        for (final q in queued) q.entityId,
+      };
       for (final row in rows) {
         final id = row['id'] as String;
-        if (pendingIds.contains(id)) continue;
+        if (protectedIds.contains(id)) continue;
         await _db
             .into(_db.localPayments)
             .insertOnConflictUpdate(

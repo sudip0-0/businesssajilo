@@ -17,8 +17,8 @@ void main() {
     expect(rupeesInWords(1000000000), 'One crore rupees.');
   });
 
-  test('drops paisa so wording matches print amounts', () {
-    expect(rupeesInWords(10050), 'One hundred rupees.');
+  test('retains paisa so wording matches print amounts', () {
+    expect(rupeesInWords(10050), 'One hundred rupees and fifty paisa.');
   });
 
   test('prefixes negative amounts', () {

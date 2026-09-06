@@ -19,9 +19,12 @@ jobs:
       - run: dart format --set-exit-if-changed lib test integration_test
       - run: flutter gen-l10n
       - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Generated sources are committed
+        run: git diff --exit-code
       - run: flutter analyze
       - run: flutter test
       - run: node --check scripts/e2e_web.mjs
+      - run: node --check scripts/run_web_search_tests.mjs
 
   e2e-web:
     runs-on: ubuntu-latest
@@ -49,7 +52,7 @@ jobs:
           eval "$(supabase status -o env)"
           export SUPABASE_URL="${API_URL}"
           export SUPABASE_ANON_KEY="${ANON_KEY:-${PUBLISHABLE_KEY}}"
-          flutter build web --release --web-renderer canvaskit \
+          flutter build web --release --no-web-resources-cdn --no-wasm-dry-run \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=FLAVOR=ci
@@ -65,6 +68,31 @@ jobs:
             e2e-results.json
             e2e-*.png
           if-no-files-found: ignore
+
+  browser-widgets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Build browser widget harness
+        run: >
+          flutter build web --debug --no-web-resources-cdn --no-wasm-dry-run
+          --target=test/support/web_search_test_bootstrap.dart
+          --output=build/web_search_tests
+      - run: node scripts/run_web_search_tests.mjs
 
   deno:
     runs-on: ubuntu-latest
@@ -85,7 +113,7 @@ jobs:
       - run: supabase test db
 
   build-web:
-    needs: [flutter, deno, supabase-db, e2e-web]
+    needs: [flutter, deno, supabase-db, e2e-web, browser-widgets]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -96,9 +124,9 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Build web (CanvasKit)
+      - name: Build web
         run: |
-          flutter build web --release --web-renderer canvaskit \
+          flutter build web --release --no-web-resources-cdn --no-wasm-dry-run \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \

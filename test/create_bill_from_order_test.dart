@@ -1,3 +1,4 @@
+import 'package:businesssajilo/data/repositories/orders_repository.dart';
 import 'package:businesssajilo/domain/models/order_item.dart';
 import 'package:businesssajilo/features/billing/create_bill_from_order.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,4 +73,39 @@ void main() {
     expect(edited.discount, 500);
     expect(edited.lineTotal, 5500);
   });
+
+  test(
+    'mapBillingOrderDraft keeps accepted quote math and rejects finance',
+    () {
+      final draft = mapBillingOrderDraft({
+        'order_id': 'order',
+        'customer_id': 'customer',
+        'shop_name': 'Ram Store',
+        'source': 'accepted_quote',
+        'lines': [
+          {
+            'product_id': 'p1',
+            'name_snapshot': 'Rice',
+            'qty': 3,
+            'rate': 1255,
+            'discount': 25,
+            'line_total': 3740,
+          },
+        ],
+      });
+      expect(draft.customerId, 'customer');
+      expect(draft.shopName, 'Ram Store');
+      expect(draft.lines.single.lineTotal, 3740);
+      expect(
+        () => mapBillingOrderDraft({
+          'order_id': 'order',
+          'customer_id': 'customer',
+          'source': 'accepted_quote',
+          'opening_balance': 10000,
+          'lines': const [],
+        }),
+        throwsFormatException,
+      );
+    },
+  );
 }

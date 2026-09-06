@@ -34,9 +34,7 @@ class _WebFiscalReportPageState extends ConsumerState<WebFiscalReportPage> {
   @override
   void initState() {
     super.initState();
-    _period = ReportPeriod.fromQuery(
-      widget.initialPeriod,
-    );
+    _period = ReportPeriod.fromQuery(widget.initialPeriod);
     if (widget.initialPeriod == null) {
       _period = ReportPeriod.preset(ReportPeriodPreset.bsFiscalYear);
     }
@@ -116,8 +114,12 @@ class _WebFiscalReportPageState extends ConsumerState<WebFiscalReportPage> {
                   0,
                   (sum, m) => sum + m.billCount,
                 );
-                final activeMonths = months.where((m) => m.totalSales > 0).length;
-                final avgMonthly = activeMonths > 0 ? (total ~/ activeMonths) : 0;
+                final activeMonths = months
+                    .where((m) => m.totalSales > 0)
+                    .length;
+                final avgMonthly = activeMonths > 0
+                    ? (total ~/ activeMonths)
+                    : 0;
                 final maxMonth = months.reduce(
                   (a, b) => a.totalSales > b.totalSales ? a : b,
                 );
@@ -144,13 +146,19 @@ class _WebFiscalReportPageState extends ConsumerState<WebFiscalReportPage> {
                           ),
                           WebStatTile(
                             label: l10n.monthlyAverage,
-                            value: formatNpr(Paisa(avgMonthly), showPaisa: false),
+                            value: formatNpr(
+                              Paisa(avgMonthly),
+                              showPaisa: false,
+                            ),
                             icon: PhosphorIconsRegular.chartLineUp,
                           ),
                           WebStatTile(
                             label: l10n.bestMonth,
                             value: maxSales > 0
-                                ? BsCalendar.monthLabel(maxMonth.month, locale: locale)
+                                ? BsCalendar.monthLabel(
+                                    maxMonth.month,
+                                    locale: locale,
+                                  )
                                 : '—',
                             icon: PhosphorIconsRegular.trophy,
                           ),
@@ -229,10 +237,9 @@ class _MonthlySalesRow extends StatelessWidget {
                 width: 100,
                 child: Text(
                   '${monthData.billCount} ${l10n.bills.toLowerCase()}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: WebPalette.inkSoft),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
                 ),
               ),
               Expanded(
@@ -252,10 +259,7 @@ class _MonthlySalesRow extends StatelessWidget {
               SizedBox(
                 width: 120,
                 child: Text(
-                  formatNpr(
-                    Paisa(monthData.totalSales),
-                    showPaisa: false,
-                  ),
+                  formatNpr(Paisa(monthData.totalSales), showPaisa: false),
                   textAlign: TextAlign.right,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),

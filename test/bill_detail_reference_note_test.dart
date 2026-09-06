@@ -1,6 +1,7 @@
 import 'package:businesssajilo/core/l10n/app_localizations.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
+import 'package:businesssajilo/domain/models/bill_item.dart';
 import 'package:businesssajilo/domain/models/member.dart';
 import 'package:businesssajilo/domain/models/session_state.dart';
 import 'package:businesssajilo/features/auth/providers/auth_provider.dart';
@@ -26,6 +27,50 @@ class _OwnerAuth extends AuthController {
 }
 
 void main() {
+  testWidgets('bill detail retains rate discount and total paisa', (
+    tester,
+  ) async {
+    const bill = Bill(
+      id: 'bill-exact',
+      businessId: 'business-1',
+      billNo: 'BS-0004',
+      status: BillStatus.due,
+      createdBy: 'owner-1',
+      itemsTotal: 20037,
+      discount: 33,
+      grandTotal: 20004,
+      items: [
+        BillItem(
+          id: 'i1',
+          billId: 'bill-exact',
+          productId: 'p1',
+          nameSnapshot: 'Rice',
+          qty: 2,
+          rate: 10029,
+          discount: 21,
+          lineTotal: 20037,
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_OwnerAuth.new),
+          billDetailProvider(bill.id).overrideWith((ref) async => bill),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BillDetailScreen(billId: 'bill-exact'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('रू 100.29'), findsOneWidget);
+    expect(find.text('रू 200.04'), findsWidgets);
+    expect(find.text('-रू 0.33'), findsOneWidget);
+  });
+
   testWidgets('bill detail displays its reference note', (tester) async {
     const bill = Bill(
       id: 'bill-1',
@@ -56,7 +101,9 @@ void main() {
     expect(find.text('Deliver Friday afternoon'), findsOneWidget);
   });
 
-  testWidgets('bill detail displays Pay Bill button for due customer bill', (tester) async {
+  testWidgets('bill detail displays Pay Bill button for due customer bill', (
+    tester,
+  ) async {
     const bill = Bill(
       id: 'bill-2',
       businessId: 'business-1',

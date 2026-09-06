@@ -82,10 +82,12 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final profitSummaryAsync = ref.watch(profitSummaryProvider(_period));
-    final profitableProductsAsync =
-        ref.watch(topProfitableProductsProvider(_period));
-    final profitableCustomersAsync =
-        ref.watch(topProfitableCustomersProvider(_period));
+    final profitableProductsAsync = ref.watch(
+      topProfitableProductsProvider(_period),
+    );
+    final profitableCustomersAsync = ref.watch(
+      topProfitableCustomersProvider(_period),
+    );
     final isWide = isWideLayout(context);
 
     final body = ListView(
@@ -119,7 +121,10 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
               children: [
                 _KpiCard(
                   label: l10n.grossProfit,
-                  value: formatNpr(Paisa(summary.grossProfit), showPaisa: false),
+                  value: formatNpr(
+                    Paisa(summary.grossProfit),
+                    showPaisa: false,
+                  ),
                   icon: Icons.trending_up,
                   color: summary.grossProfit >= 0
                       ? BsColors.primary
@@ -133,7 +138,10 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                 ),
                 _KpiCard(
                   label: l10n.totalSales,
-                  value: formatNpr(Paisa(summary.totalRevenue), showPaisa: false),
+                  value: formatNpr(
+                    Paisa(summary.totalRevenue),
+                    showPaisa: false,
+                  ),
                   icon: Icons.payments_outlined,
                   color: Colors.indigo,
                 ),
@@ -209,8 +217,9 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final p = rows[index];
-                    final ratio =
-                        maxProfit > 0 ? (p.grossProfit / maxProfit) : 0.0;
+                    final ratio = maxProfit > 0
+                        ? (p.grossProfit / maxProfit)
+                        : 0.0;
                     return InkWell(
                       onTap: () => _showProductTopCustomers(
                         context,
@@ -233,11 +242,12 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
                                     color: index < 3
-                                        ? BsColors.primary
-                                            .withValues(alpha: 0.15)
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest,
+                                        ? BsColors.primary.withValues(
+                                            alpha: 0.15,
+                                          )
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -247,9 +257,9 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                       fontWeight: FontWeight.bold,
                                       color: index < 3
                                           ? BsColors.primary
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -336,8 +346,7 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   index == 0
                                       ? BsColors.primary
-                                      : BsColors.primary
-                                          .withValues(alpha: 0.6),
+                                      : BsColors.primary.withValues(alpha: 0.6),
                                 ),
                               ),
                             ),
@@ -389,8 +398,9 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final c = rows[index];
-                    final ratio =
-                        maxProfit > 0 ? (c.grossProfit / maxProfit) : 0.0;
+                    final ratio = maxProfit > 0
+                        ? (c.grossProfit / maxProfit)
+                        : 0.0;
                     return InkWell(
                       onTap: () => _showCustomerTopProducts(
                         context,
@@ -414,9 +424,9 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                   decoration: BoxDecoration(
                                     color: index < 3
                                         ? Colors.teal.withValues(alpha: 0.15)
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest,
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -426,9 +436,9 @@ class _ProfitAnalyticsScreenState extends ConsumerState<ProfitAnalyticsScreen> {
                                       fontWeight: FontWeight.bold,
                                       color: index < 3
                                           ? Colors.teal
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -654,15 +664,13 @@ class _DrilldownSheet extends ConsumerWidget {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           subtitle,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: BsColors.outline,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: BsColors.outline),
                         ),
                       ],
                     ),

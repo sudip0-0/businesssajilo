@@ -9,6 +9,20 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get legacyRecoveryTitle => 'Previous offline work';
+
+  @override
+  String get legacyRecoveryRetained =>
+      'Some previous offline work could not be verified or recovered safely for this account and role. The original data is still saved on this device. Close other app instances, sign in with the account that created it, and retry with an authorized role. If recovery is still unavailable, ask your business owner for help. Do not clear app data or re-enter these transactions.';
+
+  @override
+  String get legacyRecoveryCopied =>
+      'Your permitted previous offline work has been recovered. Its original copy is kept safely on this device. Review pending items below; do not re-enter these transactions.';
+
+  @override
+  String get legacyRecoveryRetry => 'Retry safe recovery';
+
+  @override
   String get appTitle => 'BusinessSajilo';
 
   @override
@@ -360,16 +374,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importMissingName => 'Product name is required';
 
   @override
-  String get importInvalidCost => 'Invalid cost price';
+  String get importInvalidCost =>
+      'Enter a non-negative cost_price in NPR with at most 2 decimal places (e.g. 10.50).';
 
   @override
-  String get importInvalidPrice => 'Invalid reference price';
+  String get importInvalidPrice =>
+      'Enter a non-negative reference_price in NPR with at most 2 decimal places (e.g. 10.50).';
 
   @override
-  String get importInvalidQty => 'Invalid number';
+  String get importInvalidQty =>
+      'Enter a non-negative whole number (e.g. 12); fractional quantities are not supported.';
 
   @override
   String get importCreateFailed => 'Could not create product';
+
+  @override
+  String get importCreateUnconfirmed =>
+      'Product creation could not be confirmed. Check inventory for this name/SKU before creating it again.';
+
+  @override
+  String get importStockUnconfirmed =>
+      'Product was created, but opening stock could not be confirmed. Check this product\'s stock history before adding any missing stock; do not re-import this row.';
+
+  @override
+  String get importMissingMember =>
+      'No product was created. Sign in again before importing opening stock.';
+
+  @override
+  String get importRecoveryHint =>
+      'Do not upload the whole file again: completed rows would be duplicated. Review the row errors and inventory/stock history first. After checking, use a new file containing only products that were not created. Closing this sheet does not undo any saved data.';
 
   @override
   String importingRow(int current, int total) {

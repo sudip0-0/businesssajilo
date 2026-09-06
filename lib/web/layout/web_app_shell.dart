@@ -96,7 +96,15 @@ class _WebAppShellState extends ConsumerState<WebAppShell> {
                     child: Stack(
                       children: [
                         Positioned.fill(
-                          child: SelectionArea(child: widget.child),
+                          // Route BlockSemantics must stay inside the content
+                          // boundary rather than hiding persistent shell controls.
+                          child: Semantics(
+                            container: true,
+                            explicitChildNodes: true,
+                            child: FocusTraversalGroup(
+                              child: SelectionArea(child: widget.child),
+                            ),
+                          ),
                         ),
                         // Paper grain breaks the flatness of the canvas
                         // without ever intercepting input.

@@ -20,7 +20,7 @@ BusinessSajilo is a multi-tenant SaaS platform for small-to-medium dealers and d
 - Multi-tenant SaaS: businesses self-register; all data isolated per business (Supabase RLS on `business_id`).
 - One user account can belong to one business with one role (v1 simplification).
 - **Owner** registers the business and invites/creates all other users.
-- **Customer credentials are created by the Owner** (phone number + initial password / OTP). Customers cannot self-register; they are always attached to a specific business.
+- **Customer credentials are created by the Owner** through `create-member` (email or normalized Nepali phone number plus an initial password). Phone login uses a synthetic email internally; OTP login is not implemented. Customers cannot self-register and belong to one business.
 
 ## 4. Roles & Permissions Matrix
 
@@ -49,7 +49,7 @@ Hard rule: **Warehouse Manager may create and view bills but must never see cust
 2. Customer places an order (items + quantities + note).
 3. Sales/Owner receives notification, reviews, and sends a **Quote** (per-item rates, discounts, total).
 4. Customer **accepts** or **rejects** (with comment) the quote. Re-quote / counter-offers happen by sending new quote versions.
-5. On acceptance, sales/owner (or warehouse) generates the **Bill** from the order. Payment recorded as full, partial (credit), or due.
+5. Sales/owner (or warehouse) generates the **Bill** from the order, using accepted quote terms when present. Owner/sales may record full or partial payment; warehouse customer bills remain due and warehouse cannot record payments. Billing from an order is online-only on every platform.
 
 Order states (shipped): `placed → received → billed`. Quote discussion happens while the order is `placed` or `received`; `create_bill` moves it to `billed`.
 
@@ -63,16 +63,17 @@ Order states (shipped): `placed → received → billed`. Quote discussion happe
 
 ### 5.3 Credit / Udharo & Ledger
 
-- Every customer has a running ledger: bills (debit), payments (credit).
+- Every customer has a running ledger: opening balance and bills are debits; payments and credit notes are credits. Negative balances represent customer credit.
 - **Account-level** payment recording plus **bill-level / oldest-first allocation** (v1.2). Optional `bill_id` on payments; oldest-first splits a payment across open bills.
 - Payment methods recorded manually: cash, cheque, eSewa/Khalti/bank ref (no gateway integration in v1).
-- Outstanding dues visible to staff and to the customer in their own app.
+- Outstanding dues are visible to owner/sales and to the customer for their own account, never to warehouse.
 - Dues aging report for the owner.
 
 ### 5.4 Inventory (v1 scope)
 
 - Products: name (EN/NP), SKU, unit, cost price, selling reference price, image, low-stock threshold. Categories were removed.
-- Stock-in (purchases simplified as stock-in entries), manual adjustments with reason, automatic deduction on dispatch.
+- Stock-in (purchases simplified as stock-in entries), manual adjustments with reason, and automatic stock movements when a bill is created. There is no separate packed/dispatched order workflow.
+- Physical counts can currently be entered as reasoned adjustments; a dedicated multi-product count/reconciliation workflow is not shipped.
 - Low-stock alerts via push.
 - Out of scope v1: multi-warehouse, batches/expiry, unit conversions (carton↔piece) — see roadmap.
 
@@ -91,7 +92,7 @@ Order states (shipped): `placed → received → billed`. Quote discussion happe
 
 ## 7. Offline Strategy
 
-- **Staff apps (mobile): offline-first** for billing, payment recording, and stock operations. Local SQLite (Drift) with a sync queue; conflict policy = last-write-wins per field with audit log, stock movements are append-only events so they merge safely.
+- **Staff apps (mobile): offline-capable** for walk-in/customer billing, permitted payment recording, and stock operations using Drift and persisted UUID-based replay. Orders, quotes, order-linked billing, credit notes, and reports remain online-only. Product/customer mutations are online-only; cached reads do not imply offline editing. The unused product LWW sync RPC was removed; append-only events still require server validation and successful acknowledgement.
 - **Customer app: online-only** — catalog requires connectivity (no Drift cache in v1); placing orders and quotes also require connectivity.
 - **Web: online-only.**
 
@@ -101,7 +102,7 @@ Push (FCM) for: order placed (staff), quote received / quote response (customer/
 
 ## 9. Platforms
 
-Flutter single codebase → Android, iOS, Web — shipped together. Responsive layouts: phone-first for staff/customer, desktop-grade layout on web for owner dashboards.
+Flutter targets Android, iOS, and Web from one codebase, with separate native feature screens and web UI. Android AAB and web builds have release automation; iOS signing, builds, and device verification require macOS tooling and are not in CI. Platform targets and checked roadmap items are not proof of store publication or completed device sign-off.
 
 ## 10. Monetization
 

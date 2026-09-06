@@ -60,7 +60,18 @@ class ServerWatermarkTracker {
 
 /// Paged remote fetch helper shared by entity pull strategies.
 class SyncPullPage {
-  const SyncPullPage();
+  const SyncPullPage({
+    this.isActive,
+    this.requestTimeout = const Duration(seconds: 15),
+  });
+
+  final Duration requestTimeout;
+
+  final bool Function()? isActive;
+
+  void _checkActive() {
+    if (isActive?.call() == false) throw StateError('Sync session changed');
+  }
 
   /// Fetches all pages when [budget] is null; otherwise stops when budget
   /// is exhausted and returns [PullPageOutcome.budgetExceeded].
@@ -83,7 +94,14 @@ class SyncPullPage {
 
       List<Map<String, dynamic>> rows;
       try {
-        rows = _asMaps(await buildPage(offset, offset + pageSize - 1));
+        _checkActive();
+        rows = _asMaps(
+          await buildPage(
+            offset,
+            offset + pageSize - 1,
+          ).timeout(requestTimeout),
+        );
+        _checkActive();
       } catch (e, st) {
         AppLog.warn(
           'Sync pull page failed entity=${entityLabel ?? 'unknown'} offset=$offset',

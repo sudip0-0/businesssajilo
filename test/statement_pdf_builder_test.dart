@@ -1,7 +1,6 @@
 import 'package:businesssajilo/core/invoicing/pdf_fonts.dart';
 import 'package:businesssajilo/core/invoicing/statement_document.dart';
 import 'package:businesssajilo/core/invoicing/statement_pdf_builder.dart';
-import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/domain/models/business.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,14 +54,11 @@ void main() {
     expect(bytes.length, greaterThan(100));
   });
 
-  test('statement amounts omit currency symbol and paisa', () {
-    expect(
-      formatNpr(const Paisa(10000), showSymbol: false, showPaisa: false),
-      '100',
-    );
-    expect(
-      formatNpr(const Paisa(10000), showSymbol: true, showPaisa: false),
-      isNot('100'),
-    );
+  test('statement amounts retain paisa and omit currency symbol', () {
+    const builder = StatementPdfBuilder();
+    expect(builder.formatAmount(10029), '100.29');
+    expect(builder.formatAmount(690035), '6,900.35');
+    expect(builder.formatAmount(-1), '-0.01');
+    expect(builder.formatAmount(10029), isNot(contains('रू')));
   });
 }

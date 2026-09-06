@@ -21,6 +21,21 @@ void main() {
     );
   }
 
+  testWidgets('payment prefill retains paisa', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        const RecordPaymentSheet(
+          customerId: 'c1',
+          customerName: 'Ram Store',
+          initialAmountPaisa: 10029,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final field = tester.widget<EditableText>(find.byType(EditableText).first);
+    expect(field.controller.text, contains('100.29'));
+  });
+
   testWidgets('record payment sheet requires amount', (tester) async {
     await tester.pumpWidget(
       wrap(

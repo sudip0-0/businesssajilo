@@ -67,6 +67,85 @@ void main() {
   });
 
   test(
+    'order billing delegates online without local payment or stock writes',
+    () async {
+      Map<String, dynamic>? payload;
+      Map<String, dynamic> bill = {};
+      final client = SupabaseClient(
+        'http://localhost',
+        'anon',
+        httpClient: MockClient((request) async {
+          if (request.url.path.endsWith('/create_bill')) {
+            payload =
+                (jsonDecode(request.body) as Map<String, dynamic>)['p']
+                    as Map<String, dynamic>;
+            bill = {
+              'id': payload!['id'],
+              'business_id': 'biz',
+              'customer_id': 'customer',
+              'order_id': 'order',
+              'bill_no': 'BS-0043',
+              'status': 'partial',
+              'items_total': 1000,
+              'discount': 100,
+              'grand_total': 900,
+              'created_by': 'member',
+              'created_at': '2026-08-01T00:00:00Z',
+            };
+            return _json(request, {'bill': bill});
+          }
+          return _json(request, {...bill, 'bill_items': <Object>[]});
+        }),
+      );
+      addTearDown(client.dispose);
+      final sync = SyncService(
+        db: db,
+        client: client,
+        connectivityCheck: () async => [ConnectivityResult.none],
+        scheduleRetry: (_, _) {},
+      );
+      addTearDown(sync.dispose);
+      final repo = SyncingBillsRepository(
+        db: db,
+        sync: sync,
+        payments: _FakePaymentsRepository(),
+        businessId: 'biz',
+        client: client,
+      );
+      final result = await repo.createFromOrder(
+        orderId: 'order',
+        customerId: 'customer',
+        createdByMemberId: 'member',
+        status: BillStatus.partial,
+        itemsTotal: 1000,
+        discount: 100,
+        grandTotal: 900,
+        paymentAmount: 400,
+        paymentMethod: PaymentMethod.bank,
+        paymentRefNote: 'reference',
+        lines: const [
+          BillLineInput(
+            productId: 'product',
+            nameSnapshot: 'Product',
+            qty: 1,
+            rate: 1000,
+            lineTotal: 1000,
+          ),
+        ],
+      );
+      expect(result.billNo, 'BS-0043');
+      expect(payload!['order_id'], 'order');
+      expect(payload!['discount'], 100);
+      expect((payload!['payment'] as Map)['amount'], 400);
+      expect((payload!['payment'] as Map)['method'], 'bank');
+      expect(await db.pendingQueue(), isEmpty);
+      expect(await db.select(db.localPayments).get(), isEmpty);
+      expect(await db.select(db.localStockMovements).get(), isEmpty);
+      expect((await repo.get(result.id)).billNo, 'BS-0043');
+    },
+  );
+
+  test(
     'stale customer bill remaps on push and marks the queue row synced',
     () async {
       await db.ensureDeviceMeta('device-1');

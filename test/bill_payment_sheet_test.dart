@@ -43,6 +43,20 @@ void main() {
     );
   }
 
+  testWidgets('partial payment prefill and total retain paisa', (tester) async {
+    await tester.pumpWidget(wrap(const BillPaymentSheet(grandTotal: 10029)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Partial'));
+    await tester.pumpAndSettle();
+    expect(find.text('100.29'), findsOneWidget);
+    expect(find.textContaining('रू 100.29'), findsOneWidget);
+    await tester.tap(find.text('Paid'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Partial'));
+    await tester.pumpAndSettle();
+    expect(find.text('100.29'), findsOneWidget);
+  });
+
   testWidgets('bill payment sheet shows walk-in and paid options', (
     tester,
   ) async {

@@ -9,6 +9,20 @@ class AppLocalizationsNe extends AppLocalizations {
   AppLocalizationsNe([String locale = 'ne']) : super(locale);
 
   @override
+  String get legacyRecoveryTitle => 'पहिलेको अफलाइन काम';
+
+  @override
+  String get legacyRecoveryRetained =>
+      'पहिलेको केही अफलाइन काम यो खाता र भूमिकाका लागि जाँच वा सुरक्षित रूपमा पुनः प्राप्त गर्न सकिएन। मूल डाटा यही उपकरणमा सुरक्षित छ। एप अन्य ठाउँमा खुलेको भए बन्द गर्नुहोस्, काम सिर्जना गरेको खातामा लगइन गरी अनुमति भएको भूमिकाबाट फेरि प्रयास गर्नुहोस्। अझै सम्भव नभए व्यवसाय मालिकसँग सहयोग माग्नुहोस्। एपको डाटा नमेटाउनुहोस् र यी कारोबार फेरि प्रविष्ट नगर्नुहोस्।';
+
+  @override
+  String get legacyRecoveryCopied =>
+      'तपाईंलाई अनुमति भएको पहिलेको अफलाइन काम पुनः प्राप्त भएको छ। मूल प्रतिलिपि यही उपकरणमा सुरक्षित छ। तल बाँकी काम जाँच गर्नुहोस्; यी कारोबार फेरि प्रविष्ट नगर्नुहोस्।';
+
+  @override
+  String get legacyRecoveryRetry => 'सुरक्षित पुनः प्राप्ति प्रयास';
+
+  @override
   String get appTitle => 'बिजनेससजिलो';
 
   @override
@@ -360,16 +374,35 @@ class AppLocalizationsNe extends AppLocalizations {
   String get importMissingName => 'उत्पादनको नाम आवश्यक छ';
 
   @override
-  String get importInvalidCost => 'अमान्य लागत मूल्य';
+  String get importInvalidCost =>
+      'cost_price मा शून्य वा सकारात्मक NPR मूल्य, बढीमा २ दशमलव स्थानसम्म लेख्नुहोस् (जस्तै 10.50)।';
 
   @override
-  String get importInvalidPrice => 'अमान्य सन्दर्भ मूल्य';
+  String get importInvalidPrice =>
+      'reference_price मा शून्य वा सकारात्मक NPR मूल्य, बढीमा २ दशमलव स्थानसम्म लेख्नुहोस् (जस्तै 10.50)।';
 
   @override
-  String get importInvalidQty => 'अमान्य संख्या';
+  String get importInvalidQty =>
+      'शून्य वा सकारात्मक पूर्ण संख्या लेख्नुहोस् (जस्तै 12); दशमलव परिमाण मान्य छैन।';
 
   @override
   String get importCreateFailed => 'उत्पादन सिर्जना गर्न सकिएन';
+
+  @override
+  String get importCreateUnconfirmed =>
+      'उत्पादन सिर्जना भएको पुष्टि हुन सकेन। फेरि सिर्जना गर्नुअघि यस नाम/SKU को उत्पादन सूचीमा जाँच गर्नुहोस्।';
+
+  @override
+  String get importStockUnconfirmed =>
+      'उत्पादन सिर्जना भयो, तर प्रारम्भिक स्टकको पुष्टि हुन सकेन। छुटेको स्टक थप्नुअघि यस उत्पादनको स्टक इतिहास जाँच गर्नुहोस्; यो पंक्ति फेरि आयात नगर्नुहोस्।';
+
+  @override
+  String get importMissingMember =>
+      'कुनै उत्पादन सिर्जना भएन। प्रारम्भिक स्टक आयात गर्नुअघि फेरि साइन इन गर्नुहोस्।';
+
+  @override
+  String get importRecoveryHint =>
+      'पूरै फाइल फेरि अपलोड नगर्नुहोस्: सफल पंक्तिका उत्पादन दोहोरिन्छन्। पहिले पंक्तिका त्रुटि र उत्पादन/स्टक इतिहास जाँच गर्नुहोस्। जाँचपछि सिर्जना नभएका उत्पादन मात्र राखेर नयाँ फाइल प्रयोग गर्नुहोस्। यो पाना बन्द गर्दा सुरक्षित डाटा हट्दैन।';
 
   @override
   String importingRow(int current, int total) {

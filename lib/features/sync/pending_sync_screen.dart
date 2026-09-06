@@ -17,116 +17,194 @@ class PendingSyncScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final bundle = ref.watch(syncBundleProvider);
     final queueAsync = ref.watch(syncQueueProvider);
+    final recoveryNotice = ref.watch(legacyRecoveryNoticeProvider).value;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.pendingSyncItems)),
-      body: bundle == null
-          ? EmptyState(icon: Icons.cloud_done, message: l10n.synced)
-          : queueAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => EmptyState(
-                icon: Icons.error_outline,
-                message: l10n.somethingWentWrong,
-                isError: true,
-                actionLabel: l10n.tryAgain,
-                onAction: () => ref.invalidate(syncQueueProvider),
-              ),
-              data: (items) {
-                final status = ref.watch(syncStatusProvider).value;
-                final incomplete = status?.bootstrapIncomplete ?? false;
-                if (items.isEmpty && !incomplete) {
-                  return EmptyState(
-                    icon: Icons.cloud_done,
-                    message: l10n.synced,
-                    actionLabel: l10n.syncNow,
-                    onAction: () => bundle.sync.syncNow(),
-                  );
-                }
-                if (items.isEmpty && incomplete) {
-                  return EmptyState(
-                    icon: Icons.cloud_sync_outlined,
-                    message: l10n.syncIncompleteContinue,
-                    actionLabel: l10n.syncNow,
-                    onAction: () => bundle.sync.syncNow(),
-                  );
-                }
-                final failedCount = items
-                    .where((i) => i.status == 'failed')
-                    .length;
-                return Column(
-                  children: [
-                    if (incomplete)
-                      MaterialBanner(
-                        content: Text(l10n.syncIncompleteContinue),
-                        leading: const Icon(Icons.cloud_sync_outlined),
-                        actions: [
-                          TextButton(
-                            onPressed: () => bundle.sync.syncNow(),
-                            child: Text(l10n.syncNow),
-                          ),
-                        ],
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (status?.lastSuccessAt != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.lastSyncAt(
-                                BsDate.both(status!.lastSuccessAt!),
-                              ),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                          FilledButton.icon(
-                            onPressed: () async {
-                              await bundle.sync.syncNow();
-                              ref.invalidate(syncStatusProvider);
-                            },
-                            icon: const Icon(Icons.sync),
-                            label: Text(l10n.syncNow),
-                          ),
-                          if (failedCount > 0) ...[
-                            const SizedBox(height: 8),
-                            OutlinedButton.icon(
-                              onPressed: () async {
-                                await bundle.sync.retryFailed();
-                                ref.invalidate(syncStatusProvider);
-                              },
-                              icon: const Icon(
-                                Icons.restart_alt,
-                                color: BsColors.danger,
-                              ),
-                              label: Text(
-                                '${l10n.retrySync} — '
-                                '${l10n.failedSyncItems(failedCount)}',
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) => _QueueTile(
-                          item: items[index],
-                          onRetry: () async {
-                            await bundle.sync.retryFailed(
-                              queueRowId: items[index].id,
-                            );
-                            ref.invalidate(syncStatusProvider);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+      body: Column(
+        children: [
+          if (recoveryNotice != null)
+            _RecoveryNotice(
+              notice: recoveryNotice,
+              recover: bundle?.recoverPreviousWork,
             ),
+          Expanded(
+            child: bundle == null
+                ? EmptyState(icon: Icons.cloud_done, message: l10n.synced)
+                : queueAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, _) => EmptyState(
+                      icon: Icons.error_outline,
+                      message: l10n.somethingWentWrong,
+                      isError: true,
+                      actionLabel: l10n.tryAgain,
+                      onAction: () => ref.invalidate(syncQueueProvider),
+                    ),
+                    data: (items) {
+                      final status = ref.watch(syncStatusProvider).value;
+                      final incomplete = status?.bootstrapIncomplete ?? false;
+                      if (items.isEmpty && !incomplete) {
+                        return EmptyState(
+                          icon: Icons.cloud_done,
+                          message: l10n.synced,
+                          actionLabel: l10n.syncNow,
+                          onAction: () => bundle.sync.syncNow(),
+                        );
+                      }
+                      if (items.isEmpty && incomplete) {
+                        return EmptyState(
+                          icon: Icons.cloud_sync_outlined,
+                          message: l10n.syncIncompleteContinue,
+                          actionLabel: l10n.syncNow,
+                          onAction: () => bundle.sync.syncNow(),
+                        );
+                      }
+                      final failedCount = items
+                          .where((i) => i.status == 'failed')
+                          .length;
+                      return Column(
+                        children: [
+                          if (incomplete)
+                            MaterialBanner(
+                              content: Text(l10n.syncIncompleteContinue),
+                              leading: const Icon(Icons.cloud_sync_outlined),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => bundle.sync.syncNow(),
+                                  child: Text(l10n.syncNow),
+                                ),
+                              ],
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (status?.lastSuccessAt != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    l10n.lastSyncAt(
+                                      BsDate.both(status!.lastSuccessAt!),
+                                    ),
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                                FilledButton.icon(
+                                  onPressed: () async {
+                                    await bundle.sync.syncNow();
+                                    ref.invalidate(syncStatusProvider);
+                                  },
+                                  icon: const Icon(Icons.sync),
+                                  label: Text(l10n.syncNow),
+                                ),
+                                if (failedCount > 0) ...[
+                                  const SizedBox(height: 8),
+                                  OutlinedButton.icon(
+                                    onPressed: () async {
+                                      await bundle.sync.retryFailed();
+                                      ref.invalidate(syncStatusProvider);
+                                    },
+                                    icon: const Icon(
+                                      Icons.restart_alt,
+                                      color: BsColors.danger,
+                                    ),
+                                    label: Text(
+                                      '${l10n.retrySync} — '
+                                      '${l10n.failedSyncItems(failedCount)}',
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.separated(
+                              itemCount: items.length,
+                              separatorBuilder: (_, _) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) => _QueueTile(
+                                item: items[index],
+                                onRetry: () async {
+                                  await bundle.sync.retryFailed(
+                                    queueRowId: items[index].id,
+                                  );
+                                  ref.invalidate(syncStatusProvider);
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecoveryNotice extends ConsumerStatefulWidget {
+  const _RecoveryNotice({required this.notice, required this.recover});
+
+  final String notice;
+  final Future<void> Function()? recover;
+
+  @override
+  ConsumerState<_RecoveryNotice> createState() => _RecoveryNoticeState();
+}
+
+class _RecoveryNoticeState extends ConsumerState<_RecoveryNotice> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.legacyRecoveryTitle,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.notice == 'retained'
+                ? l10n.legacyRecoveryRetained
+                : l10n.legacyRecoveryCopied,
+          ),
+          TextButton.icon(
+            onPressed: _busy || widget.recover == null
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    try {
+                      await widget.recover!();
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.somethingWentWrong)),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        ref.invalidate(legacyRecoveryNoticeProvider);
+                        ref.invalidate(syncQueueProvider);
+                        ref.invalidate(syncStatusProvider);
+                        setState(() => _busy = false);
+                      }
+                    }
+                  },
+            icon: const Icon(Icons.history),
+            label: Text(l10n.legacyRecoveryRetry),
+          ),
+        ],
+      ),
     );
   }
 }

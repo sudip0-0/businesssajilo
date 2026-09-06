@@ -21,7 +21,7 @@ List<List<String>> salesReportCsvRows({
       'Daily sales',
       point.saleDate.toIso8601String().split('T').first,
       '${point.billCount}',
-      formatNpr(Paisa(point.totalSales), showPaisa: false),
+      formatNpr(Paisa(point.totalSales), showPaisa: true),
     ]);
   }
   rows.add(['Top products', 'Product', 'Qty sold', 'Revenue']);
@@ -30,7 +30,7 @@ List<List<String>> salesReportCsvRows({
       'Top products',
       p.nameSnapshot,
       '${p.qtySold}',
-      formatNpr(Paisa(p.revenue), showPaisa: false),
+      formatNpr(Paisa(p.revenue), showPaisa: true),
     ]);
   }
   rows.add(['Top customers', 'Customer', 'Bill count', 'Revenue']);
@@ -39,7 +39,7 @@ List<List<String>> salesReportCsvRows({
       'Top customers',
       c.shopName,
       '${c.billCount}',
-      formatNpr(Paisa(c.revenue), showPaisa: false),
+      formatNpr(Paisa(c.revenue), showPaisa: true),
     ]);
   }
   return rows;
@@ -53,14 +53,15 @@ List<List<String>> duesAgingCsvRows(DuesAgingReport report) {
     rows.add([
       customer.shopName,
       customer.phone ?? '',
-      formatNpr(Paisa(customer.balanceDue), showPaisa: false),
+      formatNpr(Paisa(customer.balanceDue), showPaisa: true),
       customer.oldestDueAt.toIso8601String().split('T').first,
     ]);
   }
   return rows;
 }
 
-List<List<String>> duesReportCsvRows(DuesAgingReport report) => duesAgingCsvRows(report);
+List<List<String>> duesReportCsvRows(DuesAgingReport report) =>
+    duesAgingCsvRows(report);
 
 List<List<String>> stockValuationCsvRows(List<StockValuationRow> rows_) {
   final rows = <List<String>>[
@@ -70,8 +71,8 @@ List<List<String>> stockValuationCsvRows(List<StockValuationRow> rows_) {
     rows.add([
       row.name,
       '${row.stockCached}',
-      formatNpr(Paisa(row.costPrice), showPaisa: false),
-      formatNpr(Paisa(row.valuation), showPaisa: false),
+      formatNpr(Paisa(row.costPrice), showPaisa: true),
+      formatNpr(Paisa(row.valuation), showPaisa: true),
       row.isLowStock ? 'Yes' : 'No',
     ]);
   }
@@ -87,9 +88,9 @@ List<List<String>> ledgerCsvRows(List<LedgerEntry> entries) {
       entry.occurredAt.toIso8601String(),
       entry.entryType,
       entry.description,
-      formatNpr(Paisa(entry.debitPaisa), showPaisa: false),
-      formatNpr(Paisa(entry.creditPaisa), showPaisa: false),
-      formatNpr(Paisa(entry.runningBalance), showPaisa: false),
+      formatNpr(Paisa(entry.debitPaisa), showPaisa: true),
+      formatNpr(Paisa(entry.creditPaisa), showPaisa: true),
+      formatNpr(Paisa(entry.runningBalance), showPaisa: true),
     ]);
   }
   return rows;
@@ -104,7 +105,7 @@ List<List<String>> todaysBillsCsvRows(List<Bill> bills) {
       bill.billNo,
       billCustomerLabel(bill, walkInLabel: 'Walk-in'),
       bill.status.name,
-      formatNpr(Paisa(bill.grandTotal), showPaisa: false),
+      formatNpr(Paisa(bill.grandTotal), showPaisa: true),
       bill.createdAt?.toIso8601String() ?? '',
     ]);
   }
@@ -120,7 +121,7 @@ List<List<String>> fiscalSummaryCsvRows(List<(String, int, int)> months) {
     rows.add([
       label,
       '$billCount',
-      formatNpr(Paisa(totalSales), showPaisa: false),
+      formatNpr(Paisa(totalSales), showPaisa: true),
     ]);
   }
   return rows;

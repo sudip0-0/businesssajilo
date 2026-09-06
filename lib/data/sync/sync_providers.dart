@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/enums.dart';
 import '../../domain/models/session_state.dart';
 import '../local/app_database.dart';
+import '../local/legacy_cache_recovery.dart';
 import 'sync_bundle_registry.dart';
 import 'sync_config.dart';
 import 'sync_constants.dart';
@@ -19,13 +21,20 @@ class SyncBundle {
     required this.sync,
     required this.businessId,
     required this.memberId,
+    this.recoverPreviousWork,
   });
 
   final AppDatabase db;
   final SyncService sync;
   final String businessId;
   final String memberId;
+  final Future<void> Function()? recoverPreviousWork;
 }
+
+final legacyRecoveryNoticeProvider = FutureProvider<String?>((ref) async {
+  final bundle = ref.watch(syncBundleProvider);
+  return bundle?.db.metaValue(legacyRecoveryNoticeKey);
+});
 
 /// Bumped whenever the active bundle changes, so [syncBundleProvider] can be
 /// refreshed from the auth notifier without `ref.invalidate` (which riverpod
@@ -135,30 +144,86 @@ final syncQueueProvider = StreamProvider<List<SyncQueueData>>((ref) {
   return bundle.db.watchUnsyncedQueue();
 });
 
+int _syncGeneration = 0;
+
 Future<void> bootstrapSyncForSession({
   required SupabaseClient client,
   required String businessId,
   required String memberId,
+  required Role role,
+  bool includeCustomerBalances = true,
 }) async {
-  await disposeSyncBundle();
+  final generation = ++_syncGeneration;
+  final authUserId = client.auth.currentUser?.id;
+  await SyncBundleRegistry.instance.disposeActive();
+  if (generation != _syncGeneration) return;
 
-  final db = AppDatabase.open();
+  final db = AppDatabase.open(
+    businessId: businessId,
+    memberId: memberId,
+    role: role,
+  );
   // Tenant isolation: wipe all cached rows, watermarks, and queued mutations
   // when the active business changes so data never leaks across tenants.
-  await db.prepareForBusiness(businessId);
-
   final deviceId = const Uuid().v4();
-  await db.ensureDeviceMeta(deviceId);
+  try {
+    await db.prepareForBusiness(businessId);
+    await db.ensureDeviceMeta(deviceId);
+    await recoverPreviousCaches(
+      db: db,
+      businessId: businessId,
+      memberId: memberId,
+      role: role,
+    );
+  } catch (_) {
+    await db.close();
+    rethrow;
+  }
 
-  final sync = SyncService(db: db, client: client);
-  await sync.init(deviceId);
-
-  SyncBundleRegistry.instance.replace(
-    SyncBundle(db: db, sync: sync, businessId: businessId, memberId: memberId),
+  final sync = SyncService(
+    db: db,
+    client: client,
+    includeCustomerBalances:
+        role.canViewCustomerBalance && includeCustomerBalances,
+    isSessionCurrent: () =>
+        generation == _syncGeneration &&
+        client.auth.currentUser?.id == authUserId,
   );
+  try {
+    await sync.init(deviceId);
+    if (generation != _syncGeneration ||
+        client.auth.currentUser?.id != authUserId) {
+      await sync.close();
+      await db.close();
+      return;
+    }
+    SyncBundleRegistry.instance.replace(
+      SyncBundle(
+        db: db,
+        sync: sync,
+        businessId: businessId,
+        memberId: memberId,
+        recoverPreviousWork: () async {
+          if (!sync.isActive) return;
+          await recoverPreviousCaches(
+            db: db,
+            businessId: businessId,
+            memberId: memberId,
+            role: role,
+          );
+          await sync.syncNow();
+        },
+      ),
+    );
+  } catch (_) {
+    await sync.close();
+    await db.close();
+    rethrow;
+  }
 }
 
 Future<void> disposeSyncBundle() async {
+  _syncGeneration++;
   await SyncBundleRegistry.instance.disposeActive();
 }
 
@@ -172,9 +237,16 @@ Future<void> syncBootstrapForSession(SessionState session) async {
     return;
   }
   final client = Supabase.instance.client;
+  if (client.auth.currentUser?.id != session.user?.id ||
+      client.auth.currentUser?.id != session.member!.authUserId) {
+    await disposeSyncBundle();
+    return;
+  }
   await bootstrapSyncForSession(
     client: client,
     businessId: session.member!.businessId,
     memberId: session.member!.id,
+    role: session.member!.role,
+    includeCustomerBalances: session.member!.role.canViewCustomerBalance,
   );
 }

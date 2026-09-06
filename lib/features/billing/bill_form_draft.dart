@@ -7,10 +7,34 @@ import 'bill_draft_line.dart';
 
 /// Shared bill form draft state used by mobile and web UIs.
 class BillFormDraft {
-  BillFormDraft({this.customerId, this.guestName, this.billDiscountText = ''});
+  BillFormDraft({
+    this.customerId,
+    this.guestName,
+    String billDiscountText = '',
+  }) {
+    this.billDiscountText = billDiscountText;
+  }
 
   final List<BillDraftLine> lines = [];
-  String billDiscountText;
+  String _billDiscountText = '';
+  int _billDiscount = 0;
+  String get billDiscountText => _billDiscountText;
+  set billDiscountText(String text) {
+    _billDiscountText = text;
+    if (text.trim().isEmpty) {
+      _billDiscount = 0;
+      return;
+    }
+    final parsed = parseNpr(text);
+    if (parsed != null && parsed.value >= 0) _billDiscount = parsed.value;
+  }
+
+  bool get billDiscountInputValid {
+    if (billDiscountText.trim().isEmpty) return true;
+    final parsed = parseNpr(billDiscountText);
+    return parsed != null && parsed.value >= 0;
+  }
+
   String? customerId;
 
   /// Optional walk-in name for the bill only (not a customers row).
@@ -18,7 +42,7 @@ class BillFormDraft {
 
   int get itemsTotal => itemsTotalPaisa(lines.map((l) => l.lineTotal));
 
-  int get billDiscount => parseNpr(billDiscountText)?.value ?? 0;
+  int get billDiscount => _billDiscount;
 
   int get grandTotal =>
       grandTotalPaisa(itemsTotal: itemsTotal, billDiscountPaisa: billDiscount);

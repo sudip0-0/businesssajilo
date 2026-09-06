@@ -1,8 +1,10 @@
+import '../../core/utils/bill_totals.dart';
 import 'bill_draft_line.dart';
 import 'bill_form_draft.dart';
 
 enum BillFormValidationError {
   noLines,
+  invalidMoneyInput,
   invalidLineDiscount,
   invalidBillDiscount,
   negativeGrandTotal,
@@ -11,15 +13,28 @@ enum BillFormValidationError {
 /// Validates a bill draft before opening the payment sheet / save.
 BillFormValidationError? validateBillForm(BillFormDraft draft) {
   if (draft.lines.isEmpty) return BillFormValidationError.noLines;
-  if (draft.lines.any((l) => !l.discountValid)) {
-    return BillFormValidationError.invalidLineDiscount;
+  if (!draft.billDiscountInputValid ||
+      draft.lines.any((l) => !l.rateInputValid || !l.discountInputValid)) {
+    return BillFormValidationError.invalidMoneyInput;
   }
-  final discount = draft.billDiscount;
-  final items = draft.itemsTotal;
-  if (discount < 0 || discount > items) {
-    return BillFormValidationError.invalidBillDiscount;
+  try {
+    if (draft.lines.any(
+      (l) => tryLineGrossPaisa(qty: l.qty, ratePaisa: l.rate) == null,
+    )) {
+      return BillFormValidationError.invalidMoneyInput;
+    }
+    if (draft.lines.any((l) => !l.discountValid)) {
+      return BillFormValidationError.invalidLineDiscount;
+    }
+    final discount = draft.billDiscount;
+    final items = draft.itemsTotal;
+    if (discount < 0 || discount > items) {
+      return BillFormValidationError.invalidBillDiscount;
+    }
+    if (draft.grandTotal < 0) return BillFormValidationError.negativeGrandTotal;
+  } on ArgumentError {
+    return BillFormValidationError.invalidMoneyInput;
   }
-  if (draft.grandTotal < 0) return BillFormValidationError.negativeGrandTotal;
   return null;
 }
 

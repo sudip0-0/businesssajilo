@@ -159,6 +159,17 @@ void main() {
   });
 
   group('extractSyncErrorDetail', () {
+    test('sync integrity failures use existing localized generic help', () {
+      for (final error in [
+        'FormatException: Invalid bill acknowledgement',
+        'TimeoutException after 0:00:15: Future not completed',
+        'Bad state: Unsupported sync entity: unknown',
+        'Bad state: Unverified local cache retained; use a scoped database',
+      ]) {
+        expect(extractSyncErrorDetail(error), isNull);
+      }
+    });
+
     test('extracts Postgrest message without stack traces', () {
       expect(
         extractSyncErrorDetail(

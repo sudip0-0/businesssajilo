@@ -49,6 +49,9 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Profit & Margins'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Outstanding Dues'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Stock valuation'), findsOneWidget);
-    expect(find.widgetWithText(ListTile, 'Fiscal summary (BS)'), findsOneWidget);
+    expect(
+      find.widgetWithText(ListTile, 'Fiscal summary (BS)'),
+      findsOneWidget,
+    );
   });
 }

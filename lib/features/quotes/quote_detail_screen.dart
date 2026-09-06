@@ -16,7 +16,11 @@ import '../orders/providers.dart';
 import 'providers.dart';
 
 class QuoteDetailScreen extends ConsumerStatefulWidget {
-  const QuoteDetailScreen({super.key, required this.quoteId, this.embedded = false});
+  const QuoteDetailScreen({
+    super.key,
+    required this.quoteId,
+    this.embedded = false,
+  });
 
   final String quoteId;
   final bool embedded;
@@ -28,7 +32,13 @@ class QuoteDetailScreen extends ConsumerStatefulWidget {
 class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   final _commentController = TextEditingController();
   bool _loading = false;
-  int _reloadToken = 0;
+  late Future<Quote> _quoteFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _quoteFuture = ref.read(quotesRepositoryProvider).get(widget.quoteId);
+  }
 
   @override
   void dispose() {
@@ -37,16 +47,22 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   }
 
   Future<void> _accept(Quote quote) async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      await _confirmAccept(quote);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _confirmAccept(Quote quote) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.accept),
-        content: Text(
-          l10n.quoteAcceptConfirm(
-            formatNpr(Paisa(quote.total), showPaisa: false),
-          ),
-        ),
+        content: Text(l10n.quoteAcceptConfirm(formatNpr(Paisa(quote.total)))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -81,6 +97,7 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
   }
 
   Future<void> _reject() async {
+    if (_loading) return;
     final l10n = AppLocalizations.of(context);
     if (_commentController.text.trim().isEmpty) {
       showBsSnackBar(context, message: l10n.rejectComment);
@@ -112,84 +129,83 @@ class _QuoteDetailScreenState extends ConsumerState<QuoteDetailScreen> {
     final canRespond = role == Role.customer;
 
     final body = FutureBuilder(
-        key: ValueKey(_reloadToken),
-        future: ref.read(quotesRepositoryProvider).get(widget.quoteId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return ErrorState(
-              message: l10n.loadingFailed,
-              onRetry: () => setState(() => _reloadToken++),
-            );
-          }
-          final quote = snapshot.data!;
+      future: _quoteFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return ErrorState(
+            message: l10n.loadingFailed,
+            onRetry: () => setState(
+              () => _quoteFuture = ref
+                  .read(quotesRepositoryProvider)
+                  .get(widget.quoteId),
+            ),
+          );
+        }
+        final quote = snapshot.data!;
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                l10n.quoteVersion(quote.version),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              if (quote.status == QuoteStatus.sent && quote.createdAt != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    l10n.quoteExpiresOn(
-                      BsDate.both(quoteExpiresAt(quote.createdAt!)),
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall,
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              l10n.quoteVersion(quote.version),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            if (quote.status == QuoteStatus.sent && quote.createdAt != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l10n.quoteExpiresOn(
+                    BsDate.both(quoteExpiresAt(quote.createdAt!)),
                   ),
-                ),
-              const Divider(),
-              ...quote.items.map(
-                (item) => ListTile(
-                  title: Text(item.productName ?? '—'),
-                  subtitle: Text(
-                    '${item.qty} × ${formatNpr(Paisa(item.rate), showPaisa: false)}',
-                  ),
-                  trailing: Text(
-                    formatNpr(Paisa(item.lineTotal), showPaisa: false),
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-              const Divider(),
-              Text(
-                '${l10n.grandTotal}: ${formatNpr(Paisa(quote.total), showPaisa: false)}',
-                style: Theme.of(context).textTheme.titleLarge,
+            const Divider(),
+            ...quote.items.map(
+              (item) => ListTile(
+                title: Text(item.productName ?? '—'),
+                subtitle: Text('${item.qty} × ${formatNpr(Paisa(item.rate))}'),
+                trailing: Text(formatNpr(Paisa(item.lineTotal))),
               ),
-              if (quote.status == QuoteStatus.sent && canRespond) ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _commentController,
-                  decoration: InputDecoration(labelText: l10n.rejectComment),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _loading ? null : _reject,
-                        child: Text(l10n.reject),
-                      ),
+            ),
+            const Divider(),
+            Text(
+              '${l10n.grandTotal}: ${formatNpr(Paisa(quote.total))}',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            if (quote.status == QuoteStatus.sent && canRespond) ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _commentController,
+                decoration: InputDecoration(labelText: l10n.rejectComment),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _loading ? null : _reject,
+                      child: Text(l10n.reject),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: _loading ? null : () => _accept(quote),
-                        child: Text(l10n.accept),
-                      ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _loading ? null : () => _accept(quote),
+                      child: Text(l10n.accept),
                     ),
-                  ],
-                ),
-              ],
-             ],
-           );
-         },
-       );
+                  ),
+                ],
+              ),
+            ],
+          ],
+        );
+      },
+    );
 
     if (widget.embedded) return body;
     return Scaffold(

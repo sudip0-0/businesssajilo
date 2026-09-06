@@ -65,101 +65,112 @@ class _WebSidebarState extends State<WebSidebar> {
         ? tokens.sidebarCollapsedWidth
         : tokens.sidebarWidth;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      width: widget.inDrawer ? null : width,
-      decoration: const BoxDecoration(gradient: WebPalette.railGradient),
-      child: Column(
-        children: [
-          _BrandBlock(
-            collapsed: isCollapsed,
-            inDrawer: widget.inDrawer,
-            l10n: l10n,
-            onToggleCollapse: widget.onToggleCollapse,
-          ),
-          const Divider(height: 1, color: WebPalette.railLine),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.fromLTRB(
-                isCollapsed ? 10 : 12,
-                14,
-                isCollapsed ? 10 : 12,
-                8,
+    return Semantics(
+      identifier: 'web_sidebar',
+      container: true,
+      explicitChildNodes: true,
+      child: FocusTraversalGroup(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          width: widget.inDrawer ? null : width,
+          decoration: const BoxDecoration(gradient: WebPalette.railGradient),
+          child: Column(
+            children: [
+              _BrandBlock(
+                collapsed: isCollapsed,
+                inDrawer: widget.inDrawer,
+                l10n: l10n,
+                onToggleCollapse: widget.onToggleCollapse,
               ),
-              itemCount: widget.items.length,
-              itemBuilder: (context, index) {
-                final item = widget.items[index];
-                final selected = location.startsWith(item.path);
+              const Divider(height: 1, color: WebPalette.railLine),
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.fromLTRB(
+                    isCollapsed ? 10 : 12,
+                    14,
+                    isCollapsed ? 10 : 12,
+                    8,
+                  ),
+                  itemCount: widget.items.length,
+                  itemBuilder: (context, index) {
+                    final item = widget.items[index];
+                    final selected = location.startsWith(item.path);
 
-                Widget tile = _SidebarTile(
-                  item: item,
-                  selected: selected,
-                  collapsed: isCollapsed,
-                  onTap: () {
-                    context.go(item.path);
-                    if (widget.inDrawer) Navigator.of(context).pop();
+                    Widget tile = _SidebarTile(
+                      item: item,
+                      selected: selected,
+                      collapsed: isCollapsed,
+                      onTap: () {
+                        context.go(item.path);
+                        if (widget.inDrawer) Navigator.of(context).pop();
+                      },
+                    );
+                    tile = KeyedSubtree(
+                      key: IntegrationKeys.sidebarNav(item.path),
+                      child: tile,
+                    );
+                    if (_playEntrance) {
+                      tile = tile
+                          .animate()
+                          .fadeIn(duration: 260.ms, delay: (40 + index * 30).ms)
+                          .slideX(
+                            begin: -0.04,
+                            end: 0,
+                            duration: 260.ms,
+                            delay: (40 + index * 30).ms,
+                            curve: Curves.easeOutCubic,
+                          );
+                    }
+                    return tile;
                   },
-                );
-                tile = KeyedSubtree(
-                  key: IntegrationKeys.sidebarNav(item.path),
-                  child: tile,
-                );
-                if (_playEntrance) {
-                  tile = tile
-                      .animate()
-                      .fadeIn(duration: 260.ms, delay: (40 + index * 30).ms)
-                      .slideX(
-                        begin: -0.04,
-                        end: 0,
-                        duration: 260.ms,
-                        delay: (40 + index * 30).ms,
-                        curve: Curves.easeOutCubic,
-                      );
-                }
-                return tile;
-              },
-            ),
-          ),
-          if (widget.footer != null) ...[
-            const Divider(height: 1, color: WebPalette.railLine),
-            // Footer CTAs (e.g. "Create bill") take the brass treatment so
-            // they stay legible on the dark rail.
-            Theme(
-              data: Theme.of(context).copyWith(
-                filledButtonTheme: FilledButtonThemeData(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.pressed)) {
-                        return WebPalette.brass;
-                      }
-                      if (states.contains(WidgetState.hovered)) {
-                        return WebPalette.brassBright;
-                      }
-                      return WebPalette.brass;
-                    }),
-                    foregroundColor: WidgetStateProperty.all(
-                      const Color(0xFF241A05),
-                    ),
-                    overlayColor: WidgetStateProperty.all(
-                      Colors.white.withValues(alpha: 0.14),
-                    ),
-                    minimumSize: WidgetStateProperty.all(const Size(64, 40)),
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              if (widget.footer != null) ...[
+                const Divider(height: 1, color: WebPalette.railLine),
+                // Footer CTAs (e.g. "Create bill") take the brass treatment so
+                // they stay legible on the dark rail.
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    filledButtonTheme: FilledButtonThemeData(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.pressed)) {
+                            return WebPalette.brass;
+                          }
+                          if (states.contains(WidgetState.hovered)) {
+                            return WebPalette.brassBright;
+                          }
+                          return WebPalette.brass;
+                        }),
+                        foregroundColor: WidgetStateProperty.all(
+                          const Color(0xFF241A05),
+                        ),
+                        overlayColor: WidgetStateProperty.all(
+                          Colors.white.withValues(alpha: 0.14),
+                        ),
+                        minimumSize: WidgetStateProperty.all(
+                          const Size(64, 40),
+                        ),
+                        shape: WidgetStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
                       ),
                     ),
                   ),
+                  child: Padding(
+                    padding: EdgeInsets.all(isCollapsed ? 12 : 14),
+                    child: widget.footer!,
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(isCollapsed ? 12 : 14),
-                child: widget.footer!,
-              ),
-            ),
-          ],
-        ],
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -365,13 +376,15 @@ class _SidebarTileState extends State<_SidebarTile> {
                         color: WebPalette.brassBright,
                         borderRadius: BorderRadius.circular(999),
                       ),
-                      child: Text(
-                        widget.item.badge!,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF241A05),
-                          height: 1.3,
+                      child: ExcludeSemantics(
+                        child: Text(
+                          widget.item.badge!,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF241A05),
+                            height: 1.3,
+                          ),
                         ),
                       ),
                     ),
@@ -383,11 +396,22 @@ class _SidebarTileState extends State<_SidebarTile> {
       ),
     );
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: widget.collapsed
-          ? Tooltip(message: widget.item.label, child: tile)
-          : tile,
+    return Semantics(
+      container: true,
+      button: true,
+      selected: widget.selected,
+      label: widget.collapsed ? widget.item.label : null,
+      value: widget.item.badge,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 3),
+        child: widget.collapsed
+            ? Tooltip(
+                message: widget.item.label,
+                excludeFromSemantics: true,
+                child: tile,
+              )
+            : tile,
+      ),
     );
   }
 }

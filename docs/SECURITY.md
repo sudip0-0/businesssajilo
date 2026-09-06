@@ -8,8 +8,8 @@
 
 ## Storage
 
-- `product-images` and `order-chat-images` buckets are tenant-scoped by folder name (`business_id`).
-- Policies: staff read product images; owner upload/update/delete; warehouse cannot upload product images.
+- `product-images` uses tenant-folder and role-gated policies; owner upload/update/delete is allowed and warehouse upload is denied.
+- Order chat, `messages`, and the `order-chat-images` bucket were removed by migration 43. Do not restore them through old deployment checklists.
 
 ## Auth rate limits
 
@@ -41,9 +41,17 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 
 ## Billing / payment write path
 
-- Direct `INSERT` on `bills`, `bill_items`, and `payments` is revoked for `authenticated`.
+- Direct client `INSERT` on `bills`, `bill_items`, and `payments` is denied by RLS (migration 16 removes their insert policies; migration 49 grants baseline table privileges).
 - Clients must use `create_bill` / `record_payment` SECURITY DEFINER RPCs (migration 16).
-- Offline sync pushes payments via `record_payment`; legacy `bill_items` queue entries are rejected.
+- Warehouse may create/read bills but cannot read raw `customers` rows, opening balances, payments, balance views, ledgers, or `audit_log`. Migration 50 exposes billing identity fields through the read-only `customer_directory` security-barrier view, with explicit active-membership, tenant, role, and customer-own filters. This view intentionally uses definer privileges to avoid granting warehouse access to underlying financial columns. Bill embeds use the directory; do not restore warehouse SELECT on `customers`.
+- `search_bills` is staff-wide plus a customer own-bill path (migration 58). It must not return another customer's bills or staff catalog data.
+- Warehouse order prefill uses `billing_draft_from_order` (migration 58): accepted-quote or order-item lines plus directory identity. It does not grant warehouse SELECT on orders, quotes, quote history, or customer finance.
+- Offline sync pushes payments via `record_payment`; legacy `bill_items` queue entries are rejected. Financial acknowledgements validate identity before marking local work synced; malformed responses remain retryable.
+- `place_order` atomically validates and inserts customer orders; `respond_quote` validates quote response ownership, state, expiry, and immutable terms. These are online-only RPCs.
+- Oldest-first payment allocation locks candidate bills before recomputing net debt from payments and credit notes. Excess remains account credit; explicit single-bill allocation retains its existing whole-amount semantics.
+- Billing recovery only resolves existing same-business customers by ID or unambiguous identity. It must not provision Auth/member/customer rows; owner credential creation remains in `create-member`.
+- Child tenant columns and composite parent foreign keys are enforced by migration 57. Review its backfill/locking deployment requirements in `handoff.md`; local application is not hosted deployment approval.
+- Migration 58 is additive (search/draft RPC + audit SELECT narrowing) and does not rewrite applied history.
 - Edge Function shared validators (`supabase/functions/_shared/validation.ts`) have Deno unit tests — run via `scripts/local_hardening_gate.ps1` or `deno test supabase/functions/_shared/validation_test.ts`.
 
 ## Observability

@@ -28,8 +28,8 @@ Future<List<Product>> productsForBillItems({
     try {
       byId[id] = await products.get(id);
     } catch (e, st) {
-          AppLog.warn('Operation failed', e, st);
-        }
+      AppLog.warn('Operation failed', e, st);
+    }
   }
   return byId.values.toList();
 }

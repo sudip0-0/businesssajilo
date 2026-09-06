@@ -52,7 +52,8 @@ import '../features/reports/web_sales_report_page.dart'
     deferred as sales_report;
 import '../features/reports/web_stock_report_page.dart'
     deferred as stock_report;
-import '../features/quotes/web_quote_builder_page.dart' deferred as quote_builder;
+import '../features/quotes/web_quote_builder_page.dart'
+    deferred as quote_builder;
 import '../features/quotes/web_quote_detail_page.dart' deferred as quote_detail;
 
 final webRouterProvider = Provider<GoRouter>((ref) {
@@ -279,8 +280,7 @@ ShellRoute _ownerRoutes() {
                 builder: () => order_detail.WebOrderDetailPage(
                   orderId: state.pathParameters['orderId']!,
                   ordersListPath: '/owner/orders',
-                  anchorQuotes:
-                      state.uri.queryParameters['tab'] == 'quote',
+                  anchorQuotes: state.uri.queryParameters['tab'] == 'quote',
                 ),
               );
             },
@@ -445,8 +445,7 @@ ShellRoute _salesRoutes() {
                 builder: () => order_detail.WebOrderDetailPage(
                   orderId: state.pathParameters['orderId']!,
                   ordersListPath: '/sales/orders',
-                  anchorQuotes:
-                      state.uri.queryParameters['tab'] == 'quote',
+                  anchorQuotes: state.uri.queryParameters['tab'] == 'quote',
                 ),
               );
             },

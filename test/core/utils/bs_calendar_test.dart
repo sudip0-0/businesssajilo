@@ -62,9 +62,21 @@ void main() {
     test('groupSalesByBsMonth buckets daily points per BS month', () {
       // Two days within the same BS month + one in a later BS month.
       final points = [
-        SalesPeriodPoint(saleDate: DateTime.utc(2026, 4, 15), totalSales: 100, billCount: 1),
-        SalesPeriodPoint(saleDate: DateTime.utc(2026, 4, 20), totalSales: 250, billCount: 2),
-        SalesPeriodPoint(saleDate: DateTime.utc(2026, 6, 10), totalSales: 70, billCount: 1),
+        SalesPeriodPoint(
+          saleDate: DateTime.utc(2026, 4, 15),
+          totalSales: 100,
+          billCount: 1,
+        ),
+        SalesPeriodPoint(
+          saleDate: DateTime.utc(2026, 4, 20),
+          totalSales: 250,
+          billCount: 2,
+        ),
+        SalesPeriodPoint(
+          saleDate: DateTime.utc(2026, 6, 10),
+          totalSales: 70,
+          billCount: 1,
+        ),
       ];
       final months = BsCalendar.groupSalesByBsMonth(points);
       expect(months, hasLength(2));
@@ -79,7 +91,10 @@ void main() {
     test('monthLabel renders without throwing for both locales', () {
       final month = BsCalendar.currentBsMonth(now: DateTime.utc(2026, 4, 14));
       expect(BsCalendar.monthLabel(month), isNotEmpty);
-      expect(BsCalendar.monthLabel(month, locale: const Locale('en')), isNotEmpty);
+      expect(
+        BsCalendar.monthLabel(month, locale: const Locale('en')),
+        isNotEmpty,
+      );
     });
   });
 }

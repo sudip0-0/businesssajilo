@@ -2,6 +2,8 @@ import 'package:businesssajilo/data/local/app_database.dart';
 import 'package:businesssajilo/data/remote/supabase_customers_repository.dart';
 import 'package:businesssajilo/data/sync/cached_customers_repository.dart';
 import 'package:businesssajilo/data/sync/pull/sync_pull_entities.dart';
+import 'package:businesssajilo/domain/enums.dart';
+import 'package:businesssajilo/domain/models/customer.dart';
 import 'package:businesssajilo/domain/models/ledger_entry.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -41,6 +43,29 @@ class _FailingLedgerRemote extends SupabaseCustomersRepository {
   }
 }
 
+class _OfflineCustomerRemote extends SupabaseCustomersRepository {
+  _OfflineCustomerRemote() : super(null);
+  var requests = 0;
+
+  @override
+  Future<List<Customer>> list({
+    int offset = 0,
+    int? limit,
+    String? query,
+    bool includeBalances = true,
+    CustomerBalanceFilter balanceFilter = CustomerBalanceFilter.all,
+  }) async {
+    requests++;
+    throw StateError('offline');
+  }
+
+  @override
+  Future<Customer> get(String id, {bool includeBalances = true}) async {
+    requests++;
+    throw StateError('offline');
+  }
+}
+
 void main() {
   late AppDatabase db;
 
@@ -67,6 +92,92 @@ void main() {
             createdAt: Value(DateTime.utc(2026, 1, 1)),
           ),
         );
+  }
+
+  for (final includeBalances in [false, true]) {
+    test(
+      'cached customers work offline with balances=$includeBalances',
+      () async {
+        final remote = _OfflineCustomerRemote();
+        final repo = CachedCustomersRepository(db: db, remote: remote);
+        final balances = [300, -200, 0];
+        for (var i = 0; i < balances.length; i++) {
+          await db
+              .into(db.localCustomers)
+              .insert(
+                LocalCustomersCompanion.insert(
+                  id: 'c$i',
+                  businessId: 'biz',
+                  memberId: 'm$i',
+                  shopName: 'Shop $i',
+                  contactName: Value('Contact $i'),
+                  phone: Value('980000000$i'),
+                  address: Value('Address $i'),
+                  openingBalance: Value(100 + i),
+                  balanceDue: Value(balances[i]),
+                  updatedAt: DateTime.utc(2026),
+                ),
+              );
+        }
+        await db.enqueue(
+          entityType: 'payment',
+          entityId: 'pending',
+          payload: {'customer_id': 'c0'},
+        );
+        for (final filter in CustomerBalanceFilter.values) {
+          final expectedIds = [
+            for (var i = 0; i < balances.length; i++)
+              if (!includeBalances ||
+                  switch (filter) {
+                    CustomerBalanceFilter.all => true,
+                    CustomerBalanceFilter.due => balances[i] > 0,
+                    CustomerBalanceFilter.credit => balances[i] < 0,
+                    CustomerBalanceFilter.settled => balances[i] == 0,
+                  })
+                'c$i',
+          ];
+          for (final query in [null, ' Shop ']) {
+            final rows = await repo.list(
+              includeBalances: includeBalances,
+              balanceFilter: filter,
+              query: query,
+            );
+            expect(rows.map((c) => c.id), expectedIds);
+            for (final customer in rows) {
+              final i = int.parse(customer.id.substring(1));
+              expect(customer.openingBalance, includeBalances ? 100 + i : 0);
+              expect(customer.balanceDue, includeBalances ? balances[i] : 0);
+            }
+          }
+        }
+        final page = await repo.list(
+          includeBalances: includeBalances,
+          offset: 1,
+          limit: 1,
+        );
+        expect(page.single.id, 'c1');
+        final searchedPage = await repo.list(
+          includeBalances: includeBalances,
+          query: 'contact',
+          offset: 1,
+          limit: 1,
+        );
+        expect(searchedPage.single.id, 'c1');
+        final byPhone = await repo.list(
+          includeBalances: includeBalances,
+          query: '9800000002',
+        );
+        expect(byPhone.single.id, 'c2');
+        final customer = await repo.get('c0', includeBalances: includeBalances);
+        expect(customer.address, 'Address 0');
+        expect(customer.openingBalance, includeBalances ? 100 : 0);
+        expect(customer.balanceDue, includeBalances ? 300 : 0);
+        expect(remote.requests, 0);
+        expect((await repo.get('c0')).balanceDue, 300);
+        expect((await repo.get('c0')).openingBalance, 100);
+        expect(await db.pendingCount(), 1);
+      },
+    );
   }
 
   test('ledger merges local payment missing from remote', () async {

@@ -5,7 +5,10 @@ import 'package:businesssajilo/data/repositories/notifications_repository.dart';
 import 'package:businesssajilo/domain/models/notification_item.dart';
 import 'package:businesssajilo/features/notifications/notification_bell_action.dart';
 import 'package:businesssajilo/features/notifications/providers.dart';
+import 'package:businesssajilo/features/notifications/notification_dropdown.dart';
+import 'package:businesssajilo/web/theme/web_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,6 +77,82 @@ const _l10nDelegates = [
 ];
 
 void main() {
+  for (final size in [const Size(320, 260), const Size(1440, 260)]) {
+    testWidgets(
+      'notification dropdown fits $size and restores focus after Escape',
+      (tester) async {
+        await tester.binding.setSurfaceSize(size);
+        final trigger = FocusNode();
+        final key = GlobalKey();
+        var viewAllCalls = 0;
+        try {
+          await tester.pumpWidget(
+            ProviderScope(
+              key: UniqueKey(),
+              overrides: [
+                notificationListProvider.overrideWith(
+                  (ref) => Stream.value([]),
+                ),
+              ],
+              child: MaterialApp(
+                theme: WebTheme.light(),
+                localizationsDelegates: _l10nDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Scaffold(
+                  body: Align(
+                    alignment: Alignment.bottomRight,
+                    child: Builder(
+                      builder: (context) => TextButton(
+                        key: key,
+                        focusNode: trigger,
+                        onPressed: () => showNotificationDropdown(
+                          buttonContext: context,
+                          onOpenItem: (_, _) =>
+                              fail('No notification should be opened'),
+                          onViewAll: () => viewAllCalls++,
+                        ),
+                        child: const Text('Notifications'),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          trigger.requestFocus();
+          await tester.pump();
+          await tester.tap(find.byKey(key));
+          await tester.pumpAndSettle();
+          expect(find.byType(NotificationDropdownPanel), findsOneWidget);
+          final bounds = tester.getRect(find.byType(NotificationDropdownPanel));
+          expect(bounds.left, greaterThanOrEqualTo(8));
+          expect(bounds.top, greaterThanOrEqualTo(8));
+          expect(bounds.right, lessThanOrEqualTo(size.width - 8));
+          expect(bounds.bottom, lessThanOrEqualTo(size.height - 8));
+          expect(tester.takeException(), isNull);
+          await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+          await tester.pumpAndSettle();
+          expect(find.byType(NotificationDropdownPanel), findsNothing);
+          expect(trigger.hasFocus, isTrue);
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          await tester.pumpAndSettle();
+          expect(find.byType(NotificationDropdownPanel), findsOneWidget);
+          await tester.tap(find.text('View all'));
+          await tester.pumpAndSettle();
+          expect(find.byType(NotificationDropdownPanel), findsNothing);
+          expect(viewAllCalls, 1);
+          expect(tester.takeException(), isNull);
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pumpAndSettle();
+          trigger.dispose();
+          await tester.binding.setSurfaceSize(null);
+        }
+      },
+    );
+  }
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -87,10 +166,11 @@ void main() {
           unreadNotificationCountProvider.overrideWith((ref) async => 0),
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
+          theme: WebTheme.light(),
           localizationsDelegates: _l10nDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: NotificationBellAction()),
+          home: const Scaffold(body: NotificationBellAction()),
         ),
       ),
     );
@@ -107,10 +187,11 @@ void main() {
           unreadNotificationCountProvider.overrideWith((ref) async => 0),
           notificationListProvider.overrideWith((ref) => Stream.value([])),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
+          theme: WebTheme.light(),
           localizationsDelegates: _l10nDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
+          home: const Scaffold(
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(56),
               child: ColoredBox(
@@ -142,10 +223,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [notificationsRepositoryProvider.overrideWithValue(repo)],
-        child: const MaterialApp(
+        child: MaterialApp(
+          theme: WebTheme.light(),
           localizationsDelegates: _l10nDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
+          home: const Scaffold(
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(56),
               child: ColoredBox(

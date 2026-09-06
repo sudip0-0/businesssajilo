@@ -125,7 +125,8 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
               ChoiceChip(
                 label: Text(l10n.bills),
                 selected: _currentTab == _SalesTab.bills,
-                onSelected: (_) => setState(() => _currentTab = _SalesTab.bills),
+                onSelected: (_) =>
+                    setState(() => _currentTab = _SalesTab.bills),
               ),
             ],
           ),
@@ -257,9 +258,9 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
             children: [
               Text(
                 l10n.topProducts,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () =>
@@ -276,8 +277,7 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
             ),
             data: (rows) => _TopProductsList(
               rows: rows.take(3).toList(),
-              onViewAll: () =>
-                  setState(() => _currentTab = _SalesTab.products),
+              onViewAll: () => setState(() => _currentTab = _SalesTab.products),
             ),
           ),
           const SizedBox(height: 16),
@@ -287,9 +287,9 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
             children: [
               Text(
                 l10n.topCustomers,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () =>
@@ -432,7 +432,10 @@ class _SalesSummaryScreenState extends ConsumerState<SalesSummaryScreen> {
                           ],
                         ),
                         subtitle: Text(
-                          billCustomerLabel(b, walkInLabel: l10n.walkInCustomer),
+                          billCustomerLabel(
+                            b,
+                            walkInLabel: l10n.walkInCustomer,
+                          ),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -607,7 +610,9 @@ class _TopProductsList extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: index < 3
                             ? BsColors.primary.withValues(alpha: 0.15)
-                            : Theme.of(context).colorScheme.surfaceContainerHighest,
+                            : Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -735,7 +740,8 @@ class _TopCustomersList extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CustomerDetailScreen(customerId: c.customerId),
+                  builder: (_) =>
+                      CustomerDetailScreen(customerId: c.customerId),
                 ),
               );
             },
@@ -753,7 +759,9 @@ class _TopCustomersList extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: index < 3
                               ? Colors.teal.withValues(alpha: 0.15)
-                              : Theme.of(context).colorScheme.surfaceContainerHighest,
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -763,7 +771,9 @@ class _TopCustomersList extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: index < 3
                                 ? Colors.teal
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),

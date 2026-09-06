@@ -96,7 +96,7 @@ void main() {
         payload: {'id': 'b1'},
       );
 
-      await db.prepareForBusiness('tenant-b');
+      await db.prepareForBusiness('tenant-b', allowWipe: true);
 
       expect(await db.pendingQueue(), isEmpty);
       expect(await db.watermark('products'), isNull);

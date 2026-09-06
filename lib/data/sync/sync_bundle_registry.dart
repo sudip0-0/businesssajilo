@@ -1,4 +1,5 @@
 import 'sync_providers.dart';
+import '../local/legacy_cache_recovery.dart';
 
 /// Explicit lifecycle owner for the active [SyncBundle].
 ///
@@ -24,7 +25,11 @@ class SyncBundleRegistry {
     final current = _active;
     _active = null;
     if (current == null) return;
-    current.sync.dispose();
-    await current.db.close();
+    await current.sync.close();
+    try {
+      await waitForCacheRecovery(current.db);
+    } finally {
+      await current.db.close();
+    }
   }
 }

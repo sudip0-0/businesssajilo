@@ -128,13 +128,14 @@ class QuotesRepository {
 
   Future<Quote> accept(String quoteId, {String? comment}) async {
     final client = requireSupabaseClient(_client);
-    await client
-        .from('quotes')
-        .update({
-          'status': QuoteStatus.accepted.name,
-          'response_comment': ?comment,
-        })
-        .eq('id', quoteId);
+    await client.rpc(
+      'respond_quote',
+      params: {
+        'p_quote_id': quoteId,
+        'p_status': QuoteStatus.accepted.name,
+        'p_comment': comment,
+      },
+    );
     final row = await client
         .from('quotes')
         .select('*, quote_items(*, products(name))')
@@ -145,13 +146,14 @@ class QuotesRepository {
 
   Future<Quote> reject(String quoteId, {required String comment}) async {
     final client = requireSupabaseClient(_client);
-    await client
-        .from('quotes')
-        .update({
-          'status': QuoteStatus.rejected.name,
-          'response_comment': comment,
-        })
-        .eq('id', quoteId);
+    await client.rpc(
+      'respond_quote',
+      params: {
+        'p_quote_id': quoteId,
+        'p_status': QuoteStatus.rejected.name,
+        'p_comment': comment,
+      },
+    );
     final row = await client
         .from('quotes')
         .select('*, quote_items(*, products(name))')

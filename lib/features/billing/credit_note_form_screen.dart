@@ -164,7 +164,7 @@ class _CreditNoteFormScreenState extends ConsumerState<CreditNoteFormScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              '${l10n.grandTotal}: ${formatNpr(Paisa(total), showPaisa: false)}',
+              '${l10n.grandTotal}: ${formatNpr(Paisa(total), showPaisa: true)}',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),

@@ -167,6 +167,48 @@ void main() {
   });
 
   group('SupabaseBillsRepository', () {
+    test('list and detail embed customer identity through directory', () async {
+      final requests = <Uri>[];
+      final row = {
+        'id': 'bill-directory',
+        'business_id': 'biz',
+        'bill_no': 'BS-0001',
+        'created_by': 'member-1',
+        'status': 'due',
+        'customers': {'shop_name': 'Directory Shop'},
+        'bill_items': <Object>[],
+      };
+      final client = _client(
+        MockClient((request) async {
+          requests.add(request.url);
+          return _json(
+            request,
+            request.url.queryParameters.containsKey('id') ? row : [row],
+          );
+        }),
+      );
+      final repo = SupabaseBillsRepository(client, _UnusedPayments());
+
+      expect((await repo.list()).single.customerShopName, 'Directory Shop');
+      expect(
+        (await repo.get('bill-directory')).customerShopName,
+        'Directory Shop',
+      );
+      expect(requests, hasLength(2));
+      for (final request in requests) {
+        expect(
+          request.queryParameters['select'],
+          contains(
+            'customers:customer_directory!bills_customer_id_fkey(shop_name)',
+          ),
+        );
+        expect(
+          request.queryParameters['select'],
+          isNot(contains('customers(shop_name)')),
+        );
+      }
+    });
+
     test('get maps customer join and bill fields', () async {
       final capture = _Capture();
       final client = _client(
@@ -331,6 +373,33 @@ void main() {
       expect(bill.customerShopName, 'Replay Shop');
       expect(call, greaterThanOrEqualTo(2));
     });
+
+    test('search calls search_bills RPC', () async {
+      final capture = _Capture();
+      final client = _client(
+        MockClient((request) async {
+          capture.paths.add(request.url.path);
+          capture.bodies.add(request.body);
+          return _json(request, [
+            {
+              'id': 'bill-1',
+              'business_id': 'biz',
+              'bill_no': 'BS-0001',
+              'status': 'due',
+              'created_by': 'member-1',
+              'customers': {'shop_name': 'Ram Store'},
+            },
+          ]);
+        }),
+      );
+      final bills = await SupabaseBillsRepository(
+        client,
+        _UnusedPayments(),
+      ).search('Ram');
+      expect(bills.single.billNo, 'BS-0001');
+      expect(capture.paths.single, contains('/rest/v1/rpc/search_bills'));
+      expect(capture.bodies.single, contains('Ram'));
+    });
   });
 
   group('SupabaseOrdersRepository', () {
@@ -381,6 +450,45 @@ void main() {
       expect(count, 3);
       expect(capture.paths.single, contains('/rest/v1/orders'));
       expect(capture.headers.single['Prefer'], contains('count=exact'));
+    });
+
+    test('billingDraftFromOrder maps identity-only RPC payload', () async {
+      final capture = _Capture();
+      final client = _client(
+        MockClient((request) async {
+          capture.paths.add(request.url.path);
+          capture.bodies.add(request.body);
+          return _json(request, {
+            'order_id': 'order',
+            'customer_id': 'customer',
+            'shop_name': 'Ram Store',
+            'source': 'accepted_quote',
+            'lines': [
+              {
+                'product_id': 'product',
+                'name_snapshot': 'Rice',
+                'qty': 3,
+                'rate': 1255,
+                'discount': 25,
+                'line_total': 3740,
+              },
+            ],
+          });
+        }),
+      );
+      final draft = await SupabaseOrdersRepository(
+        client,
+      ).billingDraftFromOrder('order');
+      expect(draft, isNotNull);
+      expect(draft!.customerId, 'customer');
+      expect(draft.shopName, 'Ram Store');
+      expect(draft.source, 'accepted_quote');
+      expect(draft.lines.single.lineTotal, 3740);
+      expect(
+        capture.paths.single,
+        contains('/rest/v1/rpc/billing_draft_from_order'),
+      );
+      expect(capture.bodies.single, contains('order'));
     });
   });
 
@@ -474,7 +582,10 @@ void main() {
     test('topProducts maps RPC rows and handles null fields safely', () async {
       final client = _client(
         MockClient((request) async {
-          expect(request.url.path, contains('/rest/v1/rpc/report_top_products_range'));
+          expect(
+            request.url.path,
+            contains('/rest/v1/rpc/report_top_products_range'),
+          );
           return _json(request, [
             {
               'product_id': 'prod-1',
@@ -508,7 +619,10 @@ void main() {
     test('topCustomers maps RPC rows safely', () async {
       final client = _client(
         MockClient((request) async {
-          expect(request.url.path, contains('/rest/v1/rpc/report_top_customers_range'));
+          expect(
+            request.url.path,
+            contains('/rest/v1/rpc/report_top_customers_range'),
+          );
           return _json(request, [
             {
               'customer_id': 'cust-1',
@@ -534,7 +648,10 @@ void main() {
     test('profitSummary maps RPC response to ProfitSummary model', () async {
       final client = _client(
         MockClient((request) async {
-          expect(request.url.path, contains('/rest/v1/rpc/report_profit_summary'));
+          expect(
+            request.url.path,
+            contains('/rest/v1/rpc/report_profit_summary'),
+          );
           return _json(request, {
             'total_revenue': 50000,
             'total_cogs': 35000,
@@ -556,33 +673,39 @@ void main() {
       expect(summary.totalBills, 12);
     });
 
-    test('topProfitableProducts maps RPC rows to ProfitableProductRow', () async {
-      final client = _client(
-        MockClient((request) async {
-          expect(request.url.path, contains('/rest/v1/rpc/report_top_profitable_products'));
-          return _json(request, [
-            {
-              'product_id': 'prod-1',
-              'name_snapshot': 'Biscuit',
-              'qty_sold': 10,
-              'revenue': 20000,
-              'cogs': 14000,
-              'gross_profit': 6000,
-              'margin_pct': 30.0,
-            },
-          ]);
-        }),
-      );
-      final repo = SupabaseReportsRepository(client);
-      final rows = await repo.topProfitableProducts(
-        from: DateTime.utc(2026, 8, 1),
-        to: DateTime.utc(2026, 8, 20),
-      );
-      expect(rows, hasLength(1));
-      expect(rows.single.nameSnapshot, 'Biscuit');
-      expect(rows.single.grossProfit, 6000);
-      expect(rows.single.marginPct, 30.0);
-    });
+    test(
+      'topProfitableProducts maps RPC rows to ProfitableProductRow',
+      () async {
+        final client = _client(
+          MockClient((request) async {
+            expect(
+              request.url.path,
+              contains('/rest/v1/rpc/report_top_profitable_products'),
+            );
+            return _json(request, [
+              {
+                'product_id': 'prod-1',
+                'name_snapshot': 'Biscuit',
+                'qty_sold': 10,
+                'revenue': 20000,
+                'cogs': 14000,
+                'gross_profit': 6000,
+                'margin_pct': 30.0,
+              },
+            ]);
+          }),
+        );
+        final repo = SupabaseReportsRepository(client);
+        final rows = await repo.topProfitableProducts(
+          from: DateTime.utc(2026, 8, 1),
+          to: DateTime.utc(2026, 8, 20),
+        );
+        expect(rows, hasLength(1));
+        expect(rows.single.nameSnapshot, 'Biscuit');
+        expect(rows.single.grossProfit, 6000);
+        expect(rows.single.marginPct, 30.0);
+      },
+    );
 
     test('customerTopProducts and productTopCustomers map correctly', () async {
       final client = _client(

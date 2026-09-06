@@ -123,10 +123,7 @@ class SupabaseReportsRepository implements ReportsRepository {
     try {
       final raw = await client.rpc(
         'report_profit_summary',
-        params: {
-          'p_from': _dateOnly(from),
-          'p_to': _dateOnly(to),
-        },
+        params: {'p_from': _dateOnly(from), 'p_to': _dateOnly(to)},
       );
       final map = raw is Map
           ? Map<String, dynamic>.from(raw)

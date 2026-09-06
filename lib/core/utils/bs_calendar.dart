@@ -45,9 +45,7 @@ abstract final class BsCalendar {
     var lo = DateTime.utc(bs.year - 58, 1, 1);
     var hi = DateTime.utc(bs.year - 54, 12, 31);
     while (lo.isBefore(hi)) {
-      final mid = lo.add(
-        Duration(days: hi.difference(lo).inDays ~/ 2),
-      );
+      final mid = lo.add(Duration(days: hi.difference(lo).inDays ~/ 2));
       if (_compareBs(bsDateOf(mid), bs) < 0) {
         lo = mid.add(const Duration(days: 1));
       } else {
@@ -140,8 +138,9 @@ abstract final class BsCalendar {
 
   /// e.g. "२०८३ असार" (Nepali default) or "2083 Asar" for English locale.
   static String monthLabel(NepaliDateTime monthStart, {Locale? locale}) {
-    final language =
-        locale?.languageCode == 'en' ? Language.english : Language.nepali;
+    final language = locale?.languageCode == 'en'
+        ? Language.english
+        : Language.nepali;
     return NepaliDateFormat('yyyy MMMM', language).format(monthStart);
   }
 }

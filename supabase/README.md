@@ -7,8 +7,9 @@ Prerequisites: Docker Desktop, Supabase CLI (`npm i -g supabase`).
 ```bash
 supabase start          # starts Postgres, Auth, API, Studio
 supabase status         # copy Publishable key → .env.local
-supabase db reset       # apply migrations + seed
-supabase test db        # RLS policy tests (pgTAP) — also runs in CI
+supabase migration up --local    # apply pending migrations without a reset
+supabase migration list --local  # confirm applied versions
+supabase test db                 # RLS policy tests (pgTAP) — also runs in CI
 supabase functions serve  # hot-reload Edge Functions (optional)
 supabase stop           # tear down containers
 ```
@@ -17,7 +18,7 @@ supabase stop           # tear down containers
 - **API:** http://127.0.0.1:55021
 - **DB:** `postgresql://postgres:postgres@127.0.0.1:55022/postgres`
 
-Copy `.env.example` → `.env.local` and fill keys from `supabase status`.
+Copy `.env.example` → `.env.local` and fill keys from `supabase status`. Never print service-role credentials in logs or pass them to Flutter. `supabase db reset` deletes local data and requires explicit approval; it is not part of routine migration/testing. E2E/demo seed data must never be loaded into a shared or production database.
 
 Run Flutter against local stack:
 
@@ -55,7 +56,7 @@ Production:
 supabase secrets set ALLOWED_ORIGIN=https://your-app.example.com
 ```
 
-For local-only CORS during development you may use `ALLOWED_ORIGIN=*`, but production must use the real app origin(s).
+`ALLOWED_ORIGIN=*` is rejected in local and hosted environments. Use a concrete origin; the local runtime configuration supplies `http://localhost:3000`. Production configuration and successful browser requests must be verified separately.
 
 ### Push notifications (optional)
 

@@ -48,11 +48,7 @@ select is(
   'customer reads catalog without prices'
 );
 
-insert into orders (id, business_id, customer_id, status, customer_note)
-values ('01111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'placed', 'Need soon');
-
-insert into order_items (id, order_id, product_id, qty)
-values ('02111111-1111-1111-1111-111111111111', '01111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 5);
+select place_order('{"id":"01111111-1111-1111-1111-111111111111","customer_id":"e1111111-1111-1111-1111-111111111111","customer_note":"Need soon","items":[{"product_id":"b1111111-1111-1111-1111-111111111111","qty":5}]}');
 
 select is(
   (select status::text from orders where id = '01111111-1111-1111-1111-111111111111'),
@@ -61,7 +57,7 @@ select is(
 );
 
 select is(
-  (select product_name from order_items where id = '02111111-1111-1111-1111-111111111111'),
+  (select product_name from order_items where order_id = '01111111-1111-1111-1111-111111111111'),
   'Cola',
   'order item snapshots product name for customer reads'
 );

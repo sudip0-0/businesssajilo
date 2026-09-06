@@ -75,7 +75,8 @@ void main() {
     SharedPreferences.setMockInitialValues({
       legacySessionCacheUserIdKey: 'u1',
       legacySessionCacheEmailKey: 'owner@test.com',
-      legacySessionCacheMemberKey: '{"id":"m1","business_id":"b1",'
+      legacySessionCacheMemberKey:
+          '{"id":"m1","business_id":"b1",'
           '"auth_user_id":"u1","role":"owner","display_name":"Owner",'
           '"is_active":true}',
     });

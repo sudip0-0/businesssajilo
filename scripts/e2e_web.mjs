@@ -1,62 +1,42 @@
+import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { writeFileSync, statSync } from 'fs';
+import { writeFileSync, statSync } from 'node:fs';
 
 const BASE = process.env.BASE_URL || 'http://localhost:52200';
 const SUPABASE_URL = process.env.SUPABASE_URL || 'http://127.0.0.1:55021';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-if (!SUPABASE_ANON_KEY) {
-  console.error('SUPABASE_ANON_KEY is required (set from `supabase status` / .env.local)');
-  process.exit(1);
-}
 const EMAIL = process.env.E2E_EMAIL || 'e2e-owner@test.com';
-// Default seed password is acceptable ONLY against the local stack; against
-// any other host require explicit credentials so real ones never leak.
+// Seed credentials are local-only. Both target URLs and browser requests are
+// checked for loopback hosts before credentials or test traffic are sent.
 const PASSWORD = process.env.E2E_PASSWORD;
-const isLocal = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:|$)/.test(BASE);
-if (!PASSWORD) {
-  if (isLocal && BASE.includes('localhost') || SUPABASE_URL.startsWith('http://127.0.0.1')) {
-    // fall through to local default below
-  } else {
-    console.error('E2E_PASSWORD is required when targeting a non-local URL');
-    process.exit(1);
-  }
-}
 const password = PASSWORD ?? 'password123';
-
-const routes = [
-  '/owner/dashboard',
-  '/owner/inventory',
-  '/owner/customers',
-  '/owner/billing',
-  '/owner/orders',
-  '/owner/staff',
-  '/owner/reports',
-  '/owner/settings',
-];
-
+const TIMEOUT = 15000;
 const results = [];
 
-function record(step, ok, detail = '') {
-  results.push({ step, ok, detail });
+function localUrl(value) {
+  const url = new URL(value);
+  assert(['http:', 'https:'].includes(url.protocol), 'Only HTTP local URLs are allowed');
+  assert(['localhost', '127.0.0.1', '[::1]'].includes(url.hostname), 'Only loopback hosts are allowed');
+  assert(!url.username && !url.password, 'URL credentials are not allowed');
+  return url;
+}
+
+function record(step, ok, detail = '', durationMs) {
+  results.push({ step, ok, detail, durationMs });
   console.log(`${ok ? 'PASS' : 'FAIL'} ${step}${detail ? `: ${detail}` : ''}`);
 }
 
 async function clickByAccessibleName(page, name) {
-  const loc = page.getByText(name, { exact: false }).first();
-  try {
-    if (await loc.count()) {
-      await loc.click({ timeout: 1500 });
-      return true;
-    }
-  } catch (_) {
-    // CanvasKit often hides DOM text; callers keep URL fallbacks.
-  }
-  return false;
+  // CanvasKit controls become accessible after activating Flutter semantics.
+  // Missing controls fail the scenario; never substitute direct navigation.
+  await page.getByRole('button', { name, exact: true }).click();
 }
 
 async function fetchSession() {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
     method: 'POST',
+    signal: AbortSignal.timeout(TIMEOUT),
+    redirect: 'error',
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
@@ -64,192 +44,236 @@ async function fetchSession() {
     },
     body: JSON.stringify({ email: EMAIL, password }),
   });
-  if (!res.ok) {
-    throw new Error(`Auth failed: ${res.status} ${await res.text()}`);
-  }
+  assert(res.ok, `Local fixture authentication failed: HTTP ${res.status}`);
   return res.json();
 }
 
 async function primeBrowserState(page, session) {
   const hostFirst = new URL(SUPABASE_URL).hostname.split('.')[0];
   const storageKey = `sb-${hostFirst}-auth-token`;
-  await page.goto(`${BASE}/#/login`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(1500);
   await page.evaluate(
     ({ key, value }) => {
       localStorage.setItem(key, JSON.stringify(value));
-      localStorage.setItem('flutter.onboarding_complete', 'true');
     },
     { key: storageKey, value: session },
   );
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(3500);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await waitForFlutter(page);
+  await expectRoute(page, '/owner/dashboard');
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Skip', exact: true }).click();
+  await page.getByRole('alertdialog').waitFor({ state: 'detached' });
+  record('onboarding_skipped', true, 'Skip control dismissed the first-run tour');
+  await dashboardAction(page, 'dashboard_new_bill').waitFor({ state: 'visible' });
 }
 
-async function login(page) {
-  const session = await fetchSession();
-  record('auth_api', true, EMAIL);
-  await primeBrowserState(page, session);
-  await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(3000);
-  record('onboarding_skipped', true, 'localStorage flag set');
+function dashboardAction(page, identifier) {
+  return page.locator(`[flt-semantics-identifier="${identifier}"]`).getByRole('button');
 }
 
-function screenshotLooksValid(path) {
-  try {
-    return statSync(path).size > 3000;
-  } catch {
-    return false;
+async function expectRoute(page, route) {
+  await page.waitForURL((url) => url.hash === `#${route}`);
+  assert.equal(new URL(page.url()).hash, `#${route}`);
+}
+
+async function waitForFlutter(page) {
+  // Flutter's accessibility activator is deliberately outside the viewport.
+  // Dispatch only this bootstrap action; all application actions use real clicks.
+  await page.locator('flutter-view').waitFor({ state: 'attached' });
+  const placeholder = page.locator('flt-semantics-placeholder');
+  await page.locator('flt-semantics-placeholder, flt-semantics[role]').first().waitFor({ state: 'attached' });
+  if (await placeholder.count()) {
+    await placeholder.dispatchEvent('click');
   }
-}
-
-async function pageLooksLikeError(page) {
-  return page.evaluate(() => {
-    const text = document.body?.innerText ?? '';
-    return text.includes('Assertion failed') || text.includes('RenderFlex');
-  });
-}
-
-async function waitForFlutter(page, timeoutMs = 15000) {
-  try {
-    await page.waitForSelector('flt-glass-pane, canvas', { timeout: timeoutMs });
-  } catch {
-    // Headless builds may not expose flt-glass-pane; allow fixed delay fallback.
-  }
-  await page.waitForTimeout(4000);
+  await page.locator('flt-semantics[role]').first().waitFor({ state: 'attached' });
 }
 
 async function screenshot(page, name) {
   const path = `e2e-${name}.png`;
-  await page.screenshot({ path, fullPage: true });
+  await page.screenshot({ path, fullPage: true, timeout: TIMEOUT });
+  assert(statSync(path).size > 3000, `Empty screenshot: ${path}`);
   return path;
 }
 
 async function main() {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-  const page = await context.newPage();
+  let browser;
+  let context;
+  let page;
+  let deadline;
+  let timedOut = false;
+  const runtimeErrors = new Set();
+  const blockedRequests = new Set();
+  const runStep = async (name, action) => {
+    const started = performance.now();
+    try {
+      assert(!timedOut, 'E2E overall deadline exceeded');
+      await action();
+      record(name, true, page?.url() ?? '', Math.round(performance.now() - started));
+    } catch (error) {
+      record(name, false, error.message, Math.round(performance.now() - started));
+      throw error;
+    }
+  };
 
   try {
-    console.log('\n=== BusinessSajilo Web E2E ===\n');
+    const base = localUrl(BASE);
+    const api = localUrl(SUPABASE_URL);
+    assert(base.pathname === '/' && !base.search && !base.hash, 'BASE_URL must be an origin');
+    assert(api.pathname === '/' && !api.search && !api.hash, 'SUPABASE_URL must be an origin');
+    assert(SUPABASE_ANON_KEY, 'SUPABASE_ANON_KEY is required (from local supabase status)');
+    // A fresh context makes onboarding, locale and credentials deterministic.
+    browser = await chromium.launch({ headless: true, timeout: TIMEOUT });
+    deadline = setTimeout(() => {
+      timedOut = true;
+      record('overall_timeout', false, 'E2E exceeded 180 seconds');
+      void browser.close().catch(() => {});
+    }, 180000);
+    context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
+    context.setDefaultTimeout(TIMEOUT);
+    context.setDefaultNavigationTimeout(TIMEOUT);
+    await context.route('**/*', async (route) => {
+      const requestUrl = new URL(route.request().url());
+      if (!['http:', 'https:'].includes(requestUrl.protocol)) return route.continue();
+      try {
+        localUrl(requestUrl.href);
+        await route.continue();
+      } catch {
+        blockedRequests.add(requestUrl.origin + (requestUrl.hostname === 'fonts.gstatic.com' ? requestUrl.pathname : ''));
+        await route.abort('blockedbyclient');
+      }
+    });
+    page = await context.newPage();
+    page.on('pageerror', (error) => runtimeErrors.add(error.message));
+    page.on('console', (message) => {
+      if (message.type() === 'error' || /Assertion failed|RenderFlex|EXCEPTION CAUGHT/.test(message.text())) {
+        runtimeErrors.add(message.text());
+      }
+    });
 
-    console.log('1. Login page loads');
-    await page.goto(`${BASE}/#/login`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(3000);
-    const loginShot = await screenshot(page, 'login');
-    record('login_page', page.url().includes('/login'), page.url());
-    record('login_screenshot', screenshotLooksValid(loginShot), loginShot);
-
-    console.log('2. Authenticate');
-    await login(page);
-    const dashShot = await screenshot(page, 'after-login');
-    record('after_login', page.url().includes('/owner/dashboard'), page.url());
-    record('dashboard_no_crash', !(await pageLooksLikeError(page)), 'layout ok');
-    record('dashboard_screenshot', screenshotLooksValid(dashShot), dashShot);
-
-    console.log('3. Navigate owner routes');
-    for (const route of routes) {
-      await page.goto(`${BASE}/#${route}`, { waitUntil: 'networkidle' });
+    await runStep('login_page', async () => {
+      await page.goto(`${BASE}/#/login`, { waitUntil: 'domcontentloaded' });
       await waitForFlutter(page);
-      const shot = await screenshot(page, route.replace(/\//g, '-').slice(1));
-      const url = page.url();
-      const segment = route.split('/').pop();
-      record(`route_${segment}`, url.includes(segment), url);
-      record(`route_${segment}_screenshot`, screenshotLooksValid(shot), shot);
-      record(`route_${segment}_no_crash`, !(await pageLooksLikeError(page)), segment);
+      await expectRoute(page, '/login');
+      await page.getByRole('button', { name: 'Sign in', exact: true }).waitFor({ state: 'visible' });
+      await screenshot(page, 'login');
+    });
+    await runStep('auth_api', async () => {
+      const session = await fetchSession();
+      await primeBrowserState(page, session);
+      await screenshot(page, 'after-login');
+    });
+
+    // go_router's context.push does not reflect imperative routes in the URL.
+    // Prove the destination form and its controls; Cancel's context.go must then
+    // update the URL. Subsequent scenarios return through the real sidebar.
+    await runStep('dashboard_new_bill_nav', async () => {
+      await dashboardAction(page, 'dashboard_new_bill').click();
+      const form = page.getByRole('group', { name: /^BILLING CREATE BILL/ });
+      await form.getByRole('button', { name: 'Save bill', exact: true }).waitFor({ state: 'visible' });
+      await form.getByRole('textbox', { name: 'Search products', exact: true }).waitFor({ state: 'visible' });
+      await dashboardAction(page, 'dashboard_new_bill').waitFor({ state: 'detached' });
+      await expectRoute(page, '/owner/dashboard');
+      await form.getByRole('button', { name: 'Cancel', exact: true }).waitFor({ state: 'visible' });
+      await screenshot(page, 'bill-form');
+    });
+    await runStep('bill_form_cancel', async () => {
+      await clickByAccessibleName(page, 'Cancel');
+      await expectRoute(page, '/owner/billing');
+    });
+    await runStep('dashboard_add_product_nav', async () => {
+      await clickByAccessibleName(page.locator('[flt-semantics-identifier="web_sidebar"]'), 'Dashboard');
+      await expectRoute(page, '/owner/dashboard');
+      await dashboardAction(page, 'dashboard_add_product').click();
+      await page.getByRole('textbox', { name: 'Product Name', exact: true }).waitFor({ state: 'visible' });
+      await page.getByRole('textbox', { name: 'Reference price', exact: true }).waitFor({ state: 'visible' });
+      await page.getByRole('button', { name: 'Save', exact: true }).waitFor({ state: 'visible' });
+      await page.getByRole('button', { name: 'Cancel', exact: true }).waitFor({ state: 'visible' });
+      await dashboardAction(page, 'dashboard_add_product').waitFor({ state: 'detached' });
+      await expectRoute(page, '/owner/dashboard');
+      await screenshot(page, 'product-form');
+    });
+    await runStep('product_form_cancel', async () => {
+      await clickByAccessibleName(page, 'Cancel');
+      await expectRoute(page, '/owner/inventory');
+    });
+    await clickByAccessibleName(page.locator('[flt-semantics-identifier="web_sidebar"]'), 'Dashboard');
+    await expectRoute(page, '/owner/dashboard');
+    const routes = [
+      ['Inventory', '/owner/inventory'],
+      ['Customers', '/owner/customers'],
+      ['Billing', '/owner/billing'],
+      ['Orders', '/owner/orders'],
+      ['Staff management', '/owner/staff'],
+      ['Reports', '/owner/reports'],
+      ['Settings', '/owner/settings'],
+      ['Dashboard', '/owner/dashboard'],
+    ];
+    for (const [label, route] of routes) {
+      await runStep(`sidebar_${label.toLowerCase().replaceAll(' ', '_')}`, async () => {
+        await clickByAccessibleName(page.locator('[flt-semantics-identifier="web_sidebar"]'), label);
+        await expectRoute(page, route);
+        await screenshot(page, route.slice(1).replaceAll('/', '-'));
+      });
     }
 
-    console.log('4. Bill form direct navigation');
-    await page.goto(`${BASE}/#/owner/billing/new`, { waitUntil: 'networkidle' });
-    await waitForFlutter(page);
-    const billShot = await screenshot(page, 'bill-form');
-    record('bill_form_route', page.url().includes('/billing/new'), page.url());
-    record('bill_form_screenshot', screenshotLooksValid(billShot), billShot);
+    await runStep('topbar_notifications', async () => {
+      const topBar = page.locator('[flt-semantics-identifier="web_top_bar"]');
+      await topBar.getByRole('button', { name: /^Notifications(?:, \d+ unread)?$/ }).click();
+      await page.getByRole('button', { name: 'Mark all read', exact: true }).waitFor({ state: 'visible' });
+      await page.keyboard.press('Escape');
+      await page.getByRole('button', { name: 'Mark all read', exact: true }).waitFor({ state: 'detached' });
+      await topBar.getByRole('button', { name: /^Notifications(?:, \d+ unread)?$/ }).click();
+      await page.getByRole('button', { name: 'Mark all read', exact: true }).waitFor({ state: 'visible' });
+      await clickByAccessibleName(page, 'View all');
+      await expectRoute(page, '/owner/notifications');
+      await page.getByRole('button', { name: 'View all', exact: true }).waitFor({ state: 'detached' });
+      await clickByAccessibleName(page.locator('[flt-semantics-identifier="web_sidebar"]'), 'Dashboard');
+      await expectRoute(page, '/owner/dashboard');
+    });
 
-    console.log('5. Dashboard header — New Bill');
-    await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
-    await waitForFlutter(page);
-    await clickByAccessibleName(page, 'New bill');
-    await page.waitForTimeout(2500);
-    const newBillViaClick = page.url().includes('/billing/new');
-    record('dashboard_new_bill_nav', newBillViaClick, page.url());
-    if (!newBillViaClick) {
-      await page.goto(`${BASE}/#/owner/billing/new`, { waitUntil: 'networkidle' });
-      await waitForFlutter(page);
-      record('dashboard_new_bill_nav_fallback', page.url().includes('/billing/new'), page.url());
+    await runStep('locale_toggle', async () => {
+      await expectRoute(page, '/owner/dashboard');
+      const topBar = page.locator('[flt-semantics-identifier="web_top_bar"]');
+      const sidebar = page.locator('[flt-semantics-identifier="web_sidebar"]');
+      await clickByAccessibleName(topBar, 'NE');
+      await sidebar.getByRole('button', { name: 'बिलिङ', exact: true }).waitFor({ state: 'visible' });
+      await sidebar.getByRole('button', { name: 'Billing', exact: true }).waitFor({ state: 'detached' });
+      await page.waitForFunction(() => JSON.parse(localStorage.getItem('flutter.app_locale')) === 'ne');
+      await screenshot(page, 'nepali-dashboard');
+      await clickByAccessibleName(topBar, 'EN');
+      await sidebar.getByRole('button', { name: 'Billing', exact: true }).waitFor({ state: 'visible' });
+      await page.waitForFunction(() => JSON.parse(localStorage.getItem('flutter.app_locale')) === 'en');
+    });
+    assert.equal(blockedRequests.size, 0, `Non-local requests blocked: ${[...blockedRequests].join(', ')}`);
+  } catch (error) {
+    if (!results.some((result) => !result.ok)) record('harness_error', false, error.message);
+    if (page && !page.isClosed()) {
+      await screenshot(page, 'error').catch(() => {});
+      await page.locator('body').ariaSnapshot({ timeout: 3000 }).then(
+        (snapshot) => console.error('Failure semantics:\n' + snapshot),
+        () => {},
+      );
     }
-
-    console.log('6. Bill form — Cancel');
-    const cancelClicked = await clickByAccessibleName(page, 'Cancel');
-    await page.waitForTimeout(2000);
-    const cancelViaClick =
-      cancelClicked &&
-      page.url().includes('/owner/billing') &&
-      !page.url().includes('/new');
-    record('bill_form_cancel', cancelViaClick, page.url());
-    if (!cancelViaClick) {
-      await page.goto(`${BASE}/#/owner/billing`, { waitUntil: 'networkidle' });
-      record('bill_form_cancel_fallback', page.url().includes('/owner/billing'), page.url());
-    }
-
-    console.log('7. Dashboard header — Add Product');
-    await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
-    await waitForFlutter(page);
-    await clickByAccessibleName(page, 'Add product');
-    await page.waitForTimeout(2500);
-    const addProductViaClick = page.url().includes('/inventory/new');
-    record('dashboard_add_product_nav', addProductViaClick, page.url());
-    if (!addProductViaClick) {
-      await page.goto(`${BASE}/#/owner/inventory/new`, { waitUntil: 'networkidle' });
-      record('dashboard_add_product_nav_fallback', page.url().includes('/inventory/new'), page.url());
-    }
-
-    console.log('8. Sidebar — Billing tab');
-    await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
-    await waitForFlutter(page);
-    await clickByAccessibleName(page, 'Billing');
-    await page.waitForTimeout(2000);
-    const sidebarViaClick = page.url().includes('/owner/billing');
-    record('sidebar_billing', sidebarViaClick, page.url());
-    if (!sidebarViaClick) {
-      await page.goto(`${BASE}/#/owner/billing`, { waitUntil: 'networkidle' });
-      record('sidebar_billing_fallback', page.url().includes('/owner/billing'), page.url());
-    }
-
-    console.log('9. Language toggle');
-    await page.goto(`${BASE}/#/owner/dashboard`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1500);
-    await clickByAccessibleName(page, 'ने');
-    await page.waitForTimeout(800);
-    record('locale_toggle', true, 'clicked');
-
-    console.log('\n=== E2E Summary ===');
-    const hardFail = results.filter(
-      (r) =>
-        !r.ok &&
-        !r.step.endsWith('_fallback') &&
-        !results.some((f) => f.step === `${r.step}_fallback` && f.ok),
-    );
-    const failed = results.filter((r) => !r.ok);
-    for (const r of results) {
-      console.log(`${r.ok ? 'PASS' : 'FAIL'} ${r.step}${r.detail ? ` — ${r.detail}` : ''}`);
-    }
-    writeFileSync('e2e-results.json', JSON.stringify(results, null, 2));
-    console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
-    if (failed.length) {
-      console.log('Soft fails (canvas clicks):', failed.filter((f) => !f.step.endsWith('_fallback')).map((f) => f.step).join(', '));
-    }
-    if (hardFail.length) {
-      console.log('Hard fails:', hardFail.map((f) => f.step).join(', '));
-    }
-    process.exit(hardFail.length ? 1 : 0);
-  } catch (err) {
-    console.error('E2E error:', err);
-    await screenshot(page, 'error').catch(() => {});
-    process.exit(1);
   } finally {
-    await browser.close();
+    try {
+      if (context) await context.close();
+    } catch (error) {
+      record('context_cleanup', false, error.message);
+    } finally {
+      try {
+        if (browser) await browser.close();
+      } catch (error) {
+        record('browser_cleanup', false, error.message);
+      }
+      clearTimeout(deadline);
+    }
+    if (runtimeErrors.size) record('runtime_errors', false, [...runtimeErrors].join('\n'));
+    if (blockedRequests.size) record('local_requests_only', false, [...blockedRequests].join(', '));
+    writeFileSync('e2e-results.json', JSON.stringify(results, null, 2));
+    const failed = results.filter((result) => !result.ok);
+    console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
+    console.log('Step timings (ms):', Object.fromEntries(results.filter((result) => result.durationMs !== undefined).map((result) => [result.step, result.durationMs])));
+    process.exitCode = failed.length ? 1 : 0;
   }
 }
 
-main();
+await main();

@@ -98,6 +98,30 @@ abstract class AppLocalizations {
     Locale('ne'),
   ];
 
+  /// No description provided for @legacyRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous offline work'**
+  String get legacyRecoveryTitle;
+
+  /// No description provided for @legacyRecoveryRetained.
+  ///
+  /// In en, this message translates to:
+  /// **'Some previous offline work could not be verified or recovered safely for this account and role. The original data is still saved on this device. Close other app instances, sign in with the account that created it, and retry with an authorized role. If recovery is still unavailable, ask your business owner for help. Do not clear app data or re-enter these transactions.'**
+  String get legacyRecoveryRetained;
+
+  /// No description provided for @legacyRecoveryCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Your permitted previous offline work has been recovered. Its original copy is kept safely on this device. Review pending items below; do not re-enter these transactions.'**
+  String get legacyRecoveryCopied;
+
+  /// No description provided for @legacyRecoveryRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry safe recovery'**
+  String get legacyRecoveryRetry;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
@@ -779,19 +803,19 @@ abstract class AppLocalizations {
   /// No description provided for @importInvalidCost.
   ///
   /// In en, this message translates to:
-  /// **'Invalid cost price'**
+  /// **'Enter a non-negative cost_price in NPR with at most 2 decimal places (e.g. 10.50).'**
   String get importInvalidCost;
 
   /// No description provided for @importInvalidPrice.
   ///
   /// In en, this message translates to:
-  /// **'Invalid reference price'**
+  /// **'Enter a non-negative reference_price in NPR with at most 2 decimal places (e.g. 10.50).'**
   String get importInvalidPrice;
 
   /// No description provided for @importInvalidQty.
   ///
   /// In en, this message translates to:
-  /// **'Invalid number'**
+  /// **'Enter a non-negative whole number (e.g. 12); fractional quantities are not supported.'**
   String get importInvalidQty;
 
   /// No description provided for @importCreateFailed.
@@ -799,6 +823,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not create product'**
   String get importCreateFailed;
+
+  /// No description provided for @importCreateUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Product creation could not be confirmed. Check inventory for this name/SKU before creating it again.'**
+  String get importCreateUnconfirmed;
+
+  /// No description provided for @importStockUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Product was created, but opening stock could not be confirmed. Check this product\'s stock history before adding any missing stock; do not re-import this row.'**
+  String get importStockUnconfirmed;
+
+  /// No description provided for @importMissingMember.
+  ///
+  /// In en, this message translates to:
+  /// **'No product was created. Sign in again before importing opening stock.'**
+  String get importMissingMember;
+
+  /// No description provided for @importRecoveryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not upload the whole file again: completed rows would be duplicated. Review the row errors and inventory/stock history first. After checking, use a new file containing only products that were not created. Closing this sheet does not undo any saved data.'**
+  String get importRecoveryHint;
 
   /// No description provided for @importingRow.
   ///

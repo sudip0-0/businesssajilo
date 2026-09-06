@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/logging/app_log.dart';
 import '../../../core/logging/sentry_scope.dart';
@@ -19,7 +18,9 @@ final authProvider = NotifierProvider<AuthController, AsyncValue<SessionState>>(
 );
 
 /// Session-scoped business profile — lives with auth, not in the data layer.
-final currentBusinessProvider = FutureProvider.autoDispose<Business?>((ref) async {
+final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
+  ref,
+) async {
   final businessId = ref.watch(authProvider).value?.member?.businessId;
   if (businessId == null) return null;
   try {
@@ -38,13 +39,19 @@ final currentBusinessProvider = FutureProvider.autoDispose<Business?>((ref) asyn
 class AuthController extends Notifier<AsyncValue<SessionState>> {
   StreamSubscription<dynamic>? _subscription;
   String? _bootstrappedMemberId;
+  int _reloadGeneration = 0;
+
+  String? _sessionKey(SessionState session) {
+    final member = session.member;
+    if (!session.isAuthenticated || member == null) return null;
+    return '${session.user?.id}:${member.businessId}:${member.id}:${member.role.name}';
+  }
 
   @override
   AsyncValue<SessionState> build() {
     final repo = ref.read(authRepositoryProvider);
     _subscription?.cancel();
     _subscription = repo.authStateChanges.listen((authState) {
-      if (authState.event == AuthChangeEvent.tokenRefreshed) return;
       unawaited(_reload());
     });
     ref.onDispose(() => _subscription?.cancel());
@@ -60,8 +67,9 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
       _bootstrappedMemberId = null;
       clearSentrySessionScope();
       unawaited(() async {
-        await disposeSyncBundle();
+        final disposing = disposeSyncBundle();
         ref.read(syncBundleVersionProvider.notifier).bump();
+        await disposing;
       }());
       return;
     }
@@ -72,11 +80,17 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
       role: member.role,
       syncEnabled: syncEnabledFor(member.role),
     );
-    if (_bootstrappedMemberId == member.id) return;
-    _bootstrappedMemberId = member.id;
+    final key = _sessionKey(session);
+    if (_bootstrappedMemberId == key) return;
+    _bootstrappedMemberId = key;
     unawaited(() async {
       try {
+        final disposing = disposeSyncBundle();
+        ref.read(syncBundleVersionProvider.notifier).bump();
+        await disposing;
+        if (_bootstrappedMemberId != key || !ref.mounted) return;
         await syncBootstrapForSession(session);
+        if (_bootstrappedMemberId != key || !ref.mounted) return;
         ref.read(syncBundleVersionProvider.notifier).bump();
       } catch (e, st) {
         AppLog.warn(
@@ -84,9 +98,13 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
           e,
           st,
         );
-        if (_bootstrappedMemberId == member.id) {
+        if (_bootstrappedMemberId == key) {
           _bootstrappedMemberId = null;
         }
+      }
+      if (!ref.mounted ||
+          _sessionKey(state.value ?? SessionState.empty) != key) {
+        return;
       }
       try {
         await ref.read(pushServiceProvider).registerForMember(member.id);
@@ -97,13 +115,18 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   }
 
   Future<void> _reload() async {
+    final generation = ++_reloadGeneration;
     final repo = ref.read(authRepositoryProvider);
     final cached = await repo.peekCachedSession();
+    if (!ref.mounted || generation != _reloadGeneration) return;
     if (cached != null && cached.isAuthenticated) {
-      final alreadyShown = state.value?.member?.id == cached.member?.id;
+      final alreadyShown =
+          state.value != null &&
+          _sessionKey(state.value!) == _sessionKey(cached);
       state = AsyncValue.data(cached);
       if (!alreadyShown) _startSessionSideEffects(cached);
-    } else if (state.value == null) {
+    } else {
+      _startSessionSideEffects(SessionState.empty);
       state = const AsyncValue.loading();
     }
 
@@ -112,6 +135,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
       'auth',
       () => AsyncValue.guard(repo.loadSession),
     );
+    if (!ref.mounted || generation != _reloadGeneration) return;
     if (result.hasError) {
       if (state.value?.isAuthenticated == true &&
           result.error is! AccountDeactivatedException) {
@@ -122,7 +146,7 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
         );
         return;
       }
-      _bootstrappedMemberId = null;
+      _startSessionSideEffects(SessionState.empty);
       state = result;
       return;
     }
@@ -135,6 +159,8 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   /// [identifier] may be an email address or a Nepali phone number
   /// (phone-created accounts use a synthetic email under the hood).
   Future<void> signIn(String identifier, String password) async {
+    _reloadGeneration++;
+    _startSessionSideEffects(SessionState.empty);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref
@@ -176,14 +202,21 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
     bool deleteBusiness = false,
     String? password,
   }) async {
+    final previous = state.value;
     try {
       await ref.read(pushServiceProvider).unregister();
     } catch (e, st) {
       AppLog.warn('Push unregister failed', e, st);
     }
-    await ref
-        .read(authRepositoryProvider)
-        .deleteAccount(deleteBusiness: deleteBusiness, password: password);
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .deleteAccount(deleteBusiness: deleteBusiness, password: password);
+    } catch (_) {
+      await _restorePushAfterFailure(previous);
+      rethrow;
+    }
+    _reloadGeneration++;
     await disposeSyncBundle();
     clearSentrySessionScope();
     _bootstrappedMemberId = null;
@@ -192,18 +225,42 @@ class AuthController extends Notifier<AsyncValue<SessionState>> {
   }
 
   Future<void> signOut() async {
+    final previous = state.value;
     // Delete the device token server-side while the session is still valid.
     try {
       await ref.read(pushServiceProvider).unregister();
     } catch (e, st) {
       AppLog.warn('Push unregister failed', e, st);
     }
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+    } catch (_) {
+      await _restorePushAfterFailure(previous);
+      rethrow;
+    }
+    _reloadGeneration++;
     await disposeSyncBundle();
     clearSentrySessionScope();
     _bootstrappedMemberId = null;
     ref.read(syncBundleVersionProvider.notifier).bump();
-    await ref.read(authRepositoryProvider).signOut();
     state = const AsyncValue.data(SessionState.empty);
+  }
+
+  Future<void> _restorePushAfterFailure(SessionState? previous) async {
+    if (!ref.mounted ||
+        previous?.member == null ||
+        _sessionKey(previous!) !=
+            _sessionKey(state.value ?? SessionState.empty)) {
+      return;
+    }
+    try {
+      await ref
+          .read(pushServiceProvider)
+          .registerForMember(previous.member!.id)
+          .timeout(const Duration(seconds: 15));
+    } catch (e, st) {
+      AppLog.warn('Push registration restore failed', e, st);
+    }
   }
 
   Future<void> registerBusiness({

@@ -39,151 +39,167 @@ class WebTopBar extends ConsumerWidget {
     final path = GoRouterState.of(context).uri.path;
     final isOwner = path.startsWith('/owner') || role == Role.owner;
 
-    return Container(
-      height: tokens.topBarHeight,
-      padding: EdgeInsets.symmetric(horizontal: tokens.pagePadding),
-      decoration: const BoxDecoration(
-        color: WebPalette.card,
-        border: Border(bottom: BorderSide(color: WebPalette.hairline)),
-      ),
-      child: Row(
-        children: [
-          if (showMenuButton)
-            IconButton(
-              tooltip: l10n.openMenu,
-              onPressed: onMenuPressed,
-              icon: const Icon(
-                PhosphorIconsRegular.list,
-                color: WebPalette.navy,
-              ),
-            ),
-          const Spacer(),
-          if (isOwner || role == Role.sales)
-            IconButton(
-              tooltip: '${l10n.globalSearch} (Ctrl+K)',
-              onPressed: () => showGlobalSearch(context, ref),
-              icon: const Icon(
-                PhosphorIconsRegular.magnifyingGlass,
-                color: WebPalette.navy,
-              ),
-            ),
-          const LocaleToggle(compact: true),
-          const SizedBox(width: 4),
-          Builder(
-            builder: (buttonContext) {
-              final semanticLabel = unread > 0
-                  ? '${l10n.notifications}, $unread unread'
-                  : l10n.notifications;
-              return Semantics(
-                button: true,
-                label: semanticLabel,
-                child: ExcludeSemantics(
-                  child: BsTouchTargets.ensureMin(
-                    context: context,
-                    child: IconButton(
-                      tooltip: l10n.notifications,
-                      onPressed: () {
-                        final memberRole = ref
-                            .read(authProvider)
-                            .value
-                            ?.member
-                            ?.role;
-                        showNotificationDropdown(
-                          buttonContext: buttonContext,
-                          onOpenItem: (navContext, item) {
-                            openWebNotificationTarget(
-                              navContext,
-                              item,
-                              role: ref.read(authProvider).value?.member?.role,
-                            );
-                          },
-                          onViewAll: memberRole == null
-                              ? null
-                              : () => context.go(
-                                  '${webRoleBasePath(memberRole)}/notifications',
+    return Semantics(
+      identifier: 'web_top_bar',
+      container: true,
+      explicitChildNodes: true,
+      child: FocusTraversalGroup(
+        child: Container(
+          height: tokens.topBarHeight,
+          padding: EdgeInsets.symmetric(horizontal: tokens.pagePadding),
+          decoration: const BoxDecoration(
+            color: WebPalette.card,
+            border: Border(bottom: BorderSide(color: WebPalette.hairline)),
+          ),
+          child: Row(
+            children: [
+              if (showMenuButton)
+                IconButton(
+                  tooltip: l10n.openMenu,
+                  onPressed: onMenuPressed,
+                  icon: const Icon(
+                    PhosphorIconsRegular.list,
+                    color: WebPalette.navy,
+                  ),
+                ),
+              const Spacer(),
+              if (isOwner || role == Role.sales)
+                IconButton(
+                  tooltip: '${l10n.globalSearch} (Ctrl+K)',
+                  onPressed: () => showGlobalSearch(context, ref),
+                  icon: const Icon(
+                    PhosphorIconsRegular.magnifyingGlass,
+                    color: WebPalette.navy,
+                  ),
+                ),
+              const LocaleToggle(compact: true),
+              const SizedBox(width: 4),
+              Builder(
+                builder: (buttonContext) {
+                  final semanticLabel = unread > 0
+                      ? '${l10n.notifications}, $unread unread'
+                      : l10n.notifications;
+                  return Tooltip(
+                    message: semanticLabel,
+                    excludeFromSemantics: true,
+                    child: MergeSemantics(
+                      child: Semantics(
+                        label: semanticLabel,
+                        child: BsTouchTargets.ensureMin(
+                          context: context,
+                          child: IconButton(
+                            onPressed: () {
+                              final memberRole = ref
+                                  .read(authProvider)
+                                  .value
+                                  ?.member
+                                  ?.role;
+                              showNotificationDropdown(
+                                buttonContext: buttonContext,
+                                onOpenItem: (navContext, item) {
+                                  openWebNotificationTarget(
+                                    navContext,
+                                    item,
+                                    role: ref
+                                        .read(authProvider)
+                                        .value
+                                        ?.member
+                                        ?.role,
+                                  );
+                                },
+                                onViewAll: memberRole == null
+                                    ? null
+                                    : () => context.go(
+                                        '${webRoleBasePath(memberRole)}/notifications',
+                                      ),
+                              );
+                            },
+                            icon: ExcludeSemantics(
+                              child: Badge(
+                                isLabelVisible: unread > 0,
+                                backgroundColor:
+                                    BsSemanticColors.notificationUnread,
+                                label: Text(
+                                  badgeLabel,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                        );
-                      },
-                      icon: Badge(
-                        isLabelVisible: unread > 0,
-                        backgroundColor: BsSemanticColors.notificationUnread,
-                        label: Text(
-                          badgeLabel,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                                child: const Icon(
+                                  PhosphorIconsRegular.bell,
+                                  color: WebPalette.inkSoft,
+                                  size: 21,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          PhosphorIconsRegular.bell,
-                          color: WebPalette.inkSoft,
-                          size: 21,
                         ),
                       ),
                     ),
+                  );
+                },
+              ),
+              if (isOwner)
+                IconButton(
+                  tooltip: l10n.settings,
+                  onPressed: () => context.go('/owner/settings'),
+                  icon: const Icon(
+                    PhosphorIconsRegular.gear,
+                    color: WebPalette.inkSoft,
+                    size: 21,
+                  ),
+                )
+              else
+                const AccountAction(),
+              if (!compact && name.isNotEmpty) ...[
+                const SizedBox(width: 10),
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: WebPalette.navyWash,
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(
+                      color: WebPalette.navy.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  child: Text(
+                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                      color: WebPalette.navy,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-          if (isOwner)
-            IconButton(
-              tooltip: l10n.settings,
-              onPressed: () => context.go('/owner/settings'),
-              icon: const Icon(
-                PhosphorIconsRegular.gear,
-                color: WebPalette.inkSoft,
-                size: 21,
-              ),
-            )
-          else
-            const AccountAction(),
-          if (!compact && name.isNotEmpty) ...[
-            const SizedBox(width: 10),
-            Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: WebPalette.navyWash,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(
-                  color: WebPalette.navy.withValues(alpha: 0.14),
-                ),
-              ),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: const TextStyle(
-                  color: WebPalette.navy,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13.5,
-                ),
-              ),
-            ),
-            const SizedBox(width: 9),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name.split(' ').first,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelLarge?.copyWith(color: WebPalette.ink),
-                ),
-                Text(
-                  role != null ? roleLabel(l10n, role) : '',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: WebPalette.inkFaint,
-                    letterSpacing: 0.6,
-                  ),
+                const SizedBox(width: 9),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name.split(' ').first,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(color: WebPalette.ink),
+                    ),
+                    Text(
+                      role != null ? roleLabel(l10n, role) : '',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: WebPalette.inkFaint,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-          const LogoutAction(),
-        ],
+              const LogoutAction(),
+            ],
+          ),
+        ),
       ),
     );
   }

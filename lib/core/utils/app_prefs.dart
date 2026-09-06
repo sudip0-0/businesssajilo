@@ -16,19 +16,13 @@ Future<void> markOnboardingTourDone() async {
 }
 
 class NotificationMutePrefs {
-  const NotificationMutePrefs({
-    this.dues = true,
-    this.lowStock = false,
-  });
+  const NotificationMutePrefs({this.dues = true, this.lowStock = false});
 
   final bool dues;
   final bool lowStock;
 
   List<String> get mutedTypes {
-    return [
-      if (dues) 'dues_reminder',
-      if (lowStock) 'low_stock',
-    ];
+    return [if (dues) 'dues_reminder', if (lowStock) 'low_stock'];
   }
 
   bool mutes(String type) => mutedTypes.contains(type);

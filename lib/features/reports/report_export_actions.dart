@@ -96,8 +96,7 @@ Future<void> exportDuesAgingCsv(
 ) async {
   await _shareCsvExport(context, () async {
     final l10n = AppLocalizations.of(context);
-    final filename =
-        'businesssajilo-dues-${nptDateString(DateTime.now())}.csv';
+    final filename = 'businesssajilo-dues-${nptDateString(DateTime.now())}.csv';
     await ref
         .read(exportShareServiceProvider)
         .shareCsv(

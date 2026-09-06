@@ -12,7 +12,7 @@ import 'statement_document.dart';
 /// Builds A4 PDF bytes for customer ledger statements. Long statements
 /// paginate automatically via [pw.MultiPage].
 ///
-/// Amounts use Nepali grouping with no currency symbol or paisa.
+/// Amounts use Nepali grouping with paisa and no currency symbol.
 class StatementPdfBuilder {
   const StatementPdfBuilder();
 
@@ -124,14 +124,14 @@ class StatementPdfBuilder {
         4: const pw.FlexColumnWidth(1.8),
       },
       data: [
-        ['', labels.openingBalance, '', '', _money(doc.openingBalance)],
+        ['', labels.openingBalance, '', '', formatAmount(doc.openingBalance)],
         ...doc.lines.map(
           (line) => [
             BsDate.both(line.date, locale: doc.locale),
             line.description,
-            line.debit == 0 ? '' : _money(line.debit),
-            line.credit == 0 ? '' : _money(line.credit),
-            _money(line.balance),
+            line.debit == 0 ? '' : formatAmount(line.debit),
+            line.credit == 0 ? '' : formatAmount(line.credit),
+            formatAmount(line.balance),
           ],
         ),
       ],
@@ -150,7 +150,7 @@ class StatementPdfBuilder {
           ),
         ),
         pw.Text(
-          _money(doc.closingBalance),
+          formatAmount(doc.closingBalance),
           style: const pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
             fontSize: _totalSize,
@@ -160,7 +160,7 @@ class StatementPdfBuilder {
     );
   }
 
-  String _money(int amountPaisa) {
-    return formatNpr(Paisa(amountPaisa), showSymbol: false, showPaisa: false);
+  String formatAmount(int amountPaisa) {
+    return formatNpr(Paisa(amountPaisa), showSymbol: false, showPaisa: true);
   }
 }

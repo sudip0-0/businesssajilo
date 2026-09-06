@@ -11,7 +11,7 @@ BusinessSajilo stores business data (products, customers, bills, orders) in Supa
   with the identity anonymized.
 - A business owner can delete the entire business from Settings →
   "Delete business". This permanently removes all business data — products,
-  bills, orders, customers, chat messages, uploaded images, and every staff
+  bills, orders, customers, uploaded product images, and every staff
   and customer login. This action cannot be undone.
 
 Contact: [your business email]

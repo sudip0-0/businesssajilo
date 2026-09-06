@@ -34,8 +34,7 @@ $$;
 -- Customer places order -> staff notifications.
 select test_set_auth('55555555-5555-5555-5555-555555555555');
 
-insert into orders (id, business_id, customer_id, status)
-values ('01111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'placed');
+select place_order('{"id":"01111111-1111-1111-1111-111111111111","customer_id":"e1111111-1111-1111-1111-111111111111","items":[{"product_id":"b1111111-1111-1111-1111-111111111111","qty":5}]}');
 
 select test_set_auth('22222222-2222-2222-2222-222222222222');
 

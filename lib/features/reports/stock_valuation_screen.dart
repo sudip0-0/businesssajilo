@@ -61,10 +61,7 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
         onRetry: () => ref.invalidate(stockValuationProvider(false)),
       ),
       data: (rows) {
-        final totalValuation = rows.fold<int>(
-          0,
-          (sum, r) => sum + r.valuation,
-        );
+        final totalValuation = rows.fold<int>(0, (sum, r) => sum + r.valuation);
         final totalUnits = rows.fold<int>(
           0,
           (sum, r) => sum + (r.stockCached > 0 ? r.stockCached : 0),
@@ -75,7 +72,9 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
         final filtered = rows.where((r) {
           if (_filter == _StockFilter.low && !r.isLowStock) return false;
           if (_filter == _StockFilter.out && r.stockCached > 0) return false;
-          if (_filter == _StockFilter.inStock && r.stockCached <= 0) return false;
+          if (_filter == _StockFilter.inStock && r.stockCached <= 0) {
+            return false;
+          }
           if (_search.isNotEmpty &&
               !r.name.toLowerCase().contains(_search.toLowerCase())) {
             return false;
@@ -167,19 +166,22 @@ class _StockValuationScreenState extends ConsumerState<StockValuationScreen> {
                   ChoiceChip(
                     label: Text(l10n.allStock),
                     selected: _filter == _StockFilter.all,
-                    onSelected: (_) => setState(() => _filter = _StockFilter.all),
+                    onSelected: (_) =>
+                        setState(() => _filter = _StockFilter.all),
                   ),
                   const SizedBox(width: 8),
                   ChoiceChip(
                     label: Text('${l10n.lowStock} ($lowStockCount)'),
                     selected: _filter == _StockFilter.low,
-                    onSelected: (_) => setState(() => _filter = _StockFilter.low),
+                    onSelected: (_) =>
+                        setState(() => _filter = _StockFilter.low),
                   ),
                   const SizedBox(width: 8),
                   ChoiceChip(
                     label: Text('${l10n.outOfStockCount} ($outOfStockCount)'),
                     selected: _filter == _StockFilter.out,
-                    onSelected: (_) => setState(() => _filter = _StockFilter.out),
+                    onSelected: (_) =>
+                        setState(() => _filter = _StockFilter.out),
                   ),
                   const SizedBox(width: 8),
                   ChoiceChip(

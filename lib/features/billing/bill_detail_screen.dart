@@ -194,8 +194,9 @@ class _BillActions extends ConsumerWidget {
       child: RecordPaymentSheet(
         customerId: bill.customerId,
         customerName: bill.customerShopName,
-        initialAmountPaisa:
-            remainingAmount > 0 ? remainingAmount : bill.grandTotal,
+        initialAmountPaisa: remainingAmount > 0
+            ? remainingAmount
+            : bill.grandTotal,
         billId: bill.id,
       ),
     );
@@ -215,7 +216,8 @@ class _BillActions extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final role = ref.watch(authProvider).value?.member?.role;
-    final canRecordPayment = (role?.canRecordPayments == true) &&
+    final canRecordPayment =
+        (role?.canRecordPayments == true) &&
         (bill.status == BillStatus.due || bill.status == BillStatus.partial) &&
         bill.customerId != null;
 
@@ -410,9 +412,8 @@ class _BillSummaryCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CustomerDetailScreen(
-                          customerId: bill.customerId!,
-                        ),
+                        builder: (_) =>
+                            CustomerDetailScreen(customerId: bill.customerId!),
                       ),
                     );
                   }
@@ -430,17 +431,14 @@ class _BillSummaryCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: scheme.primary,
                             decoration: TextDecoration.underline,
-                            decorationColor:
-                                scheme.primary.withValues(alpha: 0.4),
+                            decorationColor: scheme.primary.withValues(
+                              alpha: 0.4,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Icon(
-                        Icons.open_in_new,
-                        size: 14,
-                        color: scheme.primary,
-                      ),
+                      Icon(Icons.open_in_new, size: 14, color: scheme.primary),
                     ],
                   ),
                 ),
@@ -591,7 +589,7 @@ class _BillLinesCard extends StatelessWidget {
                           BillLineView(
                             name: item.nameSnapshot,
                             qty: '${item.qty}',
-                            rate: formatNpr(Paisa(item.rate), showPaisa: false),
+                            rate: formatNpr(Paisa(item.rate), showPaisa: true),
                             amount: formatNpr(
                               Paisa(
                                 lineGrossPaisa(
@@ -599,12 +597,12 @@ class _BillLinesCard extends StatelessWidget {
                                   ratePaisa: item.rate,
                                 ),
                               ),
-                              showPaisa: false,
+                              showPaisa: true,
                             ),
                             discount: item.discount > 0
                                 ? formatNpr(
                                     Paisa(item.discount),
-                                    showPaisa: false,
+                                    showPaisa: true,
                                   )
                                 : null,
                           ),
@@ -619,13 +617,13 @@ class _BillLinesCard extends StatelessWidget {
                 children: [
                   _TotalRow(
                     label: l10n.total,
-                    value: formatNpr(Paisa(itemsGross), showPaisa: false),
+                    value: formatNpr(Paisa(itemsGross), showPaisa: true),
                   ),
                   if (lineDiscounts > 0) ...[
                     const SizedBox(height: 8),
                     _TotalRow(
                       label: l10n.discount,
-                      value: formatNpr(Paisa(lineDiscounts), showPaisa: false),
+                      value: formatNpr(Paisa(lineDiscounts), showPaisa: true),
                     ),
                   ],
                   if (bill.discount > 0) ...[
@@ -633,19 +631,19 @@ class _BillLinesCard extends StatelessWidget {
                     _TotalRow(
                       label: l10n.billDiscount,
                       value:
-                          '-${formatNpr(Paisa(bill.discount), showPaisa: false)}',
+                          '-${formatNpr(Paisa(bill.discount), showPaisa: true)}',
                     ),
                   ],
                   const SizedBox(height: 10),
                   _TotalRow(
                     label: l10n.grandTotal,
-                    value: formatNpr(Paisa(bill.grandTotal), showPaisa: false),
+                    value: formatNpr(Paisa(bill.grandTotal), showPaisa: true),
                   ),
                   if (received != null) ...[
                     const SizedBox(height: 8),
                     _TotalRow(
                       label: l10n.amountPaid,
-                      value: formatNpr(Paisa(received), showPaisa: false),
+                      value: formatNpr(Paisa(received), showPaisa: true),
                     ),
                     const SizedBox(height: 8),
                     _TotalRow(
@@ -657,7 +655,7 @@ class _BillLinesCard extends StatelessWidget {
                             amountReceived: received,
                           ),
                         ),
-                        showPaisa: false,
+                        showPaisa: true,
                       ),
                     ),
                   ],

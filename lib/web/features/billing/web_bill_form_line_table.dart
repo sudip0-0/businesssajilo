@@ -113,9 +113,7 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
   void initState() {
     super.initState();
     _qtyController = TextEditingController(text: '${widget.line.qty}');
-    _rateController = TextEditingController(
-      text: _formatRate(widget.line.rate),
-    );
+    _rateController = TextEditingController(text: widget.line.rateText);
     _qtyFocus = FocusNode(debugLabel: 'billQty');
     _rateFocus = FocusNode(debugLabel: 'billRate');
     _qtyFocus.addListener(_onQtyFocusChange);
@@ -135,7 +133,7 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
       }
     }
     if (!_rateFocus.hasFocus) {
-      final rateText = _formatRate(widget.line.rate);
+      final rateText = widget.line.rateText;
       if (_rateController.text != rateText) {
         _rateController.text = rateText;
       }
@@ -155,9 +153,6 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
     _rateController.dispose();
     super.dispose();
   }
-
-  String _formatRate(int rate) =>
-      formatNpr(Paisa(rate), showSymbol: false, showPaisa: false);
 
   void _selectAll(TextEditingController controller) {
     controller.selection = TextSelection(
@@ -269,12 +264,18 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
             child: TextField(
               controller: _rateController,
               focusNode: _rateFocus,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               textInputAction: TextInputAction.done,
               textAlign: TextAlign.end,
-              decoration: _fieldDecoration,
+              decoration: _fieldDecoration.copyWith(
+                errorText: widget.line.rateInputValid
+                    ? null
+                    : widget.l10n.invalidNumber,
+              ),
               onChanged: (v) {
-                widget.line.rate = parseNpr(v)?.value ?? widget.line.rate;
+                setState(() => widget.line.setRateText(v));
                 widget.onChanged();
               },
               onSubmitted: (_) => _submitRate(),
@@ -284,7 +285,7 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
           SizedBox(
             width: _kAmountWidth,
             child: Text(
-              formatNpr(Paisa(widget.line.lineTotal), showPaisa: false),
+              formatNpr(Paisa(widget.line.lineTotal), showPaisa: true),
               textAlign: TextAlign.end,
               style: Theme.of(
                 context,

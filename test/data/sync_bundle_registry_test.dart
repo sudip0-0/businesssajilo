@@ -19,6 +19,7 @@ void main() {
 
     final sync = _FakeSync();
     when(sync.dispose).thenReturn(null);
+    when(sync.close).thenAnswer((_) async => sync.dispose());
 
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     registry.replace(
@@ -37,6 +38,8 @@ void main() {
     final syncB = _FakeSync();
     when(syncA.dispose).thenReturn(null);
     when(syncB.dispose).thenReturn(null);
+    when(syncA.close).thenAnswer((_) async => syncA.dispose());
+    when(syncB.close).thenAnswer((_) async => syncB.dispose());
 
     final dbA = AppDatabase.forTesting(NativeDatabase.memory());
     final dbB = AppDatabase.forTesting(NativeDatabase.memory());

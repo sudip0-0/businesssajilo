@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
@@ -30,48 +33,93 @@ Future<void> showNotificationDropdown({
   if (overlayBox == null) return;
 
   final topLeft = box.localToGlobal(Offset.zero, ancestor: overlayBox);
-  final size = MediaQuery.sizeOf(buttonContext);
-  final panelTop = topLeft.dy + box.size.height + 4;
-  final preferredRight = size.width - (topLeft.dx + box.size.width);
-  final maxRight = size.width - notificationDropdownWidth - 8;
-  final right = preferredRight.clamp(8.0, maxRight < 8 ? 8.0 : maxRight);
+  final anchorBottom = topLeft.dy + box.size.height + 4;
+  final anchorRight = topLeft.dx + box.size.width;
+  final previousFocus = FocusManager.instance.primaryFocus;
 
-  await showDialog<void>(
-    context: buttonContext,
-    barrierColor: Colors.black26,
-    builder: (dialogContext) {
-      return Stack(
-        children: [
-          Positioned(
-            top: panelTop.clamp(8.0, size.height - 120),
-            right: right,
-            child: Material(
-              elevation: 10,
-              borderRadius: BorderRadius.circular(12),
-              clipBehavior: Clip.antiAlias,
-              color: Theme.of(dialogContext).colorScheme.surface,
-              child: SizedBox(
-                width: notificationDropdownWidth,
-                height: notificationDropdownMaxHeight,
-                child: NotificationDropdownPanel(
-                  onOpenItem: (item) {
-                    Navigator.of(dialogContext).pop();
-                    onOpenItem(buttonContext, item);
+  try {
+    await showDialog<void>(
+      context: buttonContext,
+      barrierColor: Colors.black26,
+      useSafeArea: false,
+      requestFocus: true,
+      builder: (dialogContext) {
+        final media = MediaQuery.of(dialogContext);
+        return CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.escape): () =>
+                Navigator.of(dialogContext).pop(),
+          },
+          child: Focus(
+            autofocus: true,
+            child: Padding(
+              padding: media.viewInsets,
+              child: SafeArea(
+                minimum: const EdgeInsets.all(8),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Constrain the whole panel to the actual overlay, including
+                    // short windows and the keyboard, not a fixed 440px height.
+                    final width = math.min(
+                      notificationDropdownWidth,
+                      constraints.maxWidth,
+                    );
+                    final height = math.min(
+                      notificationDropdownMaxHeight,
+                      constraints.maxHeight,
+                    );
+                    final originX =
+                        media.viewInsets.left +
+                        math.max(8.0, media.padding.left);
+                    final originY =
+                        media.viewInsets.top + math.max(8.0, media.padding.top);
+                    final left = (anchorRight - originX - width).clamp(
+                      0.0,
+                      constraints.maxWidth - width,
+                    );
+                    final top = (anchorBottom - originY).clamp(
+                      0.0,
+                      constraints.maxHeight - height,
+                    );
+                    return Stack(
+                      children: [
+                        Positioned(
+                          top: top,
+                          left: left,
+                          width: width,
+                          height: height,
+                          child: Material(
+                            elevation: 10,
+                            borderRadius: BorderRadius.circular(12),
+                            clipBehavior: Clip.antiAlias,
+                            color: Theme.of(dialogContext).colorScheme.surface,
+                            child: NotificationDropdownPanel(
+                              onOpenItem: (item) {
+                                Navigator.of(dialogContext).pop();
+                                onOpenItem(buttonContext, item);
+                              },
+                              onViewAll: onViewAll == null
+                                  ? null
+                                  : () {
+                                      Navigator.of(dialogContext).pop();
+                                      onViewAll();
+                                    },
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
                   },
-                  onViewAll: onViewAll == null
-                      ? null
-                      : () {
-                          Navigator.of(dialogContext).pop();
-                          onViewAll();
-                        },
                 ),
               ),
             ),
           ),
-        ],
-      );
-    },
-  );
+        );
+      },
+    );
+  } finally {
+    if (previousFocus?.context?.mounted ?? false) previousFocus!.requestFocus();
+  }
 }
 
 /// Scrollable notification list used inside the dropdown panel.
@@ -125,25 +173,27 @@ class NotificationDropdownPanel extends ConsumerWidget {
             data: (items) {
               if (items.isEmpty) {
                 return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.notifications_none_outlined,
-                          size: 40,
-                          color: theme.colorScheme.outline,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          l10n.noNotifications,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.notifications_none_outlined,
+                            size: 40,
                             color: theme.colorScheme.outline,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.noNotifications,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

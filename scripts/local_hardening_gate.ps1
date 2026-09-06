@@ -9,7 +9,8 @@
 # instead of reporting SKIP.
 
 param(
-    [switch]$SkipOutdated
+    [switch]$SkipOutdated,
+    [switch]$ResetLocalDatabase
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,13 +34,17 @@ function Invoke-Step([string]$Name, [scriptblock]$Action) {
     Write-Step $Name
     try {
         & $Action
-        if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) {
-            Record $Name "FAIL" "exit code $LASTEXITCODE"
-            return
-        }
         Record $Name "PASS"
     } catch {
         Record $Name "FAIL" $_.Exception.Message
+    }
+}
+
+function Invoke-Checked([scriptblock]$Command) {
+    $global:LASTEXITCODE = 0
+    & $Command
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed (exit $LASTEXITCODE): $Command"
     }
 }
 
@@ -61,53 +66,105 @@ function Test-SupabaseCli {
     return Test-Command "supabase"
 }
 
+function Get-LocalSupabaseDartDefines {
+    $output = & supabase status -o env 2>$null
+    if ($LASTEXITCODE -ne 0) { return $null }
+    $map = @{}
+    foreach ($line in $output) {
+        if ($line -match '^(API_URL|ANON_KEY|PUBLISHABLE_KEY|SUPABASE_URL|SUPABASE_ANON_KEY)=(.*)$') {
+            $map[$matches[1]] = $matches[2].Trim('"').Trim("'")
+        }
+    }
+    $url = $map['SUPABASE_URL']
+    if (-not $url) { $url = $map['API_URL'] }
+    $key = $map['SUPABASE_ANON_KEY']
+    if (-not $key) { $key = $map['ANON_KEY'] }
+    if (-not $key) { $key = $map['PUBLISHABLE_KEY'] }
+    if (-not $url -or -not $key) { return $null }
+    return @{ Url = $url; Key = $key }
+}
+
 Write-Host "BusinessSajilo local hardening gate" -ForegroundColor Green
 Write-Host "Project: $ProjectRoot"
 Write-Host "HARDENING_GATE: $HardeningGate"
 
-Invoke-Step "dart format (check)" {
-    dart format --output=none --set-exit-if-changed lib test integration_test
-}
-
-Invoke-Step "generated code (build_runner)" {
-    dart run build_runner build --delete-conflicting-outputs
-}
-
-Invoke-Step "flutter analyze" {
-    flutter analyze
-}
-
-Invoke-Step "flutter test" {
-    if ($HardeningGate) {
-        flutter test --dart-define=HARDENING_GATE=1
-    } else {
-        flutter test
+if ($ResetLocalDatabase) {
+    $confirmation = Read-Host "This deletes ALL local Supabase data. Type RESET LOCAL DATABASE to confirm"
+    if ($confirmation -cne 'RESET LOCAL DATABASE') {
+        throw 'Local database reset was not confirmed. No gate commands were run.'
     }
 }
 
-# --- Supabase pgTAP (optional unless gate) ---
+Invoke-Step "dart format (check)" {
+    Invoke-Checked { dart format --output=none --set-exit-if-changed lib test integration_test }
+}
+
+Invoke-Step "generated code (build_runner + l10n)" {
+    Invoke-Checked { dart run build_runner build --delete-conflicting-outputs }
+    Invoke-Checked { flutter gen-l10n }
+}
+
+Invoke-Step "flutter analyze" {
+    Invoke-Checked { flutter analyze }
+}
+
+# --- Supabase (optional unless gate). Apply migrations before Flutter tests
+# so live integration files can receive dart-defines in the same run. ---
 $dockerOk = Test-DockerAvailable
 $supabaseOk = Test-SupabaseCli
+$supabaseDefines = $null
 
 if ($dockerOk -and $supabaseOk) {
-    Invoke-Step "supabase db reset + pgTAP" {
-        supabase db reset --yes
-        supabase test db
+    Invoke-Step "supabase local migrations" {
+        if ($ResetLocalDatabase) {
+            Invoke-Checked { supabase db reset --local --yes }
+        }
+        Invoke-Checked { supabase migration up --local }
+        Invoke-Checked { supabase migration list --local }
+    }
+    $supabaseDefines = Get-LocalSupabaseDartDefines
+} else {
+    $detail = "docker=$dockerOk supabase_cli=$supabaseOk"
+    if ($HardeningGate) {
+        Record "supabase local migrations" "FAIL" $detail
+    } else {
+        Record "supabase local migrations" "SKIP" $detail
+    }
+}
+
+Invoke-Step "flutter test" {
+    $flutterArgs = @()
+    if ($HardeningGate) {
+        $flutterArgs += "--dart-define=HARDENING_GATE=1"
+        if ($dockerOk -and $supabaseOk -and -not $supabaseDefines) {
+            throw "Supabase dart-defines unavailable for strict live integration tests"
+        }
+    }
+    if ($supabaseDefines) {
+        $flutterArgs += "--dart-define=SUPABASE_URL=$($supabaseDefines.Url)"
+        $flutterArgs += "--dart-define=SUPABASE_ANON_KEY=$($supabaseDefines.Key)"
+    }
+    Invoke-Checked { flutter test @flutterArgs }
+}
+
+if ($dockerOk -and $supabaseOk) {
+    Invoke-Step "supabase pgTAP" {
+        Invoke-Checked { supabase test db --local }
     }
 } else {
     $detail = "docker=$dockerOk supabase_cli=$supabaseOk"
     if ($HardeningGate) {
-        Record "supabase db reset + pgTAP" "FAIL" $detail
+        Record "supabase pgTAP" "FAIL" $detail
     } else {
-        Record "supabase db reset + pgTAP" "SKIP" $detail
+        Record "supabase pgTAP" "SKIP" $detail
     }
 }
 
 # --- Deno Edge Function unit tests (optional unless gate) ---
 if (Test-Command "deno") {
     Invoke-Step "deno test (validation.ts)" {
-        deno test supabase/functions/_shared/validation_test.ts --allow-read
-        deno test supabase/functions/notify/push_policy_test.ts --allow-read
+        Invoke-Checked { deno test supabase/functions/_shared/validation_test.ts --allow-read }
+        Invoke-Checked { deno test supabase/functions/notify/push_policy_test.ts --allow-read }
     }
 } else {
     if ($HardeningGate) {
@@ -118,10 +175,13 @@ if (Test-Command "deno") {
 }
 
 if (-not $SkipOutdated) {
-    Invoke-Step "flutter pub outdated" {
+    Write-Step "flutter pub outdated"
+    $global:LASTEXITCODE = 0
+    try {
         flutter pub outdated
-        # Informational only — do not fail gate on outdated packages.
-        $global:LASTEXITCODE = 0
+        Record "flutter pub outdated" "PASS" "informational (exit $LASTEXITCODE)"
+    } catch {
+        Record "flutter pub outdated" "PASS" "informational (command error: $($_.Exception.Message))"
     }
 }
 

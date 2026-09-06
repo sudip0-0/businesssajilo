@@ -52,7 +52,7 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
     if (widget.initialAmountPaisa != null && widget.initialAmountPaisa! > 0) {
       _amountController.text = formatNpr(
         Paisa(widget.initialAmountPaisa!),
-        showPaisa: false,
+        showPaisa: true,
       );
     }
     if (widget.billId != null) {
@@ -169,7 +169,7 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
               if (balanceDue != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  '${l10n.currentBalance}: ${formatNpr(Paisa(balanceDue), showPaisa: false)}',
+                  '${l10n.currentBalance}: ${formatNpr(Paisa(balanceDue), showPaisa: true)}',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
@@ -201,7 +201,7 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                         items: bills.map((b) => b.id).toList(),
                         itemLabel: (id) {
                           final b = bills.firstWhere((bill) => bill.id == id);
-                          return '${b.billNo} · ${formatNpr(Paisa(b.grandTotal), showPaisa: false)}';
+                          return '${b.billNo} · ${formatNpr(Paisa(b.grandTotal), showPaisa: true)}';
                         },
                         onChanged: (v) => setState(() => _billId = v),
                       ),
@@ -213,7 +213,9 @@ class _RecordPaymentSheetState extends ConsumerState<RecordPaymentSheet> {
                 focusNode: _amountFocus,
                 autofocus: true,
                 decoration: InputDecoration(labelText: l10n.paymentAmount),
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onChanged: (_) => setState(() {}),
               ),
               if (overpayment) ...[

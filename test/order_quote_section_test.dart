@@ -7,6 +7,9 @@ import 'package:businesssajilo/domain/models/quote_item.dart';
 import 'package:businesssajilo/domain/models/session_state.dart';
 import 'package:businesssajilo/features/auth/providers/auth_provider.dart';
 import 'package:businesssajilo/features/quotes/order_quote_section.dart';
+import 'package:businesssajilo/core/theme/app_theme.dart';
+import 'package:businesssajilo/web/theme/web_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,9 +27,13 @@ class _FakeQuotes extends QuotesRepository {
   _FakeQuotes(this.quotes) : super(null);
 
   final List<Quote> quotes;
+  var listCalls = 0;
 
   @override
-  Future<List<Quote>> listForOrder(String orderId) async => quotes;
+  Future<List<Quote>> listForOrder(String orderId) async {
+    listCalls++;
+    return quotes;
+  }
 }
 
 Quote _quote({
@@ -59,6 +66,7 @@ Quote _quote({
 Widget _wrap({
   required Role role,
   required List<Quote> quotes,
+  _FakeQuotes? repository,
 }) {
   final session = SessionState(
     member: Member(
@@ -72,22 +80,46 @@ Widget _wrap({
   return ProviderScope(
     overrides: [
       authProvider.overrideWith(() => _FixedAuth(session)),
-      quotesRepositoryProvider.overrideWithValue(_FakeQuotes(quotes)),
+      quotesRepositoryProvider.overrideWithValue(
+        repository ?? _FakeQuotes(quotes),
+      ),
     ],
-    child: const MaterialApp(
-      localizationsDelegates: [
+    child: MaterialApp(
+      theme: kIsWeb ? WebTheme.light() : AppTheme.light(),
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: OrderQuoteSection(orderId: 'ord-1')),
+      home: const Scaffold(body: OrderQuoteSection(orderId: 'ord-1')),
     ),
   );
 }
 
 void main() {
+  testWidgets('warehouse cannot fetch quotes or see quote actions', (
+    tester,
+  ) async {
+    final repository = _FakeQuotes([
+      _quote(id: 'q-1', version: 1, status: QuoteStatus.sent),
+    ]);
+    await tester.pumpWidget(
+      _wrap(
+        role: Role.warehouse,
+        quotes: repository.quotes,
+        repository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.listCalls, 0);
+    expect(find.byType(Card), findsNothing);
+    expect(find.text('Send quote'), findsNothing);
+    expect(find.text('View quote'), findsNothing);
+    expect(find.text('Respond'), findsNothing);
+  });
+
   testWidgets('staff sees send-quote action when no quote exists', (
     tester,
   ) async {
@@ -97,15 +129,17 @@ void main() {
     expect(find.text('Send quote'), findsOneWidget);
   });
 
-  testWidgets('staff sees latest quote status and view action', (
-    tester,
-  ) async {
+  testWidgets('staff sees latest quote status and view action', (tester) async {
     await tester.pumpWidget(
-      _wrap(role: Role.sales, quotes: [_quote(id: 'q-1', version: 1, status: QuoteStatus.sent)]),
+      _wrap(
+        role: Role.sales,
+        quotes: [_quote(id: 'q-1', version: 1, status: QuoteStatus.sent)],
+      ),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Quote sent'), findsOneWidget);
+    expect(find.textContaining('250.00'), findsOneWidget);
     expect(find.text('View quote'), findsOneWidget);
     // A pending quote means no duplicate send action.
     expect(find.text('Send quote'), findsNothing);
@@ -125,11 +159,12 @@ void main() {
     expect(find.text('Send new quote'), findsOneWidget);
   });
 
-  testWidgets('customer sees respond action for pending quote', (
-    tester,
-  ) async {
+  testWidgets('customer sees respond action for pending quote', (tester) async {
     await tester.pumpWidget(
-      _wrap(role: Role.customer, quotes: [_quote(id: 'q-1', version: 1, status: QuoteStatus.sent)]),
+      _wrap(
+        role: Role.customer,
+        quotes: [_quote(id: 'q-1', version: 1, status: QuoteStatus.sent)],
+      ),
     );
     await tester.pumpAndSettle();
 

@@ -1,3 +1,4 @@
+import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
 import 'package:businesssajilo/domain/models/bill_item.dart';
@@ -5,6 +6,9 @@ import 'package:businesssajilo/domain/models/product.dart';
 import 'package:businesssajilo/features/billing/bill_form_draft.dart';
 import 'package:businesssajilo/features/billing/bill_form_validation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:businesssajilo/features/billing/bill_form_save.dart';
+import 'package:businesssajilo/features/billing/bill_payment_result.dart';
 
 Product _product({
   required String id,
@@ -30,6 +34,64 @@ void main() {
     expect(draft.lines.single.qty, 2);
     expect(draft.itemsTotal, 20000);
   });
+
+  test('invalid bill discount text blocks validation until corrected', () {
+    final draft = BillFormDraft();
+    draft.addProduct(_product(id: 'p1', name: 'Rice'));
+    for (final text in ['abc', '1.001', 'NaN', '1e2']) {
+      draft.billDiscountText = text;
+      expect(validateBillForm(draft), isNotNull, reason: text);
+    }
+    draft.billDiscountText = '0.29';
+    expect(validateBillForm(draft), isNull);
+    expect(draft.billDiscount, 29);
+    draft.billDiscountText = '';
+    expect(validateBillForm(draft), isNull);
+    expect(draft.billDiscount, 0);
+  });
+
+  test('quantity times rate overflow blocks validation', () {
+    final draft = BillFormDraft();
+    draft.addProduct(
+      _product(id: 'p1', name: 'Rice', referencePrice: maxExactPaisa),
+    );
+    draft.lines.single.setQty(2);
+    expect(validateBillForm(draft), BillFormValidationError.invalidMoneyInput);
+  });
+
+  test(
+    'persistence rejects raw-invalid currency before repository access',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final refProvider = Provider((ref) => ref);
+      final ref = container.read(refProvider);
+      final draft = BillFormDraft()
+        ..addProduct(_product(id: 'p1', name: 'Rice'));
+      final line = draft.lines.single;
+      final setters = <void Function(String)>[
+        line.setRateText,
+        line.setDiscountText,
+        (text) => draft.billDiscountText = text,
+      ];
+      for (final setText in setters) {
+        setText('1.001');
+        await expectLater(
+          saveBillForm(
+            ref,
+            draft: draft,
+            payment: const BillPaymentResult(status: BillStatus.due),
+          ),
+          throwsArgumentError,
+        );
+        setText('0.29');
+        expect(validateBillForm(draft), isNull);
+        line.rate = 10000;
+        line.discount = 0;
+        draft.billDiscountText = '';
+      }
+    },
+  );
 
   test('validateBillForm reports empty lines', () {
     expect(validateBillForm(BillFormDraft()), BillFormValidationError.noLines);

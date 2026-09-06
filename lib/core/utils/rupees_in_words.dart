@@ -1,13 +1,15 @@
 /// Converts a paisa amount to English rupee words for invoice print.
 ///
-/// Uses Indian grouping (lakh / crore). Paisa is dropped so the wording
-/// matches [formatNpr] with `showPaisa: false`.
+/// Uses Indian grouping (lakh / crore). Paisa is retained so the wording
+/// matches [formatNpr] with `showPaisa: true`.
 String rupeesInWords(int amountPaisa) {
   final isNegative = amountPaisa < 0;
   final rupees = amountPaisa.abs() ~/ 100;
   final unit = rupees == 1 ? 'rupee' : 'rupees';
   final raw = isNegative ? 'minus ${_inEnglish(rupees)}' : _inEnglish(rupees);
-  return '${_capitalize(raw)} $unit.';
+  final paisa = amountPaisa.abs() % 100;
+  final fraction = paisa == 0 ? '' : ' and ${_inEnglish(paisa)} paisa';
+  return '${_capitalize(raw)} $unit$fraction.';
 }
 
 String _capitalize(String value) {
@@ -26,7 +28,7 @@ String _inEnglish(int n) {
   final thousand = n ~/ 1000;
   n %= 1000;
 
-  if (crore > 0) parts.add('${_below1000(crore)} crore');
+  if (crore > 0) parts.add('${_inEnglish(crore)} crore');
   if (lakh > 0) parts.add('${_below1000(lakh)} lakh');
   if (thousand > 0) parts.add('${_below1000(thousand)} thousand');
   if (n > 0) parts.add(_below1000(n));

@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/logging/app_log.dart';
 import '../../core/utils/bill_search_match.dart';
 import '../../core/utils/report_range.dart';
 import '../../domain/enums.dart';
@@ -14,6 +15,7 @@ import '../remote/supabase_bills_repository.dart';
 import '../repositories/bills_repository.dart';
 import '../repositories/payments_repository.dart';
 import 'sync_service.dart';
+import 'pull/sync_pull_entities.dart';
 
 class SyncingBillsRepository implements BillsRepository {
   SyncingBillsRepository({
@@ -506,8 +508,44 @@ class SyncingBillsRepository implements BillsRepository {
     PaymentMethod paymentMethod = PaymentMethod.cash,
     String? paymentRefNote,
     int? paymentAmount,
-  }) {
-    throw UnsupportedError('Order billing requires connectivity');
+  }) async {
+    final client = _client;
+    if (client == null || !_sync.isActive) {
+      throw UnsupportedError('Order billing requires connectivity');
+    }
+    final bill = await SupabaseBillsRepository(client, _payments)
+        .createFromOrder(
+          orderId: orderId,
+          customerId: customerId,
+          createdByMemberId: createdByMemberId,
+          status: status,
+          itemsTotal: itemsTotal,
+          discount: discount,
+          grandTotal: grandTotal,
+          lines: lines,
+          paymentMethod: paymentMethod,
+          paymentRefNote: paymentRefNote,
+          paymentAmount: paymentAmount,
+        );
+    if (_sync.isActive) {
+      try {
+        await SyncPullEntities(db: _db, client: client).upsertRemoteBillsBatch([
+          {
+            ...bill.toJson(),
+            'customers': {'shop_name': bill.customerShopName},
+            'bill_items': bill.items.map((item) => item.toJson()).toList(),
+          },
+        ]);
+      } catch (e, st) {
+        AppLog.warn('Order bill cache refresh failed', e, st);
+      }
+      unawaited(
+        _sync.syncNow().catchError((Object e, StackTrace st) {
+          AppLog.warn('Order bill sync refresh failed', e, st);
+        }),
+      );
+    }
+    return bill;
   }
 
   @override

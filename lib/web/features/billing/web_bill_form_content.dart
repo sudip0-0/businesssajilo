@@ -13,10 +13,11 @@ import '../../../core/ui/bs_snackbar.dart';
 import '../../../core/ui/stock_badge.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
-import '../../../data/repositories/customers_repository.dart';
 import '../../../data/repositories/orders_repository.dart';
 import '../../../data/repositories/products_repository.dart';
 import '../../../data/repositories/quotes_repository.dart';
+import '../../../features/billing/create_bill_from_order.dart';
+import '../../../core/ui/error_state.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
 import '../../../domain/models/customer.dart';
@@ -83,6 +84,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   Customer? _selectedCustomer;
   bool _loading = false;
   bool _orderPrefillLoading = false;
+  Object? _orderPrefillError;
   bool _customerLocked = false;
 
   /// After adding a product, focus that line's qty field once.
@@ -101,42 +103,38 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   }
 
   Future<void> _prefillFromOrder(String orderId) async {
+    setState(() {
+      _orderPrefillLoading = true;
+      _orderPrefillError = null;
+    });
     final l10n = AppLocalizations.of(context);
     try {
-      final order = await ref.read(ordersRepositoryProvider).get(orderId);
-      final customer = await ref
-          .read(customersRepositoryProvider)
-          .get(order.customerId);
-      // Accepted-quote rates win; reference prices fill the rest.
-      final quotedRates = <String, int>{};
-      try {
-        final accepted = await ref
-            .read(quotesRepositoryProvider)
-            .latestAccepted(orderId);
-        if (accepted != null) {
-          for (final item in accepted.items) {
-            quotedRates[item.productId] = item.rate;
-          }
-        }
-      } catch (_) {
-        // Best-effort: fall back to reference prices below.
-      }
       final productsRepo = ref.read(productsRepositoryProvider);
+      final mapped = await loadBillFromOrderRepositories(
+        orderId: orderId,
+        orders: ref.read(ordersRepositoryProvider),
+        quotes: ref.read(quotesRepositoryProvider),
+        products: productsRepo,
+      );
+      if (mapped == null || mapped.isEmpty) throw StateError('No order items');
+      final customerId = mapped.customerId;
+      if (customerId == null || customerId.isEmpty) {
+        throw StateError('No order customer');
+      }
+      final customer = await ref.read(
+        customerDetailProvider(customerId).future,
+      );
       final lines = <BillDraftLine>[];
-      for (final item in order.items) {
-        try {
-          final product = await productsRepo.get(item.productId);
-          lines.add(
-            BillDraftLine(
-              product: product,
-              qty: item.qty,
-              rate:
-                  quotedRates[item.productId] ?? product.referencePrice,
-            ),
-          );
-        } catch (_) {
-          // Skip deleted/missing products; keep remaining lines.
-        }
+      for (final item in mapped.lines) {
+        final product = await productsRepo.get(item.productId);
+        lines.add(
+          BillDraftLine(
+            product: product,
+            qty: item.qty,
+            rate: item.rate,
+            discount: item.discount,
+          ),
+        );
       }
       if (!mounted) return;
       setState(() {
@@ -154,7 +152,10 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _orderPrefillLoading = false);
+      setState(() {
+        _orderPrefillLoading = false;
+        _orderPrefillError = e;
+      });
       showBsSnackBar(
         context,
         message: AppFailure.from(e).message(l10n),
@@ -199,7 +200,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   }
 
   Future<void> copyLastBill() async {
-    if (_customerLocked) return;
+    if (_loading || widget.orderId != null) return;
     final l10n = AppLocalizations.of(context);
     setState(() => _loading = true);
     try {
@@ -218,9 +219,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
       Customer? customer;
       if (bill.customerId != null) {
         try {
-          customer = await ref
-              .read(customersRepositoryProvider)
-              .get(bill.customerId!);
+          customer = await ref.read(
+            customerDetailProvider(bill.customerId!).future,
+          );
         } catch (_) {}
       }
       if (!mounted) return;
@@ -315,6 +316,9 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
     BillStatus? forceStatus,
     bool exportAfterSave = false,
   }) async {
+    if (_loading || _orderPrefillLoading || _orderPrefillError != null) {
+      return null;
+    }
     _syncDraftFields();
     setState(() => _loading = true);
     final bill = await submitBillForm(
@@ -338,6 +342,12 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
 
   @override
   Widget build(BuildContext context) {
+    if (_orderPrefillError != null) {
+      return ErrorState(
+        message: AppLocalizations.of(context).loadingFailed,
+        onRetry: () => _prefillFromOrder(widget.orderId!),
+      );
+    }
     ref.listen(productListProvider(_productQuery), (_, next) {
       final value = next.value;
       if (value != null) {
@@ -588,13 +598,14 @@ class _CartCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                lines.isEmpty
-                    ? l10n.billLines
-                    : '${l10n.billLines} (${lines.length})',
-                style: Theme.of(context).textTheme.titleSmall,
+              Expanded(
+                child: Text(
+                  lines.isEmpty
+                      ? l10n.billLines
+                      : '${l10n.billLines} (${lines.length})',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-              const Spacer(),
               TextButton.icon(
                 key: IntegrationKeys.billFormAddProduct,
                 onPressed: onFocusProductSearch,
@@ -668,7 +679,7 @@ class _CartCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${formatNpr(Paisa(product.referencePrice), showPaisa: false)} / ${product.unit}',
+                  '${formatNpr(Paisa(product.referencePrice))} / ${product.unit}',
                   maxLines: 1,
                   style: Theme.of(
                     context,
@@ -892,7 +903,7 @@ class _CheckoutRail extends StatelessWidget {
           if (showCustomerBalance && customer.balanceDue > 0) ...[
             const SizedBox(width: 8),
             Text(
-              formatNpr(Paisa(customer.balanceDue), showPaisa: false),
+              formatNpr(Paisa(customer.balanceDue)),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: WebPalette.danger,
                 fontWeight: FontWeight.w600,

@@ -28,6 +28,48 @@ void main() {
   });
 
   group('parseNpr', () {
+    test('exact decimal arithmetic and portable integer boundary', () {
+      expect(parseNpr('90071992547409.91')?.value, 9007199254740991);
+      expect(parseNpr('-90071992547409.91')?.value, -9007199254740991);
+      expect(parseNpr('90071992547409.92'), isNull);
+      expect(parseNpr('-90071992547409.92'), isNull);
+      expect(parseNpr('0.29')?.value, 29);
+      expect(parseNpr('1.01')?.value, 101);
+    });
+
+    test('localized and grouped amounts round trip', () {
+      expect(parseNpr('रू १,२३,४५६.७८')?.value, 12345678);
+      expect(parseNpr('NPR 123,456.78')?.value, 12345678);
+      expect(parseNpr('-रू 0.01')?.value, -1);
+      for (final value in [0, 1, -1, 12345678, 9007199254740991]) {
+        expect(parseNpr(formatNpr(Paisa(value)))?.value, value);
+      }
+    });
+
+    test('rejects unsafe or malformed input without throwing', () {
+      for (final input in [
+        'NaN',
+        'Infinity',
+        '-Infinity',
+        '1e2',
+        '1E-2',
+        '1.001',
+        '1.999',
+        '1,2',
+        '12,34',
+        '1,,000',
+        '1 000',
+        '1.2.3',
+        'रू रू 1',
+        '1रू2',
+        '--1',
+        '.',
+        '1.',
+        '999999999999999999999999',
+      ]) {
+        expect(parseNpr(input), isNull, reason: input);
+      }
+    });
     test('parses formatted input', () {
       expect(parseNpr('1,23,456.50'), Paisa.fromRupees(123456.50));
       expect(parseNpr('रू 500'), Paisa.fromRupees(500));

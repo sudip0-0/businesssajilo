@@ -1,110 +1,94 @@
-# Local testing & hardening gate
+# Local testing and hardening
 
-Run this before release candidates or after migrations / auth / sync changes.
+Use the source commands below and record their actual results. A skipped test, a compiled integration, or a successful screenshot is not a completed user journey. See `tasks.md` and `handoff.md` for the latest execution state.
 
-## Quick start (Windows)
+## Safe local database workflow
 
-```powershell
-# Optional: load Supabase keys from .env.local
-Copy-Item .env.example .env.local   # if needed
-.\scripts\run_dev.ps1 --help       # see run_dev for dart-defines
-
-# Full local gate (skips Docker/Deno when unavailable)
-.\scripts\local_hardening_gate.ps1
-
-# Strict mode — skipped optional steps become failures
-$env:HARDENING_GATE = "1"
-.\scripts\local_hardening_gate.ps1
-```
-
-## What the gate runs
-
-| Step | Required | Notes |
-|------|----------|-------|
-| `dart format --set-exit-if-changed` | Yes | Same as CI (`lib test integration_test`) |
-| `dart run build_runner build` | Yes | Regenerates Drift/Freezed before analyze |
-| `flutter analyze` | Yes | Zero warnings policy |
-| `flutter test` | Yes | Passes `--dart-define=HARDENING_GATE=1` when gate is on |
-| `supabase db reset` + `supabase test db` | Optional* | Needs Docker + Supabase CLI; includes QoL filter + balance-projection pgTAP |
-| `deno test` validation + `notify/push_policy_test.ts` | Optional* | Edge Function input helpers and FCM push policy |
-| `flutter pub outdated` | Informational | Never fails the gate |
-
-\*Fails when `HARDENING_GATE=1` and Docker/Supabase/Deno is missing.
-
-## Flutter test layers
-
-| Layer | Location | Needs local Supabase |
-|-------|----------|----------------------|
-| Unit / widget | `test/` | No |
-| HTTP remote repo contracts | `test/data/remote_repo_http_test.dart` | No (mock HTTP) |
-| Sync strategy | `test/sync_strategy_test.dart`, `test/sync_*` | No |
-| Auth lifecycle | `test/auth_repository_test.dart`, `test/auth_provider_test.dart` | No |
-| Repository integration | `test/integration/repository_order_to_bill_test.dart` | Yes — skips if unreachable |
-| UI integration stub | `test/integration/ui_order_to_bill_flow_test.dart` | Yes — bootstrap only; extend with screen pumps |
-
-Integration tests expect seeded E2E owner (`e2e-owner@test.com` / `password123`) after `supabase db reset`.
-
-macOS / Linux: `scripts/run_dev.sh` (same dart-defines as `run_dev.ps1`).
-
-## Bulk demo data (E2E owner)
-
-`supabase db reset` also loads [`supabase/seeds/e2e_bulk_demo.sql`](../supabase/seeds/e2e_bulk_demo.sql): **55 products**, **55 customers**, **220 bills** for the E2E business. The script is idempotent (skips when ≥50 products already exist).
-
-**Full reset (clean slate + seed):**
+With Docker Desktop and the Supabase CLI available:
 
 ```powershell
-npx supabase db reset
+supabase start
+supabase migration up --local
+supabase migration list --local
+supabase test db --local
 ```
 
-**Populate without wiping** (local DB already running with the E2E owner):
+The CLI's Local/Remote migration columns refer to the selected local target when `--local` is supplied; they do not prove a hosted deployment.
+
+**Do not reset by default.** `supabase db reset` deletes local data. The hardening script now only resets with `-ResetLocalDatabase` and an exact interactive confirmation, in addition to explicit user approval. Agents must not pass that switch or reset another way without permission.
+
+## Local gate
 
 ```powershell
-Get-Content supabase\seeds\e2e_bulk_demo.sql -Raw |
-  docker exec -i supabase_db_businesssajilo psql -U postgres -v ON_ERROR_STOP=1
+.\scripts\local_hardening_gate.ps1 -SkipOutdated
 ```
 
-**Verify counts:**
+The script checks formatting without rewriting, generates code and l10n, runs analyze, applies/lists local migrations when Docker/Supabase are available, then runs Flutter tests (forwarding local `SUPABASE_URL` / `SUPABASE_ANON_KEY` dart-defines so live integration files can execute), pgTAP, and Deno validation/push-policy tests when available. Missing Docker/Supabase/Deno is recorded as SKIP normally and FAIL with `HARDENING_GATE=1`. Each native subcommand's exit status is checked separately. `flutter pub outdated` is informational and does not fail the gate; `-SkipOutdated` skips the network check.
+
+Browser widget and actual-app E2E layers remain separate commands below. They are wired into CI/release quality gates.
+
+## Dart verification layers
+
+| Layer | Location | External requirements |
+|---|---|---|
+| Unit/widget, mocked HTTP | `test/`, `test/data/remote_repo_http_test.dart` | Flutter only |
+| Sync/recovery/auth | `test/sync_*`, `test/tenant_cache_isolation_test.dart`, `test/auth_*` | Temporary local fixtures; never use real legacy caches in tests |
+| UI order/quote/accept/bill | `test/integration/ui_order_to_bill_flow_test.dart` | Deterministic repositories; actual screen pumps, not a bootstrap stub |
+| Live order/quote/bill | `test/integration/repository_order_to_bill_test.dart` | Local Supabase, `create-member`, seeded E2E owner |
+| Live warehouse privacy/billing | `test/integration/repository_warehouse_billing_test.dart` | Same local services |
+| Live concurrent payment allocation | `test/integration/payment_allocation_concurrency_test.dart` | Same local services plus Docker/Postgres lock inspection |
+| Browser widgets | `test/support/web_search_test_bootstrap.dart` | Local web build and Playwright; no Supabase credentials |
+| Actual-app web smoke | `scripts/e2e_web.mjs` | Served local web build and local Supabase |
 
 ```powershell
-docker exec -i supabase_db_businesssajilo psql -U postgres -c @"
-select
-  (select count(*) from products where business_id = 'e2e00000-0000-4000-8000-000000000010') as products,
-  (select count(*) from customers where business_id = 'e2e00000-0000-4000-8000-000000000010') as customers,
-  (select count(*) from bills where business_id = 'e2e00000-0000-4000-8000-000000000010') as bills;
-"@
+dart format --output=none --set-exit-if-changed lib test integration_test
+flutter analyze
+flutter test
 ```
 
-## Environment variables
+For relevant model changes, run `flutter gen-l10n` and/or `dart run build_runner build`, then review generated diffs. Do not overwrite unsaved editor buffers while verifying filesystem code; save all and confirm both views match first.
 
-| Variable | Purpose |
-|----------|---------|
-| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Dart-defines for integration tests |
-| `E2E_EMAIL`, `E2E_PASSWORD` | Override seeded owner credentials |
-| `HARDENING_GATE=1` | Fail instead of skip for optional steps |
-| `SENTRY_TRACES_SAMPLE_RATE` | Optional 0–1 Sentry tracing rate (default 0.1) |
-
-## CI layers
-
-GitHub Actions (`ci.yml`, Flutter **3.44.8**) runs format, generated-code, analyze, unit/widget tests, Deno tests, pgTAP, and Playwright web E2E (`scripts/e2e_web.mjs`) against a local Supabase + CanvasKit web build. `release.yml` runs the same quality gates before `supabase db push` / function deploy / app builds, then a post-build smoke check.
-
-Local Playwright (needs a served web build + running Supabase):
+Live integration example (replace placeholders with local configuration only):
 
 ```powershell
-npm test                          # Deno Edge Function tests
-npm run e2e:web                   # requires BASE_URL + SUPABASE_ANON_KEY
+supabase functions serve
+flutter test test/integration/repository_order_to_bill_test.dart --dart-define=SUPABASE_URL=http://127.0.0.1:55021 --dart-define=SUPABASE_ANON_KEY=<local-publishable-key> --dart-define=HARDENING_GATE=1
 ```
 
-## Customer-balance projection (gated)
+Run the warehouse and payment-concurrency files the same way. `E2E_EMAIL`/`E2E_PASSWORD` dart-defines override the seeded local owner (`e2e-owner@test.com` / `password123`). These tests create accounts and business documents and leave fixtures intact; do not target production or delete fixtures without approval. Missing configuration is a skip in ordinary runs and a failure in strict runs.
 
-Live reads stay on `customer_balances`. Migration 37 adds `customer_balance_projections` plus `customer_balance_projection_drift` for parity checks. Do not switch repository reads until `scripts/benchmark_customer_balances.sql` shows acceptable latency **and** drift is zero. Rollback is to keep reading the view.
+## Browser widgets without the broken direct Chrome runner
+
+The direct `flutter test --platform chrome` runner returned CanvasKit JS/Wasm 404s on this Windows setup. The supported alternative builds ordinary Flutter web assets and reads the public integration-test results through a local browser harness:
 
 ```powershell
-Get-Content scripts\benchmark_customer_balances.sql -Raw |
-  docker exec -i supabase_db_businesssajilo psql -U postgres
+flutter build web --debug --no-web-resources-cdn --no-wasm-dry-run --target=test/support/web_search_test_bootstrap.dart --output=build/web_search_tests
+node scripts/run_web_search_tests.mjs
 ```
 
-## Known gaps (honest)
+This runs real search, shell, warehouse billing, order-role, and notification widgets. The harness fails on missing tests, failed assertions, browser errors, or external network requests. `pubspec.yaml` aliases Flutter's default `Roboto` family to the existing Inter asset; the named mobile/web themes remain unchanged and test assets are not rewritten to hide network failures.
 
-- UI order→quote→bill flow is documented but not fully pumped through screens yet (`ui_order_to_bill_flow_test.dart`).
-- Deno is not installed by default on Windows; install from [deno.land](https://deno.land) for Edge Function unit tests locally.
-- Customer-balance projection is additive and unused by the app until the benchmark gate passes.
+## Actual-app browser verification
+
+Build with the explicit local URL and publishable key:
+
+```powershell
+flutter build web --release --no-web-resources-cdn --no-wasm-dry-run --output=build/e2e_local --dart-define=SUPABASE_URL=http://127.0.0.1:55021 --dart-define=SUPABASE_ANON_KEY=<local-publishable-key>
+python -m http.server 4173 --bind 127.0.0.1 --directory build/e2e_local
+```
+
+In another terminal, set `BASE_URL=http://127.0.0.1:4173`, the local `SUPABASE_URL`, and local `SUPABASE_ANON_KEY`, then run `npm run e2e:web`. The runner enables Flutter semantics and verifies actual buttons, sidebar destinations, notification Escape/View All, and persisted EN/NE state. It rejects non-loopback targets, has bounded execution, closes test browsers, and does not convert failed clicks into passes using direct navigation fallbacks.
+
+## Deno, CI and devices
+
+`npm test` runs the configured Deno validation and push-policy suites. Deno must be installed; absence is not a pass. No production FCM delivery is exercised by these unit tests.
+
+CI/release source uses Flutter 3.44.8. Workflows build web without the removed `--web-renderer canvaskit` flag, using `--no-web-resources-cdn --no-wasm-dry-run`. CI runs the build-based browser widget harness and local-resource actual-app E2E; release quality repeats those checks before deployment. Generated sources are verified with `git diff --exit-code` after `gen-l10n` and `build_runner`.
+
+Android and iOS device sign-off is separate from VM/browser widgets. This session had no Android device/emulator and no macOS/iOS toolchain. Record EN/NP, narrow-layout, large-text, keyboard and real printing/share checks on supported devices before release.
+
+## Demo data and gated projection
+
+The local seed scripts define an E2E business plus bulk demo products/customers/bills. Never load them into shared/staging/production databases. Existing local data can be used without a reset; missing fixtures require an explicitly approved setup action.
+
+Live balances remain on `customer_balances`. Do not activate `customer_balance_projections` until `scripts/benchmark_customer_balances.sql` demonstrates acceptable latency and `customer_balance_projection_drift` is zero. No projection activation or production benchmark was performed during this hardening work.

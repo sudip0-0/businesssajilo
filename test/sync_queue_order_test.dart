@@ -1,10 +1,29 @@
 import 'dart:convert';
 
 import 'package:businesssajilo/data/local/app_database.dart';
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('timestamp ties use queue row id in all queue views', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    for (final id in ['z', 'a', 'm']) {
+      await db.enqueue(entityType: 'bill', entityId: id, payload: {'id': id});
+    }
+    await db
+        .update(db.syncQueue)
+        .write(SyncQueueCompanion(createdAt: Value(DateTime.utc(2026))));
+    expect((await db.pendingQueue()).map((q) => q.entityId), ['z', 'a', 'm']);
+    expect((await db.unsyncedQueue()).map((q) => q.entityId), ['z', 'a', 'm']);
+    expect((await db.watchUnsyncedQueue().first).map((q) => q.entityId), [
+      'z',
+      'a',
+      'm',
+    ]);
+  });
+
   test('enqueue preserves bill before dependent rows', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     const billId = 'bill-1';

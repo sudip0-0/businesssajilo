@@ -197,7 +197,7 @@ Future<InvoiceDocument?> _loadBillDocument(
     try {
       final customer = await ref
           .read(customersRepositoryProvider)
-          .get(customerId);
+          .get(customerId, includeBalances: false);
       final address = customer.address?.trim();
       if (address != null && address.isNotEmpty) {
         customerAddress = address;

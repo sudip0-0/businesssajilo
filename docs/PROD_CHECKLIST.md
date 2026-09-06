@@ -1,61 +1,52 @@
 # Production checklist (BusinessSajilo)
 
-Run through this list before pointing a production Flutter build at a
-hosted Supabase project. Local `supabase/config.toml` values are for
-dev only — several of them are intentionally loose.
+This is an operations checklist, not evidence that a hosted service is configured. Local `supabase/config.toml` is development configuration. Do not deploy, reset data, rotate credentials, send notifications, or incur service costs without explicit approval.
 
 ## Edge runtime / CORS
 
-- [ ] `supabase secrets set ALLOWED_ORIGIN=https://your-app.example.com`
-  - Local default in `config.toml` is `ALLOWED_ORIGIN = "*"` which must
-    never ship to production. Combined with `register-business`
-    (`verify_jwt = false`), an open origin enables cross-site signup spam.
+- [ ] Set `ALLOWED_ORIGIN` on every deployed Edge Function to the approved application origin.
+- [ ] Verify an unset or wildcard origin fails closed. Local configuration uses `http://localhost:3000`; wildcard origins are rejected by the function handlers.
+- [ ] Exercise registration and owner-only member creation against the approved staging environment, including rejected non-owner requests.
 
-## Auth hardening
+## Auth and account lifecycle
 
-- [ ] Enable email confirmations (`[auth.email] enable_confirmations = true`)
-- [ ] Set password requirements (length + character classes) —
-  local `password_requirements = ""` is too weak
-- [ ] Enable captcha on signup (hCaptcha / Turnstile) for
-  `register-business`
-- [ ] Enable MFA for owner accounts
-- [ ] Confirm `secure_password_change = true` so password changes require
-  recent re-authentication
-- [ ] Confirm business deletion requires password re-auth (Phase 19
-  `delete-account` edge function)
-- [ ] Configure prod SMTP so password-reset emails deliver (`site_url` +
-  redirect URLs). Phone-login staff cannot self-reset by email — owners
-  reset them from the Staff screen.
+- [ ] Verify hosted password policy, leaked-password protection, email confirmation, and registration captcha against the actual registration flow. Dashboard settings alone are not proof of enforcement.
+- [ ] Configure SMTP, `site_url`, and redirect allowlists; verify a password-reset email is delivered and recovery completes.
+- [ ] Verify phone-login staff/customer recovery through owner reset and forced password change; synthetic phone-login emails have no inbox.
+- [ ] Verify deactivated accounts cannot read/write tenant data, and failed account deletion leaves a recoverable session.
+- [ ] Verify deletion requires recent password re-authentication and that the retention/purge behavior matches the reviewed privacy policy.
+- [ ] Evaluate owner MFA in a dedicated authentication pass; do not claim MFA is shipped or enforced merely because the provider supports it.
 
-## Observability
+## Financial and tenant boundaries
 
-- [ ] Set `SENTRY_DSN` as a GitHub Actions secret (already passed via `--dart-define` in `release.yml`)
-- [ ] Verify a test exception appears in the Sentry project after a
-  release build
+- [ ] Run the full pgTAP suite on the approved target's migration set and verify per-role allow/deny and cross-tenant cases.
+- [ ] Verify warehouse customer selection and billing while direct opening-balance, payment, ledger, and dues reads are denied.
+- [ ] Verify customer catalog data contains no prices or restricted stock fields; customer bills/dues remain own-account only.
+- [ ] Verify bill/payment replay, stock movement invariants, quote-to-bill amounts, credit notes, and payment allocation using disposable test fixtures.
+- [ ] Keep customer-balance projection reads disabled until parity is zero and the documented benchmark gate passes.
 
-## Secrets
+## Storage and notifications
 
-- [ ] Never apply `supabase/seed.sql` (or any seed with `password123`)
-  to a shared/staging/production project
-- [ ] Rotate any keys that were ever committed or shared in chat
+- [ ] Review tenant-folder policies on `product-images`, including owner upload, authorized reads, and warehouse upload denial.
+- [ ] Confirm removed chat tables, triggers, and `order-chat-images` storage have not been reintroduced.
+- [ ] Configure Firebase client values, web service-worker configuration, VAPID, and the server FCM service account through the approved secret/configuration mechanism.
+- [ ] Verify opt-in test push delivery, token cleanup, notification preferences, and safe payloads. In-app notification records do not prove push delivery.
 
-## Storage / RLS
+## Observability and recovery
 
-- [ ] Confirm migration `00000000000019_security_hotfix` is applied
-  (order-scoped chat image policies + `payments(bill_id)` index)
-- [ ] Smoke-test: customer A cannot open customer B's order-chat image
-  in the same business
+- [ ] Configure `SENTRY_DSN` and verify a sanitized test event from an approved release build; avoid customer financial data and credentials in logs.
+- [ ] Confirm the actual backup/PITR availability and retention of the hosted Supabase plan; do not assume backups are enabled.
+- [ ] Agree recovery-point and recovery-time objectives with the business owner.
+- [ ] Restore an approved backup into an isolated non-production environment and verify tenant isolation, financial totals, storage references, and Auth recovery. Record the result before calling disaster recovery tested.
+- [ ] Establish an operational owner and a forward-fix/recovery procedure for failed migrations. A rollback document is not a completed restore drill.
 
-## Deploy
+## Secrets, release and platform sign-off
 
-Release tags (`v*`) push migrations and deploy Edge Functions when
-`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, and
-`SUPABASE_DB_PASSWORD` are configured (see `.github/workflows/release.yml`
-and the rollback policy in `supabase/README.md`). Manual fallback:
+- [ ] Never apply demo/E2E seeds to a shared, staging, or production database. Keep test credentials confined to disposable local fixtures.
+- [ ] Review and rotate credentials known to have been exposed; never copy service-role credentials into client builds.
+- [ ] Run formatting, generated-code checks where applicable, analyze, Flutter tests, pgTAP, Deno tests, and browser verification. Record skipped/blocked checks separately from passes.
+- [ ] Verify Android and Web in EN/NP, including narrow layouts, keyboard/focus and large text. Verify iOS on macOS/device tooling before an iOS release.
+- [ ] Resolve outstanding CI/release command or harness failures before tagging. Successful direct-route screenshots do not prove working buttons or transaction workflows.
+- [ ] Complete reviewed store listing copy, privacy policy, screenshots, and signing requirements.
 
-- [ ] `supabase db push` for migrations
-- [ ] `supabase functions deploy` for `create-member`,
-  `register-business`, `reset-member-password`, `delete-account`,
-  `notify`
-- [ ] Copy `web/firebase-config.example.js` → `web/firebase-config.js` with production Firebase web keys
-- [ ] Set Firebase dart-define GitHub secrets used by `release.yml` (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_VAPID_KEY`)
+Release tags (`v*`) can push migrations and deploy functions when GitHub deployment secrets are configured. This checklist does not authorize tagging or deployment. Follow the forward-fix policy in `supabase/README.md`, review the entire release diff, and obtain explicit deployment approval.

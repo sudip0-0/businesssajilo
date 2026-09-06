@@ -76,37 +76,37 @@ class SupabaseOrdersRepository implements OrdersRepository {
   }
 
   @override
+  Future<BillingOrderDraft?> billingDraftFromOrder(String orderId) async {
+    final client = requireSupabaseClient(_client);
+    final result = await client.rpc<dynamic>(
+      'billing_draft_from_order',
+      params: {'p_order_id': orderId},
+    );
+    return mapBillingOrderDraft(result);
+  }
+
+  @override
   Future<Order> placeOrder({
+    String? id,
     required String customerId,
     required List<OrderLineInput> lines,
     String? note,
   }) async {
     final client = requireSupabaseClient(_client);
-    final orderId = const Uuid().v4();
-
-    await client.from('orders').insert({
-      'id': orderId,
-      'customer_id': customerId,
-      'status': OrderStatus.placed.name,
-      'customer_note': ?note,
-    });
-
-    if (lines.isNotEmpty) {
-      await client
-          .from('order_items')
-          .insert(
-            lines
-                .map(
-                  (line) => {
-                    'id': const Uuid().v4(),
-                    'order_id': orderId,
-                    'product_id': line.productId,
-                    'qty': line.qty,
-                  },
-                )
-                .toList(),
-          );
-    }
+    final orderId = id ?? const Uuid().v4();
+    await client.rpc(
+      'place_order',
+      params: {
+        'p': {
+          'id': orderId,
+          'customer_id': customerId,
+          'customer_note': note,
+          'items': lines
+              .map((line) => {'product_id': line.productId, 'qty': line.qty})
+              .toList(),
+        },
+      },
+    );
 
     return get(orderId);
   }

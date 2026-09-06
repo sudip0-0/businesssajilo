@@ -13,10 +13,23 @@ import 'pull/sync_pull_page.dart';
 /// Credit notes: server updates `customer_balances.updated_at`; delta pull on
 /// the `customers` watermark picks up revised balance_due via Drift upsert.
 class SyncPuller {
-  SyncPuller({required AppDatabase db, required SupabaseClient client})
-    : _db = db,
-      _entities = SyncPullEntities(db: db, client: client);
+  SyncPuller({
+    required AppDatabase db,
+    required SupabaseClient client,
+    bool includeCustomerBalances = true,
+    bool Function()? isActive,
+    Duration requestTimeout = const Duration(seconds: 15),
+  }) : _db = db,
+       _includeCustomerBalances = includeCustomerBalances,
+       _entities = SyncPullEntities(
+         db: db,
+         client: client,
+         includeCustomerBalances: includeCustomerBalances,
+         isActive: isActive,
+         requestTimeout: requestTimeout,
+       );
 
+  final bool _includeCustomerBalances;
   final AppDatabase _db;
   final SyncPullEntities _entities;
 
@@ -60,6 +73,7 @@ class SyncPuller {
 
     for (var i = startIndex; i < syncBootstrapTables.length; i++) {
       final table = syncBootstrapTables[i];
+      if (table == 'payments' && !_includeCustomerBalances) continue;
       final tableOffset = i == startIndex ? offset : 0;
       final ts = DateTime.now().toUtc();
 
@@ -151,7 +165,7 @@ class SyncPuller {
     }
 
     final payWatermark = await _db.watermark('payments');
-    if (payWatermark != null) {
+    if (_includeCustomerBalances && payWatermark != null) {
       await _entities.pullPaymentsDelta(
         payWatermark.toIso8601String(),
         DateTime.now().toUtc(),

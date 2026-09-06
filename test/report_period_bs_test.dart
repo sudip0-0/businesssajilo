@@ -12,12 +12,21 @@ void main() {
         ReportPeriodPreset.bsThisMonth,
         now: now,
       );
-      expect(period.from, BsCalendar.monthRange(BsCalendar.currentBsMonth(now: now)).from);
-      expect(period.to, BsCalendar.monthRange(BsCalendar.currentBsMonth(now: now)).to);
+      expect(
+        period.from,
+        BsCalendar.monthRange(BsCalendar.currentBsMonth(now: now)).from,
+      );
+      expect(
+        period.to,
+        BsCalendar.monthRange(BsCalendar.currentBsMonth(now: now)).to,
+      );
     });
 
     test('bsLastMonth ends where bsThisMonth begins', () {
-      final last = ReportPeriod.preset(ReportPeriodPreset.bsLastMonth, now: now);
+      final last = ReportPeriod.preset(
+        ReportPeriodPreset.bsLastMonth,
+        now: now,
+      );
       final current = ReportPeriod.preset(
         ReportPeriodPreset.bsThisMonth,
         now: now,

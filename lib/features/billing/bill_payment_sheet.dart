@@ -67,7 +67,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     _amountController.text = formatNpr(
       Paisa(widget.grandTotal),
       showSymbol: false,
-      showPaisa: false,
+      showPaisa: true,
     );
   }
 
@@ -76,19 +76,6 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
       _customerId = customer.id;
       _selectedShopName = customer.shopName;
       _customerSearchController.text = customer.shopName;
-    });
-  }
-
-  void _applyCustomerLabel(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return;
-    if (_selectedShopName == trimmed &&
-        _customerSearchController.text == trimmed) {
-      return;
-    }
-    setState(() {
-      _selectedShopName = trimmed;
-      _customerSearchController.text = trimmed;
     });
   }
 
@@ -160,21 +147,17 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
 
     final initialId = widget.initialCustomerId;
-    if (!_walkIn &&
-        initialId != null &&
-        _customerId == initialId &&
-        _selectedShopName == null) {
-      ref.listen(customerDetailProvider(initialId), (prev, next) {
-        final customer = next.value;
-        if (customer != null) _applyCustomerLabel(customer.shopName);
-      });
-      final cached = ref.watch(customerDetailProvider(initialId)).value;
-      if (cached != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _applyCustomerLabel(cached.shopName);
-        });
-      }
-    }
+    // Keep prefill reactive for the lifetime of the initial selection, rather
+    // than copying provider data into state from listener/post-frame callbacks.
+    // A changed selection must never be overwritten by a late initial lookup.
+    final resolvedInitialName =
+        !_walkIn &&
+            initialId != null &&
+            _customerId == initialId &&
+            _selectedShopName == null
+        ? ref.watch(customerDetailProvider(initialId)).value?.shopName.trim()
+        : null;
+    final displayName = _selectedShopName ?? resolvedInitialName;
 
     final canRecordPayments =
         ref.watch(authProvider).value?.member?.role.canRecordPayments ?? false;
@@ -193,7 +176,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               ),
               const SizedBox(height: 8),
               Text(
-                '${l10n.grandTotal}: ${formatNpr(Paisa(widget.grandTotal), showPaisa: false)}',
+                '${l10n.grandTotal}: ${formatNpr(Paisa(widget.grandTotal), showPaisa: true)}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
@@ -221,7 +204,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                       _amountController.text = formatNpr(
                         Paisa(widget.grandTotal),
                         showSymbol: false,
-                        showPaisa: false,
+                        showPaisa: true,
                       );
                     }
                   });
@@ -268,7 +251,7 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               if (!_walkIn) ...[
                 const SizedBox(height: 8),
                 BillCustomerSearchField(
-                  selectedName: _selectedShopName,
+                  selectedName: displayName,
                   onCustomerSelected: (customer) {
                     if (customer == null) {
                       setState(() {
@@ -287,7 +270,9 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                 TextFormField(
                   controller: _amountController,
                   decoration: InputDecoration(labelText: l10n.amountPaid),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ],
               if (_status != BillStatus.due && !_walkIn ||

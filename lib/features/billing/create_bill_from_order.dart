@@ -8,6 +8,7 @@ import '../../data/repositories/quotes_repository.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/order.dart';
 import '../../domain/models/order_item.dart';
+import '../../domain/models/quote.dart';
 import '../auth/providers/auth_provider.dart';
 import 'bill_payment_result.dart';
 import 'invalidate_billing.dart';
@@ -17,11 +18,15 @@ class BillFromOrderDraft {
     required this.lines,
     required this.itemsTotal,
     this.discount = 0,
+    this.customerId,
+    this.shopName,
   });
 
   final List<BillLineInput> lines;
   final int itemsTotal;
   final int discount;
+  final String? customerId;
+  final String? shopName;
 
   int get grandTotal => itemsTotal - discount;
 
@@ -32,6 +37,18 @@ class BillFromOrderDraft {
       lines: lines,
       itemsTotal: itemsTotalPaisa(lines.map((l) => l.lineTotal)),
       discount: discount,
+      customerId: customerId,
+      shopName: shopName,
+    );
+  }
+
+  BillFromOrderDraft copyWithCustomer(String? customerId, String? shopName) {
+    return BillFromOrderDraft(
+      lines: lines,
+      itemsTotal: itemsTotal,
+      discount: discount,
+      customerId: customerId,
+      shopName: shopName,
     );
   }
 }
@@ -87,41 +104,71 @@ BillLineInput billLineWithEdits(
   );
 }
 
-/// Loads order items into a bill draft. Rates come from the accepted quote
-/// when one exists (PRD: bill from quoted order), falling back to product
-/// reference prices for anything the quote doesn't cover.
-Future<BillFromOrderDraft?> loadBillFromOrderDraft(
-  Ref ref,
-  String orderId,
-) async {
-  final Order order = await ref.read(ordersRepositoryProvider).get(orderId);
+BillFromOrderDraft billFromAcceptedQuote(Quote quote) {
+  if (quote.items.isEmpty) throw StateError('Accepted quote has no items');
+  final lines = quote.items
+      .map(
+        (item) => BillLineInput(
+          productId: item.productId,
+          nameSnapshot: item.productName ?? '—',
+          qty: item.qty,
+          rate: item.rate,
+          discount: item.discount,
+          lineTotal: lineTotalPaisa(
+            qty: item.qty,
+            ratePaisa: item.rate,
+            discountPaisa: item.discount,
+          ),
+        ),
+      )
+      .toList();
+  return BillFromOrderDraft(
+    lines: lines,
+    itemsTotal: itemsTotalPaisa(lines.map((line) => line.lineTotal)),
+  );
+}
+
+Future<BillFromOrderDraft?> loadBillFromOrderDraft(Ref ref, String orderId) =>
+    loadBillFromOrderRepositories(
+      orderId: orderId,
+      orders: ref.read(ordersRepositoryProvider),
+      quotes: ref.read(quotesRepositoryProvider),
+      products: ref.read(productsRepositoryProvider),
+    );
+
+Future<BillFromOrderDraft?> loadBillFromOrderRepositories({
+  required String orderId,
+  required OrdersRepository orders,
+  required QuotesRepository quotes,
+  required ProductsRepository products,
+}) async {
+  final remote = await orders.billingDraftFromOrder(orderId);
+  if (remote != null) {
+    if (remote.lines.isEmpty) return null;
+    return BillFromOrderDraft(
+      lines: remote.lines,
+      itemsTotal: itemsTotalPaisa(remote.lines.map((line) => line.lineTotal)),
+      customerId: remote.customerId,
+      shopName: remote.shopName,
+    );
+  }
+  final Order order = await orders.get(orderId);
+  final accepted = await quotes.latestAccepted(orderId);
+  if (accepted != null) {
+    return billFromAcceptedQuote(
+      accepted,
+    ).copyWithCustomer(order.customerId, order.customerShopName);
+  }
   if (order.items.isEmpty) return null;
-
   final rates = <String, int>{};
-  try {
-    final accepted = await ref
-        .read(quotesRepositoryProvider)
-        .latestAccepted(orderId);
-    if (accepted != null) {
-      for (final item in accepted.items) {
-        rates[item.productId] = item.rate;
-      }
-    }
-  } catch (_) {
-    // Quote lookup is best-effort; reference prices still prefill below.
-  }
-
-  final productsRepo = ref.read(productsRepositoryProvider);
   for (final item in order.items) {
-    if (rates.containsKey(item.productId)) continue;
-    try {
-      final product = await productsRepo.get(item.productId);
-      rates[item.productId] = product.referencePrice;
-    } catch (_) {
-      rates[item.productId] = 0;
-    }
+    final product = await products.get(item.productId);
+    rates[item.productId] = product.referencePrice;
   }
-  return billFromOrderDraftFromItems(order.items, ratesByProductId: rates);
+  return billFromOrderDraftFromItems(
+    order.items,
+    ratesByProductId: rates,
+  ).copyWithCustomer(order.customerId, order.customerShopName);
 }
 
 Future<Bill> saveBillFromOrder(

@@ -36,6 +36,7 @@ class ProductImportSheet extends ConsumerStatefulWidget {
 
 class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
   bool _busy = false;
+  bool _importAttempted = false;
   String? _status;
   List<String> _errorLines = const [];
 
@@ -70,6 +71,7 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
   }
 
   Future<void> _pickAndImport() async {
+    if (_busy || _importAttempted) return;
     final l10n = AppLocalizations.of(context);
     setState(() {
       _busy = true;
@@ -126,6 +128,7 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
         return;
       }
 
+      if (!mounted) return;
       final memberId = ref.read(authProvider).value?.member?.id;
       final runner = ProductImportRunner(
         products: ref.read(productsRepositoryProvider),
@@ -133,6 +136,9 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
         memberId: memberId,
       );
 
+      // Once writes begin, replacing the file would lose the session's row
+      // outcomes and can duplicate products/stock. Require reconciliation first.
+      setState(() => _importAttempted = true);
       final result = await runner.run(
         parsed.rows,
         priorErrors: parsed.errors,
@@ -142,15 +148,23 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
         },
       );
 
+      if (!mounted) return;
       bumpInventoryRevision(ref);
       ref.invalidate(productListProvider);
       ref.invalidate(lowStockCountProvider);
 
-      if (!mounted) return;
-
-      final errorLines = result.errors
-          .map((e) => l10n.importRowError(e.rowNumber, _rowCode(l10n, e.code)))
-          .toList();
+      final errorLines = result.errors.map((e) {
+        final identity = [
+          e.productName,
+          e.sku,
+          e.productId,
+        ].whereType<String>().join(' · ');
+        final message = _rowCode(l10n, e.code);
+        return l10n.importRowError(
+          e.rowNumber,
+          identity.isEmpty ? message : '$identity: $message',
+        );
+      }).toList();
 
       if (result.imported > 0 && result.failed == 0) {
         showBsSnackBar(context, message: l10n.importSuccess(result.imported));
@@ -160,9 +174,11 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
 
       setState(() {
         _busy = false;
-        _status = result.imported > 0
-            ? l10n.importPartial(result.imported, result.total, result.failed)
-            : l10n.importNoRows;
+        _status = l10n.importPartial(
+          result.imported,
+          result.total,
+          result.failed,
+        );
         _errorLines = errorLines;
       });
 
@@ -194,8 +210,13 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
       'missing_name' => l10n.importMissingName,
       'invalid_cost' => l10n.importInvalidCost,
       'invalid_price' => l10n.importInvalidPrice,
-      'invalid_threshold' || 'invalid_qty' => l10n.importInvalidQty,
+      'invalid_threshold' =>
+        '${l10n.lowStockThreshold}: ${l10n.importInvalidQty}',
+      'invalid_qty' => '${l10n.initialQuantity}: ${l10n.importInvalidQty}',
       'create_failed' => l10n.importCreateFailed,
+      'create_unconfirmed' => l10n.importCreateUnconfirmed,
+      'stock_unconfirmed' => l10n.importStockUnconfirmed,
+      'missing_member' => l10n.importMissingMember,
       _ => l10n.importInvalidFile,
     };
   }
@@ -229,13 +250,13 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
-              onPressed: _busy ? null : _downloadSample,
+              onPressed: _busy || _importAttempted ? null : _downloadSample,
               icon: const Icon(PhosphorIconsRegular.downloadSimple),
               label: Text(l10n.downloadSampleExcel),
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: _busy ? null : _pickAndImport,
+              onPressed: _busy || _importAttempted ? null : _pickAndImport,
               icon: const Icon(PhosphorIconsRegular.uploadSimple),
               label: Text(l10n.chooseExcelFile),
             ),
@@ -253,6 +274,10 @@ class _ProductImportSheetState extends ConsumerState<ProductImportSheet> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+            ],
+            if (_importAttempted && !_busy) ...[
+              const SizedBox(height: 12),
+              Text(l10n.importRecoveryHint),
             ],
             if (_errorLines.isNotEmpty) ...[
               const SizedBox(height: 12),

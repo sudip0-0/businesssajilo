@@ -5,7 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
 import '../../data/repositories/bills_repository.dart';
-import '../../data/repositories/customers_repository.dart';
+import '../customers/providers.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
@@ -77,9 +77,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       Customer? customer;
       if (bill.customerId != null) {
         try {
-          customer = await ref
-              .read(customersRepositoryProvider)
-              .get(bill.customerId!);
+          customer = await ref.read(
+            customerDetailProvider(bill.customerId!).future,
+          );
         } catch (e, st) {
           AppLog.warn('Operation failed', e, st);
         }

@@ -365,9 +365,9 @@ class _WebReportsHubPageState extends ConsumerState<WebReportsHubPage> {
                 onTap: () => context.go('/owner/reports/fiscal'),
                 child: Text(
                   l10n.fiscalMonthlySales,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: WebPalette.inkSoft,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
                 ),
               ),
             ],

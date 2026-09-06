@@ -49,8 +49,8 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
       try {
         await ref.read(quotesRepositoryProvider).processOperationalNudges();
       } catch (e, st) {
-          AppLog.warn('Operation failed', e, st);
-        }
+        AppLog.warn('Operation failed', e, st);
+      }
     });
   }
 

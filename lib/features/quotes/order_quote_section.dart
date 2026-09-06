@@ -46,7 +46,9 @@ class OrderQuoteSection extends ConsumerWidget {
         if (role == Role.customer) {
           return _CustomerQuoteCard(
             orderId: orderId,
-            latestSent: quotes.where((q) => q.status == QuoteStatus.sent).firstOrNull,
+            latestSent: quotes
+                .where((q) => q.status == QuoteStatus.sent)
+                .firstOrNull,
           );
         }
         return _StaffQuoteCard(orderId: orderId, latest: latest);
@@ -77,9 +79,7 @@ class _StaffQuoteCard extends ConsumerWidget {
   final Quote? latest;
 
   Future<void> _openBuilder(BuildContext context) async {
-    await context.push(
-      _routeForPlatform(context, '/order/$orderId/quote/new'),
-    );
+    await context.push(_routeForPlatform(context, '/order/$orderId/quote/new'));
   }
 
   void _invalidate(WidgetRef ref) {
@@ -91,7 +91,8 @@ class _StaffQuoteCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final hasPending = latest != null &&
+    final hasPending =
+        latest != null &&
         latest!.status == QuoteStatus.sent &&
         !isQuoteExpired(latest!);
 
@@ -105,10 +106,7 @@ class _StaffQuoteCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    l10n.quotes,
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  child: Text(l10n.quotes, style: theme.textTheme.titleMedium),
                 ),
                 if (latest != null)
                   Text(
@@ -127,7 +125,7 @@ class _StaffQuoteCard extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 '${l10n.quoteVersion(latest!.version)} · '
-                '${formatNpr(Paisa(latest!.total), showPaisa: false)}',
+                '${formatNpr(Paisa(latest!.total), showPaisa: true)}',
                 style: theme.textTheme.bodyMedium,
               ),
               if (latest!.status == QuoteStatus.sent &&
@@ -151,9 +149,7 @@ class _StaffQuoteCard extends ConsumerWidget {
                       _invalidate(ref);
                     },
                     icon: const Icon(Icons.request_quote_outlined, size: 18),
-                    label: Text(
-                      latest == null ? l10n.sendQuote : l10n.requote,
-                    ),
+                    label: Text(latest == null ? l10n.sendQuote : l10n.requote),
                   ),
                 if (latest != null)
                   OutlinedButton.icon(
@@ -203,7 +199,7 @@ class _CustomerQuoteCard extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  formatNpr(Paisa(quote.total), showPaisa: false),
+                  formatNpr(Paisa(quote.total), showPaisa: true),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

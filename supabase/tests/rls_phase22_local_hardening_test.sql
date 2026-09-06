@@ -70,6 +70,10 @@ select throws_ok(
   'owner cannot insert credit_notes directly'
 );
 
+reset role;
+insert into credit_notes(id,business_id,bill_id,customer_id,created_by,items_total,grand_total,restock)
+values ('c0333333-3333-3333-3333-333333333333','11111111-1111-1111-1111-111111111111','f1111111-1111-1111-1111-111111111111','e1111111-1111-1111-1111-111111111111','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',0,0,false);
+
 -- 2. Direct credit_note_items INSERT denied for sales.
 select test_set_auth('33333333-3333-3333-3333-333333333333');
 select throws_ok(
@@ -78,7 +82,7 @@ select throws_ok(
      qty_returned, rate, discount, line_total
    ) values (
      'c0222222-2222-2222-2222-222222222222',
-     'c0111111-1111-1111-1111-111111111111',
+     'c0333333-3333-3333-3333-333333333333',
      'f2222222-2222-2222-2222-222222222222',
      'b1111111-1111-1111-1111-111111111111',
      'Cola', 1, 5000, 0, 5000

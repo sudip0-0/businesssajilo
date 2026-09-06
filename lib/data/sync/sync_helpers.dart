@@ -70,10 +70,69 @@ Map<String, dynamic> mapRpcObject(dynamic result) {
   if (result is String && result.trim().isNotEmpty) {
     return mapRpcObject(jsonDecode(result));
   }
-  if (result is List && result.isNotEmpty) {
+  if (result is List && result.length == 1) {
     return mapRpcObject(result.first);
   }
   throw FormatException('Expected RPC object, got ${result.runtimeType}');
+}
+
+Map<String, dynamic> validateSyncedBill(dynamic value, String expectedId) {
+  if (value is! Map) {
+    throw const FormatException('Invalid bill acknowledgement');
+  }
+  final bill = Map<String, dynamic>.from(value);
+  final number = bill['bill_no'];
+  if (bill['id'] != expectedId ||
+      number is! String ||
+      number.trim().isEmpty ||
+      !const ['paid', 'partial', 'due'].contains(bill['status'])) {
+    throw const FormatException('Invalid bill acknowledgement');
+  }
+  return bill;
+}
+
+Map<String, dynamic> validateSyncedPayment(
+  dynamic value, {
+  required String expectedId,
+  required String expectedCustomerId,
+  required int requestedAmount,
+  required String expectedMethod,
+  required bool allowsSplit,
+  String? expectedBillId,
+  String? expectedBusinessId,
+  String? expectedReceivedBy,
+}) {
+  if (value is! Map) {
+    throw const FormatException('Invalid payment acknowledgement');
+  }
+  final payment = Map<String, dynamic>.from(value);
+  final amount = payment['amount'];
+  final billId = payment['bill_id'];
+  final createdAt = payment['created_at'];
+  if (payment['id'] != expectedId ||
+      payment['customer_id'] != expectedCustomerId ||
+      amount is! num ||
+      !amount.isFinite ||
+      amount <= 0 ||
+      amount != amount.roundToDouble() ||
+      amount > requestedAmount ||
+      (!allowsSplit && amount != requestedAmount) ||
+      !const ['cash', 'cheque', 'wallet', 'bank'].contains(payment['method']) ||
+      payment['method'] != expectedMethod ||
+      (billId != null && (billId is! String || billId.trim().isEmpty)) ||
+      (!allowsSplit && billId != expectedBillId) ||
+      _nonEmptyString(payment['business_id']) == null ||
+      (expectedBusinessId != null &&
+          payment['business_id'] != expectedBusinessId) ||
+      _nonEmptyString(payment['received_by']) == null ||
+      (expectedReceivedBy != null &&
+          payment['received_by'] != expectedReceivedBy) ||
+      createdAt is! String ||
+      DateTime.tryParse(createdAt) == null ||
+      (payment['ref_note'] != null && payment['ref_note'] is! String)) {
+    throw const FormatException('Invalid payment acknowledgement');
+  }
+  return payment;
 }
 
 String? _nonEmptyString(dynamic value) {
@@ -147,6 +206,12 @@ String? extractSyncErrorDetail(String? raw, {int maxLength = 180}) {
   if (raw == null) return null;
   final trimmed = raw.trim();
   if (trimmed.isEmpty) return null;
+  if (trimmed.startsWith('FormatException:') ||
+      trimmed.startsWith('TimeoutException') ||
+      trimmed.contains('Unsupported sync entity:') ||
+      trimmed.contains('Unverified local cache retained')) {
+    return null;
+  }
   final messageMatch = RegExp(
     r"message:\s*([^,\)]+)",
     caseSensitive: false,

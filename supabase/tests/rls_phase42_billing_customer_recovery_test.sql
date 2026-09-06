@@ -91,9 +91,9 @@ select throws_ok(
 select lives_ok(
   $$select create_bill(jsonb_build_object(
     'id', 'f4444444-4444-4444-4444-444444444444',
-    'customer_id', 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2',
-    'customer_shop_name', 'Brand New Shop',
-    'customer_phone', '+9779844444444',
+    'customer_id', 'e1111111-1111-1111-1111-111111111111',
+    'customer_shop_name', 'Ram Store',
+    'customer_phone', '+9779811111111',
     'discount', 0,
     'items', jsonb_build_array(jsonb_build_object(
       'product_id', 'deadbeef-dead-4000-8000-deadbeefdead',
@@ -115,18 +115,16 @@ select is(
   'snapshot name is preserved when the product id is stale'
 );
 
-select is(
-  (select shop_name from customers where id = 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2'),
-  'Brand New Shop',
-  'unique identity snapshot creates a portal-disabled customer with the requested id'
+select throws_ok(
+  $$select create_bill('{"customer_id":"c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2","customer_shop_name":"Brand New Shop","customer_phone":"+9779844444444","items":[{"name_snapshot":"Old Cola","qty":1,"rate":2500,"discount":0}]}')$$,
+  'P0001', 'customer not found',
+  'identity snapshot never creates credentials through owner billing'
 );
 
 select is(
-  (select is_active from members m
-     join customers c on c.member_id = m.id
-    where c.id = 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2'),
-  false,
-  'recreated customer member is portal-disabled'
+  (select count(*)::int from customers where id = 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2'),
+  0,
+  'missing customer remains absent'
 );
 
 select lives_ok(

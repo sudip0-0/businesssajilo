@@ -50,6 +50,10 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   late final TextEditingController _thresholdController;
   late final TextEditingController _initialQtyController;
   bool _loading = false;
+  bool _creationAttempted = false;
+  Product? _createdProduct;
+  String? _attemptedName;
+  String? _recoveryMessage;
 
   bool get _isEdit => widget.product != null;
 
@@ -67,11 +71,11 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     );
     _unitController = TextEditingController(text: p?.unit ?? 'piece');
     _costController = TextEditingController(
-      text: p != null ? formatNpr(Paisa(p.costPrice), showPaisa: false) : '',
+      text: p != null ? formatNpr(Paisa(p.costPrice), showPaisa: true) : '',
     );
     _refController = TextEditingController(
       text: p != null
-          ? formatNpr(Paisa(p.referencePrice), showPaisa: false)
+          ? formatNpr(Paisa(p.referencePrice), showPaisa: true)
           : '',
     );
     _thresholdController = TextEditingController(
@@ -107,15 +111,28 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   /// movement so `stock_cached` is maintained by the movement trigger.
   Future<void> _recordInitialStock(String productId, int qty) async {
     final memberId = ref.read(authProvider).value?.member?.id;
-    if (memberId == null) return;
+    if (memberId == null) throw StateError('Not authenticated');
     await ref
         .read(stockRepositoryProvider)
         .stockIn(productId: productId, qty: qty, createdByMemberId: memberId);
   }
 
   Future<void> _submit() async {
+    if (_loading || _creationAttempted) return;
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+    final l10n = AppLocalizations.of(context);
+    final initialQuantity = _isEdit
+        ? 0
+        : int.tryParse(_initialQtyController.text.trim()) ?? 0;
+    if (initialQuantity > 0 &&
+        ref.read(authProvider).value?.member?.id == null) {
+      setState(() => _recoveryMessage = l10n.importMissingMember);
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _recoveryMessage = null;
+    });
     await runSubmitAction(
       context,
       action: () async {
@@ -144,22 +161,39 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             imageUrl: widget.product!.imageUrl,
           );
         } else {
-          saved = await repo.create(
-            name: _nameController.text.trim(),
-            nameNp: _nameNpController.text.trim().isEmpty
-                ? null
-                : _nameNpController.text.trim(),
-            sku: sku.isEmpty ? null : sku,
-            unit: _unitController.text.trim(),
-            costPrice: cost,
-            referencePrice: refPrice,
-            lowStockThreshold: threshold,
-          );
-          if (initialQty > 0) {
-            await _recordInitialStock(saved.id, initialQty);
+          _creationAttempted = true;
+          _attemptedName = _nameController.text.trim();
+          try {
+            saved = await repo.create(
+              name: _nameController.text.trim(),
+              nameNp: _nameNpController.text.trim().isEmpty
+                  ? null
+                  : _nameNpController.text.trim(),
+              sku: sku.isEmpty ? null : sku,
+              unit: _unitController.text.trim(),
+              costPrice: cost,
+              referencePrice: refPrice,
+              lowStockThreshold: threshold,
+            );
+            _createdProduct = saved;
+            if (initialQty > 0) {
+              await _recordInitialStock(saved.id, initialQty);
+            }
+          } catch (_) {
+            if (!mounted) return;
+            bumpInventoryRevision(ref);
+            ref.invalidate(productListProvider);
+            ref.invalidate(lowStockCountProvider);
+            setState(
+              () => _recoveryMessage = _createdProduct == null
+                  ? l10n.importCreateUnconfirmed
+                  : l10n.importStockUnconfirmed,
+            );
+            return;
           }
         }
 
+        if (!mounted) return;
         bumpInventoryRevision(ref);
         ref.invalidate(productListProvider);
         ref.invalidate(lowStockCountProvider);
@@ -241,13 +275,17 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   left: TextFormField(
                     controller: _costController,
                     decoration: InputDecoration(labelText: l10n.costPrice),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (v) => _validateMoney(v, l10n),
                   ),
                   right: TextFormField(
                     controller: _refController,
                     decoration: InputDecoration(labelText: l10n.referencePrice),
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (v) => _validateMoney(v, l10n),
                   ),
                 ),
@@ -283,9 +321,22 @@ class ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
+                if (_recoveryMessage != null) ...[
+                  Text(
+                    _recoveryMessage!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  if (_creationAttempted)
+                    SelectableText(
+                      '${_createdProduct?.name ?? _attemptedName} · ${_skuController.text}${_createdProduct == null ? '' : ' · ${_createdProduct!.id}'}',
+                    ),
+                  const SizedBox(height: 12),
+                ],
                 if (!widget.embedded)
                   FilledButton(
-                    onPressed: _loading ? null : _submit,
+                    onPressed: _loading || _creationAttempted ? null : _submit,
                     child: _loading
                         ? const SizedBox(
                             height: 20,

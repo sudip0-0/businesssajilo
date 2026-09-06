@@ -85,8 +85,7 @@ class SessionCache {
       if (!migrated) return null;
       memberRaw = await _storage.read(sessionCacheMemberKey);
     }
-    final id =
-        storedId ?? await _storage.read(sessionCacheUserIdKey);
+    final id = storedId ?? await _storage.read(sessionCacheUserIdKey);
     if (id != authUserId || memberRaw == null || memberRaw.isEmpty) {
       return null;
     }
@@ -127,10 +126,7 @@ class SessionCache {
       }
       await _storage.write(sessionCacheUserIdKey, legacyId);
       await _storage.write(sessionCacheEmailKey, legacyEmail);
-      await _storage.write(
-        sessionCacheMemberKey,
-        legacyMember,
-      );
+      await _storage.write(sessionCacheMemberKey, legacyMember);
       await prefs.remove(legacySessionCacheUserIdKey);
       await prefs.remove(legacySessionCacheEmailKey);
       await prefs.remove(legacySessionCacheMemberKey);

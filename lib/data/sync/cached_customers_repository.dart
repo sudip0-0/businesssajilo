@@ -33,14 +33,7 @@ class CachedCustomersRepository implements CustomersRepository {
     bool includeBalances = true,
     CustomerBalanceFilter balanceFilter = CustomerBalanceFilter.all,
   }) async {
-    if (!includeBalances) {
-      return _remote.list(
-        offset: offset,
-        limit: limit,
-        query: query,
-        includeBalances: false,
-      );
-    }
+    if (!includeBalances) balanceFilter = CustomerBalanceFilter.all;
     final balanceSql = switch (balanceFilter) {
       CustomerBalanceFilter.all => '',
       CustomerBalanceFilter.due => 'AND balance_due > 0 ',
@@ -70,7 +63,7 @@ class CachedCustomersRepository implements CustomersRepository {
           )
           .map((row) => _db.localCustomers.map(row.data))
           .get();
-      return rows.map(mapLocalCustomer).toList();
+      return rows.map((row) => _mapCustomer(row, includeBalances)).toList();
     }
     if (balanceFilter != CustomerBalanceFilter.all) {
       final rows = await _db
@@ -87,7 +80,7 @@ class CachedCustomersRepository implements CustomersRepository {
           )
           .map((row) => _db.localCustomers.map(row.data))
           .get();
-      return rows.map(mapLocalCustomer).toList();
+      return rows.map((row) => _mapCustomer(row, includeBalances)).toList();
     }
     final select = _db.select(_db.localCustomers)
       ..orderBy([(c) => OrderingTerm.asc(c.shopName)]);
@@ -95,7 +88,7 @@ class CachedCustomersRepository implements CustomersRepository {
       select.limit(limit, offset: offset);
     }
     final rows = await select.get();
-    return rows.map(mapLocalCustomer).toList();
+    return rows.map((row) => _mapCustomer(row, includeBalances)).toList();
   }
 
   @override
@@ -113,13 +106,17 @@ class CachedCustomersRepository implements CustomersRepository {
 
   @override
   Future<Customer> get(String id, {bool includeBalances = true}) async {
-    if (!includeBalances) {
-      return _remote.get(id, includeBalances: false);
-    }
     final row = await (_db.select(
       _db.localCustomers,
     )..where((c) => c.id.equals(id))).getSingle();
-    return mapLocalCustomer(row);
+    return _mapCustomer(row, includeBalances);
+  }
+
+  Customer _mapCustomer(LocalCustomer row, bool includeBalances) {
+    final customer = mapLocalCustomer(row);
+    return includeBalances
+        ? customer
+        : customer.copyWith(openingBalance: 0, balanceDue: 0);
   }
 
   @override

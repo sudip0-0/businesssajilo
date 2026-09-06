@@ -16,6 +16,7 @@ String billFormValidationMessage(
 ) {
   return switch (error) {
     BillFormValidationError.noLines => l10n.noBillLines,
+    BillFormValidationError.invalidMoneyInput => l10n.invalidNumber,
     BillFormValidationError.invalidLineDiscount => l10n.discountExceedsLine,
     BillFormValidationError.invalidBillDiscount => l10n.discountExceedsItems,
     BillFormValidationError.negativeGrandTotal => l10n.amountMustBePositive,
@@ -49,6 +50,8 @@ Future<Bill> saveBillForm(
   String? fallbackCustomerId,
   String? orderId,
 }) async {
+  final validationError = validateBillForm(draft);
+  if (validationError != null) throw ArgumentError.value(validationError);
   final memberId = ref.read(authProvider).value?.member?.id;
   if (memberId == null) {
     throw StateError('Not authenticated');

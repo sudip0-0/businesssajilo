@@ -14,12 +14,14 @@ class SyncBadgeAction extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final statusAsync = ref.watch(syncStatusProvider);
+    final recoveryNotice =
+        ref.watch(legacyRecoveryNoticeProvider).value != null;
     return statusAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, _) =>
           _iconButton(context, l10n: l10n, state: SyncState.offline),
       data: (status) {
-        if (status.state == SyncState.synced) {
+        if (status.state == SyncState.synced && !recoveryNotice) {
           return const SizedBox.shrink();
         }
         return _iconButton(
@@ -27,6 +29,7 @@ class SyncBadgeAction extends ConsumerWidget {
           l10n: l10n,
           state: status.state,
           pendingCount: status.pendingCount,
+          recoveryNotice: recoveryNotice,
         );
       },
     );
@@ -37,6 +40,7 @@ class SyncBadgeAction extends ConsumerWidget {
     required AppLocalizations l10n,
     required SyncState state,
     int pendingCount = 0,
+    bool recoveryNotice = false,
   }) {
     final appearance = SyncBadgeAppearance.from(
       l10n: l10n,
@@ -46,18 +50,20 @@ class SyncBadgeAction extends ConsumerWidget {
     return BsTouchTargets.ensureMin(
       context: context,
       child: IconButton(
-        tooltip: appearance.label,
+        tooltip: recoveryNotice ? l10n.legacyRecoveryTitle : appearance.label,
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const PendingSyncScreen()),
           );
         },
-        icon: SyncBadge(
-          state: state,
-          pendingCount: pendingCount,
-          iconOnly: true,
-        ),
+        icon: recoveryNotice && state == SyncState.synced
+            ? const Icon(Icons.history)
+            : SyncBadge(
+                state: state,
+                pendingCount: pendingCount,
+                iconOnly: true,
+              ),
       ),
     );
   }

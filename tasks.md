@@ -1,6 +1,6 @@
 # BusinessSajilo — Task Breakdown
 
-Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜ = todo.
+Phases 0–13 are the historical implementation log; later migrations supersede earlier behavior. Checked implementation items do not prove production configuration or platform sign-off. Current hardening results, limitations, and the next actions are tracked in the audit sections and `handoff.md`. ✅ = implemented, ⬜ = todo.
 
 ## Phase 0 — Project Setup
 - ✅ Create Flutter project (Android, iOS, Web enabled); env via `--dart-define` (`Env`)
@@ -15,14 +15,14 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Business registration flow (`register-business` Edge Function + register screen)
 - ✅ Edge Function `create-member` (owner creates sales/warehouse/customer logins)
 - ✅ Login (email + password), session persistence, role in JWT app_metadata via trigger
-- ✅ Role-aware routing: 4 role home shells with bottom nav (warehouse has no billing)
+- ✅ Role-aware routing: 4 role home shells with bottom nav (warehouse billing enabled later; no ledger/payments)
 - ✅ Staff management screen (owner: list, add, deactivate members)
 - ✅ RLS test suite (`supabase test db` — full suite in `supabase/tests/`: phases 1–8, 10–13, cross-tenant, storage)
 
 ## Phase 2 — Products & Inventory
 - ✅ DB: `categories`, `products`, `stock_movements`, `notifications` + stock_cached trigger + RLS + storage bucket
 - ✅ Product CRUD (owner) with image upload (Supabase Storage), EN/NP names
-- ✅ Category management
+- ✅ Category management was implemented historically; removed by migration 25 and no longer part of the product
 - ✅ Stock-in entry, manual adjustment (reason required) — owner/warehouse
 - ✅ Stock list with levels + low-stock badges; movement history per product
 - ✅ Low-stock threshold alerts (DB trigger → notification records)
@@ -34,7 +34,7 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Record payment flow (cash/cheque/wallet/bank ref), account-level allocation
 
 ## Phase 4 — Billing (online first)
-- ✅ DB: `bills`, `bill_items`, `bill_sequences` + per-business BS-0001 numbering + RLS (warehouse blocked)
+- ✅ DB: `bills`, `bill_items`, `bill_sequences` + per-business BS-0001 numbering + RLS (warehouse billing enabled later; payments remain blocked)
 - ✅ Billing screen: product search, qty steppers, discounts, running total
 - ✅ Payment sheet on save: Paid / Partial / Due → ledger entries
 - ✅ Walk-in (no-customer) bills
@@ -45,13 +45,13 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Customer catalog (no prices), cart, place order with note
 - ✅ Staff order queue; quote builder (rates, discounts) + send
 - ✅ Customer quote view: accept/reject with comment; quote versioning on re-quote
-- ✅ Order status pipeline: confirmed → packed → dispatched (warehouse actions; auto stock deduction on dispatch)
-- ✅ Generate bill from dispatched order (prefilled from accepted quote)
+- ✅ Current order pipeline: placed → received → billed; only `create_bill` applies the billed transition and creates stock deductions (migration 27)
+- ✅ Owner/sales order billing uses accepted quote quantities, rates, and discounts when present; it remains online-only
 - ✅ Order chat thread shipped in Phase 5; **removed post-launch** (migration 43 drops `messages`, trigger, and `order-chat-images` bucket)
 - ✅ Customer "My Dues" + own bill history
 
 ## Phase 6 — Notifications
-- ✅ FCM setup (Android/iOS/Web), token registration
+- ✅ FCM client/service-worker and token-registration code; Android/iOS/Web configuration and actual push delivery require separate operational verification
 - ✅ Edge Function `notify` + DB webhooks for order/quote/low-stock/payment events
 - ✅ In-app notification center with read states
 
@@ -61,7 +61,7 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Delta pull sync (`updated_at` watermark) + initial bootstrap
 - ✅ Provisional bill numbering (device prefix) + server-side final assignment
 - ✅ Sync status UI (badge, pending-items screen, retry)
-- ✅ Conflict handling: LWW for mutable rows + audit_log; offline e2e tests
+- ✅ Append-only replay and offline tests; product/customer mutations are online-only, and the unused product LWW RPC was removed by migration 20
 
 ## Phase 8 — Reports & Dashboard
 - ✅ Owner dashboard: today's sales, dues total, low stock, pending orders
@@ -97,11 +97,11 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Remote repository HTTP contract tests expanded (`record_payment`, dashboard KPIs, low stock, dues aging, entity mapping, idempotent bill replay)
 - ✅ Auth repository/provider/router tests for deactivation, forced password change, re-auth, self-delete, role redirects
 - ✅ Sync strategy tests: customer-balance watermark, bootstrap resume offsets, bill/payment ordering, queue idempotency / legacy rejection
-- ✅ Repository integration order→bill reclassified; UI integration stub with `HARDENING_GATE` skip/fail semantics
+- ✅ Repository integration was expanded to real quote versions/acceptance/billing; deterministic UI screen integration now replaces the old bootstrap stub
 - ✅ Deno unit tests for Edge Function `validation.ts`
 - ✅ `scripts/local_hardening_gate.ps1` + `docs/LOCAL_TESTING.md`
 - ✅ Repair compile errors in `dashboard_scoped_queries_test.dart` and `offline_query_scale_test.dart`
-- ⚠️ Full UI pump through quote builder → bill form (stub only today)
+- ✅ Cart → quote versions → acceptance → bill screen pumps run with deterministic repositories; live backend and device/browser verification remain separate layers
 
 ## Phase 13 — v1.2 QoL (2026-08)
 - ✅ Bill-level / oldest-first payment allocation (`record_payment` + payment sheet)
@@ -113,6 +113,30 @@ Phases are sequential; tasks within a phase can be parallelized. ✅ = done, ⬜
 - ✅ Web FCM service worker (fill `web/firebase-config.js` for production)
 - ✅ Sentry + Firebase dart-defines on release builds; `scripts/run_dev.sh`
 - ⚠️ Remaining client folds are UI totals of RPC rows (not extra round-trips). Drift encryption at rest is deferred (see `docs/SECURITY.md`).
+
+## Audit batch 1A — Warehouse financial privacy (2026-09-05)
+
+Implementation verified below; platform sign-off remains open.
+
+- [x] Migrations 50/51 remove warehouse raw-customer access, preserve identity-only billing directory/search, and prohibit client directory mutations. Applied locally; pgTAP: 259 assertions across 31 files passed, including 37 privacy/role/tenant assertions.
+- [x] Remote bill embeds, mobile/web copy and customer lookup, invoice address lookup, and staff-mobile directory sync use non-financial identities. Warehouse skips payment pulls; offline directory reads mask financial values without deleting cached or pending data.
+- [x] Customer selection and due-bill submission privacy tests pass in EN/NP at phone and desktop sizes; fixed the narrow web bill header overflow. Live local repository test verifies customer selection, bill creation/reopen/search, and denied financial reads.
+- [x] `flutter analyze`: no issues. Full Flutter suite: 433 passed, 10 skipped; the new live warehouse integration was also run separately with required local configuration and passed. Release web build passed with an existing icon-font warning. Changed Dart files pass formatting.
+- [ ] Android/iOS device verification; no Android device/emulator or iOS tooling available during this batch.
+- [x] The build-based browser harness subsequently passed 29 widget tests and the repaired actual-app runner passed 17 E2E checks, including real navigation, notification Escape/View All, and persisted EN/NE changes. Direct `flutter test --platform chrome` still encounters CanvasKit asset 404s; use the supported build-based harness.
+- [ ] Final combined verification after synchronizing all editor buffers; repository-wide formatting drift, CI wiring, and device sign-off remain open. Earlier batch counts above are historical checkpoints, not a final all-green claim.
+
+## Audit batch 1B — Core reliability and verification (2026-09-06)
+
+- [x] Migrations 52–57 applied locally and confirmed: atomic/replay-safe orders, quote-response safeguards, order/customer binding, serialized credit-note-aware allocation, existing-customer-only billing recovery, and explicit child-table tenant scope. Latest pgTAP: 496 assertions across 35 files passed.
+- [x] Accepted quote terms and fractional paisa are preserved in owner/sales billing; staff-mobile order billing delegates online. The old UI integration stub now exercises actual screens with deterministic repositories; three live backend integration tests passed separately.
+- [x] Invalid money text blocks billing; transaction details/PDFs/CSV/words preserve paisa. Import/product-create partial failures retain identity and require reconciliation instead of blind retry; protection is session-local, not durable atomic import.
+- [x] Sync acknowledgement, dependency replay, scoped caches, cancellation, and account-failure recovery are hardened. Legacy recovery uses approved sqlite3 3.5.1 read-only transactions, not temporary whole-database copies; pending/failed payment pulls preserve local work.
+- [x] Role-aware search, shell semantics, notification Escape/focus, and local bundled-font behavior verified: latest browser checkpoint 29/29 widget tests and 17/17 actual-app E2E checks.
+- [x] Follow-up filesystem Flutter suite: 595 passed, 10 skipped. Full analyzer clean. Format check clean (536 files). pgTAP: 520 assertions across 36 files, including migration 58.
+- [x] Payment bootstrap cursor reset is on disk in `sync_pusher.dart` with split-receipt/request-identity tests. Unsaved editor buffers were not available; the filesystem version now contains the intended additions.
+- [x] Approved CI/release workflow wiring: unsupported `--web-renderer canvaskit` removed, generated-source `git diff --exit-code`, build-based browser widget harness, local-resource actual-app E2E, local-gate dart-defines, informational `pub outdated`.
+- [x] Customer own-bill search, warehouse billing-draft RPC, warehouse audit-log deny, quote paisa display, and web safe-integer line/total checks. External/device/hosted sign-off remains in `handoff.md`. No overall release-ready claim is made.
 
 ## Backlog (post-launch, see product.md roadmap)
 - Customer self-edit of own profile (PRD matrix deferred from v1)

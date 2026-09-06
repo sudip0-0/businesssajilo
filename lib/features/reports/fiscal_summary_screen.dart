@@ -98,7 +98,10 @@ class _FiscalSummaryScreenState extends ConsumerState<FiscalSummaryScreen> {
               );
             }
             final total = months.fold<int>(0, (sum, m) => sum + m.totalSales);
-            final totalBills = months.fold<int>(0, (sum, m) => sum + m.billCount);
+            final totalBills = months.fold<int>(
+              0,
+              (sum, m) => sum + m.billCount,
+            );
             final activeMonths = months.where((m) => m.totalSales > 0).length;
             final avgMonthly = activeMonths > 0 ? (total ~/ activeMonths) : 0;
             final maxMonth = months.reduce(
@@ -140,7 +143,10 @@ class _FiscalSummaryScreenState extends ConsumerState<FiscalSummaryScreen> {
                     _KpiCard(
                       label: l10n.bestMonth,
                       value: maxSales > 0
-                          ? BsCalendar.monthLabel(maxMonth.month, locale: locale)
+                          ? BsCalendar.monthLabel(
+                              maxMonth.month,
+                              locale: locale,
+                            )
                           : '—',
                       icon: Icons.emoji_events_outlined,
                       color: Colors.amber.shade800,
@@ -172,7 +178,9 @@ class _FiscalSummaryScreenState extends ConsumerState<FiscalSummaryScreen> {
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final m = months[index];
-                      final ratio = maxSales > 0 ? (m.totalSales / maxSales) : 0.0;
+                      final ratio = maxSales > 0
+                          ? (m.totalSales / maxSales)
+                          : 0.0;
                       final monthName = BsCalendar.monthLabel(
                         m.month,
                         locale: locale,

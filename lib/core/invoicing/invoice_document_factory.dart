@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../../core/utils/bill_customer_label.dart';
+import '../../core/utils/money.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
 import '../../domain/models/business.dart';
@@ -115,8 +116,7 @@ class InvoiceDocumentFactory {
       };
 
   String formatNprForCaption(int paisa) {
-    final rupees = paisa / 100;
-    return 'Rs ${rupees.toStringAsFixed(0)}';
+    return formatNpr(Paisa(paisa));
   }
 }
 

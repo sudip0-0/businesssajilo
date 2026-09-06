@@ -75,9 +75,9 @@ class NewBillCtaCard extends ConsumerWidget {
                     ),
                     Text(
                       l10n.createBillSubtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: BsColors.outline,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),

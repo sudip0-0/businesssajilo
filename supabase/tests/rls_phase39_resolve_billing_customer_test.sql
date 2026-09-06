@@ -65,7 +65,7 @@ select lives_ok(
   'create_bill remaps by phone and treats empty product_id as null'
 );
 
-select lives_ok(
+select throws_ok(
   $$select create_bill(jsonb_build_object(
     'id', 'f3333333-3333-3333-3333-333333333333',
     'customer_id', 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2',
@@ -76,13 +76,15 @@ select lives_ok(
       'name_snapshot', 'Cola', 'qty', 1, 'rate', 5000, 'discount', 0
     ))
   ))$$,
-  'create_bill recreates a missing customer from the shop snapshot'
+  'P0001',
+  'customer not found',
+  'owner billing cannot create missing customer credentials'
 );
 
 select is(
-  (select shop_name from customers where id = 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2'),
-  'Brand New Shop',
-  'ensured customer keeps the requested id and shop name'
+  (select count(*)::int from customers where id = 'c2c2c2c2-c2c2-4000-8000-c2c2c2c2c2c2'),
+  0,
+  'missing customer is not auto-created'
 );
 
 select * from finish();

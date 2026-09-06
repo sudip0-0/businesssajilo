@@ -35,8 +35,13 @@ class BillSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final discount = parseNpr(billDiscountController.text)?.value ?? 0;
-    final discountError = (discount < 0 || discount > itemsTotal)
+    final parsed = parseNpr(billDiscountController.text);
+    final discount = parsed?.value ?? 0;
+    final invalidInput =
+        billDiscountController.text.trim().isNotEmpty && parsed == null;
+    final discountError = invalidInput
+        ? l10n.invalidNumber
+        : (discount < 0 || discount > itemsTotal)
         ? l10n.discountExceedsItems
         : null;
 
@@ -51,7 +56,7 @@ class BillSummary extends StatelessWidget {
         errorText: discountError,
         contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       ),
-      keyboardType: TextInputType.number,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: (_) => onDiscountChanged(),
     );
 
@@ -75,7 +80,7 @@ class BillSummary extends StatelessWidget {
                 width: 72,
                 child: Text(
                   discount > 0
-                      ? '- ${formatNpr(Paisa(discount), showPaisa: false)}'
+                      ? '- ${formatNpr(Paisa(discount), showPaisa: true)}'
                       : '—',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.end,
@@ -95,7 +100,7 @@ class BillSummary extends StatelessWidget {
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             Text(
-              formatNpr(Paisa(grandTotal), showPaisa: false),
+              formatNpr(Paisa(grandTotal), showPaisa: true),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: accent,
@@ -128,7 +133,7 @@ class BillSummary extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                '- ${formatNpr(Paisa(discount), showPaisa: false)}',
+                '- ${formatNpr(Paisa(discount), showPaisa: true)}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: BsColors.success,
                   fontWeight: FontWeight.w600,
@@ -154,7 +159,7 @@ class BillSummary extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  formatNpr(Paisa(grandTotal), showPaisa: false),
+                  formatNpr(Paisa(grandTotal), showPaisa: true),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -199,7 +204,7 @@ class BillSummary extends StatelessWidget {
   Widget _summaryRow(BuildContext context, String label, int amount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: false))],
+      children: [Text(label), Text(formatNpr(Paisa(amount), showPaisa: true))],
     );
   }
 }

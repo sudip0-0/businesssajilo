@@ -54,9 +54,9 @@ class _WebProfitReportPageState extends ConsumerState<WebProfitReportPage> {
             children: [
               Text(
                 subtitle,
-                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                  color: WebPalette.inkSoft,
-                ),
+                style: Theme.of(
+                  ctx,
+                ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -68,12 +68,10 @@ class _WebProfitReportPageState extends ConsumerState<WebProfitReportPage> {
                           : productTopCustomersProvider(id),
                     );
                     return async.when(
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      error: (_, _) => Text(
-                        AppLocalizations.of(context).loadingFailed,
-                      ),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (_, _) =>
+                          Text(AppLocalizations.of(context).loadingFailed),
                       data: (rows) {
                         if (rows.isEmpty) {
                           return Center(
@@ -342,8 +340,9 @@ class _ProfitableProductsCard extends StatelessWidget {
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final p = rows[index];
-                  final ratio =
-                      maxProfit > 0 ? (p.grossProfit / maxProfit) : 0.0;
+                  final ratio = maxProfit > 0
+                      ? (p.grossProfit / maxProfit)
+                      : 0.0;
                   return InkWell(
                     onTap: () => onProductTap(p),
                     child: Padding(
@@ -481,8 +480,9 @@ class _ProfitableCustomersCard extends StatelessWidget {
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final c = rows[index];
-                  final ratio =
-                      maxProfit > 0 ? (c.grossProfit / maxProfit) : 0.0;
+                  final ratio = maxProfit > 0
+                      ? (c.grossProfit / maxProfit)
+                      : 0.0;
                   return InkWell(
                     onTap: () => onCustomerTap(c),
                     child: Padding(

@@ -1,9 +1,10 @@
 import 'package:businesssajilo/core/invoicing/invoice_document.dart';
+import 'package:businesssajilo/core/invoicing/invoice_document_factory.dart';
+import 'package:businesssajilo/core/utils/rupees_in_words.dart';
 import 'package:businesssajilo/core/invoicing/invoice_labels.dart';
 import 'package:businesssajilo/core/invoicing/invoice_paper_size.dart';
 import 'package:businesssajilo/core/invoicing/invoice_pdf_builder.dart';
 import 'package:businesssajilo/core/invoicing/pdf_fonts.dart';
-import 'package:businesssajilo/core/utils/money.dart';
 import 'package:businesssajilo/domain/enums.dart';
 import 'package:businesssajilo/domain/models/bill.dart';
 import 'package:businesssajilo/domain/models/bill_item.dart';
@@ -85,6 +86,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(PdfFonts.clearCache);
+
+  test('invoice caption and words preserve paisa exactly', () {
+    expect(
+      const InvoiceDocumentFactory().formatNprForCaption(10029),
+      'रू 100.29',
+    );
+    expect(rupeesInWords(10029), 'One hundred rupees and twenty-nine paisa.');
+    expect(rupeesInWords(-1), 'Minus zero rupees and one paisa.');
+    expect(rupeesInWords(9007199254740991), contains('ninety-one paisa'));
+  });
 
   test('InvoicePdfBuilder produces non-empty A4 bytes', () async {
     final bytes = await const InvoicePdfBuilder().build(
@@ -304,18 +315,11 @@ void main() {
     expect(bytes, isNotEmpty);
   });
 
-  test('print amounts use grouping without currency symbol or paisa', () {
-    expect(
-      formatNpr(const Paisa(10000), showSymbol: false, showPaisa: false),
-      '100',
-    );
-    expect(
-      formatNpr(const Paisa(690000), showSymbol: false, showPaisa: false),
-      '6,900',
-    );
-    expect(
-      formatNpr(const Paisa(690000), showSymbol: false, showPaisa: false),
-      isNot(contains('रू')),
-    );
+  test('print amounts retain paisa with grouping and no currency symbol', () {
+    const builder = InvoicePdfBuilder();
+    expect(builder.formatAmount(10029), '100.29');
+    expect(builder.formatAmount(690035), '6,900.35');
+    expect(builder.formatAmount(-1), '-0.01');
+    expect(builder.formatAmount(690035), isNot(contains('रू')));
   });
 }

@@ -11,9 +11,9 @@ import '../repositories/payments_repository.dart';
 import 'supabase_provider.dart';
 
 const _billSelect =
-    '*, customers(shop_name), members!bills_created_by_fkey(display_name, role)';
+    '*, customers:customer_directory!bills_customer_id_fkey(shop_name), members!bills_created_by_fkey(display_name, role)';
 const _billSelectWithItems =
-    '*, customers(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*), payments(ref_note, created_at)';
+    '*, customers:customer_directory!bills_customer_id_fkey(shop_name), members!bills_created_by_fkey(display_name, role), bill_items(*), payments(ref_note, created_at)';
 
 class SupabaseBillsRepository implements BillsRepository {
   SupabaseBillsRepository(this._client, PaymentsRepository payments);

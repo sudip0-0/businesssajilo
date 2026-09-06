@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 /// Customer shopping cart: productId → quantity.
 class CartNotifier extends Notifier<Map<String, int>> {
+  String placementId = const Uuid().v4();
   @override
   Map<String, int> build() => {};
 
@@ -22,7 +24,10 @@ class CartNotifier extends Notifier<Map<String, int>> {
     setQty(productId, (state[productId] ?? 0) + 1);
   }
 
-  void clear() => state = {};
+  void clear() {
+    placementId = const Uuid().v4();
+    state = {};
+  }
 
   void replaceAll(Map<String, int> quantities) {
     state = Map<String, int>.from(quantities)

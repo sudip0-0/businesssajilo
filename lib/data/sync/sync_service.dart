@@ -19,6 +19,9 @@ class SyncService {
   SyncService({
     required AppDatabase db,
     required SupabaseClient client,
+    bool includeCustomerBalances = true,
+    bool Function()? isSessionCurrent,
+    Duration requestTimeout = const Duration(seconds: 15),
     Connectivity? connectivity,
     Future<List<ConnectivityResult>> Function()? connectivityCheck,
     Future<bool> Function()? reachabilityProbe,
@@ -30,8 +33,22 @@ class SyncService {
        _reachabilityProbe = reachabilityProbe ?? isSupabaseReachable,
        _scheduleRetry = scheduleRetry,
        _cancelScheduledRetry = cancelScheduledRetry,
-       _puller = SyncPuller(db: db, client: client),
-       _pusher = SyncPusher(db: db, client: client);
+       _requestTimeout = requestTimeout,
+       _isSessionCurrent = isSessionCurrent {
+    _puller = SyncPuller(
+      db: db,
+      client: client,
+      includeCustomerBalances: includeCustomerBalances,
+      isActive: () => isActive,
+      requestTimeout: requestTimeout,
+    );
+    _pusher = SyncPusher(
+      db: db,
+      client: client,
+      isActive: () => isActive,
+      requestTimeout: requestTimeout,
+    );
+  }
 
   final AppDatabase _db;
   final Connectivity _connectivity;
@@ -39,8 +56,22 @@ class SyncService {
   final Future<bool> Function() _reachabilityProbe;
   final void Function(Duration delay, void Function() run)? _scheduleRetry;
   final void Function()? _cancelScheduledRetry;
-  final SyncPuller _puller;
-  final SyncPusher _pusher;
+  final bool Function()? _isSessionCurrent;
+  final Duration _requestTimeout;
+  late final SyncPuller _puller;
+  late final SyncPusher _pusher;
+  bool _disposed = false;
+  Future<void>? _running;
+
+  bool get isActive => !_disposed && (_isSessionCurrent?.call() ?? true);
+
+  Future<void> close() async {
+    dispose();
+    try {
+      await _running;
+    } catch (_) {}
+  }
+
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   final SyncCoalesce _coalesce = SyncCoalesce();
   final ReachabilityBackoff _reachabilityBackoff = ReachabilityBackoff();
@@ -77,20 +108,27 @@ class SyncService {
   }
 
   void dispose() {
+    _disposed = true;
     unawaited(_connectivitySub?.cancel());
     _connectivitySub = null;
     _clearReachabilityRetry();
   }
 
   Future<bool> get isOnline async {
-    final results =
-        await (_connectivityCheck?.call() ?? _connectivity.checkConnectivity());
-    if (!results.any((r) => r != ConnectivityResult.none)) return false;
-    return _reachabilityProbe();
+    if (!isActive) return false;
+    return (() async {
+      final results =
+          await (_connectivityCheck?.call() ??
+              _connectivity.checkConnectivity());
+      if (!isActive || !results.any((r) => r != ConnectivityResult.none)) {
+        return false;
+      }
+      return _reachabilityProbe();
+    })().timeout(_requestTimeout, onTimeout: () => false);
   }
 
   void _armReachabilityRetry() {
-    if (_retryArmed) return;
+    if (!isActive || _retryArmed) return;
     _retryArmed = true;
     final delay = _reachabilityBackoff.next();
     void run() {
@@ -115,7 +153,19 @@ class SyncService {
     _cancelScheduledRetry?.call();
   }
 
-  Future<void> syncNow({bool initial = false}) async {
+  Future<void> syncNow({bool initial = false}) {
+    if (!isActive) return Future.value();
+    final running = _running;
+    if (running != null) {
+      _coalesce.markQueuedIfBusy();
+      return running;
+    }
+    return _running = _runSync(initial: initial).whenComplete(() {
+      _running = null;
+    });
+  }
+
+  Future<void> _runSync({bool initial = false}) async {
     if (_coalesce.syncing) {
       _coalesce.markQueuedIfBusy();
       return;
@@ -124,7 +174,7 @@ class SyncService {
       _armReachabilityRetry();
       return;
     }
-    if (!_coalesce.tryEnter()) return;
+    if (!isActive || !_coalesce.tryEnter()) return;
 
     final started = DateTime.now().toUtc();
     final pendingStart = await _db.pendingCount();
@@ -167,7 +217,8 @@ class SyncService {
           if (pullError != null) {
             _armReachabilityRetry();
           }
-        } while (_coalesce.shouldRepeat);
+        } while (isActive && _coalesce.shouldRepeat);
+        if (!isActive) return;
         await _db.pruneSyncedQueue();
         if (pullError == null) {
           await _db.setMetaValue(

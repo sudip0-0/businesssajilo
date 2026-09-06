@@ -63,6 +63,7 @@ class _FakeOrders implements OrdersRepository {
 
   @override
   Future<Order> placeOrder({
+    String? id,
     required String customerId,
     required List<OrderLineInput> lines,
     String? note,
@@ -71,6 +72,10 @@ class _FakeOrders implements OrdersRepository {
   @override
   Future<Order> updateStatus(String id, OrderStatus status) =>
       throw UnimplementedError();
+
+  @override
+  Future<BillingOrderDraft?> billingDraftFromOrder(String orderId) async =>
+      null;
 }
 
 class _FakeProducts implements ProductsRepository {
@@ -198,7 +203,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Cola'), findsOneWidget);
-    // 2 × 500 paisa = रू 10 (showPaisa: false).
+    // 2 × 500 paisa = रू 10.00.
     expect(find.textContaining('Grand Total'), findsOneWidget);
     expect(find.textContaining('10'), findsWidgets);
 

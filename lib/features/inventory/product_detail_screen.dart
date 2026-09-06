@@ -606,8 +606,9 @@ void _showProductTopCustomersSheet(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Consumer(
             builder: (context, ref, _) {
-              final buyersAsync =
-                  ref.watch(productTopCustomersProvider(productId));
+              final buyersAsync = ref.watch(
+                productTopCustomersProvider(productId),
+              );
               return ListView(
                 controller: scrollController,
                 children: [
@@ -625,14 +626,14 @@ void _showProductTopCustomersSheet(
                   Text(
                     productName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     l10n.topCustomersForProduct,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: BsColors.outline,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: BsColors.outline),
                   ),
                   const SizedBox(height: 16),
                   buyersAsync.when(
@@ -644,8 +645,9 @@ void _showProductTopCustomersSheet(
                     ),
                     error: (_, _) => ErrorState(
                       message: l10n.loadingFailed,
-                      onRetry: () =>
-                          ref.invalidate(productTopCustomersProvider(productId)),
+                      onRetry: () => ref.invalidate(
+                        productTopCustomersProvider(productId),
+                      ),
                     ),
                     data: (rows) {
                       if (rows.isEmpty) {
@@ -676,8 +678,9 @@ void _showProductTopCustomersSheet(
                             ),
                             title: Text(
                               r.label,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             subtitle: Text(
                               '${l10n.qtySold}: ${r.qtySold} · ${l10n.totalSales}: ${formatNpr(Paisa(r.revenue), showPaisa: false)}',
@@ -692,9 +695,8 @@ void _showProductTopCustomersSheet(
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => CustomerDetailScreen(
-                                    customerId: r.id,
-                                  ),
+                                  builder: (_) =>
+                                      CustomerDetailScreen(customerId: r.id),
                                 ),
                               );
                             },

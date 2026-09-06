@@ -13,7 +13,7 @@ import 'pdf_fonts.dart';
 
 /// Builds Nepal-style bill / credit-note PDFs (A4 or A5).
 ///
-/// Amounts are whole rupees with grouping and no currency symbol or paisa
+/// Amounts include paisa with grouping and no currency symbol or separate paisa
 /// column — matching a typical shop invoice without VAT.
 class InvoicePdfBuilder {
   const InvoicePdfBuilder();
@@ -298,8 +298,8 @@ class InvoicePdfBuilder {
             '${i + 1}',
             _lineLabel(doc.lines[i], labels.discount),
             '${doc.lines[i].qty}',
-            _money(doc.lines[i].rate),
-            _money(
+            formatAmount(doc.lines[i].rate),
+            formatAmount(
               lineGrossPaisa(
                 qty: doc.lines[i].qty,
                 ratePaisa: doc.lines[i].rate,
@@ -355,7 +355,11 @@ class InvoicePdfBuilder {
     _Sizes fs,
     pw.TextStyle style,
   ) {
-    return _dataRow(['', '', '', label, _money(amountPaisa)], fs, style: style);
+    return _dataRow(
+      ['', '', '', label, formatAmount(amountPaisa)],
+      fs,
+      style: style,
+    );
   }
 
   pw.Widget _dataRow(List<String> values, _Sizes fs, {pw.TextStyle? style}) {
@@ -434,12 +438,12 @@ class InvoicePdfBuilder {
 
   String _lineLabel(InvoiceLine line, String discountLabel) {
     if (line.discount <= 0) return line.name;
-    return '${line.name}  ($discountLabel ${_money(-line.discount)})';
+    return '${line.name}  ($discountLabel ${formatAmount(-line.discount)})';
   }
 
-  /// Bill print amounts: Nepali grouping, no currency symbol, no paisa.
-  String _money(int amountPaisa) {
-    return formatNpr(Paisa(amountPaisa), showSymbol: false, showPaisa: false);
+  /// Bill print amounts: Nepali grouping, no currency symbol, with paisa.
+  String formatAmount(int amountPaisa) {
+    return formatNpr(Paisa(amountPaisa), showSymbol: false, showPaisa: true);
   }
 }
 
