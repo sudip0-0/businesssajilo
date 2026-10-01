@@ -9,7 +9,7 @@
     "test": "test"
   },
   "devDependencies": {
-    "playwright": "^1.60.0"
+    "playwright": "^1.63.0"
   },
   "scripts": {
     "e2e:web": "node scripts/e2e_web.mjs",
