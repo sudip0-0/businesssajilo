@@ -12,6 +12,7 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
+import '../../../features/onboarding/first_bill_checklist_provider.dart';
 import '../../../features/onboarding/first_run_tour.dart';
 import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../../features/reports/providers.dart';
@@ -27,6 +28,7 @@ import 'sections/web_dashboard_kpi_grid.dart';
 import 'sections/web_dashboard_recent_activity.dart';
 import 'sections/web_dashboard_sales_chart.dart';
 import 'sections/web_dashboard_transactions_table.dart';
+import 'sections/web_first_bill_checklist_card.dart';
 
 class WebOwnerDashboardPage extends ConsumerStatefulWidget {
   const WebOwnerDashboardPage({super.key});
@@ -53,6 +55,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
 
   Future<void> _refresh() async {
     invalidateOwnerDashboardWidget(ref);
+    ref.invalidate(firstBillChecklistProvider);
   }
 
   @override
@@ -113,6 +116,7 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                 onRetry: () => ref.invalidate(ownerDashboardStatsProvider),
               ),
               const SizedBox(height: 16),
+              const WebFirstBillChecklistCard(),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final wide = constraints.maxWidth >= BsBreakpoints.desktop;

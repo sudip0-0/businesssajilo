@@ -6,12 +6,16 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/preferences/saved_filters_store.dart';
 import '../../../core/ui/paginated_list_state.dart';
+import '../../../core/ui/reset_filters_button.dart';
 import '../../../core/ui/stock_badge.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/products_repository.dart';
+import '../../../domain/enums.dart';
 import '../../../domain/models/product.dart';
 import '../../../core/ui/adaptive_sheet.dart';
+import '../../../features/auth/providers/filter_scope_provider.dart';
 import '../../../features/inventory/product_detail_screen.dart';
 import '../../../features/inventory/product_import_sheet.dart';
 import '../../../features/inventory/providers.dart';
@@ -24,6 +28,7 @@ import '../../ui/web_empty_state.dart';
 import '../../ui/web_search_field.dart';
 import '../../ui/web_skeleton.dart';
 import '../web_page_scaffold.dart';
+import 'web_stock_count_dialog.dart';
 
 /// Base path for the product list under the current role shell.
 /// Owner: `/owner/inventory`; sales/warehouse: `/sales/stock`, `/warehouse/stock`.
@@ -52,8 +57,6 @@ class WebProductListPage extends ConsumerStatefulWidget {
   ConsumerState<WebProductListPage> createState() => _WebProductListPageState();
 }
 
-enum _SortField { name, quantity, price }
-
 class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   static const _searchDebounce = Duration(milliseconds: 300);
 
@@ -63,21 +66,61 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   final _scrollController = ScrollController();
   late final TextEditingController _searchController;
   bool _showInactive = false;
-  _SortField _sortField = _SortField.name;
+  ProductStockFilter _stockFilter = ProductStockFilter.all;
+  InventorySortField _sortField = InventorySortField.name;
   bool _sortAscending = true;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final initialQ = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final initialQ = GoRouterState.of(context).uri.queryParameters['q'] ?? '';
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref
+        .read(savedFiltersStoreProvider)
+        .loadInventory(scope, canEdit: widget.canEdit);
+    if (!mounted) return;
+    setState(() {
       if (initialQ.isNotEmpty) {
         _query = initialQ;
         _searchController.text = initialQ;
       }
-      _initPager();
+      _stockFilter = saved.stockFilter;
+      _showInactive = widget.canEdit && saved.showInactive;
+      _sortField = saved.sortField;
+      _sortAscending = saved.sortAscending;
     });
+    _initPager();
+  }
+
+  InventoryListFilterState get _filterState => InventoryListFilterState(
+    stockFilter: _stockFilter,
+    showInactive: widget.canEdit && _showInactive,
+    sortField: _sortField,
+    sortAscending: _sortAscending,
+  );
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveInventory(scope, _filterState),
+    );
+  }
+
+  void _resetFilters() {
+    if (_filterState.isDefault) return;
+    setState(() {
+      _stockFilter = ProductStockFilter.all;
+      _showInactive = false;
+      _sortField = InventorySortField.name;
+      _sortAscending = true;
+    });
+    _persistFilters();
+    _pager?.refresh();
   }
 
   void _initPager() {
@@ -89,6 +132,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             offset: offset,
             limit: limit,
             query: _query.trim().isEmpty ? null : _query.trim(),
+            stockFilter: _stockFilter,
           ),
       onChanged: () {
         if (mounted) setState(() {});
@@ -108,11 +152,29 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     });
   }
 
+  void _setStockFilter(ProductStockFilter filter) {
+    if (_stockFilter == filter) return;
+    setState(() => _stockFilter = filter);
+    _persistFilters();
+    _pager?.refresh();
+  }
+
   Future<void> _setShowInactive(bool value) async {
     if (_showInactive == value) return;
     setState(() => _showInactive = value);
+    _persistFilters();
     await _pager?.refresh();
     if (mounted) setState(() {});
+  }
+
+  Future<void> _openStockCount() async {
+    final reconciled = await showWebStockCountDialog(context);
+    if (reconciled == true && mounted) {
+      bumpInventoryRevision(ref);
+      ref.invalidate(lowStockCountProvider);
+      ref.invalidate(lowStockProductsProvider);
+      await _pager?.refresh();
+    }
   }
 
   Future<void> _openStockIn() async {
@@ -169,7 +231,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
   }
 
   Widget _buildSortControl(AppLocalizations l10n) {
-    return PopupMenuButton<_SortField>(
+    return PopupMenuButton<InventorySortField>(
       initialValue: _sortField,
       tooltip: l10n.sortBy,
       icon: Icon(
@@ -178,41 +240,44 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             : PhosphorIconsRegular.arrowDown,
       ),
       onSelected: (field) {
-        if (field == _sortField) {
-          setState(() => _sortAscending = !_sortAscending);
-        } else {
-          setState(() => _sortField = field);
-        }
+        setState(() {
+          if (field == _sortField) {
+            _sortAscending = !_sortAscending;
+          } else {
+            _sortField = field;
+          }
+        });
+        _persistFilters();
       },
       itemBuilder: (context) => [
         PopupMenuItem(
-          value: _SortField.name,
+          value: InventorySortField.name,
           child: Text(
             l10n.sortName,
             style: TextStyle(
-              fontWeight: _sortField == _SortField.name
+              fontWeight: _sortField == InventorySortField.name
                   ? FontWeight.bold
                   : null,
             ),
           ),
         ),
         PopupMenuItem(
-          value: _SortField.quantity,
+          value: InventorySortField.quantity,
           child: Text(
             l10n.sortQuantity,
             style: TextStyle(
-              fontWeight: _sortField == _SortField.quantity
+              fontWeight: _sortField == InventorySortField.quantity
                   ? FontWeight.bold
                   : null,
             ),
           ),
         ),
         PopupMenuItem(
-          value: _SortField.price,
+          value: InventorySortField.price,
           child: Text(
             l10n.sortPrice,
             style: TextStyle(
-              fontWeight: _sortField == _SortField.price
+              fontWeight: _sortField == InventorySortField.price
                   ? FontWeight.bold
                   : null,
             ),
@@ -228,6 +293,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     final pager = _pager;
     final selectedId = widget.selectedProductId;
     final lowStockCount = ref.watch(lowStockCountProvider).value ?? 0;
+    final activeFilterCount = _filterState.activeCount;
 
     ref.listen<int>(inventoryRevisionProvider, (prev, next) {
       if (prev != next) {
@@ -240,6 +306,12 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
       actions: [
         if (widget.canManageStock) ...[
           OutlinedButton.icon(
+            onPressed: _openStockCount,
+            icon: const Icon(PhosphorIconsRegular.clipboardText),
+            label: Text(l10n.stockCount),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
             onPressed: _openStockIn,
             icon: const Icon(PhosphorIconsRegular.package),
             label: Text(l10n.stockIn),
@@ -247,21 +319,17 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
           const SizedBox(width: 8),
         ],
         if (widget.canEdit) ...[
-          FilterChip(
-            label: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
-            selected: _showInactive,
-            onSelected: _setShowInactive,
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final imported = await showProductImportSheet(context);
-              if (imported == true && mounted) {
-                await _pager?.refresh();
-              }
-            },
-            icon: const Icon(PhosphorIconsRegular.uploadSimple),
-            label: Text(l10n.importFromExcel),
+          Tooltip(
+            message: l10n.importFromExcel,
+            child: IconButton.outlined(
+              onPressed: () async {
+                final imported = await showProductImportSheet(context);
+                if (imported == true && mounted) {
+                  await _pager?.refresh();
+                }
+              },
+              icon: const Icon(PhosphorIconsRegular.uploadSimple),
+            ),
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
@@ -277,7 +345,7 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Row(
                 children: [
                   Expanded(
@@ -289,6 +357,40 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
                   ),
                   const SizedBox(width: 8),
                   _buildSortControl(l10n),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (final (filter, label) in [
+                    (ProductStockFilter.all, l10n.allStock),
+                    (ProductStockFilter.low, l10n.stockFilterLow),
+                    (ProductStockFilter.out, l10n.stockFilterOut),
+                    (ProductStockFilter.inStock, l10n.stockFilterIn),
+                  ])
+                    FilterChip(
+                      label: Text(label),
+                      selected: _stockFilter == filter,
+                      onSelected: (_) => _setStockFilter(filter),
+                    ),
+                  if (widget.canEdit)
+                    FilterChip(
+                      label: Text(
+                        _showInactive ? l10n.hideInactive : l10n.showInactive,
+                      ),
+                      selected: _showInactive,
+                      onSelected: _setShowInactive,
+                    ),
+                  if (activeFilterCount > 0)
+                    ResetFiltersButton(
+                      activeCount: activeFilterCount,
+                      onReset: _resetFilters,
+                    ),
                 ],
               ),
             ),
@@ -326,9 +428,13 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     final sorted = items.where((p) => p.isActive == !_showInactive).toList();
     sorted.sort((a, b) {
       final cmp = switch (_sortField) {
-        _SortField.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        _SortField.quantity => a.stockCached.compareTo(b.stockCached),
-        _SortField.price => a.referencePrice.compareTo(b.referencePrice),
+        InventorySortField.name => a.name.toLowerCase().compareTo(
+          b.name.toLowerCase(),
+        ),
+        InventorySortField.quantity => a.stockCached.compareTo(b.stockCached),
+        InventorySortField.price => a.referencePrice.compareTo(
+          b.referencePrice,
+        ),
       };
       return _sortAscending ? cmp : -cmp;
     });

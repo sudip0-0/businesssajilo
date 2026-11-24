@@ -6,21 +6,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/layout/two_pane_layout.dart';
+import '../../core/preferences/saved_filters_store.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/paginated_list_state.dart';
+import '../../core/ui/reset_filters_button.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/customers_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../core/ui/adaptive_sheet.dart';
+import '../auth/providers/filter_scope_provider.dart';
 import 'add_customer_sheet.dart';
 import 'customer_detail_screen.dart';
 import 'providers.dart';
-
-enum _CustomerSortField { name, balance, date }
 
 class CustomerListScreen extends ConsumerStatefulWidget {
   const CustomerListScreen({
@@ -45,13 +46,51 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   PaginatedListState<Customer>? _pager;
   final _scrollController = ScrollController();
   CustomerBalanceFilter _filter = CustomerBalanceFilter.all;
-  _CustomerSortField _sortField = _CustomerSortField.name;
+  CustomerListSortField _sortField = CustomerListSortField.name;
   bool _sortAscending = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref
+        .read(savedFiltersStoreProvider)
+        .loadCustomers(scope);
+    if (!mounted) return;
+    setState(() {
+      _filter = saved.balanceFilter;
+      _sortField = saved.sortField;
+      _sortAscending = saved.sortAscending;
+    });
+    _initPager();
+  }
+
+  CustomerListFilterState get _filterState => CustomerListFilterState(
+    balanceFilter: _filter,
+    sortField: _sortField,
+    sortAscending: _sortAscending,
+  );
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveCustomers(scope, _filterState),
+    );
+  }
+
+  void _resetFilters() {
+    if (_filterState.isDefault) return;
+    setState(() {
+      _filter = CustomerBalanceFilter.all;
+      _sortField = CustomerListSortField.name;
+      _sortAscending = true;
+    });
+    _persistFilters();
+    _pager?.refresh();
   }
 
   void _initPager() {
@@ -94,6 +133,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   void _setFilter(CustomerBalanceFilter filter) {
     if (_filter == filter) return;
     setState(() => _filter = filter);
+    _persistFilters();
     _pager?.refresh();
   }
 
@@ -101,11 +141,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     final filtered = List<Customer>.from(_pager?.items ?? []);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _CustomerSortField.name => a.shopName.toLowerCase().compareTo(
+        CustomerListSortField.name => a.shopName.toLowerCase().compareTo(
           b.shopName.toLowerCase(),
         ),
-        _CustomerSortField.balance => a.balanceDue.compareTo(b.balanceDue),
-        _CustomerSortField.date =>
+        CustomerListSortField.balance => a.balanceDue.compareTo(b.balanceDue),
+        CustomerListSortField.date =>
           (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
             b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
           ),
@@ -119,6 +159,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
+    final activeFilterCount = _filterState.activeCount;
 
     ref.listen<int>(customersRevisionProvider, (prev, next) {
       if (prev != next) {
@@ -144,93 +185,90 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-          child: SizedBox(
-            height: 48,
-            child: ShaderMask(
-              shaderCallback: (bounds) {
-                return const LinearGradient(
-                  colors: [Colors.white, Colors.white, Color(0x00FFFFFF)],
-                  stops: [0.0, 0.88, 1.0],
-                ).createShader(bounds);
-              },
-              blendMode: BlendMode.dstIn,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 0, 28, 0),
-                children: [
-                  for (final (filter, label) in [
-                    (CustomerBalanceFilter.all, l10n.allCustomers),
-                    (CustomerBalanceFilter.due, l10n.customerFilterDues),
-                    (CustomerBalanceFilter.credit, l10n.creditBalance),
-                    (CustomerBalanceFilter.settled, l10n.customerFilterSettled),
-                  ])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (final (filter, label) in [
+                      (CustomerBalanceFilter.all, l10n.allCustomers),
+                      (CustomerBalanceFilter.due, l10n.customerFilterDues),
+                      (CustomerBalanceFilter.credit, l10n.creditBalance),
+                      (
+                        CustomerBalanceFilter.settled,
+                        l10n.customerFilterSettled,
+                      ),
+                    ])
+                      FilterChip(
                         label: Text(label),
                         selected: _filter == filter,
                         onSelected: (_) => _setFilter(filter),
                       ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: PopupMenuButton<_CustomerSortField>(
-                      initialValue: _sortField,
-                      tooltip: l10n.sortBy,
-                      icon: Icon(
-                        _sortAscending
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
+                    if (activeFilterCount > 0)
+                      ResetFiltersButton(
+                        activeCount: activeFilterCount,
+                        onReset: _resetFilters,
                       ),
-                      onSelected: (field) {
-                        if (field == _sortField) {
-                          setState(() => _sortAscending = !_sortAscending);
-                        } else {
-                          setState(() => _sortField = field);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: _CustomerSortField.name,
-                          child: Text(
-                            l10n.sortName,
-                            style: TextStyle(
-                              fontWeight: _sortField == _CustomerSortField.name
-                                  ? FontWeight.bold
-                                  : null,
-                            ),
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: _CustomerSortField.balance,
-                          child: Text(
-                            l10n.balance,
-                            style: TextStyle(
-                              fontWeight:
-                                  _sortField == _CustomerSortField.balance
-                                  ? FontWeight.bold
-                                  : null,
-                            ),
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: _CustomerSortField.date,
-                          child: Text(
-                            l10n.sortDate,
-                            style: TextStyle(
-                              fontWeight: _sortField == _CustomerSortField.date
-                                  ? FontWeight.bold
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+              PopupMenuButton<CustomerListSortField>(
+                initialValue: _sortField,
+                tooltip: l10n.sortBy,
+                icon: Icon(
+                  _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                ),
+                onSelected: (field) {
+                  setState(() {
+                    if (field == _sortField) {
+                      _sortAscending = !_sortAscending;
+                    } else {
+                      _sortField = field;
+                    }
+                  });
+                  _persistFilters();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: CustomerListSortField.name,
+                    child: Text(
+                      l10n.sortName,
+                      style: TextStyle(
+                        fontWeight: _sortField == CustomerListSortField.name
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: CustomerListSortField.balance,
+                    child: Text(
+                      l10n.balance,
+                      style: TextStyle(
+                        fontWeight: _sortField == CustomerListSortField.balance
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: CustomerListSortField.date,
+                    child: Text(
+                      l10n.sortDate,
+                      style: TextStyle(
+                        fontWeight: _sortField == CustomerListSortField.date
+                            ? FontWeight.bold
+                            : null,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         ),
         Expanded(child: _buildListBody(l10n, pager)),

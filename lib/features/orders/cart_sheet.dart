@@ -26,8 +26,15 @@ class CartSheet extends ConsumerStatefulWidget {
 
 class _CartSheetState extends ConsumerState<CartSheet> {
   late final Map<String, int> _qty = Map.from(widget.quantities);
-  final _noteController = TextEditingController();
+  late final TextEditingController _noteController;
   bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final notifier = ref.read(cartProvider.notifier);
+    _noteController = TextEditingController(text: notifier.note);
+  }
 
   @override
   void dispose() {
@@ -63,6 +70,7 @@ class _CartSheetState extends ConsumerState<CartSheet> {
       setState(() {
         for (final id in staleIds) {
           _qty.remove(id);
+          ref.read(cartProvider.notifier).setQty(id, 0);
         }
       });
       showBsSnackBar(context, message: l10n.removedUnavailableItems);
@@ -108,6 +116,7 @@ class _CartSheetState extends ConsumerState<CartSheet> {
                   .toList(),
               note: note.isEmpty ? null : note,
             );
+        ref.read(cartProvider.notifier).clear();
         if (mounted) Navigator.pop(context, true);
       },
     );
@@ -138,13 +147,16 @@ class _CartSheetState extends ConsumerState<CartSheet> {
               title: Text(product.name),
               trailing: QtyStepper(
                 value: qty,
-                onChanged: (v) => setState(() {
-                  if (v <= 0) {
-                    _qty.remove(product.id);
-                  } else {
-                    _qty[product.id] = v;
-                  }
-                }),
+                onChanged: (v) {
+                  setState(() {
+                    if (v <= 0) {
+                      _qty.remove(product.id);
+                    } else {
+                      _qty[product.id] = v;
+                    }
+                  });
+                  ref.read(cartProvider.notifier).setQty(product.id, v);
+                },
               ),
             );
           }),
@@ -152,6 +164,7 @@ class _CartSheetState extends ConsumerState<CartSheet> {
             controller: _noteController,
             decoration: InputDecoration(labelText: l10n.orderNote),
             maxLines: 2,
+            onChanged: (v) => ref.read(cartProvider.notifier).setNote(v),
           ),
           const SizedBox(height: 16),
           FilledButton(

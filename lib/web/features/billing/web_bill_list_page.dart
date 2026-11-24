@@ -1,20 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/preferences/saved_filters_store.dart';
 import '../../../core/ui/bill_status_chip.dart';
 import '../../../core/ui/debounced_list_search.dart';
 import '../../../core/ui/error_state.dart';
 import '../../../core/ui/paginated_list_state.dart';
+import '../../../core/ui/reset_filters_button.dart';
 import '../../../core/utils/bill_customer_label.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/bill.dart';
+import '../../../features/auth/providers/filter_scope_provider.dart';
 import '../../../features/billing/bill_date_filter_bar.dart';
 import '../../../features/billing/bill_detail_screen.dart';
+import '../../../features/billing/bill_period_codec.dart';
 import '../../../features/billing/providers.dart';
 import '../../../features/reports/report_period.dart';
 import '../../layout/web_master_detail.dart';
@@ -40,16 +46,12 @@ class WebBillListPage extends ConsumerStatefulWidget {
   ConsumerState<WebBillListPage> createState() => _WebBillListPageState();
 }
 
-enum _BillStatusFilter { all, paid, partial, due }
-
-enum _BillSortField { date, amount, customer }
-
 class _WebBillListPageState extends ConsumerState<WebBillListPage> {
   PaginatedListState<Bill>? _pager;
   final _scrollController = ScrollController();
   DebouncedListSearchController<Bill>? _search;
-  _BillStatusFilter _statusFilter = _BillStatusFilter.all;
-  _BillSortField _sortField = _BillSortField.date;
+  BillListStatusFilter _statusFilter = BillListStatusFilter.all;
+  BillListSortField _sortField = BillListSortField.date;
   bool _sortAscending = false;
 
   /// `null` = all dates; otherwise bills are loaded via [BillsRepository.listInRange].
@@ -58,22 +60,52 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _search = DebouncedListSearchController<Bill>(
-        search: _searchBills,
-        onChanged: () {
-          if (mounted) setState(() {});
-        },
-      );
-      _initPager();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    _search = DebouncedListSearchController<Bill>(
+      search: _searchBills,
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref.read(savedFiltersStoreProvider).loadBills(scope);
+    if (!mounted) return;
+    setState(() {
+      _statusFilter = saved.status;
+      _datePeriod = decodeBillPeriod(saved);
+      _sortField = saved.sortField;
+      _sortAscending = saved.sortAscending;
     });
+    _initPager();
+  }
+
+  BillListFilterState get _filterState {
+    final encoded = encodeBillPeriod(_datePeriod);
+    return BillListFilterState(
+      status: _statusFilter,
+      periodQuery: encoded.periodQuery,
+      customFromMs: encoded.customFromMs,
+      customToMs: encoded.customToMs,
+      sortField: _sortField,
+      sortAscending: _sortAscending,
+    );
+  }
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveBills(scope, _filterState),
+    );
   }
 
   BillStatus? get _statusParam => switch (_statusFilter) {
-    _BillStatusFilter.all => null,
-    _BillStatusFilter.paid => BillStatus.paid,
-    _BillStatusFilter.partial => BillStatus.partial,
-    _BillStatusFilter.due => BillStatus.due,
+    BillListStatusFilter.all => null,
+    BillListStatusFilter.paid => BillStatus.paid,
+    BillListStatusFilter.partial => BillStatus.partial,
+    BillListStatusFilter.due => BillStatus.due,
   };
 
   Future<List<Bill>> _searchBills(String query) {
@@ -120,6 +152,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
 
   void _onDatePeriodChanged(ReportPeriod? period) {
     setState(() => _datePeriod = period);
+    _persistFilters();
     _pager?.refresh();
     if (_search?.isActive == true) {
       _search!.retry();
@@ -127,13 +160,16 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
   }
 
   bool get _isFiltering =>
-      _statusFilter != _BillStatusFilter.all || _datePeriod != null;
+      _statusFilter != BillListStatusFilter.all || _datePeriod != null;
 
   void _clearFilters() {
     setState(() {
-      _statusFilter = _BillStatusFilter.all;
+      _statusFilter = BillListStatusFilter.all;
       _datePeriod = null;
+      _sortField = BillListSortField.date;
+      _sortAscending = false;
     });
+    _persistFilters();
     _pager?.refresh();
     if (_search?.isActive == true) {
       _search!.retry();
@@ -153,12 +189,12 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     final filtered = List<Bill>.from(bills);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _BillSortField.date =>
+        BillListSortField.date =>
           (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
             b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
           ),
-        _BillSortField.amount => a.grandTotal.compareTo(b.grandTotal),
-        _BillSortField.customer =>
+        BillListSortField.amount => a.grandTotal.compareTo(b.grandTotal),
+        BillListSortField.customer =>
           (a.customerShopName ?? '').toLowerCase().compareTo(
             (b.customerShopName ?? '').toLowerCase(),
           ),
@@ -173,7 +209,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
   }
 
   Widget _buildSortControl(AppLocalizations l10n) {
-    return PopupMenuButton<_BillSortField>(
+    return PopupMenuButton<BillListSortField>(
       initialValue: _sortField,
       tooltip: l10n.sortBy,
       icon: Icon(
@@ -182,41 +218,44 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
             : PhosphorIconsRegular.arrowDown,
       ),
       onSelected: (field) {
-        if (field == _sortField) {
-          setState(() => _sortAscending = !_sortAscending);
-        } else {
-          setState(() => _sortField = field);
-        }
+        setState(() {
+          if (field == _sortField) {
+            _sortAscending = !_sortAscending;
+          } else {
+            _sortField = field;
+          }
+        });
+        _persistFilters();
       },
       itemBuilder: (context) => [
         PopupMenuItem(
-          value: _BillSortField.date,
+          value: BillListSortField.date,
           child: Text(
             l10n.sortDate,
             style: TextStyle(
-              fontWeight: _sortField == _BillSortField.date
+              fontWeight: _sortField == BillListSortField.date
                   ? FontWeight.bold
                   : null,
             ),
           ),
         ),
         PopupMenuItem(
-          value: _BillSortField.amount,
+          value: BillListSortField.amount,
           child: Text(
             l10n.sortAmount,
             style: TextStyle(
-              fontWeight: _sortField == _BillSortField.amount
+              fontWeight: _sortField == BillListSortField.amount
                   ? FontWeight.bold
                   : null,
             ),
           ),
         ),
         PopupMenuItem(
-          value: _BillSortField.customer,
+          value: BillListSortField.customer,
           child: Text(
             l10n.sortCustomer,
             style: TextStyle(
-              fontWeight: _sortField == _BillSortField.customer
+              fontWeight: _sortField == BillListSortField.customer
                   ? FontWeight.bold
                   : null,
             ),
@@ -232,6 +271,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
     final prefix = _webRolePrefix(context);
     final selectedId = widget.selectedBillId;
     final pager = _pager;
+    final activeFilterCount = _filterState.activeCount;
 
     ref.listen<int>(billingRevisionProvider, (prev, next) {
       if (prev != next) {
@@ -266,34 +306,38 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final (filter, label) in [
-                            (_BillStatusFilter.all, l10n.allBills),
-                            (_BillStatusFilter.paid, l10n.paid),
-                            (_BillStatusFilter.partial, l10n.partial),
-                            (_BillStatusFilter.due, l10n.due),
-                          ])
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(label),
-                                selected: _statusFilter == filter,
-                                onSelected: (_) {
-                                  setState(() => _statusFilter = filter);
-                                  _pager?.refresh();
-                                  if (_search?.isActive == true) {
-                                    _search!.retry();
-                                  }
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final (filter, label) in [
+                          (BillListStatusFilter.all, l10n.allBills),
+                          (BillListStatusFilter.paid, l10n.paid),
+                          (BillListStatusFilter.partial, l10n.partial),
+                          (BillListStatusFilter.due, l10n.due),
+                        ])
+                          FilterChip(
+                            label: Text(label),
+                            selected: _statusFilter == filter,
+                            onSelected: (_) {
+                              setState(() => _statusFilter = filter);
+                              _persistFilters();
+                              _pager?.refresh();
+                              if (_search?.isActive == true) {
+                                _search!.retry();
+                              }
+                            },
+                          ),
+                        if (activeFilterCount > 0)
+                          ResetFiltersButton(
+                            activeCount: activeFilterCount,
+                            onReset: _clearFilters,
+                          ),
+                      ],
                     ),
                   ),
                   _buildSortControl(l10n),

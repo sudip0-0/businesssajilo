@@ -28,10 +28,12 @@ class StaffOrderFilterBar extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.trailing,
   });
 
   final StaffOrderFilter value;
   final ValueChanged<StaffOrderFilter> onChanged;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +43,7 @@ class StaffOrderFilterBar extends StatelessWidget {
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           for (final filter in StaffOrderFilter.values)
             FilterChip(
@@ -48,6 +51,7 @@ class StaffOrderFilterBar extends StatelessWidget {
               selected: value == filter,
               onSelected: (_) => onChanged(filter),
             ),
+          ?trailing,
         ],
       ),
     );

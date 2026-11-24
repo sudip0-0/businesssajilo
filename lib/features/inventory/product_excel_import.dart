@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/import/simple_xlsx.dart';
 import '../../core/utils/money.dart';
+import '../../data/repositories/product_import_repository.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../data/repositories/stock_repository.dart';
+import '../../domain/enums.dart';
 import 'product_form_screen.dart';
+import 'product_import_session_store.dart';
 
 /// Canonical Excel / CSV column headers for product import.
 const productImportHeaders = <String>[
@@ -344,21 +347,155 @@ class ProductImportRunner {
     required ProductsRepository products,
     required StockRepository stock,
     required String? memberId,
+    ProductImportRepository? idempotentImport,
+    Role? role,
   }) : _products = products,
        _stock = stock,
-       _memberId = memberId;
+       _memberId = memberId,
+       _idempotentImport = idempotentImport,
+       _role = role;
 
   final ProductsRepository _products;
   final StockRepository _stock;
   final String? _memberId;
+  final ProductImportRepository? _idempotentImport;
+  final Role? _role;
 
   // One runner is one import session. Row numbers identify rows in that file.
   // Keep acknowledged and ambiguous writes so a resumed run only attempts rows
-  // that have not been sent. These repositories allocate IDs internally, so a
-  // lost response cannot safely be retried (especially append-only stock).
+  // that have not been sent. Legacy fallback repositories allocate IDs
+  // internally, so a lost response cannot safely be retried without the
+  // idempotent `create_product_with_stock` RPC.
   final _completed = <int>{};
   final _unconfirmed = <int, ProductImportRowError>{};
   bool _running = false;
+
+  /// Runs or safely resumes a durable [ProductImportSession] with persisted
+  /// per-row `operationId`s and SKUs.
+  ///
+  /// When [idempotentImport] is available, retries send the exact same `op_id`
+  /// and payload to `create_product_with_stock` so partial failures recover
+  /// without duplicate products or duplicate opening stock.
+  Future<ProductImportSession> runSession(
+    ProductImportSession session, {
+    Future<void> Function(ProductImportSession updated)? onSessionUpdated,
+    void Function(int current, int total)? onProgress,
+  }) async {
+    if (_running) throw StateError('Import session already running');
+    _running = true;
+    try {
+      final rows = List<ProductImportSessionRow>.from(session.rows);
+      var currentSession = session.copyWith(rows: rows);
+      const chunkSize = 25;
+
+      for (var i = 0; i < rows.length; i++) {
+        if (i % chunkSize == 0) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        onProgress?.call(i + 1, rows.length);
+        final entry = rows[i];
+        if (entry.isDone) continue;
+
+        final row = entry.row;
+        // Enforce product.md §4: only Owner can record opening stock.
+        if (row.initialQuantity > 0 && _role != null && !_role.canManageStock) {
+          rows[i] = entry.copyWith(
+            status: ProductImportRowStatus.failed,
+            errorCode: 'opening_stock_owner_only',
+          );
+          currentSession = currentSession.copyWith(rows: List.of(rows));
+          await onSessionUpdated?.call(currentSession);
+          continue;
+        }
+
+        if (row.initialQuantity > 0 &&
+            (_memberId == null || _memberId.isEmpty)) {
+          rows[i] = entry.copyWith(
+            status: ProductImportRowStatus.failed,
+            errorCode: 'missing_member',
+          );
+          currentSession = currentSession.copyWith(rows: List.of(rows));
+          await onSessionUpdated?.call(currentSession);
+          continue;
+        }
+
+        final rpc = _idempotentImport;
+        if (rpc != null) {
+          try {
+            final res = await rpc.createProductWithStock(
+              opId: entry.operationId,
+              name: row.name,
+              nameNp: row.nameNp,
+              sku: entry.sku,
+              unit: row.unit,
+              costPrice: row.costPrice,
+              referencePrice: row.referencePrice,
+              lowStockThreshold: row.lowStockThreshold,
+              openingStock: row.initialQuantity,
+            );
+            rows[i] = entry.copyWith(
+              status: ProductImportRowStatus.completed,
+              clearError: true,
+              productId: res.product.id,
+            );
+          } catch (_) {
+            rows[i] = entry.copyWith(
+              status: ProductImportRowStatus.failed,
+              errorCode: 'create_unconfirmed',
+            );
+          }
+          currentSession = currentSession.copyWith(rows: List.of(rows));
+          await onSessionUpdated?.call(currentSession);
+          continue;
+        }
+
+        // Legacy non-idempotent path: never blindly retry an unconfirmed write.
+        if (entry.status == ProductImportRowStatus.unconfirmed) {
+          continue;
+        }
+
+        String? productId;
+        try {
+          final created = await _products.create(
+            name: row.name,
+            nameNp: row.nameNp,
+            sku: entry.sku,
+            unit: row.unit,
+            costPrice: row.costPrice,
+            referencePrice: row.referencePrice,
+            lowStockThreshold: row.lowStockThreshold,
+          );
+          productId = created.id;
+          if (row.initialQuantity > 0) {
+            await _stock.stockIn(
+              productId: productId,
+              qty: row.initialQuantity,
+              createdByMemberId: _memberId!,
+            );
+          }
+          rows[i] = entry.copyWith(
+            status: ProductImportRowStatus.completed,
+            clearError: true,
+            productId: productId,
+          );
+        } catch (_) {
+          rows[i] = entry.copyWith(
+            status: ProductImportRowStatus.unconfirmed,
+            errorCode: productId == null
+                ? 'create_unconfirmed'
+                : 'stock_unconfirmed',
+            productId: productId,
+          );
+        }
+        currentSession = currentSession.copyWith(rows: List.of(rows));
+        await onSessionUpdated?.call(currentSession);
+      }
+
+      return currentSession;
+    } finally {
+      _running = false;
+    }
+  }
 
   Future<ProductImportResult> run(
     List<ProductImportRow> rows, {
@@ -371,10 +508,6 @@ class ProductImportRunner {
       var imported = 0;
       final errors = List<ProductImportRowError>.from(priorErrors);
 
-      // Chunked processing: each chunk runs its rows through create+stockIn
-      // sequentially (per-row error isolation requires one row at a time), but
-      // progress is emitted per chunk boundary so the UI updates less often on
-      // large sheets.
       const chunkSize = 25;
       for (var i = 0; i < rows.length; i++) {
         if (i % chunkSize == 0) {
@@ -389,6 +522,17 @@ class ProductImportRunner {
         final previous = _unconfirmed[row.rowNumber];
         if (previous != null) {
           errors.add(previous);
+          continue;
+        }
+        if (row.initialQuantity > 0 && _role != null && !_role.canManageStock) {
+          errors.add(
+            ProductImportRowError(
+              rowNumber: row.rowNumber,
+              code: 'opening_stock_owner_only',
+              productName: row.name,
+              sku: row.sku,
+            ),
+          );
           continue;
         }
         if (row.initialQuantity > 0 &&

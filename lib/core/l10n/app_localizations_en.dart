@@ -2047,4 +2047,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profitSubtitle => 'Revenue, cost & margin analysis';
+
+  @override
+  String get resetFilters => 'Reset filters';
+
+  @override
+  String filtersActiveCount(int count) {
+    return '$count active';
+  }
+
+  @override
+  String get firstBillChecklistTitle => 'Get ready for your first bill';
+
+  @override
+  String firstBillChecklistProgress(int done, int total) {
+    return '$done of $total completed';
+  }
+
+  @override
+  String get firstBillChecklistDismiss => 'Dismiss checklist';
+
+  @override
+  String get checklistStepProfileTitle => 'Complete business profile';
+
+  @override
+  String get checklistStepProfileAction => 'Edit profile';
+
+  @override
+  String get checklistStepProductTitle => 'Add your first product';
+
+  @override
+  String get checklistStepCustomerTitle => 'Add your first customer';
+
+  @override
+  String get checklistStepBillTitle => 'Create your first bill';
+
+  @override
+  String get checklistCompleted => 'Completed';
+
+  @override
+  String get stockCount => 'Stock count';
+
+  @override
+  String get stockCountSubtitle =>
+      'Enter physical shelf counts to reconcile stock.';
+
+  @override
+  String get systemStock => 'System';
+
+  @override
+  String get countedStock => 'Counted';
+
+  @override
+  String get variance => 'Variance';
+
+  @override
+  String get stockCountReasonHint => 'e.g. Monthly physical godown count';
+
+  @override
+  String get stockCountChangedOnly => 'Changed only';
+
+  @override
+  String stockCountItemsToAdjust(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items to adjust',
+      one: '1 item to adjust',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stockCountNoChanges =>
+      'Enter at least one counted quantity that differs from system stock.';
+
+  @override
+  String get stockCountSubmit => 'Reconcile stock';
+
+  @override
+  String stockCountSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Reconciled $count products',
+      one: 'Reconciled 1 product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stockCountInvalidQty => 'Enter a whole number (0 or more)';
+
+  @override
+  String stockCountNetVariance(String delta) {
+    return 'Net variance: $delta';
+  }
+
+  @override
+  String stockCountSummary(int counted, int changed) {
+    return '$counted counted · $changed changed';
+  }
+
+  @override
+  String get cartDraftRestored => 'Saved cart restored';
+
+  @override
+  String get importSessionSavedTitle => 'Unfinished import session';
+
+  @override
+  String importSessionSavedBody(
+    String file,
+    int completed,
+    int total,
+    int remaining,
+  ) {
+    return '$file: $completed of $total imported, $remaining remaining.';
+  }
+
+  @override
+  String get importResumeSafe => 'Resume safely';
+
+  @override
+  String get importDiscardSession => 'Discard session';
+
+  @override
+  String get importOpeningStockOwnerOnly =>
+      'Only owners can set opening stock during import.';
 }

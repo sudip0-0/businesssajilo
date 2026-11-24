@@ -20,6 +20,8 @@ import '../auth/providers/auth_provider.dart';
 import '../billing/new_bill_cta_card.dart';
 import '../billing/providers.dart';
 import '../inventory/providers.dart';
+import '../onboarding/first_bill_checklist_card.dart';
+import '../onboarding/first_bill_checklist_provider.dart';
 import 'dashboard/dashboard_invalidation.dart';
 import 'dashboard/dashboard_activity_feed.dart';
 import 'dashboard/dashboard_kpi_format.dart';
@@ -56,6 +58,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
 
   Future<void> _refresh() async {
     invalidateOwnerDashboardWidget(ref);
+    ref.invalidate(firstBillChecklistProvider);
   }
 
   @override
@@ -220,6 +223,7 @@ class _OwnerDashboardState extends ConsumerState<OwnerDashboard> {
             ],
           ),
           const SizedBox(height: 16),
+          const FirstBillChecklistCard(),
           Card(
             margin: EdgeInsets.zero,
             child: Padding(

@@ -5,22 +5,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/preferences/saved_filters_store.dart';
 import '../../core/ui/adaptive_sheet.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/paginated_list_state.dart';
+import '../../core/ui/reset_filters_button.dart';
 import '../../core/ui/stock_badge.dart';
 import '../../data/repositories/products_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
+import '../auth/providers/filter_scope_provider.dart';
 import 'product_form_screen.dart';
 import 'product_image.dart';
 import 'product_import_sheet.dart';
 import 'providers.dart';
 import 'reorder_low_stock_sheet.dart';
-
-enum _SortField { name, quantity, price }
+import 'stock_count_screen.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({
@@ -45,13 +47,54 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   final _scrollController = ScrollController();
   bool _showInactive = false;
   ProductStockFilter _stockFilter = ProductStockFilter.all;
-  _SortField _sortField = _SortField.name;
+  InventorySortField _sortField = InventorySortField.name;
   bool _sortAscending = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref
+        .read(savedFiltersStoreProvider)
+        .loadInventory(scope, canEdit: widget.canEdit);
+    if (!mounted) return;
+    setState(() {
+      _stockFilter = saved.stockFilter;
+      _showInactive = widget.canEdit && saved.showInactive;
+      _sortField = saved.sortField;
+      _sortAscending = saved.sortAscending;
+    });
+    _initPager();
+  }
+
+  InventoryListFilterState get _filterState => InventoryListFilterState(
+    stockFilter: _stockFilter,
+    showInactive: widget.canEdit && _showInactive,
+    sortField: _sortField,
+    sortAscending: _sortAscending,
+  );
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveInventory(scope, _filterState),
+    );
+  }
+
+  void _resetFilters() {
+    if (_filterState.isDefault) return;
+    setState(() {
+      _stockFilter = ProductStockFilter.all;
+      _showInactive = false;
+      _sortField = InventorySortField.name;
+      _sortAscending = true;
+    });
+    _persistFilters();
+    _pager?.refresh();
   }
 
   void _initPager() {
@@ -86,12 +129,14 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   void _setStockFilter(ProductStockFilter filter) {
     if (_stockFilter == filter) return;
     setState(() => _stockFilter = filter);
+    _persistFilters();
     _pager?.refresh();
   }
 
   Future<void> _setShowInactive(bool value) async {
     if (_showInactive == value) return;
     setState(() => _showInactive = value);
+    _persistFilters();
     await _pager?.refresh();
     if (mounted) setState(() {});
   }
@@ -107,9 +152,13 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     final filtered = List<Product>.from(_pager?.items ?? []);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _SortField.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        _SortField.quantity => a.stockCached.compareTo(b.stockCached),
-        _SortField.price => a.referencePrice.compareTo(b.referencePrice),
+        InventorySortField.name => a.name.toLowerCase().compareTo(
+          b.name.toLowerCase(),
+        ),
+        InventorySortField.quantity => a.stockCached.compareTo(b.stockCached),
+        InventorySortField.price => a.referencePrice.compareTo(
+          b.referencePrice,
+        ),
       };
       return _sortAscending ? cmp : -cmp;
     });
@@ -142,94 +191,104 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final (filter, label) in [
-                  (ProductStockFilter.all, l10n.allStock),
-                  (ProductStockFilter.low, l10n.stockFilterLow),
-                  (ProductStockFilter.out, l10n.stockFilterOut),
-                  (ProductStockFilter.inStock, l10n.stockFilterIn),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(label),
-                      selected: _stockFilter == filter,
-                      onSelected: (_) => _setStockFilter(filter),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: PopupMenuButton<_SortField>(
-                    initialValue: _sortField,
-                    tooltip: l10n.sortBy,
-                    icon: Icon(
-                      _sortAscending
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
-                    ),
-                    onSelected: (field) {
-                      if (field == _sortField) {
-                        setState(() => _sortAscending = !_sortAscending);
-                      } else {
-                        setState(() => _sortField = field);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: _SortField.name,
-                        child: Text(
-                          l10n.sortName,
-                          style: TextStyle(
-                            fontWeight: _sortField == _SortField.name
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final (filter, label) in [
+                      (ProductStockFilter.all, l10n.allStock),
+                      (ProductStockFilter.low, l10n.stockFilterLow),
+                      (ProductStockFilter.out, l10n.stockFilterOut),
+                      (ProductStockFilter.inStock, l10n.stockFilterIn),
+                    ])
+                      FilterChip(
+                        label: Text(label),
+                        selected: _stockFilter == filter,
+                        onSelected: (_) => _setStockFilter(filter),
                       ),
-                      PopupMenuItem(
-                        value: _SortField.quantity,
-                        child: Text(
-                          l10n.sortQuantity,
-                          style: TextStyle(
-                            fontWeight: _sortField == _SortField.quantity
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
+                    if (_filterState.activeCount > 0)
+                      ResetFiltersButton(
+                        activeCount: _filterState.activeCount,
+                        onReset: _resetFilters,
                       ),
-                      PopupMenuItem(
-                        value: _SortField.price,
-                        child: Text(
-                          l10n.sortPrice,
-                          style: TextStyle(
-                            fontWeight: _sortField == _SortField.price
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-                if (widget.canEdit)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: IconButton(
-                      tooltip: l10n.importFromExcel,
-                      onPressed: () async {
-                        final imported = await showProductImportSheet(context);
-                        if (imported == true && mounted) {
-                          await _pager?.refresh();
-                        }
-                      },
-                      icon: const Icon(Icons.upload_file_outlined),
+              ),
+              PopupMenuButton<InventorySortField>(
+                initialValue: _sortField,
+                tooltip: l10n.sortBy,
+                icon: Icon(
+                  _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                ),
+                onSelected: (field) {
+                  setState(() {
+                    if (field == _sortField) {
+                      _sortAscending = !_sortAscending;
+                    } else {
+                      _sortField = field;
+                    }
+                  });
+                  _persistFilters();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: InventorySortField.name,
+                    child: Text(
+                      l10n.sortName,
+                      style: TextStyle(
+                        fontWeight: _sortField == InventorySortField.name
+                            ? FontWeight.bold
+                            : null,
+                      ),
                     ),
                   ),
-              ],
-            ),
+                  PopupMenuItem(
+                    value: InventorySortField.quantity,
+                    child: Text(
+                      l10n.sortQuantity,
+                      style: TextStyle(
+                        fontWeight: _sortField == InventorySortField.quantity
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: InventorySortField.price,
+                    child: Text(
+                      l10n.sortPrice,
+                      style: TextStyle(
+                        fontWeight: _sortField == InventorySortField.price
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (widget.canManageStock)
+                IconButton(
+                  tooltip: l10n.stockCount,
+                  onPressed: _openStockCount,
+                  icon: const Icon(Icons.fact_check_outlined),
+                ),
+              if (widget.canEdit)
+                IconButton(
+                  tooltip: l10n.importFromExcel,
+                  onPressed: () async {
+                    final imported = await showProductImportSheet(context);
+                    if (imported == true && mounted) {
+                      await _pager?.refresh();
+                    }
+                  },
+                  icon: const Icon(Icons.upload_file_outlined),
+                ),
+            ],
           ),
         ),
         if (lowStockCount > 0)
@@ -254,6 +313,18 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         Expanded(child: _buildListBody(l10n, pager)),
       ],
     );
+  }
+
+  Future<void> _openStockCount() async {
+    final reconciled = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const StockCountScreen()),
+    );
+    if (reconciled == true && mounted) {
+      ref.invalidate(lowStockCountProvider);
+      ref.invalidate(lowStockProductsProvider);
+      await _pager?.refresh();
+    }
   }
 
   Future<void> _openReorder() async {

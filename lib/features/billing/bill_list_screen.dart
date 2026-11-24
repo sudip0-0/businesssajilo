@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../../core/layout/adaptive_scaffold.dart';
 import '../../core/layout/two_pane_layout.dart';
+import '../../core/preferences/saved_filters_store.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bill_status_chip.dart';
 import '../../core/ui/debounced_list_search.dart';
@@ -12,15 +15,18 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/paginated_list_state.dart';
+import '../../core/ui/reset_filters_button.dart';
 import '../../core/utils/bill_customer_label.dart';
 import '../../core/utils/money.dart';
 import '../../data/repositories/bills_repository.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/bill.dart';
+import '../auth/providers/filter_scope_provider.dart';
 import '../reports/report_period.dart';
 import 'bill_date_filter_bar.dart';
 import 'bill_detail_screen.dart';
 import 'bill_form_screen.dart';
+import 'bill_period_codec.dart';
 import 'providers.dart';
 
 class BillListScreen extends ConsumerStatefulWidget {
@@ -30,17 +36,13 @@ class BillListScreen extends ConsumerStatefulWidget {
   ConsumerState<BillListScreen> createState() => _BillListScreenState();
 }
 
-enum _BillStatusFilter { all, paid, partial, due }
-
-enum _BillSortField { date, amount, customer }
-
 class _BillListScreenState extends ConsumerState<BillListScreen> {
   String? _selectedBillId;
   PaginatedListState<Bill>? _pager;
   final _scrollController = ScrollController();
   DebouncedListSearchController<Bill>? _search;
-  _BillStatusFilter _statusFilter = _BillStatusFilter.all;
-  _BillSortField _sortField = _BillSortField.date;
+  BillListStatusFilter _statusFilter = BillListStatusFilter.all;
+  BillListSortField _sortField = BillListSortField.date;
   bool _sortAscending = false;
 
   /// `null` = all dates; otherwise bills are loaded via [BillsRepository.listInRange].
@@ -49,22 +51,52 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _search = DebouncedListSearchController<Bill>(
-        search: _searchBills,
-        onChanged: () {
-          if (mounted) setState(() {});
-        },
-      );
-      _initPager();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    _search = DebouncedListSearchController<Bill>(
+      search: _searchBills,
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref.read(savedFiltersStoreProvider).loadBills(scope);
+    if (!mounted) return;
+    setState(() {
+      _statusFilter = saved.status;
+      _datePeriod = decodeBillPeriod(saved);
+      _sortField = saved.sortField;
+      _sortAscending = saved.sortAscending;
     });
+    _initPager();
+  }
+
+  BillListFilterState get _filterState {
+    final encoded = encodeBillPeriod(_datePeriod);
+    return BillListFilterState(
+      status: _statusFilter,
+      periodQuery: encoded.periodQuery,
+      customFromMs: encoded.customFromMs,
+      customToMs: encoded.customToMs,
+      sortField: _sortField,
+      sortAscending: _sortAscending,
+    );
+  }
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveBills(scope, _filterState),
+    );
   }
 
   BillStatus? get _statusParam => switch (_statusFilter) {
-    _BillStatusFilter.all => null,
-    _BillStatusFilter.paid => BillStatus.paid,
-    _BillStatusFilter.partial => BillStatus.partial,
-    _BillStatusFilter.due => BillStatus.due,
+    BillListStatusFilter.all => null,
+    BillListStatusFilter.paid => BillStatus.paid,
+    BillListStatusFilter.partial => BillStatus.partial,
+    BillListStatusFilter.due => BillStatus.due,
   };
 
   Future<List<Bill>> _searchBills(String query) {
@@ -111,6 +143,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
 
   void _onDatePeriodChanged(ReportPeriod? period) {
     setState(() => _datePeriod = period);
+    _persistFilters();
     _pager?.refresh();
     if (_search?.isActive == true) {
       _search!.retry();
@@ -118,13 +151,16 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   }
 
   bool get _isFiltering =>
-      _statusFilter != _BillStatusFilter.all || _datePeriod != null;
+      _statusFilter != BillListStatusFilter.all || _datePeriod != null;
 
   void _clearFilters() {
     setState(() {
-      _statusFilter = _BillStatusFilter.all;
+      _statusFilter = BillListStatusFilter.all;
       _datePeriod = null;
+      _sortField = BillListSortField.date;
+      _sortAscending = false;
     });
+    _persistFilters();
     _pager?.refresh();
     if (_search?.isActive == true) {
       _search!.retry();
@@ -144,12 +180,12 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
     final filtered = List<Bill>.from(bills);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _BillSortField.date =>
+        BillListSortField.date =>
           (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
             b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
           ),
-        _BillSortField.amount => a.grandTotal.compareTo(b.grandTotal),
-        _BillSortField.customer =>
+        BillListSortField.amount => a.grandTotal.compareTo(b.grandTotal),
+        BillListSortField.customer =>
           (a.customerShopName ?? '').toLowerCase().compareTo(
             (b.customerShopName ?? '').toLowerCase(),
           ),
@@ -163,6 +199,7 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final pager = _pager;
+    final activeFilterCount = _filterState.activeCount;
 
     ref.listen<int>(billingRevisionProvider, (prev, next) {
       if (prev != next) {
@@ -187,86 +224,93 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final (filter, label) in [
-                  (_BillStatusFilter.all, l10n.allBills),
-                  (_BillStatusFilter.paid, l10n.paid),
-                  (_BillStatusFilter.partial, l10n.partial),
-                  (_BillStatusFilter.due, l10n.due),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(label),
-                      selected: _statusFilter == filter,
-                      onSelected: (_) {
-                        setState(() => _statusFilter = filter);
-                        _pager?.refresh();
-                        if (_search?.isActive == true) {
-                          _search!.retry();
-                        }
-                      },
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: PopupMenuButton<_BillSortField>(
-                    initialValue: _sortField,
-                    tooltip: l10n.sortBy,
-                    icon: Icon(
-                      _sortAscending
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
-                    ),
-                    onSelected: (field) {
-                      if (field == _sortField) {
-                        setState(() => _sortAscending = !_sortAscending);
-                      } else {
-                        setState(() => _sortField = field);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: _BillSortField.date,
-                        child: Text(
-                          l10n.sortDate,
-                          style: TextStyle(
-                            fontWeight: _sortField == _BillSortField.date
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (final (filter, label) in [
+                      (BillListStatusFilter.all, l10n.allBills),
+                      (BillListStatusFilter.paid, l10n.paid),
+                      (BillListStatusFilter.partial, l10n.partial),
+                      (BillListStatusFilter.due, l10n.due),
+                    ])
+                      FilterChip(
+                        label: Text(label),
+                        selected: _statusFilter == filter,
+                        onSelected: (_) {
+                          setState(() => _statusFilter = filter);
+                          _persistFilters();
+                          _pager?.refresh();
+                          if (_search?.isActive == true) {
+                            _search!.retry();
+                          }
+                        },
                       ),
-                      PopupMenuItem(
-                        value: _BillSortField.amount,
-                        child: Text(
-                          l10n.sortAmount,
-                          style: TextStyle(
-                            fontWeight: _sortField == _BillSortField.amount
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
+                    if (activeFilterCount > 0)
+                      ResetFiltersButton(
+                        activeCount: activeFilterCount,
+                        onReset: _clearFilters,
                       ),
-                      PopupMenuItem(
-                        value: _BillSortField.customer,
-                        child: Text(
-                          l10n.sortCustomer,
-                          style: TextStyle(
-                            fontWeight: _sortField == _BillSortField.customer
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              PopupMenuButton<BillListSortField>(
+                initialValue: _sortField,
+                tooltip: l10n.sortBy,
+                icon: Icon(
+                  _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                ),
+                onSelected: (field) {
+                  setState(() {
+                    if (field == _sortField) {
+                      _sortAscending = !_sortAscending;
+                    } else {
+                      _sortField = field;
+                    }
+                  });
+                  _persistFilters();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: BillListSortField.date,
+                    child: Text(
+                      l10n.sortDate,
+                      style: TextStyle(
+                        fontWeight: _sortField == BillListSortField.date
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: BillListSortField.amount,
+                    child: Text(
+                      l10n.sortAmount,
+                      style: TextStyle(
+                        fontWeight: _sortField == BillListSortField.amount
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: BillListSortField.customer,
+                    child: Text(
+                      l10n.sortCustomer,
+                      style: TextStyle(
+                        fontWeight: _sortField == BillListSortField.customer
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         Padding(
