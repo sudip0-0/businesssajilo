@@ -229,8 +229,9 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
             children: [
               Expanded(
                 child: Wrap(
-                  spacing: 8,
+                  spacing: 6,
                   runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     for (final (filter, label) in [
                       (BillListStatusFilter.all, l10n.allBills),
@@ -503,6 +504,7 @@ class _BillTile extends StatelessWidget {
         ),
         subtitle: Text(customerLabel),
         trailing: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -512,7 +514,7 @@ class _BillTile extends StatelessWidget {
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             BillStatusChip(bill.status),
           ],
         ),

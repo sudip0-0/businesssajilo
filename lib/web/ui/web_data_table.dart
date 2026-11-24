@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/config/pagination.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../theme/web_palette.dart';
 import '../theme/web_typography.dart';
 
@@ -119,7 +120,7 @@ class _WebDataTableState<T> extends State<WebDataTable<T>> {
                     rows: rows,
                     headingRowHeight: 44,
                     dataRowMinHeight: rowHeight,
-                    dataRowMaxHeight: rowHeight + 8,
+                    dataRowMaxHeight: rowHeight + 16,
                     columnSpacing: 24,
                     horizontalMargin: 20,
                     showCheckboxColumn: false,
@@ -174,6 +175,7 @@ class _TablePagination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final totalPages = (totalItems / kListPageSize).ceil().clamp(1, 9999);
     final from = page * kListPageSize + 1;
     final to = ((page + 1) * kListPageSize).clamp(0, totalItems);
@@ -183,7 +185,7 @@ class _TablePagination extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            '$from–$to of $totalItems',
+            l10n.tablePaginationRange(from, to, totalItems),
             style: WebTypography.mono(
               fontSize: 11.5,
               color: WebPalette.inkSoft,

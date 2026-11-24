@@ -78,6 +78,7 @@ class _WebLoginPageState extends ConsumerState<WebLoginPage> {
       body: compact
           ? _buildForm(context, l10n, showBranding: true)
           : Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
                   flex: 11,

@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
 import '../theme/web_tokens.dart';
+import '../ui/web_empty_state.dart';
 
 /// URL-synced master-detail split for web list screens.
 class WebMasterDetail extends StatelessWidget {
@@ -64,13 +66,9 @@ class WebMasterDetail extends StatelessWidget {
               Expanded(
                 child:
                     detail ??
-                    Center(
-                      child: Text(
-                        l10n.selectItem,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                        ),
-                      ),
+                    WebEmptyState(
+                      message: l10n.selectItem,
+                      icon: PhosphorIconsRegular.cursorClick,
                     ),
               ),
             ],

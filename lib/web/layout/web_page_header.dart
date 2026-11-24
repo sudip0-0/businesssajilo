@@ -51,6 +51,7 @@ class WebPageHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
+            flex: 3,
             child: _TitleBlock(
               theme: theme,
               title: title,
@@ -61,6 +62,7 @@ class WebPageHeader extends StatelessWidget {
           if (actions.isNotEmpty) ...[
             const SizedBox(width: 16),
             Flexible(
+              flex: 5,
               child: Align(
                 alignment: Alignment.topRight,
                 child: Wrap(

@@ -2,15 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/l10n/app_localizations.dart';
-import '../../../core/layout/bs_breakpoints.dart';
 import '../../../core/testing/integration_keys.dart';
 import '../../../core/ui/bs_snackbar.dart';
 import '../../../core/ui/stock_badge.dart';
+import '../../../core/utils/bs_date.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/bills_repository.dart';
 import '../../../data/repositories/orders_repository.dart';
@@ -33,6 +32,7 @@ import '../../../features/customers/providers.dart';
 import '../../../features/inventory/providers.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../theme/web_palette.dart';
+import '../../theme/web_typography.dart';
 import '../../ui/web_search_dropdown.dart';
 import 'web_bill_form_line_table.dart';
 
@@ -57,7 +57,10 @@ class WebBillFormContent extends ConsumerStatefulWidget {
 
 class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
   static const _searchDebounce = Duration(milliseconds: 300);
-  static const _railWidth = 360.0;
+  static const _twoPaneMinWidth = 860.0;
+  static const _wideRailThreshold = 1060.0;
+  static const _railWidthWide = 360.0;
+  static const _railWidthCompact = 316.0;
 
   final _draft = BillFormDraft(billDiscountText: '0');
   final _billDiscountController = TextEditingController(text: '0');
@@ -388,13 +391,19 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
         (liveCustomerQuery.isNotEmpty &&
             liveCustomerQuery != _lastCustomersQuery) ||
         (liveCustomerQuery == _customerQuery && customersAsync.isLoading);
-    final today = DateFormat.yMMMd().format(DateTime.now());
+    final today = BsDate.both(
+      DateTime.now(),
+      locale: Localizations.localeOf(context),
+    );
 
     return Stack(
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= BsBreakpoints.desktop;
+            final wide = constraints.maxWidth >= _twoPaneMinWidth;
+            final railWidth = constraints.maxWidth >= _wideRailThreshold
+                ? _railWidthWide
+                : _railWidthCompact;
 
             final cartCard = _CartCard(
               l10n: l10n,
@@ -463,7 +472,7 @@ class WebBillFormContentState extends ConsumerState<WebBillFormContent> {
                   Expanded(child: cartCard),
                   const SizedBox(width: 16),
                   SizedBox(
-                    width: _railWidth,
+                    width: railWidth,
                     child: SingleChildScrollView(child: rail),
                   ),
                 ],
@@ -563,32 +572,30 @@ class _CartCard extends StatelessWidget {
       itemBuilder: _productTile,
     );
 
-    final linesContent = LayoutBuilder(
-      builder: (context, constraints) {
-        const minTableWidth = 720.0;
-        final tableWidth = constraints.maxWidth < minTableWidth
-            ? minTableWidth
-            : constraints.maxWidth;
-        final table = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (lines.isEmpty)
-              _EmptyLinesHint(l10n: l10n)
-            else ...[
-              WebBillItemsTableHeader(l10n: l10n),
-              const SizedBox(height: 8),
-              linesList,
-            ],
-          ],
-        );
-        if (constraints.maxWidth >= minTableWidth) return table;
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(width: tableWidth, child: table),
-        );
-      },
-    );
+    final linesContent = lines.isEmpty
+        ? _EmptyLinesHint(l10n: l10n)
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              const minTableWidth = 720.0;
+              final tableWidth = constraints.maxWidth < minTableWidth
+                  ? minTableWidth
+                  : constraints.maxWidth;
+              final table = Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  WebBillItemsTableHeader(l10n: l10n),
+                  const SizedBox(height: 8),
+                  linesList,
+                ],
+              );
+              if (constraints.maxWidth >= minTableWidth) return table;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(width: tableWidth, child: table),
+              );
+            },
+          );
 
     return WebBentoTile(
       minHeight: 0,
@@ -634,6 +641,12 @@ class _CartCard extends StatelessWidget {
                           linesContent,
                           const SizedBox(height: 16),
                           productSearch,
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.billFormShortcutHint,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: WebPalette.inkFaint),
+                          ),
                         ],
                       ),
                     ),
@@ -816,19 +829,22 @@ class _CheckoutRail extends StatelessWidget {
               ] else
                 _SelectedCustomerChip(
                   customer: selectedCustomer!,
+                  showBalance: showCustomerBalance,
                   onCleared: customerLocked ? null : onCustomerCleared,
                 ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
+                    flex: 3,
                     child: _MetaItem(label: l10n.billDate, value: today),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
+                    flex: 2,
                     child: _MetaItem(
                       label: l10n.billNumber,
-                      value: 'AUTO',
+                      value: l10n.autoGenerated,
                       mutedValue: true,
                     ),
                   ),
@@ -917,15 +933,21 @@ class _CheckoutRail extends StatelessWidget {
 }
 
 class _SelectedCustomerChip extends StatelessWidget {
-  const _SelectedCustomerChip({required this.customer, this.onCleared});
+  const _SelectedCustomerChip({
+    required this.customer,
+    this.showBalance = false,
+    this.onCleared,
+  });
 
   final Customer customer;
+  final bool showBalance;
   final VoidCallback? onCleared;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final subtitle = customer.contactName ?? customer.phone ?? '';
+    final due = customer.balanceDue;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -961,6 +983,22 @@ class _SelectedCustomerChip extends StatelessWidget {
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: WebPalette.inkSoft),
+                  ),
+                if (showBalance && due != 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      due > 0
+                          ? '${l10n.due}: ${formatNpr(Paisa(due), showPaisa: false)}'
+                          : '${l10n.creditBalance}: ${formatNpr(Paisa(-due), showPaisa: false)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: WebTypography.mono(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: due > 0 ? WebPalette.danger : WebPalette.navy,
+                      ),
+                    ),
                   ),
               ],
             ),

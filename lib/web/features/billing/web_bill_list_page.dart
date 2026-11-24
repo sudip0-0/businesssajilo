@@ -310,7 +310,7 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
                 children: [
                   Expanded(
                     child: Wrap(
-                      spacing: 8,
+                      spacing: 6,
                       runSpacing: 6,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [

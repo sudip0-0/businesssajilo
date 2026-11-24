@@ -19,12 +19,19 @@ import '../navigation/web_notification_navigation.dart';
 import '../router/web_role_routes.dart';
 import '../theme/web_palette.dart';
 import '../theme/web_tokens.dart';
+import '../theme/web_typography.dart';
 
 class WebTopBar extends ConsumerWidget {
-  const WebTopBar({super.key, this.showMenuButton = false, this.onMenuPressed});
+  const WebTopBar({
+    super.key,
+    this.showMenuButton = false,
+    this.onMenuPressed,
+    this.onOpenShortcuts,
+  });
 
   final bool showMenuButton;
   final VoidCallback? onMenuPressed;
+  final VoidCallback? onOpenShortcuts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,6 +45,7 @@ class WebTopBar extends ConsumerWidget {
     final compact = context.isWebCompact;
     final path = GoRouterState.of(context).uri.path;
     final isOwner = path.startsWith('/owner') || role == Role.owner;
+    final showSearch = isOwner || role == Role.sales || role == Role.warehouse;
 
     return Semantics(
       identifier: 'web_top_bar',
@@ -46,7 +54,9 @@ class WebTopBar extends ConsumerWidget {
       child: FocusTraversalGroup(
         child: Container(
           height: tokens.topBarHeight,
-          padding: EdgeInsets.symmetric(horizontal: tokens.pagePadding),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 8 : tokens.pagePadding,
+          ),
           decoration: const BoxDecoration(
             color: WebPalette.card,
             border: Border(bottom: BorderSide(color: WebPalette.hairline)),
@@ -62,18 +72,37 @@ class WebTopBar extends ConsumerWidget {
                     color: WebPalette.navy,
                   ),
                 ),
+              if (!compact && showSearch) ...[
+                _SearchTriggerPill(
+                  label: l10n.globalSearch,
+                  tooltip: '${l10n.globalSearch} (Ctrl+K / /)',
+                  onTap: () => showGlobalSearch(context, ref),
+                ),
+              ],
               const Spacer(),
-              if (isOwner || role == Role.sales)
+              if (compact && showSearch)
                 IconButton(
                   tooltip: '${l10n.globalSearch} (Ctrl+K)',
                   onPressed: () => showGlobalSearch(context, ref),
+                  visualDensity: VisualDensity.compact,
                   icon: const Icon(
                     PhosphorIconsRegular.magnifyingGlass,
                     color: WebPalette.navy,
+                    size: 20,
+                  ),
+                ),
+              if (!compact && onOpenShortcuts != null)
+                IconButton(
+                  tooltip: '${l10n.keyboardShortcuts} (?)',
+                  onPressed: onOpenShortcuts,
+                  icon: const Icon(
+                    PhosphorIconsRegular.keyboard,
+                    color: WebPalette.inkSoft,
+                    size: 20,
                   ),
                 ),
               const LocaleToggle(compact: true),
-              const SizedBox(width: 4),
+              SizedBox(width: compact ? 2 : 4),
               Builder(
                 builder: (buttonContext) {
                   final semanticLabel = unread > 0
@@ -176,28 +205,120 @@ class WebTopBar extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 9),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name.split(' ').first,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(color: WebPalette.ink),
-                    ),
-                    Text(
-                      role != null ? roleLabel(l10n, role) : '',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: WebPalette.inkFaint,
-                        letterSpacing: 0.6,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name.split(' ').first,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelLarge?.copyWith(color: WebPalette.ink),
                       ),
-                    ),
-                  ],
+                      Text(
+                        role != null ? roleLabel(l10n, role) : '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: WebPalette.inkFaint,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
               const LogoutAction(),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchTriggerPill extends StatelessWidget {
+  const _SearchTriggerPill({
+    required this.label,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final String label;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      excludeFromSemantics: true,
+      child: Semantics(
+        button: true,
+        label: label,
+        child: Material(
+          color: WebPalette.paper,
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            hoverColor: WebPalette.paperDeep,
+            child: Container(
+              height: 36,
+              constraints: const BoxConstraints(minWidth: 196, maxWidth: 280),
+              padding: const EdgeInsets.symmetric(horizontal: 11),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: WebPalette.hairline),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    PhosphorIconsRegular.magnifyingGlass,
+                    size: 16,
+                    color: WebPalette.inkSoft,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: WebPalette.inkSoft,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ExcludeSemantics(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WebPalette.cardBright,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: WebPalette.hairlineStrong),
+                      ),
+                      child: Text(
+                        'Ctrl K',
+                        style: WebTypography.mono(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: WebPalette.inkSoft,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

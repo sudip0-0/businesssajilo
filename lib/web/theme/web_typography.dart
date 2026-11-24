@@ -87,39 +87,39 @@ abstract final class WebTypography {
           displayLarge: serif(
             fontSize: 40,
             fontWeight: FontWeight.w600,
-            height: 1.15,
+            height: 1.32,
             letterSpacing: -0.5,
             color: scheme.onSurface,
           ),
           displayMedium: serif(
             fontSize: 30,
             fontWeight: FontWeight.w600,
-            height: 1.2,
+            height: 1.35,
             letterSpacing: -0.3,
             color: scheme.onSurface,
           ),
           headlineSmall: serif(
             fontSize: 26,
             fontWeight: FontWeight.w600,
-            height: 1.22,
+            height: 1.38,
             letterSpacing: -0.2,
             color: scheme.onSurface,
           ),
           titleLarge: serif(
             fontSize: 21,
             fontWeight: FontWeight.w600,
-            height: 1.28,
+            height: 1.38,
             color: scheme.onSurface,
           ),
           titleMedium: _sans(
             fontSize: 15.5,
             fontWeight: FontWeight.w600,
-            height: 1.4,
+            height: 1.42,
           ),
           titleSmall: _sans(
             fontSize: 13.5,
             fontWeight: FontWeight.w600,
-            height: 1.4,
+            height: 1.42,
           ),
           bodyLarge: _sans(
             fontSize: 15.5,
@@ -142,13 +142,13 @@ abstract final class WebTypography {
           labelLarge: _sans(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            height: 1.35,
+            height: 1.4,
             letterSpacing: 0.35,
           ),
           labelSmall: _sans(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            height: 1.3,
+            height: 1.4,
             letterSpacing: 0.9,
             color: scheme.onSurface.withValues(alpha: 0.72),
           ),
@@ -162,7 +162,7 @@ abstract final class WebTypography {
       fontSize: 11,
       fontWeight: FontWeight.w700,
       letterSpacing: 1.15,
-      height: 1.3,
+      height: 1.4,
       color: color ?? WebPalette.inkSoft,
     );
   }
@@ -180,7 +180,7 @@ abstract final class WebTypography {
     return serif(
       fontSize: 31,
       fontWeight: FontWeight.w600,
-      height: 1.12,
+      height: 1.25,
       letterSpacing: -0.2,
       color: Theme.of(context).colorScheme.onSurface,
     );

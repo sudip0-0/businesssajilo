@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../core/l10n/app_localizations.dart';
@@ -51,9 +52,17 @@ class BillSummary extends StatelessWidget {
 
     final accent = accentColor ?? BsColors.primary;
     final compact = style == BillSummaryStyle.denseBar;
+    TextStyle? moneyStyle(TextStyle? base) => kIsWeb
+        ? base?.copyWith(
+            fontFamily: 'IBM Plex Mono',
+            fontFamilyFallback: const ['Inter', 'Noto Sans Devanagari'],
+          )
+        : base?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
     final discountField = TextFormField(
       controller: billDiscountController,
+      textAlign: TextAlign.end,
+      textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         isDense: true,
         hintText: '0',
@@ -67,47 +76,60 @@ class BillSummary extends StatelessWidget {
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _summaryRow(context, l10n.subtotal, itemsTotal),
+        _summaryRow(context, l10n.subtotal, itemsTotal, moneyStyle: moneyStyle),
         SizedBox(height: compact ? 6 : 8),
         Row(
           children: [
             Expanded(
               child: Text(
                 l10n.billDiscount,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
-            SizedBox(width: compact ? 96 : 120, child: discountField),
-            if (style == BillSummaryStyle.card) ...[
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 72,
-                child: Text(
-                  discount > 0
-                      ? '- ${formatNpr(Paisa(discount), showPaisa: true)}'
-                      : '—',
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.end,
-                ),
-              ),
-            ],
+            const SizedBox(width: 8),
+            SizedBox(width: compact ? 96 : 116, child: discountField),
           ],
         ),
+        if (style == BillSummaryStyle.card &&
+            discount > 0 &&
+            discountError == null) ...[
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '- ${formatNpr(Paisa(discount), showPaisa: true)}',
+              style: moneyStyle(
+                Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: BsColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
         Divider(height: compact ? 14 : 18),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.grandTotal,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            Expanded(
+              child: Text(
+                l10n.grandTotal,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
+            const SizedBox(width: 8),
             Text(
               moneyOrInvalid(grandTotal),
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: accent,
+              style: moneyStyle(
+                Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                ),
               ),
             ),
           ],
@@ -119,16 +141,24 @@ class BillSummary extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _summaryRow(context, l10n.subtotal, itemsTotal),
+          _summaryRow(
+            context,
+            l10n.subtotal,
+            itemsTotal,
+            moneyStyle: moneyStyle,
+          ),
           const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
                 child: Text(
                   l10n.billDiscount,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
+              const SizedBox(width: 8),
               SizedBox(width: 96, child: discountField),
             ],
           ),
@@ -138,9 +168,11 @@ class BillSummary extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 '- ${formatNpr(Paisa(discount), showPaisa: true)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: BsColors.success,
-                  fontWeight: FontWeight.w600,
+                style: moneyStyle(
+                  Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: BsColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -154,19 +186,25 @@ class BillSummary extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Text(
-                  l10n.grandTotal,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                Expanded(
+                  child: Text(
+                    l10n.grandTotal,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   moneyOrInvalid(grandTotal),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                  style: moneyStyle(
+                    Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -205,16 +243,30 @@ class BillSummary extends StatelessWidget {
     );
   }
 
-  Widget _summaryRow(BuildContext context, String label, int? amount) {
+  Widget _summaryRow(
+    BuildContext context,
+    String label,
+    int? amount, {
+    TextStyle? Function(TextStyle?)? moneyStyle,
+  }) {
     final l10n = AppLocalizations.of(context);
+    final baseStyle = Theme.of(context).textTheme.bodyMedium;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: baseStyle,
+          ),
+        ),
+        const SizedBox(width: 8),
         Text(
           amount == null
               ? l10n.invalidNumber
               : formatNpr(Paisa(amount), showPaisa: true),
+          style: moneyStyle != null ? moneyStyle(baseStyle) : baseStyle,
         ),
       ],
     );

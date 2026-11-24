@@ -83,45 +83,38 @@ class BillDateFilterBar extends StatelessWidget {
       ReportPeriodPreset.thisMonth,
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(l10n.periodAllDates),
-              selected: value == null,
-              onSelected: (_) => onChanged(null),
-            ),
-          ),
-          for (final preset in presets)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(_presetLabel(l10n, preset)),
-                selected: value?.preset == preset,
-                onSelected: (_) => onChanged(ReportPeriod.preset(preset)),
-              ),
-            ),
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        FilterChip(
+          label: Text(l10n.periodAllDates),
+          selected: value == null,
+          onSelected: (_) => onChanged(null),
+        ),
+        for (final preset in presets)
           FilterChip(
-            avatar: Icon(
-              Icons.calendar_today_outlined,
-              size: 16,
-              color: value?.preset == ReportPeriodPreset.custom
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.outline,
-            ),
-            label: Text(
-              value?.preset == ReportPeriodPreset.custom
-                  ? _customRangeLabel(value!)
-                  : l10n.periodCustom,
-            ),
-            selected: value?.preset == ReportPeriodPreset.custom,
-            onSelected: (_) => _pickCustom(context),
+            label: Text(_presetLabel(l10n, preset)),
+            selected: value?.preset == preset,
+            onSelected: (_) => onChanged(ReportPeriod.preset(preset)),
           ),
-        ],
-      ),
+        FilterChip(
+          avatar: Icon(
+            Icons.calendar_today_outlined,
+            size: 16,
+            color: value?.preset == ReportPeriodPreset.custom
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline,
+          ),
+          label: Text(
+            value?.preset == ReportPeriodPreset.custom
+                ? _customRangeLabel(value!)
+                : l10n.periodCustom,
+          ),
+          selected: value?.preset == ReportPeriodPreset.custom,
+          onSelected: (_) => _pickCustom(context),
+        ),
+      ],
     );
   }
 }

@@ -40,7 +40,7 @@ class BillStatusChip extends StatelessWidget {
     return Semantics(
       label: label,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
           color: tint.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
@@ -51,14 +51,18 @@ class BillStatusChip extends StatelessWidget {
           children: [
             Icon(icon, size: 12, color: textColor),
             const SizedBox(width: 4.5),
-            Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                color: textColor,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.55,
-                height: 1.25,
+            Flexible(
+              child: Text(
+                label.toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.55,
+                  height: 1.4,
+                ),
               ),
             ),
           ],

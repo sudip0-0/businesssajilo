@@ -44,6 +44,7 @@ class WebDashboardKpiGrid extends StatelessWidget {
           icon: PhosphorIconsRegular.currencyDollar,
           trend: stats.when(
             data: (d) {
+              if (formatDashboardTrendPercent(d) == null) return null;
               final pct = d.salesTrendPercent;
               if (pct == null) return null;
               return pct >= 0 ? WebTrendDirection.up : WebTrendDirection.down;
@@ -106,8 +107,9 @@ class WebDashboardKpiGrid extends StatelessWidget {
           ),
           icon: PhosphorIconsRegular.shoppingCart,
           trendLabel: stats.when(
-            data: (d) =>
-                (d.pendingOrders ?? 0) > 0 ? '${d.pendingOrders} NEW' : null,
+            data: (d) => (d.pendingOrders ?? 0) > 0
+                ? l10n.newBadgeCount(d.pendingOrders!)
+                : null,
             loading: () => null,
             error: (_, _) => null,
           ),

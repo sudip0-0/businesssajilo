@@ -5,10 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../domain/enums.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../features/search/global_search_sheet.dart';
+import '../router/web_role_routes.dart';
 import '../theme/web_tokens.dart';
 import '../ui/web_keyboard_scope.dart';
 import '../ui/web_paper.dart';
+import '../widgets/web_shortcuts_dialog.dart';
 import 'web_sidebar.dart';
 import 'web_top_bar.dart';
 
@@ -36,8 +40,155 @@ class WebAppShell extends ConsumerStatefulWidget {
 
 class _WebAppShellState extends ConsumerState<WebAppShell> {
   bool _collapsed = false;
+  bool _searchOpen = false;
+  bool _shortcutsOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    super.dispose();
+  }
+
+  bool _isEditingTextField() {
+    final ctx = FocusManager.instance.primaryFocus?.context;
+    if (ctx == null) return false;
+    if (ctx.widget is EditableText) return true;
+    return ctx.findAncestorWidgetOfExactType<EditableText>() != null;
+  }
+
+  int? _altDigitIndex(LogicalKeyboardKey key) {
+    if (key == LogicalKeyboardKey.digit1 || key == LogicalKeyboardKey.numpad1) {
+      return 0;
+    }
+    if (key == LogicalKeyboardKey.digit2 || key == LogicalKeyboardKey.numpad2) {
+      return 1;
+    }
+    if (key == LogicalKeyboardKey.digit3 || key == LogicalKeyboardKey.numpad3) {
+      return 2;
+    }
+    if (key == LogicalKeyboardKey.digit4 || key == LogicalKeyboardKey.numpad4) {
+      return 3;
+    }
+    if (key == LogicalKeyboardKey.digit5 || key == LogicalKeyboardKey.numpad5) {
+      return 4;
+    }
+    if (key == LogicalKeyboardKey.digit6 || key == LogicalKeyboardKey.numpad6) {
+      return 5;
+    }
+    if (key == LogicalKeyboardKey.digit7 || key == LogicalKeyboardKey.numpad7) {
+      return 6;
+    }
+    return null;
+  }
+
+  Future<void> _openGlobalSearch() async {
+    if (_searchOpen || !mounted) return;
+    _searchOpen = true;
+    try {
+      await showGlobalSearch(context, ref);
+    } finally {
+      _searchOpen = false;
+    }
+  }
+
+  Future<void> _openShortcutsDialog() async {
+    if (_shortcutsOpen || !mounted) return;
+    _shortcutsOpen = true;
+    final role = ref.read(authProvider).value?.member?.role;
+    final canCreateBill = role?.canBill ?? false;
+    try {
+      await showWebShortcutsDialog(
+        context,
+        navItems: widget.navItems,
+        canCreateBill: canCreateBill,
+      );
+    } finally {
+      _shortcutsOpen = false;
+    }
+  }
+
+  bool _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent || !mounted) return false;
+    if (!TickerMode.valuesOf(context).enabled) return false;
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return false;
+
+    final kb = HardwareKeyboard.instance;
+    final ctrlOrMeta = kb.isControlPressed || kb.isMetaPressed;
+    final alt = kb.isAltPressed;
+    final shift = kb.isShiftPressed;
+    final key = event.logicalKey;
+
+    if (ctrlOrMeta && !alt && key == LogicalKeyboardKey.keyK) {
+      _openGlobalSearch();
+      return true;
+    }
+
+    if (alt && !ctrlOrMeta) {
+      if (key == LogicalKeyboardKey.keyN || key == LogicalKeyboardKey.keyB) {
+        final role = ref.read(authProvider).value?.member?.role;
+        if (role != null && role.canBill) {
+          final target = '${webRoleBasePath(role)}/billing/new';
+          final current = GoRouterState.of(context).uri.path;
+          if (current != target) {
+            context.go(target);
+          }
+          return true;
+        }
+        return false;
+      }
+
+      final navIndex = _altDigitIndex(key);
+      if (navIndex != null && navIndex < widget.navItems.length) {
+        context.go(widget.navItems[navIndex].path);
+        return true;
+      }
+      return false;
+    }
+
+    if (!ctrlOrMeta && !alt && !_isEditingTextField()) {
+      final isQuestion =
+          event.character == '?' ||
+          key == LogicalKeyboardKey.question ||
+          (key == LogicalKeyboardKey.slash && shift);
+      if (isQuestion) {
+        _openShortcutsDialog();
+        return true;
+      }
+
+      final isSlash =
+          event.character == '/' || (key == LogicalKeyboardKey.slash && !shift);
+      if (isSlash) {
+        _openGlobalSearch();
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   void _openMobileDrawer() {
+    final location = GoRouterState.of(context).uri.path;
+    final router = GoRouter.of(context);
+    var drawerOpen = true;
+    BuildContext? sheetCtx;
+
+    void onRouteChanged() {
+      if (!drawerOpen || sheetCtx == null) return;
+      final nextLocation = router.routeInformationProvider.value.uri.path;
+      if (nextLocation != location && sheetCtx!.mounted) {
+        drawerOpen = false;
+        Navigator.of(sheetCtx!).pop();
+      }
+    }
+
+    router.routerDelegate.addListener(onRouteChanged);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -45,20 +196,32 @@ class _WebAppShellState extends ConsumerState<WebAppShell> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.55,
-        minChildSize: 0.35,
-        maxChildSize: 0.85,
-        builder: (context, scrollController) => WebSidebar(
-          items: widget.navItems,
-          collapsed: false,
-          onToggleCollapse: () {},
-          footer: widget.sidebarFooter?.call(false),
-          inDrawer: true,
-        ),
-      ),
-    );
+      builder: (sheetContext) {
+        sheetCtx = sheetContext;
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.65,
+          minChildSize: 0.35,
+          maxChildSize: 0.88,
+          builder: (context, scrollController) => WebSidebar(
+            items: widget.navItems,
+            collapsed: false,
+            onToggleCollapse: () {},
+            footer: widget.sidebarFooter?.call(false),
+            inDrawer: true,
+            location: location,
+            onNavigate: (path) {
+              drawerOpen = false;
+              Navigator.of(sheetContext).pop();
+              router.go(path);
+            },
+          ),
+        );
+      },
+    ).whenComplete(() {
+      drawerOpen = false;
+      router.routerDelegate.removeListener(onRouteChanged);
+    });
   }
 
   @override
@@ -67,12 +230,6 @@ class _WebAppShellState extends ConsumerState<WebAppShell> {
     final location = GoRouterState.of(context).uri.path;
 
     return WebKeyboardScope(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () =>
-            showGlobalSearch(context, ref),
-        const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () =>
-            showGlobalSearch(context, ref),
-      },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Row(
@@ -91,6 +248,7 @@ class _WebAppShellState extends ConsumerState<WebAppShell> {
                   WebTopBar(
                     showMenuButton: compact,
                     onMenuPressed: _openMobileDrawer,
+                    onOpenShortcuts: _openShortcutsDialog,
                   ),
                   Expanded(
                     child: Stack(
@@ -193,7 +351,7 @@ class _MobileBottomNav extends StatelessWidget {
     ];
 
     return NavigationBar(
-      height: 64,
+      height: 68,
       selectedIndex: _selectedIndex().clamp(0, destinations.length - 1),
       onDestinationSelected: (index) {
         if (_useMore && index == _primary.length) {

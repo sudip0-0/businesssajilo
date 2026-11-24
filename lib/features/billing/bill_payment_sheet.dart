@@ -5,6 +5,7 @@ import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/bs_snackbar.dart';
 import '../../core/ui/sheet_select_field.dart';
+import '../../core/utils/bill_totals.dart';
 import '../../core/utils/money.dart';
 import '../../core/utils/payment_method_label.dart';
 import '../../domain/enums.dart';
@@ -183,18 +184,34 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               Text(l10n.selectPaymentStatus),
               const SizedBox(height: 8),
               SegmentedButton<BillStatus>(
+                showSelectedIcon: false,
                 segments: [
                   if (canRecordPayments || _walkIn)
                     ButtonSegment(
                       value: BillStatus.paid,
-                      label: Text(l10n.paid),
+                      label: Text(
+                        l10n.paid,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   if (canRecordPayments)
                     ButtonSegment(
                       value: BillStatus.partial,
-                      label: Text(l10n.partial),
+                      label: Text(
+                        l10n.partial,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ButtonSegment(value: BillStatus.due, label: Text(l10n.due)),
+                  ButtonSegment(
+                    value: BillStatus.due,
+                    label: Text(
+                      l10n.due,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
                 selected: {_status},
                 onSelectionChanged: (s) {
@@ -265,14 +282,94 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
                   },
                 ),
               ],
-              if (_status == BillStatus.partial) ...[
+              if (_status == BillStatus.partial && canRecordPayments) ...[
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _amountController,
-                  decoration: InputDecoration(labelText: l10n.amountPaid),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final parsedPartial = parseNpr(_amountController.text);
+                    final partialValue = parsedPartial?.value;
+                    final partialError = _amountController.text.trim().isEmpty
+                        ? null
+                        : partialValue == null
+                        ? l10n.invalidNumber
+                        : partialValue <= 0
+                        ? l10n.amountMustBePositive
+                        : partialValue > widget.grandTotal
+                        ? l10n.amountExceedsTotal
+                        : null;
+                    final remaining =
+                        partialValue != null &&
+                            partialValue > 0 &&
+                            partialValue <= widget.grandTotal
+                        ? remainingDuePaisa(
+                            grandTotal: widget.grandTotal,
+                            amountReceived: partialValue,
+                          )
+                        : null;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _amountController,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: l10n.amountPaid,
+                            errorText: partialError,
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                          onFieldSubmitted: (_) => _submit(),
+                        ),
+                        if (remaining != null) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(BsRadii.lg),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    l10n.remainingDue,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  formatNpr(Paisa(remaining), showPaisa: true),
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(
+                                        color: remaining > 0
+                                            ? BsColors.amberTextOnTint
+                                            : BsColors.success,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ],
               if (_status != BillStatus.due && !_walkIn ||
@@ -289,7 +386,9 @@ class _BillPaymentSheetState extends ConsumerState<BillPaymentSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _refController,
+                textInputAction: TextInputAction.done,
                 decoration: InputDecoration(labelText: l10n.paymentRef),
+                onFieldSubmitted: (_) => _submit(),
               ),
               const SizedBox(height: 24),
               FilledButton(onPressed: _submit, child: Text(l10n.saveBill)),

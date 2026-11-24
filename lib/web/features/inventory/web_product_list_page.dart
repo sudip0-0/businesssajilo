@@ -310,13 +310,11 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             icon: const Icon(PhosphorIconsRegular.clipboardText),
             label: Text(l10n.stockCount),
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: _openStockIn,
             icon: const Icon(PhosphorIconsRegular.package),
             label: Text(l10n.stockIn),
           ),
-          const SizedBox(width: 8),
         ],
         if (widget.canEdit) ...[
           Tooltip(
@@ -331,7 +329,6 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
               icon: const Icon(PhosphorIconsRegular.uploadSimple),
             ),
           ),
-          const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () => context.push('${_inventoryListBase(context)}/new'),
             icon: const Icon(PhosphorIconsRegular.plus),

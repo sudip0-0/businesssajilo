@@ -14,10 +14,16 @@ class SubscriptionPlanTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final business = ref.watch(currentBusinessProvider).value;
     if (business == null) return const SizedBox.shrink();
+    final rawPlan = FeatureFlags.labelFor(business).toLowerCase();
+    final planLabel = switch (rawPlan) {
+      FeatureFlags.free => l10n.planFree,
+      FeatureFlags.pro => l10n.planPro,
+      _ => FeatureFlags.labelFor(business),
+    };
     return ListTile(
       leading: const Icon(Icons.workspace_premium_outlined),
       title: Text(l10n.subscriptionPlan),
-      subtitle: Text(FeatureFlags.labelFor(business)),
+      subtitle: Text(planLabel),
     );
   }
 }

@@ -117,12 +117,20 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                       widget.onChanged();
                     },
                   ),
-                  const Spacer(),
-                  Text(
-                    line.tryLineTotal == null
-                        ? l10n.invalidNumber
-                        : formatNpr(Paisa(line.tryLineTotal!), showPaisa: true),
-                    style: Theme.of(context).textTheme.titleSmall,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      line.tryLineTotal == null
+                          ? l10n.invalidNumber
+                          : formatNpr(
+                              Paisa(line.tryLineTotal!),
+                              showPaisa: true,
+                            ),
+                      textAlign: TextAlign.end,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -147,6 +155,7 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                     Expanded(
                       child: TextFormField(
                         initialValue: line.rateText,
+                        textInputAction: TextInputAction.next,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -168,6 +177,7 @@ class _BillFormLineEditorState extends State<BillFormLineEditor> {
                     Expanded(
                       child: TextFormField(
                         initialValue: line.discountText,
+                        textInputAction: TextInputAction.done,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),

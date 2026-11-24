@@ -93,20 +93,16 @@ class _WebBillFormPageState extends ConsumerState<WebBillFormPage> {
               onPressed: () => context.go(backPath),
               child: Text(l10n.cancel),
             ),
-            if (widget.orderId == null || widget.orderId!.isEmpty) ...[
-              const SizedBox(width: 8),
+            if (widget.orderId == null || widget.orderId!.isEmpty)
               OutlinedButton(
                 onPressed: () => _formKey.currentState?.copyLastBill(),
                 child: Text(l10n.copyLastBill),
               ),
-            ],
-            const SizedBox(width: 8),
             OutlinedButton(
               key: IntegrationKeys.billFormSaveAsDue,
               onPressed: () => _formKey.currentState?.saveAsDue(),
               child: Text(l10n.saveAsDue),
             ),
-            const SizedBox(width: 8),
             FilledButton.icon(
               onPressed: () => _formKey.currentState?.saveBill(),
               icon: const Icon(PhosphorIconsRegular.floppyDisk, size: 18),

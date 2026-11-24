@@ -71,7 +71,7 @@ class _WebSalesReportPageState extends ConsumerState<WebSalesReportPage> {
       points.fold<int>(0, (s, p) => s + p.billCount);
 
   WebTrendDirection? _trendDir(int current, int previous) {
-    if (previous == 0 && current == 0) return WebTrendDirection.neutral;
+    if (previous == 0 && current == 0) return null;
     if (current > previous) return WebTrendDirection.up;
     if (current < previous) return WebTrendDirection.down;
     return WebTrendDirection.neutral;

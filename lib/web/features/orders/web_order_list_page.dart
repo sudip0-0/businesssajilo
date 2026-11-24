@@ -261,7 +261,7 @@ class _WebOrderListPageState extends ConsumerState<WebOrderListPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: WebSearchField(
-                hint: '${l10n.search} ${l10n.orders}',
+                hint: l10n.filterOrders,
                 onChanged: (v) => setState(() => _query = v.trim()),
               ),
             ),

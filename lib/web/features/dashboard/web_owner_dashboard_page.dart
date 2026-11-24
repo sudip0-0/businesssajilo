@@ -18,7 +18,6 @@ import '../../../features/reports/dashboard/dashboard_invalidation.dart';
 import '../../../features/reports/providers.dart';
 import '../../../features/reports/report_export_actions.dart';
 import '../../../core/testing/integration_keys.dart';
-import '../../../features/search/global_search_sheet.dart';
 import '../../layout/web_bento_grid.dart';
 import '../../theme/web_palette.dart';
 import '../../theme/web_typography.dart';
@@ -76,11 +75,6 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
       title: l10n.namasteGreeting(name),
       subtitle: l10n.dashboardTodaySummary,
       actions: [
-        IconButton(
-          tooltip: l10n.globalSearch,
-          onPressed: () => showGlobalSearch(context, ref),
-          icon: const Icon(PhosphorIconsRegular.magnifyingGlass),
-        ),
         Semantics(
           identifier: 'dashboard_add_product',
           button: true,
@@ -91,7 +85,6 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
             child: Text(l10n.addProduct),
           ),
         ),
-        const SizedBox(width: 8),
         Semantics(
           identifier: 'dashboard_new_bill',
           button: true,
@@ -209,11 +202,15 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          l10n.todaysTransactions,
-                          style: Theme.of(context).textTheme.titleMedium,
+                        Expanded(
+                          child: Text(
+                            l10n.todaysTransactions,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         OutlinedButton.icon(
                           onPressed: todaysBills.hasValue
                               ? () => exportTodaysBillsCsv(ref, context)
@@ -266,11 +263,16 @@ class _WebOwnerDashboardPageState extends ConsumerState<WebOwnerDashboardPage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      '© ${DateTime.now().year} ${l10n.appTitle.toUpperCase()} • ${l10n.madeForNepal.toUpperCase()}',
-                      style: WebTypography.eyebrow(
-                        color: WebPalette.inkFaint,
-                      ).copyWith(fontSize: 10, letterSpacing: 1.3),
+                    Flexible(
+                      child: Text(
+                        '© ${DateTime.now().year} ${l10n.appTitle.toUpperCase()} • ${l10n.madeForNepal.toUpperCase()}',
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: WebTypography.eyebrow(
+                          color: WebPalette.inkFaint,
+                        ).copyWith(fontSize: 10, letterSpacing: 1.3),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Container(
