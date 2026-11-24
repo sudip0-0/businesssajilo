@@ -35,9 +35,10 @@ bool pathAllowedForRole(String path, Role role) {
   if (path.startsWith('/order/')) {
     return true;
   }
-  // Quote detail deep links (RLS enforces ownership per role).
+  // Quote detail deep links (warehouse has no quote/financial access; RLS
+  // enforces ownership for permitted roles).
   if (path.startsWith('/quote/')) {
-    return true;
+    return role != Role.warehouse;
   }
   return false;
 }

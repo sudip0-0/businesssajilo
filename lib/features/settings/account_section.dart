@@ -193,7 +193,7 @@ class AccountSettingsTiles extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final role = ref.watch(authProvider).value?.member?.role;
+    final role = ref.watch(authProvider.select((a) => a.value?.member?.role));
     final isOwner = role == Role.owner;
 
     return Column(

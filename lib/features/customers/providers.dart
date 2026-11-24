@@ -39,7 +39,7 @@ void bumpCustomersRevisionFromRef(Ref ref) {
 final customerListProvider = FutureProvider.autoDispose
     .family<List<Customer>, String>((ref, query) {
       ref.watch(customersRevisionProvider);
-      final role = ref.watch(authProvider).value?.member?.role;
+      final role = ref.watch(authProvider.select((a) => a.value?.member?.role));
       final includeBalances = role?.canViewCustomerBalance ?? false;
       return ref
           .watch(customersRepositoryProvider)
@@ -60,7 +60,7 @@ final recentCustomersProvider = FutureProvider.autoDispose<List<Customer>>((
 final customerDetailProvider = FutureProvider.autoDispose
     .family<Customer, String>((ref, id) {
       ref.watch(customersRevisionProvider);
-      final role = ref.watch(authProvider).value?.member?.role;
+      final role = ref.watch(authProvider.select((a) => a.value?.member?.role));
       final includeBalances = role?.canViewCustomerBalance ?? false;
       return ref
           .watch(customersRepositoryProvider)

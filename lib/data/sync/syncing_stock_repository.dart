@@ -97,12 +97,9 @@ class SyncingStockRepository implements StockRepository {
             ),
           );
 
-      await (_db.update(
-        _db.localProducts,
-      )..where((p) => p.id.equals(productId))).write(
-        LocalProductsCompanion(
-          stockCached: Value(await _projectedStock(productId, qtyDelta)),
-        ),
+      await _db.customStatement(
+        'UPDATE local_products SET stock_cached = stock_cached + ? WHERE id = ?',
+        [qtyDelta, productId],
       );
 
       await _db.enqueue(
@@ -126,12 +123,5 @@ class SyncingStockRepository implements StockRepository {
         _db.localStockMovements,
       )..where((m) => m.id.equals(id))).getSingle(),
     );
-  }
-
-  Future<int> _projectedStock(String productId, int delta) async {
-    final product = await (_db.select(
-      _db.localProducts,
-    )..where((p) => p.id.equals(productId))).getSingleOrNull();
-    return (product?.stockCached ?? 0) + delta;
   }
 }

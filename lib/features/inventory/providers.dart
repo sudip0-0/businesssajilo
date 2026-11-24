@@ -51,11 +51,9 @@ final lowStockAlertsProvider = FutureProvider.autoDispose<List<Product>>((ref) {
 /// Every active low-stock product (for the reorder screen), capped defensively.
 final lowStockProductsProvider = FutureProvider.autoDispose<List<Product>>((
   ref,
-) async {
+) {
   ref.watch(inventoryRevisionProvider);
-  final count = await ref.watch(productsRepositoryProvider).lowStockCount();
-  final limit = count.clamp(1, 200);
-  return ref.watch(productsRepositoryProvider).listLowStock(limit: limit);
+  return ref.watch(productsRepositoryProvider).listLowStock(limit: 200);
 });
 
 final productDetailProvider = FutureProvider.autoDispose

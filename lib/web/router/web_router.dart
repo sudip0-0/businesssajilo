@@ -19,7 +19,6 @@ import '../features/customers/web_customer_list_page.dart';
 import '../features/dashboard/web_customer_dashboard_page.dart';
 import '../features/dashboard/web_owner_dashboard_page.dart';
 import '../features/dashboard/web_sales_dashboard_page.dart';
-import '../features/dashboard/web_warehouse_dashboard_page.dart';
 import '../features/notifications/web_notifications_page.dart';
 import '../features/settings/web_settings_page.dart';
 import '../features/staff/web_staff_list_page.dart';
@@ -595,7 +594,6 @@ ShellRoute _warehouseRoutes() {
       ),
       GoRoute(
         path: '/warehouse/dashboard',
-        builder: (_, _) => const WebWarehouseDashboardPage(),
         redirect: (_, _) => '/warehouse/stock',
       ),
       GoRoute(

@@ -5,6 +5,7 @@ import '../../domain/enums.dart';
 import '../../domain/models/customer.dart';
 import '../../domain/models/ledger_entry.dart';
 import '../repositories/customers_repository.dart';
+import 'postgrest_filter.dart';
 import 'supabase_members_repository.dart';
 import 'supabase_provider.dart';
 
@@ -26,10 +27,9 @@ class SupabaseCustomersRepository implements CustomersRepository {
       return _listDirectory(offset: offset, limit: limit, query: query);
     }
     var filter = client.from('customer_balances').select();
-    final q = query?.trim();
-    if (q != null && q.isNotEmpty) {
-      // Commas break PostgREST `or` filter syntax.
-      final pattern = '%${q.replaceAll(',', '')}%';
+    final q = query == null ? '' : sanitizePostgrestOrIlikeQuery(query);
+    if (q.isNotEmpty) {
+      final pattern = '%$q%';
       filter = filter.or(
         'shop_name.ilike.$pattern,contact_name.ilike.$pattern,phone.ilike.$pattern',
       );
@@ -55,9 +55,9 @@ class SupabaseCustomersRepository implements CustomersRepository {
   }) async {
     final client = requireSupabaseClient(_client);
     var filter = client.from('customer_directory').select();
-    final q = query?.trim();
-    if (q != null && q.isNotEmpty) {
-      final pattern = '%${q.replaceAll(',', '')}%';
+    final q = query == null ? '' : sanitizePostgrestOrIlikeQuery(query);
+    if (q.isNotEmpty) {
+      final pattern = '%$q%';
       filter = filter.or(
         'shop_name.ilike.$pattern,contact_name.ilike.$pattern,phone.ilike.$pattern',
       );

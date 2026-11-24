@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config/env.dart';
 import 'core/logging/app_log.dart';
+import 'core/logging/log_redactor.dart';
 import 'core/notifications/push_service.dart';
 
 Future<void> main() async {
@@ -19,9 +20,40 @@ Future<void> main() async {
         await SentryFlutter.init((options) {
           options.dsn = Env.sentryDsn;
           options.environment = Env.flavor;
+          options.sendDefaultPii = false;
           options.tracesSampleRate = Env.hasSentry
               ? Env.sentryTracesSampleRate
               : 0.0;
+          options.beforeSend = (event, hint) {
+            final msg = event.message;
+            final sanitizedMsg = msg == null
+                ? null
+                : SentryMessage(LogRedactor.redactText(msg.formatted));
+            final sanitizedExceptions = event.exceptions
+                ?.map(
+                  (ex) => ex.copyWith(
+                    value: ex.value == null
+                        ? null
+                        : LogRedactor.redactText(ex.value!),
+                  ),
+                )
+                .toList();
+            return event.copyWith(
+              message: sanitizedMsg,
+              exceptions: sanitizedExceptions,
+            );
+          };
+          options.beforeBreadcrumb = (breadcrumb, hint) {
+            if (breadcrumb == null) return null;
+            return breadcrumb.copyWith(
+              message: breadcrumb.message == null
+                  ? null
+                  : LogRedactor.redactText(breadcrumb.message!),
+              data: breadcrumb.data == null
+                  ? null
+                  : LogRedactor.redactMap(breadcrumb.data!),
+            );
+          };
         });
       }
 
