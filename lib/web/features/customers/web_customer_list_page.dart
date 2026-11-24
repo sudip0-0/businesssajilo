@@ -6,12 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/l10n/app_localizations.dart';
+import '../../../core/preferences/saved_filters_store.dart';
 import '../../../core/ui/paginated_list_state.dart';
+import '../../../core/ui/reset_filters_button.dart';
 import '../../../core/utils/money.dart';
 import '../../../data/repositories/customers_repository.dart';
 import '../../../domain/enums.dart';
 import '../../../domain/models/customer.dart';
 import '../../../core/ui/adaptive_sheet.dart';
+import '../../../features/auth/providers/filter_scope_provider.dart';
 import '../../../features/customers/customer_detail_screen.dart';
 import '../../../features/customers/providers.dart';
 import '../../../features/customers/record_payment_sheet.dart';
@@ -46,8 +49,6 @@ class WebCustomerListPage extends ConsumerStatefulWidget {
       _WebCustomerListPageState();
 }
 
-enum _CustomerSortField { name, balance, date }
-
 class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   static const _searchDebounce = Duration(milliseconds: 300);
 
@@ -56,13 +57,51 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   PaginatedListState<Customer>? _pager;
   final _scrollController = ScrollController();
   CustomerBalanceFilter _filter = CustomerBalanceFilter.all;
-  _CustomerSortField _sortField = _CustomerSortField.name;
+  CustomerListSortField _sortField = CustomerListSortField.name;
   bool _sortAscending = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref
+        .read(savedFiltersStoreProvider)
+        .loadCustomers(scope);
+    if (!mounted) return;
+    setState(() {
+      _filter = saved.balanceFilter;
+      _sortField = saved.sortField;
+      _sortAscending = saved.sortAscending;
+    });
+    _initPager();
+  }
+
+  CustomerListFilterState get _filterState => CustomerListFilterState(
+    balanceFilter: _filter,
+    sortField: _sortField,
+    sortAscending: _sortAscending,
+  );
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveCustomers(scope, _filterState),
+    );
+  }
+
+  void _resetFilters() {
+    if (_filterState.isDefault) return;
+    setState(() {
+      _filter = CustomerBalanceFilter.all;
+      _sortField = CustomerListSortField.name;
+      _sortAscending = true;
+    });
+    _persistFilters();
+    _pager?.refresh();
   }
 
   void _initPager() {
@@ -116,6 +155,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   void _setFilter(CustomerBalanceFilter filter) {
     if (_filter == filter) return;
     setState(() => _filter = filter);
+    _persistFilters();
     _pager?.refresh();
   }
 
@@ -123,11 +163,11 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     final filtered = List<Customer>.from(_pager?.items ?? []);
     filtered.sort((a, b) {
       final cmp = switch (_sortField) {
-        _CustomerSortField.name => a.shopName.toLowerCase().compareTo(
+        CustomerListSortField.name => a.shopName.toLowerCase().compareTo(
           b.shopName.toLowerCase(),
         ),
-        _CustomerSortField.balance => a.balanceDue.compareTo(b.balanceDue),
-        _CustomerSortField.date =>
+        CustomerListSortField.balance => a.balanceDue.compareTo(b.balanceDue),
+        CustomerListSortField.date =>
           (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
             b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
           ),
@@ -142,7 +182,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
   }
 
   Widget _buildSortControl(AppLocalizations l10n) {
-    return PopupMenuButton<_CustomerSortField>(
+    return PopupMenuButton<CustomerListSortField>(
       initialValue: _sortField,
       tooltip: l10n.sortBy,
       icon: Icon(
@@ -151,41 +191,44 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
             : PhosphorIconsRegular.arrowDown,
       ),
       onSelected: (field) {
-        if (field == _sortField) {
-          setState(() => _sortAscending = !_sortAscending);
-        } else {
-          setState(() => _sortField = field);
-        }
+        setState(() {
+          if (field == _sortField) {
+            _sortAscending = !_sortAscending;
+          } else {
+            _sortField = field;
+          }
+        });
+        _persistFilters();
       },
       itemBuilder: (context) => [
         PopupMenuItem(
-          value: _CustomerSortField.name,
+          value: CustomerListSortField.name,
           child: Text(
             l10n.sortName,
             style: TextStyle(
-              fontWeight: _sortField == _CustomerSortField.name
+              fontWeight: _sortField == CustomerListSortField.name
                   ? FontWeight.bold
                   : null,
             ),
           ),
         ),
         PopupMenuItem(
-          value: _CustomerSortField.balance,
+          value: CustomerListSortField.balance,
           child: Text(
             l10n.balance,
             style: TextStyle(
-              fontWeight: _sortField == _CustomerSortField.balance
+              fontWeight: _sortField == CustomerListSortField.balance
                   ? FontWeight.bold
                   : null,
             ),
           ),
         ),
         PopupMenuItem(
-          value: _CustomerSortField.date,
+          value: CustomerListSortField.date,
           child: Text(
             l10n.sortDate,
             style: TextStyle(
-              fontWeight: _sortField == _CustomerSortField.date
+              fontWeight: _sortField == CustomerListSortField.date
                   ? FontWeight.bold
                   : null,
             ),
@@ -200,6 +243,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
     final l10n = AppLocalizations.of(context);
     final selectedId = widget.selectedCustomerId;
     final pager = _pager;
+    final activeFilterCount = _filterState.activeCount;
 
     ref.listen<int>(customersRevisionProvider, (prev, next) {
       if (prev != next) {
@@ -247,6 +291,7 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         for (final (filter, label) in [
                           (CustomerBalanceFilter.all, l10n.allCustomers),
@@ -261,6 +306,11 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
                             label: Text(label),
                             selected: _filter == filter,
                             onSelected: (_) => _setFilter(filter),
+                          ),
+                        if (activeFilterCount > 0)
+                          ResetFiltersButton(
+                            activeCount: activeFilterCount,
+                            onReset: _resetFilters,
                           ),
                       ],
                     ),

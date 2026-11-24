@@ -827,5 +827,100 @@
   "cost": "Cost",
   "profit": "Profit",
   "profitOverview": "Profit analytics overview",
-  "profitSubtitle": "Revenue, cost & margin analysis"
+  "profitSubtitle": "Revenue, cost & margin analysis",
+  "resetFilters": "Reset filters",
+  "filtersActiveCount": "{count} active",
+  "@filtersActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "firstBillChecklistTitle": "Get ready for your first bill",
+  "firstBillChecklistProgress": "{done} of {total} completed",
+  "@firstBillChecklistProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "firstBillChecklistDismiss": "Dismiss checklist",
+  "checklistStepProfileTitle": "Complete business profile",
+  "checklistStepProfileAction": "Edit profile",
+  "checklistStepProductTitle": "Add your first product",
+  "checklistStepCustomerTitle": "Add your first customer",
+  "checklistStepBillTitle": "Create your first bill",
+  "checklistCompleted": "Completed",
+  "stockCount": "Stock count",
+  "stockCountSubtitle": "Enter physical shelf counts to reconcile stock.",
+  "systemStock": "System",
+  "countedStock": "Counted",
+  "variance": "Variance",
+  "stockCountReasonHint": "e.g. Monthly physical godown count",
+  "stockCountChangedOnly": "Changed only",
+  "stockCountItemsToAdjust": "{count, plural, =1{1 item to adjust} other{{count} items to adjust}}",
+  "@stockCountItemsToAdjust": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stockCountNoChanges": "Enter at least one counted quantity that differs from system stock.",
+  "stockCountSubmit": "Reconcile stock",
+  "stockCountSuccess": "{count, plural, =1{Reconciled 1 product} other{Reconciled {count} products}}",
+  "@stockCountSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stockCountInvalidQty": "Enter a whole number (0 or more)",
+  "stockCountNetVariance": "Net variance: {delta}",
+  "@stockCountNetVariance": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "stockCountSummary": "{counted} counted · {changed} changed",
+  "@stockCountSummary": {
+    "placeholders": {
+      "counted": {
+        "type": "int"
+      },
+      "changed": {
+        "type": "int"
+      }
+    }
+  },
+  "cartDraftRestored": "Saved cart restored",
+  "importSessionSavedTitle": "Unfinished import session",
+  "importSessionSavedBody": "{file}: {completed} of {total} imported, {remaining} remaining.",
+  "@importSessionSavedBody": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "importResumeSafe": "Resume safely",
+  "importDiscardSession": "Discard session",
+  "importOpeningStockOwnerOnly": "Only owners can set opening stock during import."
 }

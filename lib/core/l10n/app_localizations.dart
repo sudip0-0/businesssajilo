@@ -3961,6 +3961,197 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Revenue, cost & margin analysis'**
   String get profitSubtitle;
+
+  /// No description provided for @resetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get resetFilters;
+
+  /// No description provided for @filtersActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String filtersActiveCount(int count);
+
+  /// No description provided for @firstBillChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get ready for your first bill'**
+  String get firstBillChecklistTitle;
+
+  /// No description provided for @firstBillChecklistProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} completed'**
+  String firstBillChecklistProgress(int done, int total);
+
+  /// No description provided for @firstBillChecklistDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss checklist'**
+  String get firstBillChecklistDismiss;
+
+  /// No description provided for @checklistStepProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete business profile'**
+  String get checklistStepProfileTitle;
+
+  /// No description provided for @checklistStepProfileAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get checklistStepProfileAction;
+
+  /// No description provided for @checklistStepProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first product'**
+  String get checklistStepProductTitle;
+
+  /// No description provided for @checklistStepCustomerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first customer'**
+  String get checklistStepCustomerTitle;
+
+  /// No description provided for @checklistStepBillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first bill'**
+  String get checklistStepBillTitle;
+
+  /// No description provided for @checklistCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get checklistCompleted;
+
+  /// No description provided for @stockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock count'**
+  String get stockCount;
+
+  /// No description provided for @stockCountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter physical shelf counts to reconcile stock.'**
+  String get stockCountSubtitle;
+
+  /// No description provided for @systemStock.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemStock;
+
+  /// No description provided for @countedStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted'**
+  String get countedStock;
+
+  /// No description provided for @variance.
+  ///
+  /// In en, this message translates to:
+  /// **'Variance'**
+  String get variance;
+
+  /// No description provided for @stockCountReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Monthly physical godown count'**
+  String get stockCountReasonHint;
+
+  /// No description provided for @stockCountChangedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed only'**
+  String get stockCountChangedOnly;
+
+  /// No description provided for @stockCountItemsToAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item to adjust} other{{count} items to adjust}}'**
+  String stockCountItemsToAdjust(int count);
+
+  /// No description provided for @stockCountNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least one counted quantity that differs from system stock.'**
+  String get stockCountNoChanges;
+
+  /// No description provided for @stockCountSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconcile stock'**
+  String get stockCountSubmit;
+
+  /// No description provided for @stockCountSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Reconciled 1 product} other{Reconciled {count} products}}'**
+  String stockCountSuccess(int count);
+
+  /// No description provided for @stockCountInvalidQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number (0 or more)'**
+  String get stockCountInvalidQty;
+
+  /// No description provided for @stockCountNetVariance.
+  ///
+  /// In en, this message translates to:
+  /// **'Net variance: {delta}'**
+  String stockCountNetVariance(String delta);
+
+  /// No description provided for @stockCountSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{counted} counted · {changed} changed'**
+  String stockCountSummary(int counted, int changed);
+
+  /// No description provided for @cartDraftRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved cart restored'**
+  String get cartDraftRestored;
+
+  /// No description provided for @importSessionSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfinished import session'**
+  String get importSessionSavedTitle;
+
+  /// No description provided for @importSessionSavedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{file}: {completed} of {total} imported, {remaining} remaining.'**
+  String importSessionSavedBody(
+    String file,
+    int completed,
+    int total,
+    int remaining,
+  );
+
+  /// No description provided for @importResumeSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume safely'**
+  String get importResumeSafe;
+
+  /// No description provided for @importDiscardSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard session'**
+  String get importDiscardSession;
+
+  /// No description provided for @importOpeningStockOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only owners can set opening stock during import.'**
+  String get importOpeningStockOwnerOnly;
 }
 
 class _AppLocalizationsDelegate

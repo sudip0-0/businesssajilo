@@ -2044,4 +2044,131 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get profitSubtitle => 'बिक्री, लागत तथा नाफा विश्लेषण';
+
+  @override
+  String get resetFilters => 'फिल्टर रिसेट';
+
+  @override
+  String filtersActiveCount(int count) {
+    return '$count सक्रिय';
+  }
+
+  @override
+  String get firstBillChecklistTitle => 'पहिलो बिलको लागि तयारी';
+
+  @override
+  String firstBillChecklistProgress(int done, int total) {
+    return '$total मध्ये $done पूरा भयो';
+  }
+
+  @override
+  String get firstBillChecklistDismiss => 'सूची हटाउनुहोस्';
+
+  @override
+  String get checklistStepProfileTitle => 'व्यवसाय विवरण पूरा गर्नुहोस्';
+
+  @override
+  String get checklistStepProfileAction => 'विवरण सच्याउनुहोस्';
+
+  @override
+  String get checklistStepProductTitle => 'पहिलो सामान थप्नुहोस्';
+
+  @override
+  String get checklistStepCustomerTitle => 'पहिलो ग्राहक थप्नुहोस्';
+
+  @override
+  String get checklistStepBillTitle => 'पहिलो बिल बनाउनुहोस्';
+
+  @override
+  String get checklistCompleted => 'पूरा भयो';
+
+  @override
+  String get stockCount => 'स्टक गणना';
+
+  @override
+  String get stockCountSubtitle =>
+      'स्टक मिलान गर्न भौतिक गणना प्रविष्ट गर्नुहोस्।';
+
+  @override
+  String get systemStock => 'सिस्टम';
+
+  @override
+  String get countedStock => 'गणना';
+
+  @override
+  String get variance => 'फरक';
+
+  @override
+  String get stockCountReasonHint => 'जस्तै: मासिक गोदाम स्टक गणना';
+
+  @override
+  String get stockCountChangedOnly => 'परिवर्तन भएका मात्र';
+
+  @override
+  String stockCountItemsToAdjust(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count सामान समायोजन',
+      one: '१ सामान समायोजन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stockCountNoChanges =>
+      'सिस्टम स्टकभन्दा फरक कम्तीमा एक गणना प्रविष्ट गर्नुहोस्।';
+
+  @override
+  String get stockCountSubmit => 'स्टक मिलान गर्नुहोस्';
+
+  @override
+  String stockCountSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count सामान मिलान भयो',
+      one: '१ सामान मिलान भयो',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stockCountInvalidQty => '० वा सोभन्दा बढी पूर्ण संख्या राख्नुहोस्';
+
+  @override
+  String stockCountNetVariance(String delta) {
+    return 'कुल फरक: $delta';
+  }
+
+  @override
+  String stockCountSummary(int counted, int changed) {
+    return '$counted गणना · $changed परिवर्तन';
+  }
+
+  @override
+  String get cartDraftRestored => 'बचत गरिएको कार्ट पुनःस्थापना भयो';
+
+  @override
+  String get importSessionSavedTitle => 'अधूरो इम्पोर्ट सत्र';
+
+  @override
+  String importSessionSavedBody(
+    String file,
+    int completed,
+    int total,
+    int remaining,
+  ) {
+    return '$file: $total मध्ये $completed इम्पोर्ट भयो, $remaining बाँकी छ।';
+  }
+
+  @override
+  String get importResumeSafe => 'सुरक्षित रूपमा जारी राख्नुहोस्';
+
+  @override
+  String get importDiscardSession => 'सत्र हटाउनुहोस्';
+
+  @override
+  String get importOpeningStockOwnerOnly =>
+      'इम्पोर्ट गर्दा प्रारम्भिक स्टक मालिकले मात्र राख्न सक्छन्।';
 }

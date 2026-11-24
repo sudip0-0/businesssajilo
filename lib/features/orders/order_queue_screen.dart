@@ -1,15 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_localizations.dart';
+import '../../core/preferences/saved_filters_store.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/error_state.dart';
 import '../../core/ui/list_skeleton.dart';
 import '../../core/ui/paginated_list_state.dart';
+import '../../core/ui/reset_filters_button.dart';
 import '../../core/ui/status_chip.dart';
 import '../../core/utils/bs_date.dart';
 import '../../data/repositories/orders_repository.dart';
 import '../../domain/models/order.dart';
+import '../auth/providers/filter_scope_provider.dart';
 import '../billing/providers.dart';
 import 'order_detail_screen.dart';
 import 'providers.dart';
@@ -30,7 +35,37 @@ class _OrderQueueScreenState extends ConsumerState<OrderQueueScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initPager());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final scope = ref.read(currentFilterScopeProvider);
+    final saved = await ref.read(savedFiltersStoreProvider).loadOrders(scope);
+    if (!mounted) return;
+    setState(() {
+      _filter = StaffOrderFilter.values.firstWhere(
+        (v) => v.name == saved.staffFilterName,
+        orElse: () => StaffOrderFilter.needsAction,
+      );
+    });
+    _initPager();
+  }
+
+  OrderListFilterState get _filterState =>
+      OrderListFilterState(staffFilterName: _filter.name);
+
+  void _persistFilters() {
+    final scope = ref.read(currentFilterScopeProvider);
+    unawaited(
+      ref.read(savedFiltersStoreProvider).saveOrders(scope, _filterState),
+    );
+  }
+
+  Future<void> _resetFilters() async {
+    if (_filterState.isDefault) return;
+    setState(() => _filter = StaffOrderFilter.needsAction);
+    _persistFilters();
+    await _refresh();
   }
 
   void _initPager() {
@@ -53,6 +88,7 @@ class _OrderQueueScreenState extends ConsumerState<OrderQueueScreen> {
   Future<void> _setFilter(StaffOrderFilter filter) async {
     if (_filter == filter) return;
     setState(() => _filter = filter);
+    _persistFilters();
     await _refresh();
   }
 
@@ -143,7 +179,16 @@ class _OrderQueueScreenState extends ConsumerState<OrderQueueScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        StaffOrderFilterBar(value: _filter, onChanged: _setFilter),
+        StaffOrderFilterBar(
+          value: _filter,
+          onChanged: _setFilter,
+          trailing: _filterState.activeCount > 0
+              ? ResetFiltersButton(
+                  activeCount: _filterState.activeCount,
+                  onReset: _resetFilters,
+                )
+              : null,
+        ),
         Expanded(child: listBody),
       ],
     );
