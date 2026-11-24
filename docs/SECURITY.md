@@ -62,7 +62,7 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset, `*`, or not an 
 - Migration 61 adds composite/partial indexes across `bills`, `orders`, `payments`, `credit_notes`, `stock_movements`, `notifications`, `audit_log`, `customer_balance_projections`, `products`, and `quotes`, wraps remaining view/policy auth helpers in `(SELECT ...)` InitPlans, and backs `total_dues()` / `owner_dashboard_stats()` dues reads with the zero-drift `customer_balance_projections` table (local authenticated benchmark: `0.165 ms` vs `2.155 ms` on live view, `0` drift rows).
 - Migration 62 adds two atomic, idempotent P2 RPCs:
   - `reconcile_stock_count(p jsonb)` — `owner` & `warehouse` only, append-only `adjust` rows in `stock_movements`, idempotent via caller `op_id` in RLS-protected `stock_reconciliations`, zero financial columns exposed.
-  - `create_product_with_stock(p jsonb)` — `owner` & `sales` only (`opening_stock > 0` restricted to `owner` per `product.md §4`), idempotent via caller `op_id` (`products.client_op_id`), atomically inserts `stock_in` movement when `opening_stock > 0`.
+  - `create_product_with_stock(p jsonb)` — `owner` & `sales` only (`opening_stock > 0` restricted to `owner` per `product.md §4`), idempotent via caller `op_id` (`products.client_op_id` + internal RLS-protected `product_create_ops` ledger added in migration 63 hashing full payload including `name_np`/`opening_stock` and pinning exact `opening_movement_id`), atomically inserts `stock_in` movement when `opening_stock > 0`.
 - Edge Function shared validators (`supabase/functions/_shared/validation.ts`) have Deno unit tests — run via `scripts/local_hardening_gate.ps1` or `deno test supabase/functions/_shared/validation_test.ts`.
 
 ## Observability
