@@ -100,7 +100,6 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
           selected: _showInactive,
           onSelected: (v) => setState(() => _showInactive = v),
         ),
-        const SizedBox(width: 8),
         FilledButton.icon(
           onPressed: _openAddMember,
           icon: const Icon(PhosphorIconsRegular.userPlus),
@@ -129,14 +128,14 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
           return WebDataTable<Member>(
             columns: [
               DataColumn(
-                label: Text(l10n.displayName),
+                label: Text(l10n.columnName),
                 onSort: (_, asc) => setState(() {
                   _sortColumnIndex = 0;
                   _sortAscending = asc;
                 }),
               ),
               DataColumn(
-                label: Text(l10n.staff),
+                label: Text(l10n.columnRole),
                 onSort: (_, asc) => setState(() {
                   _sortColumnIndex = 1;
                   _sortAscending = asc;
@@ -149,7 +148,7 @@ class _WebStaffListPageState extends ConsumerState<WebStaffListPage> {
                   _sortAscending = asc;
                 }),
               ),
-              DataColumn(label: Text(l10n.active)),
+              DataColumn(label: Text(l10n.status)),
               const DataColumn(label: Text('')),
             ],
             items: sorted,

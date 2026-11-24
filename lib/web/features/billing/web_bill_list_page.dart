@@ -266,34 +266,31 @@ class _WebBillListPageState extends ConsumerState<WebBillListPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final (filter, label) in [
-                            (_BillStatusFilter.all, l10n.allBills),
-                            (_BillStatusFilter.paid, l10n.paid),
-                            (_BillStatusFilter.partial, l10n.partial),
-                            (_BillStatusFilter.due, l10n.due),
-                          ])
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(label),
-                                selected: _statusFilter == filter,
-                                onSelected: (_) {
-                                  setState(() => _statusFilter = filter);
-                                  _pager?.refresh();
-                                  if (_search?.isActive == true) {
-                                    _search!.retry();
-                                  }
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final (filter, label) in [
+                          (_BillStatusFilter.all, l10n.allBills),
+                          (_BillStatusFilter.paid, l10n.paid),
+                          (_BillStatusFilter.partial, l10n.partial),
+                          (_BillStatusFilter.due, l10n.due),
+                        ])
+                          FilterChip(
+                            label: Text(label),
+                            selected: _statusFilter == filter,
+                            onSelected: (_) {
+                              setState(() => _statusFilter = filter);
+                              _pager?.refresh();
+                              if (_search?.isActive == true) {
+                                _search!.retry();
+                              }
+                            },
+                          ),
+                      ],
                     ),
                   ),
                   _buildSortControl(l10n),

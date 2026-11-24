@@ -53,11 +53,27 @@ class BillFormProductPicker extends StatelessWidget {
           child: TextField(
             controller: controller,
             focusNode: focusNode,
+            textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: l10n.filterProducts,
               prefixIcon: const Icon(Icons.search),
+              suffixIcon: controller.text.isNotEmpty
+                  ? IconButton(
+                      tooltip: l10n.clear,
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        controller.clear();
+                        onQueryChanged('');
+                      },
+                    )
+                  : null,
             ),
             onChanged: onQueryChanged,
+            onSubmitted: (_) {
+              if (products.length == 1) {
+                onProductSelected(products.first);
+              }
+            },
           ),
         ),
         if (refreshing) const LinearProgressIndicator(minHeight: 2),
@@ -82,14 +98,17 @@ class BillFormProductPicker extends StatelessWidget {
                     final product = products[index];
                     return ListTile(
                       leading: ProductImage(storagePath: product.imageUrl),
-                      title: Text(product.name),
-                      subtitle: Text(
-                        formatNpr(
-                          Paisa(product.referencePrice),
-                          showPaisa: false,
-                        ),
+                      title: Text(
+                        product.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      trailing: StockBadge(product: product),
+                      subtitle: Text(
+                        '${formatNpr(Paisa(product.referencePrice), showPaisa: false)} / ${product.unit}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: StockBadge(product: product, compact: true),
                       onTap: () => onProductSelected(product),
                     );
                   },

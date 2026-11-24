@@ -216,8 +216,6 @@ class _WebCustomerListPageState extends ConsumerState<WebCustomerListPage> {
             icon: const Icon(PhosphorIconsRegular.wallet),
             label: Text(l10n.recordPayment),
           ),
-        if (widget.canRecordPayments && widget.canEdit)
-          const SizedBox(width: 8),
         if (widget.canEdit)
           FilledButton.icon(
             onPressed: () =>
@@ -432,9 +430,9 @@ class _CustomerRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 128,
+            const SizedBox(width: 12),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 136),
               child: Text(
                 due < 0
                     ? '${l10n.creditBalance} ${formatNpr(Paisa(-due), showPaisa: false)}'

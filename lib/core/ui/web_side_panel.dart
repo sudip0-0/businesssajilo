@@ -71,34 +71,37 @@ Future<T?> showWebSidePanel<T>({
             const SingleActivator(LogicalKeyboardKey.escape): () =>
                 Navigator.of(ctx).pop(),
           },
-          child: AnimatedBuilder(
-            animation: animation,
-            child: panel,
-            builder: (context, panelChild) {
-              final t = Curves.easeOutCubic.transform(animation.value);
-              return Stack(
-                children: [
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(ctx).pop(),
-                      child: Opacity(
-                        opacity: t * 0.54,
-                        child: const ColoredBox(color: Colors.black),
+          child: Focus(
+            autofocus: true,
+            child: AnimatedBuilder(
+              animation: animation,
+              child: panel,
+              builder: (context, panelChild) {
+                final t = Curves.easeOutCubic.transform(animation.value);
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(ctx).pop(),
+                        child: Opacity(
+                          opacity: t * 0.54,
+                          child: const ColoredBox(color: Colors.black),
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Transform.translate(
-                      offset: Offset((1 - t) * panelWidth, 0),
-                      child: panelChild,
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Transform.translate(
+                        offset: Offset((1 - t) * panelWidth, 0),
+                        child: panelChild,
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
         ),
       );

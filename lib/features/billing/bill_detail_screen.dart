@@ -560,11 +560,15 @@ class _BillLinesCard extends StatelessWidget {
                   color: scheme.primary,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.billLines,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
+                Expanded(
+                  child: Text(
+                    l10n.billLines,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ),
               ],
@@ -680,8 +684,15 @@ class _TotalRow extends StatelessWidget {
     final style = Theme.of(context).textTheme.bodyMedium;
     return Row(
       children: [
-        Text(label, style: style),
-        const Spacer(),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+        const SizedBox(width: 8),
         Text(value, style: style?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );

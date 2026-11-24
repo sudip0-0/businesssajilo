@@ -32,6 +32,8 @@ class WebSidebar extends StatefulWidget {
     required this.onToggleCollapse,
     this.footer,
     this.inDrawer = false,
+    this.location,
+    this.onNavigate,
   });
 
   final List<WebNavItem> items;
@@ -39,6 +41,12 @@ class WebSidebar extends StatefulWidget {
   final VoidCallback onToggleCollapse;
   final Widget? footer;
   final bool inDrawer;
+
+  /// Explicit route path when rendered inside a modal route above [GoRouterState].
+  final String? location;
+
+  /// Optional navigation callback when rendered inside a modal drawer.
+  final ValueChanged<String>? onNavigate;
 
   @override
   State<WebSidebar> createState() => _WebSidebarState();
@@ -59,7 +67,7 @@ class _WebSidebarState extends State<WebSidebar> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tokens = context.webTokens;
-    final location = GoRouterState.of(context).uri.path;
+    final location = widget.location ?? GoRouterState.of(context).uri.path;
     final isCollapsed = widget.collapsed && !widget.inDrawer;
     final width = isCollapsed
         ? tokens.sidebarCollapsedWidth
@@ -102,8 +110,12 @@ class _WebSidebarState extends State<WebSidebar> {
                       selected: selected,
                       collapsed: isCollapsed,
                       onTap: () {
-                        context.go(item.path);
-                        if (widget.inDrawer) Navigator.of(context).pop();
+                        if (widget.onNavigate != null) {
+                          widget.onNavigate!(item.path);
+                        } else {
+                          context.go(item.path);
+                          if (widget.inDrawer) Navigator.of(context).pop();
+                        }
                       },
                     );
                     tile = KeyedSubtree(
@@ -239,7 +251,7 @@ class _BrandBlock extends StatelessWidget {
                   style: WebTypography.serif(
                     fontSize: 18.5,
                     fontWeight: FontWeight.w600,
-                    height: 1.15,
+                    height: 1.32,
                     color: WebPalette.railTextBright,
                   ),
                 ),

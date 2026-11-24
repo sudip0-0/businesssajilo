@@ -87,23 +87,27 @@ Future<void> showNotificationDropdown({
                           top: top,
                           left: left,
                           width: width,
-                          height: height,
-                          child: Material(
-                            elevation: 10,
-                            borderRadius: BorderRadius.circular(12),
-                            clipBehavior: Clip.antiAlias,
-                            color: Theme.of(dialogContext).colorScheme.surface,
-                            child: NotificationDropdownPanel(
-                              onOpenItem: (item) {
-                                Navigator.of(dialogContext).pop();
-                                onOpenItem(buttonContext, item);
-                              },
-                              onViewAll: onViewAll == null
-                                  ? null
-                                  : () {
-                                      Navigator.of(dialogContext).pop();
-                                      onViewAll();
-                                    },
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxHeight: height),
+                            child: Material(
+                              elevation: 10,
+                              borderRadius: BorderRadius.circular(12),
+                              clipBehavior: Clip.antiAlias,
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.surface,
+                              child: NotificationDropdownPanel(
+                                onOpenItem: (item) {
+                                  Navigator.of(dialogContext).pop();
+                                  onOpenItem(buttonContext, item);
+                                },
+                                onViewAll: onViewAll == null
+                                    ? null
+                                    : () {
+                                        Navigator.of(dialogContext).pop();
+                                        onViewAll();
+                                      },
+                              ),
                             ),
                           ),
                         ),
@@ -140,6 +144,7 @@ class NotificationDropdownPanel extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
@@ -149,6 +154,8 @@ class NotificationDropdownPanel extends ConsumerWidget {
               Expanded(
                 child: Text(
                   l10n.notifications,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -165,42 +172,41 @@ class NotificationDropdownPanel extends ConsumerWidget {
           ),
         ),
         const Divider(height: 1),
-        Expanded(
+        Flexible(
           child: AsyncBody(
             value: notificationsAsync,
             onRetry: () => ref.invalidate(notificationListProvider),
             skeletonRows: 4,
             data: (items) {
               if (items.isEmpty) {
-                return Center(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.notifications_none_outlined,
-                            size: 40,
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.notifications_none_outlined,
+                          size: 40,
+                          color: theme.colorScheme.outline,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.noNotifications,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.outline,
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            l10n.noNotifications,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.outline,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 );
               }
 
               return ListView.separated(
-                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 itemCount: items.length,
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {

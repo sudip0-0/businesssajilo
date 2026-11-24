@@ -113,16 +113,16 @@ abstract final class AppTheme {
     ),
     bodyLarge: TextStyle(fontSize: 16, height: 1.5),
     bodyMedium: TextStyle(fontSize: 14, height: 1.43),
-    bodySmall: TextStyle(fontSize: 12, height: 1.33),
+    bodySmall: TextStyle(fontSize: 12, height: 1.4),
     labelLarge: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w600,
-      height: 1.33,
+      height: 1.4,
     ),
     labelSmall: TextStyle(
       fontSize: 11,
       fontWeight: FontWeight.w500,
-      height: 1.27,
+      height: 1.4,
     ),
   ).apply(fontFamily: _fontFamily, fontFamilyFallback: _fontFallback);
 
@@ -206,7 +206,7 @@ abstract final class AppTheme {
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final style = _textTheme.labelSmall?.copyWith(
             fontSize: 11,
-            height: 1.2,
+            height: 1.35,
           );
           if (states.contains(WidgetState.selected)) {
             return style?.copyWith(color: BsColors.secondary);

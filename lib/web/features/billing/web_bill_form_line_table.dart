@@ -6,6 +6,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../../../features/billing/bill_draft_line.dart';
 import '../../theme/web_palette.dart';
+import '../../theme/web_typography.dart';
 
 /// Shared column metrics so header labels and row cells stay aligned.
 const double _kSnWidth = 40;
@@ -162,7 +163,14 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
   }
 
   void _onQtyFocusChange() {
-    if (_qtyFocus.hasFocus) _selectAll(_qtyController);
+    if (_qtyFocus.hasFocus) {
+      _selectAll(_qtyController);
+    } else {
+      final qtyText = '${widget.line.qty}';
+      if (_qtyController.text != qtyText) {
+        _qtyController.text = qtyText;
+      }
+    }
   }
 
   void _onRateFocusChange() {
@@ -286,17 +294,40 @@ class _WebBillItemRowState extends State<WebBillItemRow> {
           const SizedBox(width: _kColGap),
           SizedBox(
             width: _kAmountWidth,
-            child: Text(
-              widget.line.tryLineTotal == null
-                  ? widget.l10n.invalidNumber
-                  : formatNpr(
-                      Paisa(widget.line.tryLineTotal!),
-                      showPaisa: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.line.tryLineTotal == null
+                      ? widget.l10n.invalidNumber
+                      : formatNpr(
+                          Paisa(widget.line.tryLineTotal!),
+                          showPaisa: true,
+                        ),
+                  textAlign: TextAlign.end,
+                  style: widget.line.tryLineTotal == null
+                      ? Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: WebPalette.danger,
+                          fontWeight: FontWeight.w600,
+                        )
+                      : WebTypography.mono(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: WebPalette.ink,
+                        ),
+                ),
+                if (widget.line.discount > 0 &&
+                    widget.line.tryLineTotal != null)
+                  Text(
+                    '- ${formatNpr(Paisa(widget.line.discount), showPaisa: true)}',
+                    textAlign: TextAlign.end,
+                    style: WebTypography.mono(
+                      fontSize: 11,
+                      color: WebPalette.success,
                     ),
-              textAlign: TextAlign.end,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: _kColGap),

@@ -38,6 +38,11 @@ class _WebStatTileState extends State<WebStatTile> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final showTrend =
+        widget.trend != null &&
+        widget.trendLabel != null &&
+        widget.trendLabel!.trim().isNotEmpty;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -45,6 +50,7 @@ class _WebStatTileState extends State<WebStatTile> {
         onTap: widget.onTap,
         elevated: true,
         height: 188,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -55,7 +61,7 @@ class _WebStatTileState extends State<WebStatTile> {
               curve: Curves.easeOutCubic,
               width: _hovered ? 44 : 0,
               height: 2,
-              margin: const EdgeInsets.only(bottom: 14),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: WebPalette.brass,
                 borderRadius: BorderRadius.circular(2),
@@ -76,7 +82,7 @@ class _WebStatTileState extends State<WebStatTile> {
                   child: Icon(widget.icon, size: 18, color: WebPalette.navy),
                 ),
                 const Spacer(),
-                if (widget.trend != null)
+                if (showTrend)
                   Flexible(
                     child: _TrendBadge(
                       direction: widget.trend!,
@@ -91,22 +97,25 @@ class _WebStatTileState extends State<WebStatTile> {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
               widget.label.toUpperCase(),
               style: WebTypography.eyebrow(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 5),
-            Text(
-              widget.value,
-              style: WebTypography.metricValue(context),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.value,
+                style: WebTypography.metricValue(context),
+                maxLines: 1,
+              ),
             ),
             SizedBox(
-              height: 18,
+              height: 20,
               child: widget.subtitle != null
                   ? Align(
                       alignment: Alignment.centerLeft,

@@ -26,6 +26,7 @@ class WebAuthBrandPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Container(
+      clipBehavior: Clip.hardEdge,
       decoration: const BoxDecoration(gradient: WebPalette.brandGradient),
       child: Stack(
         children: [

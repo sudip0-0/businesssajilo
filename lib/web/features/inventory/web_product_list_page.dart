@@ -238,21 +238,18 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
     return WebPageScaffold(
       title: l10n.inventory,
       actions: [
-        if (widget.canManageStock) ...[
+        if (widget.canManageStock)
           OutlinedButton.icon(
             onPressed: _openStockIn,
             icon: const Icon(PhosphorIconsRegular.package),
             label: Text(l10n.stockIn),
           ),
-          const SizedBox(width: 8),
-        ],
         if (widget.canEdit) ...[
           FilterChip(
             label: Text(_showInactive ? l10n.hideInactive : l10n.showInactive),
             selected: _showInactive,
             onSelected: _setShowInactive,
           ),
-          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: () async {
               final imported = await showProductImportSheet(context);
@@ -263,7 +260,6 @@ class _WebProductListPageState extends ConsumerState<WebProductListPage> {
             icon: const Icon(PhosphorIconsRegular.uploadSimple),
             label: Text(l10n.importFromExcel),
           ),
-          const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () => context.push('${_inventoryListBase(context)}/new'),
             icon: const Icon(PhosphorIconsRegular.plus),

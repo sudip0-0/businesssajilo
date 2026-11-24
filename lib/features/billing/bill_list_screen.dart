@@ -187,86 +187,84 @@ class _BillListScreenState extends ConsumerState<BillListScreen> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final (filter, label) in [
-                  (_BillStatusFilter.all, l10n.allBills),
-                  (_BillStatusFilter.paid, l10n.paid),
-                  (_BillStatusFilter.partial, l10n.partial),
-                  (_BillStatusFilter.due, l10n.due),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(label),
-                      selected: _statusFilter == filter,
-                      onSelected: (_) {
-                        setState(() => _statusFilter = filter);
-                        _pager?.refresh();
-                        if (_search?.isActive == true) {
-                          _search!.retry();
-                        }
-                      },
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: PopupMenuButton<_BillSortField>(
-                    initialValue: _sortField,
-                    tooltip: l10n.sortBy,
-                    icon: Icon(
-                      _sortAscending
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
-                    ),
-                    onSelected: (field) {
-                      if (field == _sortField) {
-                        setState(() => _sortAscending = !_sortAscending);
-                      } else {
-                        setState(() => _sortField = field);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: _BillSortField.date,
-                        child: Text(
-                          l10n.sortDate,
-                          style: TextStyle(
-                            fontWeight: _sortField == _BillSortField.date
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final (filter, label) in [
+                      (_BillStatusFilter.all, l10n.allBills),
+                      (_BillStatusFilter.paid, l10n.paid),
+                      (_BillStatusFilter.partial, l10n.partial),
+                      (_BillStatusFilter.due, l10n.due),
+                    ])
+                      FilterChip(
+                        label: Text(label),
+                        selected: _statusFilter == filter,
+                        onSelected: (_) {
+                          setState(() => _statusFilter = filter);
+                          _pager?.refresh();
+                          if (_search?.isActive == true) {
+                            _search!.retry();
+                          }
+                        },
                       ),
-                      PopupMenuItem(
-                        value: _BillSortField.amount,
-                        child: Text(
-                          l10n.sortAmount,
-                          style: TextStyle(
-                            fontWeight: _sortField == _BillSortField.amount
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: _BillSortField.customer,
-                        child: Text(
-                          l10n.sortCustomer,
-                          style: TextStyle(
-                            fontWeight: _sortField == _BillSortField.customer
-                                ? FontWeight.bold
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              PopupMenuButton<_BillSortField>(
+                initialValue: _sortField,
+                tooltip: l10n.sortBy,
+                icon: Icon(
+                  _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                ),
+                onSelected: (field) {
+                  if (field == _sortField) {
+                    setState(() => _sortAscending = !_sortAscending);
+                  } else {
+                    setState(() => _sortField = field);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _BillSortField.date,
+                    child: Text(
+                      l10n.sortDate,
+                      style: TextStyle(
+                        fontWeight: _sortField == _BillSortField.date
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _BillSortField.amount,
+                    child: Text(
+                      l10n.sortAmount,
+                      style: TextStyle(
+                        fontWeight: _sortField == _BillSortField.amount
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _BillSortField.customer,
+                    child: Text(
+                      l10n.sortCustomer,
+                      style: TextStyle(
+                        fontWeight: _sortField == _BillSortField.customer
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         Padding(
@@ -459,6 +457,7 @@ class _BillTile extends StatelessWidget {
         ),
         subtitle: Text(customerLabel),
         trailing: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -468,7 +467,7 @@ class _BillTile extends StatelessWidget {
                 context,
               ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             BillStatusChip(bill.status),
           ],
         ),
