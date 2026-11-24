@@ -1,49 +1,28 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { EMAIL_RE, MAX_FIELD_LEN, str } from "../_shared/validation.ts";
+import {
+  buildCorsHeaders,
+  createRateLimiter,
+  EMAIL_RE,
+  isSyntheticPhoneEmail,
+  MAX_FIELD_LEN,
+  MAX_MONEY_PAISA,
+  NO_SESSION_CLIENT_OPTIONS,
+  normalizePhone,
+  parseJsonObject,
+  phoneLoginEmail,
+  str,
+  validatePassword,
+} from "../_shared/validation.ts";
 
-const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
-if (!allowedOrigin) {
-  throw new Error("ALLOWED_ORIGIN must be set");
-}
-if (allowedOrigin.trim() === "*") {
-  // Wildcard CORS defeats the origin allow-list model; refuse to serve it.
-  throw new Error(
-    "ALLOWED_ORIGIN must be a concrete origin, not '*' — set it via `supabase secrets set ALLOWED_ORIGIN=https://…`",
-  );
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": allowedOrigin,
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const corsHeaders = buildCorsHeaders(Deno.env.get("ALLOWED_ORIGIN"));
 
 const allowedRoles = ["sales", "warehouse", "customer"] as const;
 
-// Members without a real email log in by phone: the auth account is created
-// with a synthetic email derived from the normalized phone number. Must stay
-// in sync with lib/core/utils/login_identifier.dart.
-const PHONE_LOGIN_DOMAIN = "phone.businesssajilo.app";
-
-/** Normalizes a Nepali phone number to +977XXXXXXXXXX, or null if invalid. */
-function normalizePhone(raw: string): string | null {
-  const digits = raw.replace(/[\s\-()]/g, "").replace(/^\+/, "");
-  let local: string;
-  if (digits.startsWith("977")) {
-    local = digits.slice(3);
-  } else if (/^0\d{9,}$/.test(digits)) {
-    local = digits.slice(1);
-  } else {
-    local = digits;
-  }
-  if (!/^9\d{9}$/.test(local)) return null;
-  return `+977${local}`;
-}
-
-/** Synthetic auth email for phone-based logins: 98XXXXXXXX@phone.… */
-function phoneLoginEmail(normalizedPhone: string): string {
-  return `${normalizedPhone.slice(4)}@${PHONE_LOGIN_DOMAIN}`;
-}
+const isRateLimited = createRateLimiter({
+  windowMs: 60_000,
+  maxPerWindow: 30,
+  maxTrackedKeys: 10_000,
+});
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -63,6 +42,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
   const supabaseUser = createClient(supabaseUrl, anonKey, {
+    ...NO_SESSION_CLIENT_OPTIONS,
     global: { headers: { Authorization: authHeader } },
   });
 
@@ -74,7 +54,15 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized" }, 401);
   }
 
-  const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  if (isRateLimited(user.id)) {
+    return json({ error: "Too many attempts. Try again later." }, 429);
+  }
+
+  const supabaseAdmin = createClient(
+    supabaseUrl,
+    serviceKey,
+    NO_SESSION_CLIENT_OPTIONS,
+  );
 
   const { data: caller, error: callerError } = await supabaseAdmin
     .from("members")
@@ -87,14 +75,12 @@ Deno.serve(async (req) => {
     return json({ error: "Only the business owner can create members" }, 403);
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
+  const body = await parseJsonObject(req);
+  if (!body) {
     return json({ error: "Invalid request body" }, 400);
   }
 
-  let email = str(body.email)?.trim().toLowerCase() || null;
+  const suppliedEmail = str(body.email)?.trim().toLowerCase() || null;
   const password = str(body.password);
   const role = str(body.role);
   const displayName = str(body.displayName)?.trim();
@@ -116,7 +102,13 @@ Deno.serve(async (req) => {
   if (!password || !role || !displayName) {
     return json({ error: "Missing required fields" }, 400);
   }
-  // Email is optional when a phone is given: derive a synthetic login email.
+
+  // Reject manually supplied synthetic phone-login emails; they may only be
+  // derived from a validated Nepali phone number.
+  let email = suppliedEmail;
+  if (email && isSyntheticPhoneEmail(email)) {
+    return json({ error: "Invalid email address" }, 400);
+  }
   if (!email) {
     if (!phone) {
       return json({ error: "Email or phone number is required" }, 400);
@@ -126,13 +118,14 @@ Deno.serve(async (req) => {
   if (!EMAIL_RE.test(email) || email.length > MAX_FIELD_LEN) {
     return json({ error: "Invalid email address" }, 400);
   }
+
   // Phone doubles as a global login identifier. Do NOT pre-check across all
   // businesses — that lets any caller enumerate which phones exist anywhere
   // on the platform. The partial unique index (active rows only) is the
   // backstop; a violation surfaces below as the same generic 409.
-
-  if (password.length < 8 || password.length > 72) {
-    return json({ error: "Password must be 8-72 characters" }, 400);
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return json({ error: passwordError }, 400);
   }
   if (!allowedRoles.includes(role as typeof allowedRoles[number])) {
     return json({ error: "Invalid role" }, 400);
@@ -141,9 +134,11 @@ Deno.serve(async (req) => {
     return json({ error: "shopName is required for customer role" }, 400);
   }
   if (
-    openingBalance !== undefined && openingBalance !== null &&
+    openingBalance !== undefined &&
+    openingBalance !== null &&
     (typeof openingBalance !== "number" ||
-      !Number.isSafeInteger(openingBalance))
+      !Number.isSafeInteger(openingBalance) ||
+      Math.abs(openingBalance) > MAX_MONEY_PAISA)
   ) {
     return json({ error: "openingBalance must be an integer (paisa)" }, 400);
   }
@@ -162,15 +157,17 @@ Deno.serve(async (req) => {
         email_confirm: true,
       });
     if (authError) {
-      console.error("create-member createUser failed", authError.message);
+      console.error("create-member createUser failed", authError.status ?? "unknown");
       return json({ error: "Could not create account with this email" }, 400);
     }
     userId = authData.user.id;
 
     // Customers default to portal-off (inactive) so random passwords cannot
     // be used to sign in until the owner explicitly enables portal access;
-    // staff roles default active. Callers can still override either way.
-    const isActive = body.isActive === true;
+    // staff roles default active. Explicit boolean overrides either way.
+    const isActive = typeof body.isActive === "boolean"
+      ? body.isActive
+      : role !== "customer";
 
     const { data: member, error: memberError } = await supabaseAdmin
       .from("members")
@@ -223,7 +220,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error(
       "create-member failed",
-      error instanceof Error ? error.message : error,
+      error instanceof Error ? error.name : "unknown",
     );
     if (userId) {
       await supabaseAdmin.auth.admin.deleteUser(userId);

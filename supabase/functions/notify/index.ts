@@ -1,22 +1,18 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isUnregisteredTokenError } from "./push_policy.ts";
+import {
+  buildCorsHeaders,
+  isUuid,
+  NO_SESSION_CLIENT_OPTIONS,
+  parseJsonObject,
+  str,
+  timingSafeEqual,
+} from "../_shared/validation.ts";
+import {
+  isUnregisteredTokenError,
+  shouldStampPushedAt,
+} from "./push_policy.ts";
 
-const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
-if (!allowedOrigin) {
-  throw new Error("ALLOWED_ORIGIN must be set");
-}
-if (allowedOrigin.trim() === "*") {
-  // Wildcard CORS defeats the origin allow-list model; refuse to serve it.
-  throw new Error(
-    "ALLOWED_ORIGIN must be a concrete origin, not '*' — set it via `supabase secrets set ALLOWED_ORIGIN=https://…`",
-  );
-}
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": allowedOrigin,
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const corsHeaders = buildCorsHeaders(Deno.env.get("ALLOWED_ORIGIN"));
 
 const TITLE_BY_TYPE: Record<string, string> = {
   order_placed: "New order placed",
@@ -32,36 +28,53 @@ const TITLE_BY_TYPE: Record<string, string> = {
   dues_reminder: "Outstanding dues reminder",
 };
 
+const FETCH_TIMEOUT_MS = 10_000;
+const PROJECT_ID_RE = /^[a-z0-9-]+$/i;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
+
+  let claimedNotificationId: string | null = null;
+  let claimedAtIso: string | null = null;
+  // deno-lint-ignore no-explicit-any
+  let adminForRelease: any = null;
 
   try {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    if (
+      !serviceKey ||
+      !timingSafeEqual(authHeader, `Bearer ${serviceKey}`)
+    ) {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      // Malformed JSON is a client error, not a server fault — the outer
-      // catch-all maps to 500.
+    const body = await parseJsonObject(req);
+    if (!body) {
       return json({ error: "Invalid request body" }, 400);
     }
+
+    const recordObj =
+      typeof body.record === "object" && body.record !== null
+        ? (body.record as Record<string, unknown>)
+        : null;
     const notificationId =
-      body.notification_id ?? body.record?.id ?? body.id;
-    if (!notificationId) {
-      return json({ error: "notification_id required" }, 400);
+      str(body.notification_id) ?? str(recordObj?.id) ?? str(body.id);
+    if (!notificationId || !isUuid(notificationId)) {
+      return json({ error: "Valid notification_id required" }, 400);
     }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       serviceKey,
+      NO_SESSION_CLIENT_OPTIONS,
     );
+    adminForRelease = supabaseAdmin;
 
     const { data: notification, error: notifError } = await supabaseAdmin
       .from("notifications")
@@ -81,23 +94,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Atomic claim: only the invocation whose conditional update touches a
-    // row proceeds. Concurrent webhook deliveries (check-then-act race)
-    // lose here instead of double-sending.
-    const { data: claimed, error: claimError } = await supabaseAdmin
-      .from("notifications")
-      .update({ pushed_at: new Date().toISOString() })
-      .eq("id", notificationId)
-      .eq("pushed_at", null)
-      .select("id");
-    if (claimError || !claimed || claimed.length === 0) {
-      return json({
-        pushed: false,
-        reason: "already_pushed",
-        notification_id: notificationId,
-      });
-    }
-
+    // Check FCM configuration & tokens BEFORE claiming pushed_at so an
+    // unconfigured environment or offline tokenless user does not get
+    // permanently stamped as pushed.
     const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
     if (!fcmJson) {
       return json({
@@ -122,8 +121,32 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Atomic claim: use .is("pushed_at", null) (SQL IS NULL, NOT eq.null).
+    // Concurrent webhook deliveries lose here instead of double-sending.
+    claimedAtIso = new Date().toISOString();
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("notifications")
+      .update({ pushed_at: claimedAtIso })
+      .eq("id", notificationId)
+      .is("pushed_at", null)
+      .select("id");
+    if (claimError || !claimed || claimed.length === 0) {
+      claimedAtIso = null;
+      return json({
+        pushed: false,
+        reason: "already_pushed",
+        notification_id: notificationId,
+      });
+    }
+    claimedNotificationId = notificationId;
+
+    const parsedSa = JSON.parse(fcmJson) as { project_id?: unknown };
+    const projectId = str(parsedSa.project_id)?.trim() ?? "";
+    if (!PROJECT_ID_RE.test(projectId)) {
+      throw new Error("Invalid FCM project_id");
+    }
+
     const accessToken = await getFcmAccessToken(fcmJson);
-    const projectId = JSON.parse(fcmJson).project_id as string;
     const title = titleFor(notification.type, notification.payload);
     const bodyText = notification.type.replaceAll("_", " ");
 
@@ -159,11 +182,17 @@ Deno.serve(async (req) => {
       await supabaseAdmin
         .from("device_tokens")
         .delete()
+        .eq("member_id", notification.recipient_member_id)
         .in("token", invalidTokens);
     }
 
-    // pushed_at was already stamped by the atomic claim above — no need to
-    // re-stamp. Report partial failure so the webhook caller can see it.
+    // Keep pushed_at stamped only when every send succeeded (push_policy.ts);
+    // release the claim on partial/total transient failure so retries can recover.
+    if (!shouldStampPushedAt(sent, failed)) {
+      await releaseClaim(supabaseAdmin, claimedNotificationId, claimedAtIso);
+    }
+    claimedNotificationId = null;
+
     return json({
       pushed: sent > 0,
       notification_id: notificationId,
@@ -171,21 +200,37 @@ Deno.serve(async (req) => {
       failed,
     });
   } catch (err) {
-    console.error("notify failed", err instanceof Error ? err.message : err);
+    if (adminForRelease && claimedNotificationId && claimedAtIso) {
+      await releaseClaim(adminForRelease, claimedNotificationId, claimedAtIso);
+    }
+    console.error("notify failed", err instanceof Error ? err.name : "unknown");
     return json({ error: "Push dispatch failed" }, 500);
   }
 });
 
+async function releaseClaim(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  notificationId: string,
+  claimedAtIso: string,
+) {
+  try {
+    await admin
+      .from("notifications")
+      .update({ pushed_at: null })
+      .eq("id", notificationId)
+      .eq("pushed_at", claimedAtIso);
+  } catch {
+    // Best-effort release; do not mask original failure.
+  }
+}
+
 function titleFor(_type: string, _payload: unknown): string {
   // PII policy: FCM payloads must never contain customer names or amounts.
-  // The app renders the detailed title locally from the notification row
-  // (lib/features/notifications/notification_labels.dart); the FCM title is
-  // only the OS shade fallback, so keep it generic per type.
   return TITLE_BY_TYPE[_type] ?? "BusinessSajilo";
 }
 
-// FCM OAuth tokens are valid ~1h; minting an RS256 JWT + token round-trip per
-// dispatch costs 200-500ms. Cache in module scope until shortly before expiry.
+// FCM OAuth tokens are valid ~1h; cache in module scope until shortly before expiry.
 let fcmTokenCache: { token: string; expiresAtMs: number } | null = null;
 
 async function getFcmAccessToken(serviceAccountJson: string): Promise<string> {
@@ -240,17 +285,17 @@ async function getFcmAccessToken(serviceAccountJson: string): Promise<string> {
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: signedJwt,
     }),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
 
   if (!tokenRes.ok) {
-    throw new Error(`FCM auth failed: ${await tokenRes.text()}`);
+    throw new Error(`FCM auth failed (${tokenRes.status})`);
   }
 
   const tokenJson = await tokenRes.json();
   const token = tokenJson.access_token as string;
   fcmTokenCache = {
     token,
-    // exp is iat+3600 in seconds; keep wall-clock ms with a safety margin
     expiresAtMs: Date.now() + 55 * 60_000,
   };
   return token;
@@ -281,6 +326,7 @@ async function sendFcmMessage(
           ),
         },
       }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     },
   );
   const bodyText = res.ok ? "" : await res.text();
