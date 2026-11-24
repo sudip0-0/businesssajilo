@@ -58,7 +58,7 @@ class _BusinessProfileSectionState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final role = ref.watch(authProvider).value?.member?.role;
+    final role = ref.watch(authProvider.select((a) => a.value?.member?.role));
     if (role != Role.owner) return const SizedBox.shrink();
 
     final businessAsync = ref.watch(currentBusinessProvider);

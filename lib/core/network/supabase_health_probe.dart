@@ -28,7 +28,12 @@ Future<HealthProbeResult> probeSupabaseHealth({
   final base = Env.supabaseUrl;
   if (base.isEmpty) return HealthProbeResult.unreachable;
 
-  final uri = Uri.parse('$base/auth/v1/health');
+  final uri = Uri.tryParse('$base/auth/v1/health');
+  if (uri == null ||
+      (uri.scheme != 'http' && uri.scheme != 'https') ||
+      uri.host.isEmpty) {
+    return HealthProbeResult.unreachable;
+  }
   final client = _httpClient()..connectionTimeout = timeout;
   try {
     final request = await client.getUrl(uri).timeout(timeout);

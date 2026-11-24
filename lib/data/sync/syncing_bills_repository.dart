@@ -112,20 +112,19 @@ class SyncingBillsRepository implements BillsRepository {
   Future<int> _todaysLocalSales({required bool syncedOnly}) async {
     final start = nptDayStartUtc();
     final end = start.add(const Duration(days: 1));
-    final rows =
-        await (_db.select(_db.localBills)..where((b) {
-              final inToday =
-                  b.createdAt.isBiggerOrEqualValue(start) &
-                  b.createdAt.isSmallerThanValue(end);
-              if (syncedOnly) {
-                return inToday & b.syncStatus.equals('synced');
-              }
-              return inToday &
-                  (b.syncStatus.equals('pending') |
-                      b.syncStatus.equals('failed'));
-            }))
-            .get();
-    return rows.fold<int>(0, (sum, b) => sum + b.grandTotal);
+    final total = _db.localBills.grandTotal.sum();
+    final inToday =
+        _db.localBills.createdAt.isBiggerOrEqualValue(start) &
+        _db.localBills.createdAt.isSmallerThanValue(end);
+    final statusExpr = syncedOnly
+        ? _db.localBills.syncStatus.equals('synced')
+        : (_db.localBills.syncStatus.equals('pending') |
+              _db.localBills.syncStatus.equals('failed'));
+    final query = _db.selectOnly(_db.localBills)
+      ..addColumns([total])
+      ..where(inToday & statusExpr);
+    final row = await query.getSingle();
+    return row.read(total) ?? 0;
   }
 
   @override
@@ -149,14 +148,15 @@ class SyncingBillsRepository implements BillsRepository {
     final net = await _netSalesFromReport(yesterdayStart);
     if (net != null) return net;
     final todayStart = nptDayStartUtc();
-    final rows =
-        await (_db.select(_db.localBills)..where(
-              (b) =>
-                  b.createdAt.isBiggerOrEqualValue(yesterdayStart) &
-                  b.createdAt.isSmallerThanValue(todayStart),
-            ))
-            .get();
-    return rows.fold<int>(0, (sum, b) => sum + b.grandTotal);
+    final total = _db.localBills.grandTotal.sum();
+    final query = _db.selectOnly(_db.localBills)
+      ..addColumns([total])
+      ..where(
+        _db.localBills.createdAt.isBiggerOrEqualValue(yesterdayStart) &
+            _db.localBills.createdAt.isSmallerThanValue(todayStart),
+      );
+    final row = await query.getSingle();
+    return row.read(total) ?? 0;
   }
 
   /// Prefer report_sales_daily (nets credit notes) when online.
@@ -656,15 +656,10 @@ class SyncingBillsRepository implements BillsRepository {
 
   /// Decrements [LocalProducts.stockCached] by [qty]. Negative results are
   /// allowed — matches the server alert-only negative-stock policy.
-  Future<void> _decrementLocalStock(String productId, int qty) async {
-    final product = await (_db.select(
-      _db.localProducts,
-    )..where((p) => p.id.equals(productId))).getSingleOrNull();
-    if (product == null) return;
-    await (_db.update(
-      _db.localProducts,
-    )..where((p) => p.id.equals(productId))).write(
-      LocalProductsCompanion(stockCached: Value(product.stockCached - qty)),
+  Future<void> _decrementLocalStock(String productId, int qty) {
+    return _db.customStatement(
+      'UPDATE local_products SET stock_cached = stock_cached - ? WHERE id = ?',
+      [qty, productId],
     );
   }
 }

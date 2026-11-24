@@ -329,10 +329,8 @@ class SyncPullEntities {
       );
     }
     if (companions.isEmpty) return;
-    await _db.transaction(() async {
-      for (final c in companions) {
-        await _db.into(_db.localProducts).insertOnConflictUpdate(c);
-      }
+    await _db.batch((b) {
+      b.insertAllOnConflictUpdate(_db.localProducts, companions);
     });
   }
 
@@ -347,47 +345,44 @@ class SyncPullEntities {
     final byId = {for (final e in existing) e.id: e};
     final pendingBalanceCustomerIds =
         await _customerIdsWithPendingBalanceWrites(ids);
-    await _db.transaction(() async {
-      for (final row in rows) {
-        final id = row['customer_id'] as String;
-        final local = byId[id];
-        final remoteBalance = (row['balance_due'] as num?)?.toInt() ?? 0;
-        // Sync pulls customers before the just-recorded payment is pushed, which
-        // would clobber the optimistic local balance. Keep it while bills or
-        // payments for this customer are still pending.
-        final balanceDue =
-            local != null && pendingBalanceCustomerIds.contains(id)
-            ? local.balanceDue
-            : remoteBalance;
-        final updatedAt = row['updated_at'] != null
-            ? DateTime.parse(row['updated_at'] as String)
-            : (row['created_at'] != null
-                  ? DateTime.parse(row['created_at'] as String)
-                  : DateTime.now().toUtc());
-        await _db
-            .into(_db.localCustomers)
-            .insertOnConflictUpdate(
-              LocalCustomersCompanion.insert(
-                id: id,
-                businessId: row['business_id'] as String,
-                memberId: row['member_id'] as String? ?? '',
-                shopName: row['shop_name'] as String,
-                contactName: Value(row['contact_name'] as String?),
-                phone: Value(row['phone'] as String?),
-                address: Value(row['address'] as String?),
-                openingBalance: Value(
-                  (row['opening_balance'] as num?)?.toInt() ?? 0,
-                ),
-                balanceDue: Value(balanceDue),
-                updatedAt: updatedAt,
-                createdAt: Value(
-                  row['created_at'] == null
-                      ? null
-                      : DateTime.parse(row['created_at'] as String),
-                ),
-              ),
-            );
-      }
+    final companions = <LocalCustomersCompanion>[];
+    for (final row in rows) {
+      final id = row['customer_id'] as String;
+      final local = byId[id];
+      final remoteBalance = (row['balance_due'] as num?)?.toInt() ?? 0;
+      // Sync pulls customers before the just-recorded payment is pushed, which
+      // would clobber the optimistic local balance. Keep it while bills or
+      // payments for this customer are still pending.
+      final balanceDue = local != null && pendingBalanceCustomerIds.contains(id)
+          ? local.balanceDue
+          : remoteBalance;
+      final updatedAt = row['updated_at'] != null
+          ? DateTime.parse(row['updated_at'] as String)
+          : (row['created_at'] != null
+                ? DateTime.parse(row['created_at'] as String)
+                : DateTime.now().toUtc());
+      companions.add(
+        LocalCustomersCompanion.insert(
+          id: id,
+          businessId: row['business_id'] as String,
+          memberId: row['member_id'] as String? ?? '',
+          shopName: row['shop_name'] as String,
+          contactName: Value(row['contact_name'] as String?),
+          phone: Value(row['phone'] as String?),
+          address: Value(row['address'] as String?),
+          openingBalance: Value((row['opening_balance'] as num?)?.toInt() ?? 0),
+          balanceDue: Value(balanceDue),
+          updatedAt: updatedAt,
+          createdAt: Value(
+            row['created_at'] == null
+                ? null
+                : DateTime.parse(row['created_at'] as String),
+          ),
+        ),
+      );
+    }
+    await _db.batch((b) {
+      b.insertAllOnConflictUpdate(_db.localCustomers, companions);
     });
   }
 
@@ -395,26 +390,27 @@ class SyncPullEntities {
     List<String> customerIds,
   ) async {
     if (customerIds.isEmpty) return {};
-    final pendingPayments =
-        await (_db.select(_db.localPayments)..where(
-              (p) =>
-                  p.customerId.isIn(customerIds) &
-                  (p.syncStatus.equals('pending') |
-                      p.syncStatus.equals('failed')),
-            ))
-            .get();
-    final pendingBills =
-        await (_db.select(_db.localBills)..where(
-              (b) =>
-                  b.customerId.isIn(customerIds) &
-                  (b.syncStatus.equals('pending') |
-                      b.syncStatus.equals('failed')),
-            ))
-            .get();
+    final pendingPaymentsQuery =
+        _db.selectOnly(_db.localPayments, distinct: true)
+          ..addColumns([_db.localPayments.customerId])
+          ..where(
+            _db.localPayments.customerId.isIn(customerIds) &
+                (_db.localPayments.syncStatus.equals('pending') |
+                    _db.localPayments.syncStatus.equals('failed')),
+          );
+    final pendingBillsQuery = _db.selectOnly(_db.localBills, distinct: true)
+      ..addColumns([_db.localBills.customerId])
+      ..where(
+        _db.localBills.customerId.isIn(customerIds) &
+            (_db.localBills.syncStatus.equals('pending') |
+                _db.localBills.syncStatus.equals('failed')),
+      );
+    final pendingPayments = await pendingPaymentsQuery.get();
+    final pendingBills = await pendingBillsQuery.get();
     return {
-      ...pendingPayments.map((p) => p.customerId),
-      for (final b in pendingBills)
-        if (b.customerId != null) b.customerId!,
+      for (final row in pendingPayments)
+        ?row.read(_db.localPayments.customerId),
+      for (final row in pendingBills) ?row.read(_db.localBills.customerId),
     };
   }
 
@@ -501,24 +497,26 @@ class SyncPullEntities {
               ),
             );
 
-        if (itemsRaw is List) {
-          for (final item in itemsRaw) {
-            final i = item as Map<String, dynamic>;
-            await _db
-                .into(_db.localBillItems)
-                .insertOnConflictUpdate(
-                  LocalBillItemsCompanion.insert(
-                    id: i['id'] as String,
-                    billId: billId,
-                    productId: i['product_id'] as String? ?? '',
-                    nameSnapshot: i['name_snapshot'] as String,
-                    qty: i['qty'] as int,
-                    rate: Value((i['rate'] as num?)?.toInt() ?? 0),
-                    discount: Value((i['discount'] as num?)?.toInt() ?? 0),
-                    lineTotal: Value((i['line_total'] as num?)?.toInt() ?? 0),
-                  ),
+        if (itemsRaw is List && itemsRaw.isNotEmpty) {
+          final itemCompanions = [
+            for (final item in itemsRaw)
+              () {
+                final i = item as Map<String, dynamic>;
+                return LocalBillItemsCompanion.insert(
+                  id: i['id'] as String,
+                  billId: billId,
+                  productId: i['product_id'] as String? ?? '',
+                  nameSnapshot: i['name_snapshot'] as String,
+                  qty: i['qty'] as int,
+                  rate: Value((i['rate'] as num?)?.toInt() ?? 0),
+                  discount: Value((i['discount'] as num?)?.toInt() ?? 0),
+                  lineTotal: Value((i['line_total'] as num?)?.toInt() ?? 0),
                 );
-          }
+              }(),
+          ];
+          await _db.batch((b) {
+            b.insertAllOnConflictUpdate(_db.localBillItems, itemCompanions);
+          });
         }
       }
     });
@@ -547,29 +545,33 @@ class SyncPullEntities {
           if (e.syncStatus == 'pending' || e.syncStatus == 'failed') e.id,
         for (final q in queued) q.entityId,
       };
+      final companions = <LocalPaymentsCompanion>[];
       for (final row in rows) {
         final id = row['id'] as String;
         if (protectedIds.contains(id)) continue;
-        await _db
-            .into(_db.localPayments)
-            .insertOnConflictUpdate(
-              LocalPaymentsCompanion.insert(
-                id: id,
-                businessId: row['business_id'] as String,
-                customerId: row['customer_id'] as String,
-                billId: Value(row['bill_id'] as String?),
-                amount: (row['amount'] as num).toInt(),
-                method: row['method'] as String,
-                refNote: Value(row['ref_note'] as String?),
-                receivedBy: row['received_by'] as String,
-                syncStatus: Value(synced ? 'synced' : 'pending'),
-                createdAt: Value(
-                  row['created_at'] == null
-                      ? DateTime.now().toUtc()
-                      : DateTime.parse(row['created_at'] as String),
-                ),
-              ),
-            );
+        companions.add(
+          LocalPaymentsCompanion.insert(
+            id: id,
+            businessId: row['business_id'] as String,
+            customerId: row['customer_id'] as String,
+            billId: Value(row['bill_id'] as String?),
+            amount: (row['amount'] as num).toInt(),
+            method: row['method'] as String,
+            refNote: Value(row['ref_note'] as String?),
+            receivedBy: row['received_by'] as String,
+            syncStatus: Value(synced ? 'synced' : 'pending'),
+            createdAt: Value(
+              row['created_at'] == null
+                  ? DateTime.now().toUtc()
+                  : DateTime.parse(row['created_at'] as String),
+            ),
+          ),
+        );
+      }
+      if (companions.isNotEmpty) {
+        await _db.batch((b) {
+          b.insertAllOnConflictUpdate(_db.localPayments, companions);
+        });
       }
     });
   }

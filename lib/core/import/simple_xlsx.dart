@@ -12,6 +12,11 @@ import 'package:xml/xml.dart';
 class SimpleXlsx {
   const SimpleXlsx();
 
+  /// Defensive limits against malformed / zip-bomb XLSX payloads.
+  static const maxXmlBytes = 20 * 1024 * 1024;
+  static const maxRows = 50000;
+  static const maxColumns = 256;
+
   /// Builds a single-sheet workbook from [rows] (row-major string grid).
   Uint8List encode(List<List<String>> rows, {String sheetName = 'Sheet1'}) {
     final shared = <String>[];
@@ -86,6 +91,9 @@ class SimpleXlsx {
     if (sheetBytes == null) {
       throw const FormatException('Could not read worksheet');
     }
+    if (sheetBytes.length > maxXmlBytes) {
+      throw const FormatException('Excel worksheet is too large');
+    }
     return _parseSheet(utf8.decode(sheetBytes), shared);
   }
 
@@ -94,6 +102,9 @@ class SimpleXlsx {
     if (file == null) return const [];
     final bytes = file.readBytes();
     if (bytes == null) return const [];
+    if (bytes.length > maxXmlBytes) {
+      throw const FormatException('Excel shared strings table is too large');
+    }
     final doc = XmlDocument.parse(utf8.decode(bytes));
     final out = <String>[];
     for (final si in doc.findAllElements('si')) {
@@ -131,12 +142,20 @@ class SimpleXlsx {
     for (final rowEl in doc.findAllElements('row')) {
       final rowRef = int.tryParse(rowEl.getAttribute('r') ?? '') ?? 0;
       final rowIndex = rowRef > 0 ? rowRef - 1 : rows.length;
+      if (rowIndex >= maxRows) {
+        throw const FormatException('Excel file exceeds maximum row limit');
+      }
       final cells = rows.putIfAbsent(rowIndex, () => <int, String>{});
 
       for (final cell in rowEl.findElements('c')) {
         final ref = cell.getAttribute('r') ?? '';
         final col = _colIndexFromRef(ref);
         if (col < 0) continue;
+        if (col >= maxColumns) {
+          throw const FormatException(
+            'Excel file exceeds maximum column limit',
+          );
+        }
         if (col > maxCol) maxCol = col;
         cells[col] = _cellValue(cell, shared);
       }

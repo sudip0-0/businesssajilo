@@ -30,14 +30,18 @@ class ProductImage extends ConsumerWidget {
     final asyncUrl = ref.watch(signedProductImageUrlProvider(storagePath!));
     final url = asyncUrl.value;
     if (url == null) return _placeholder();
+    final dpr = MediaQuery.devicePixelRatioOf(context).clamp(1.0, 3.0);
+    final cachePx = (size * dpr).round();
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: CachedNetworkImage(
         imageUrl: url,
         width: size,
         height: size,
-        memCacheWidth: (size * 2).round(),
+        memCacheWidth: cachePx,
+        memCacheHeight: cachePx,
         fit: BoxFit.cover,
+        placeholder: (_, _) => _placeholder(),
         errorWidget: (_, _, _) => _placeholder(),
       ),
     );

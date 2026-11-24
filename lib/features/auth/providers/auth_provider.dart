@@ -21,7 +21,9 @@ final authProvider = NotifierProvider<AuthController, AsyncValue<SessionState>>(
 final currentBusinessProvider = FutureProvider.autoDispose<Business?>((
   ref,
 ) async {
-  final businessId = ref.watch(authProvider).value?.member?.businessId;
+  final businessId = ref.watch(
+    authProvider.select((a) => a.value?.member?.businessId),
+  );
   if (businessId == null) return null;
   try {
     return await ref

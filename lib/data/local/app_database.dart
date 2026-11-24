@@ -191,10 +191,14 @@ class AppDatabase extends _$AppDatabase {
   );
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+      await _createIndexes();
+    },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.createTable(syncMeta);
@@ -212,8 +216,51 @@ class AppDatabase extends _$AppDatabase {
       if (from < 5) {
         await m.addColumn(localBills, localBills.referenceNote);
       }
+      if (from < 6) {
+        await _createIndexes();
+      }
     },
   );
+
+  Future<void> _createIndexes() async {
+    const statements = <String>[
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_status_created '
+          'ON sync_queue (status, created_at, id)',
+      'CREATE INDEX IF NOT EXISTS idx_sync_queue_entity '
+          'ON sync_queue (entity_type, entity_id, status)',
+      'CREATE INDEX IF NOT EXISTS idx_local_products_active_name '
+          'ON local_products (is_active, name)',
+      'CREATE INDEX IF NOT EXISTS idx_local_customers_shop_name '
+          'ON local_customers (shop_name)',
+      'CREATE INDEX IF NOT EXISTS idx_local_customers_balance_due '
+          'ON local_customers (balance_due)',
+      'CREATE INDEX IF NOT EXISTS idx_local_customers_created_at '
+          'ON local_customers (created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_bills_created_at '
+          'ON local_bills (created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_bills_customer_status '
+          'ON local_bills (customer_id, status, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_bills_status_created '
+          'ON local_bills (status, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_bills_sync_created '
+          'ON local_bills (sync_status, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_bill_items_bill_id '
+          'ON local_bill_items (bill_id)',
+      'CREATE INDEX IF NOT EXISTS idx_local_payments_customer_created '
+          'ON local_payments (customer_id, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_payments_bill_id '
+          'ON local_payments (bill_id)',
+      'CREATE INDEX IF NOT EXISTS idx_local_payments_sync_customer '
+          'ON local_payments (sync_status, customer_id)',
+      'CREATE INDEX IF NOT EXISTS idx_local_stock_movements_product_created '
+          'ON local_stock_movements (product_id, created_at)',
+      'CREATE INDEX IF NOT EXISTS idx_local_stock_movements_ref_bill '
+          'ON local_stock_movements (ref_bill_id)',
+    ];
+    for (final sql in statements) {
+      await customStatement(sql);
+    }
+  }
 
   Future<void> enqueue({
     required String entityType,
@@ -265,27 +312,33 @@ class AppDatabase extends _$AppDatabase {
 
   /// Unsynced items shown in the badge (pending + terminal failures).
   Future<int> pendingCount() async {
-    final rows =
-        await (select(syncQueue)..where(
-              (q) => q.status.equals('pending') | q.status.equals('failed'),
-            ))
-            .get();
-    return rows.length;
+    final count = syncQueue.id.count();
+    final query = selectOnly(syncQueue)
+      ..addColumns([count])
+      ..where(
+        syncQueue.status.equals('pending') | syncQueue.status.equals('failed'),
+      );
+    final row = await query.getSingle();
+    return row.read(count) ?? 0;
   }
 
   /// Automatically retryable queue items only (excludes terminal `failed`).
   Future<int> retryableCount() async {
-    final rows = await (select(
-      syncQueue,
-    )..where((q) => q.status.equals('pending'))).get();
-    return rows.length;
+    final count = syncQueue.id.count();
+    final query = selectOnly(syncQueue)
+      ..addColumns([count])
+      ..where(syncQueue.status.equals('pending'));
+    final row = await query.getSingle();
+    return row.read(count) ?? 0;
   }
 
   Future<int> failedCount() async {
-    final rows = await (select(
-      syncQueue,
-    )..where((q) => q.status.equals('failed'))).get();
-    return rows.length;
+    final count = syncQueue.id.count();
+    final query = selectOnly(syncQueue)
+      ..addColumns([count])
+      ..where(syncQueue.status.equals('failed'));
+    final row = await query.getSingle();
+    return row.read(count) ?? 0;
   }
 
   /// Marks queue rows for [entityId] synced (pull found the remote row).

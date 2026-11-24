@@ -138,7 +138,9 @@ final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
 });
 
 /// Live view of the local sync queue (pending + failed items).
-final syncQueueProvider = StreamProvider<List<SyncQueueData>>((ref) {
+final syncQueueProvider = StreamProvider.autoDispose<List<SyncQueueData>>((
+  ref,
+) {
   final bundle = ref.watch(syncBundleProvider);
   if (bundle == null) return Stream.value(const <SyncQueueData>[]);
   return bundle.db.watchUnsyncedQueue();

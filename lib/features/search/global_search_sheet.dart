@@ -53,7 +53,7 @@ class _GlobalSearchDelegate extends SearchDelegate<void> {
     builder: (context, ref, _) => _Results(
       query: query,
       ref: ref,
-      role: ref.watch(authProvider).value?.member?.role,
+      role: ref.watch(authProvider.select((a) => a.value?.member?.role)),
     ),
   );
 

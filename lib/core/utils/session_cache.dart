@@ -111,6 +111,16 @@ class SessionCache {
     await _storage.delete(sessionCacheUserIdKey);
     await _storage.delete(sessionCacheEmailKey);
     await _storage.delete(sessionCacheMemberKey);
+    // Also remove any lingering legacy plain-text keys if clear() runs before
+    // migration.
+    try {
+      final prefs = await _prefs();
+      await prefs.remove(legacySessionCacheUserIdKey);
+      await prefs.remove(legacySessionCacheEmailKey);
+      await prefs.remove(legacySessionCacheMemberKey);
+    } catch (_) {
+      // Best-effort cleanup; secure storage is already cleared.
+    }
   }
 
   /// Moves a legacy plain-text session into secure storage and wipes the

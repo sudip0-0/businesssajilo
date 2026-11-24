@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/errors/app_failure.dart';
@@ -8,14 +8,24 @@ import '../../core/validation/image_upload.dart';
 import '../../domain/enums.dart';
 import '../../domain/models/product.dart';
 import '../repositories/products_repository.dart';
+import 'postgrest_filter.dart';
 import 'supabase_provider.dart';
+
+class _CachedSignedUrl {
+  const _CachedSignedUrl(this.future, this.expiresAt);
+  final Future<String> future;
+  final DateTime expiresAt;
+}
 
 class SupabaseProductsRepository implements ProductsRepository {
   SupabaseProductsRepository(this._client);
 
   final SupabaseClient? _client;
   static const _bucket = 'product-images';
-  final Map<String, Future<String>> _signedUrlCache = {};
+  static const _signedUrlTtlSeconds = 60 * 60 * 24;
+  static const _cacheTtl = Duration(hours: 20);
+  static const _maxCacheEntries = 500;
+  final Map<String, _CachedSignedUrl> _signedUrlCache = {};
 
   @override
   Future<List<Product>> list({
@@ -43,9 +53,9 @@ class SupabaseProductsRepository implements ProductsRepository {
           .toList();
     }
     var built = client.from('products').select().eq('is_active', activeOnly);
-    final q = query?.trim();
-    if (q != null && q.isNotEmpty) {
-      final pattern = '%${q.replaceAll(',', '')}%';
+    final q = query == null ? '' : sanitizePostgrestOrIlikeQuery(query);
+    if (q.isNotEmpty) {
+      final pattern = '%$q%';
       built = built.or(
         'name.ilike.$pattern,sku.ilike.$pattern,name_np.ilike.$pattern',
       );
@@ -162,7 +172,10 @@ class SupabaseProductsRepository implements ProductsRepository {
     required Uint8List bytes,
     required String mimeType,
   }) async {
-    final compressed = ImageUpload.compressForUpload(bytes);
+    final compressed =
+        !kIsWeb && bytes.lengthInBytes > ImageUpload.compressBelowBytes
+        ? await compute(ImageUpload.compressForUpload, bytes)
+        : ImageUpload.compressForUpload(bytes);
     final uploadError = ImageUpload.validate(compressed);
     if (uploadError != null) {
       throw AppFailure.validation(
@@ -182,6 +195,8 @@ class SupabaseProductsRepository implements ProductsRepository {
           compressed,
           fileOptions: FileOptions(contentType: sniffed, upsert: true),
         );
+    // Invalidate cached signed URL so newly uploaded photo renders immediately.
+    _signedUrlCache.remove(path);
     return path;
   }
 
@@ -189,12 +204,18 @@ class SupabaseProductsRepository implements ProductsRepository {
   Future<String?> signedImageUrl(String? storagePath) async {
     if (storagePath == null || storagePath.isEmpty) return null;
     final client = requireSupabaseClient(_client);
+    final now = DateTime.now();
     final cached = _signedUrlCache[storagePath];
-    if (cached != null) return cached;
+    if (cached != null && now.isBefore(cached.expiresAt)) {
+      return cached.future;
+    }
+    if (_signedUrlCache.length >= _maxCacheEntries) {
+      _signedUrlCache.remove(_signedUrlCache.keys.first);
+    }
     final future = client.storage
         .from(_bucket)
-        .createSignedUrl(storagePath, 60 * 60 * 24);
-    _signedUrlCache[storagePath] = future;
+        .createSignedUrl(storagePath, _signedUrlTtlSeconds);
+    _signedUrlCache[storagePath] = _CachedSignedUrl(future, now.add(_cacheTtl));
     // Don't cache failures.
     unawaited(
       future.catchError((Object _) {
