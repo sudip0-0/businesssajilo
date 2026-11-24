@@ -123,14 +123,14 @@ select is(
   'owner_dashboard_stats.total_dues matches total_dues'
 );
 
--- 6. insert_audit_log rejects non-staff (function is still callable but forbidden).
+-- 6. insert_audit_log rejects authenticated clients (revoked from PUBLIC/authenticated).
 select test_set_auth('55555555-5555-5555-5555-555555555555');
 select throws_ok(
   $$select insert_audit_log(
      'products', 'b1111111-1111-1111-1111-111111111111',
      'name', 'a', 'b', 'sync_lww'
    )$$,
-  'P0001',
+  '42501',
   null,
   'customer cannot execute insert_audit_log'
 );

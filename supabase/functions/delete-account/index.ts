@@ -1,21 +1,20 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  buildCorsHeaders,
+  createRateLimiter,
+  MAX_PASSWORD_LEN,
+  NO_SESSION_CLIENT_OPTIONS,
+  parseJsonObject,
+  str,
+} from "../_shared/validation.ts";
 
-const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
-if (!allowedOrigin) {
-  throw new Error("ALLOWED_ORIGIN must be set");
-}
-if (allowedOrigin.trim() === "*") {
-  // Wildcard CORS defeats the origin allow-list model; refuse to serve it.
-  throw new Error(
-    "ALLOWED_ORIGIN must be a concrete origin, not '*' — set it via `supabase secrets set ALLOWED_ORIGIN=https://…`",
-  );
-}
+const corsHeaders = buildCorsHeaders(Deno.env.get("ALLOWED_ORIGIN"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": allowedOrigin,
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const isRateLimited = createRateLimiter({
+  windowMs: 60_000,
+  maxPerWindow: 5,
+  maxTrackedKeys: 10_000,
+});
 
 // Modes:
 //  - "self": non-owner member deletes their own account. Personal identity is
@@ -40,6 +39,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
   const supabaseUser = createClient(supabaseUrl, anonKey, {
+    ...NO_SESSION_CLIENT_OPTIONS,
     global: { headers: { Authorization: authHeader } },
   });
 
@@ -51,7 +51,15 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized" }, 401);
   }
 
-  const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  if (isRateLimited(user.id)) {
+    return json({ error: "Too many attempts. Try again later." }, 429);
+  }
+
+  const supabaseAdmin = createClient(
+    supabaseUrl,
+    serviceKey,
+    NO_SESSION_CLIENT_OPTIONS,
+  );
 
   const { data: caller, error: callerError } = await supabaseAdmin
     .from("members")
@@ -64,10 +72,8 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized" }, 401);
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
+  const body = await parseJsonObject(req);
+  if (!body) {
     return json({ error: "Invalid request body" }, 400);
   }
 
@@ -85,7 +91,7 @@ Deno.serve(async (req) => {
       // Require password confirmation so a stolen session alone cannot
       // delete a member account.
       const password = str(body.password);
-      if (!password) {
+      if (!password || password.length > MAX_PASSWORD_LEN) {
         return json({ error: "Password required to delete account" }, 400);
       }
       if (!user.email) {
@@ -128,7 +134,7 @@ Deno.serve(async (req) => {
       // Require recent password confirmation so a stolen session alone
       // cannot purge the entire business.
       const password = str(body.password);
-      if (!password) {
+      if (!password || password.length > MAX_PASSWORD_LEN) {
         return json({ error: "Password required to delete business" }, 400);
       }
       if (!user.email) {
@@ -144,32 +150,31 @@ Deno.serve(async (req) => {
 
       const businessId = caller.business_id as string;
 
-      // Remove tenant storage objects (product images).
-      for (const bucket of ["product-images"]) {
-        try {
-          await removeFolder(supabaseAdmin, bucket, businessId);
-        } catch (e) {
-          // Non-fatal: DB purge is the source of truth; orphaned files can
-          // be cleaned up manually.
-          console.error(`delete-account storage cleanup failed (${bucket})`, e);
-        }
-      }
-
+      // Purge DB atomically FIRST so a DB failure does not destroy storage
+      // objects prematurely.
       const { data: authUserIds, error } = await supabaseAdmin.rpc(
         "purge_business",
         { p_business_id: businessId },
       );
       if (error) throw error;
 
+      // Remove tenant storage objects (best-effort after DB purge succeeds).
+      for (const bucket of ["product-images"]) {
+        try {
+          await removeFolder(supabaseAdmin, bucket, businessId);
+        } catch (e) {
+          console.error(
+            `delete-account storage cleanup failed (${bucket})`,
+            e instanceof Error ? e.name : "unknown",
+          );
+        }
+      }
+
       for (const id of (authUserIds as string[]) ?? []) {
         const { error: deleteError } = await supabaseAdmin.auth.admin
           .deleteUser(id);
         if (deleteError) {
-          console.error(
-            "delete-account auth user cleanup failed",
-            id,
-            deleteError.message,
-          );
+          console.error("delete-account auth user cleanup failed");
         }
       }
 
@@ -180,7 +185,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error(
       "delete-account failed",
-      error instanceof Error ? error.message : error,
+      error instanceof Error ? error.name : "unknown",
     );
     return json({ error: "Could not delete account. Please try again." }, 500);
   }
@@ -191,13 +196,13 @@ async function removeFolder(
   admin: any,
   bucket: string,
   folder: string,
+  maxDepth = 5,
 ) {
+  if (maxDepth <= 0) return;
   const pageSize = 1000;
-  // Always re-list from offset 0: removing objects shifts list indices, so
-  // advancing `offset` between pages can skip entries in buckets with more
-  // than one page of objects. The loop terminates because each pass either
-  // deletes objects or recurses into (and empties) a subfolder.
-  for (;;) {
+  const maxPasses = 50;
+  // Always re-list from offset 0: removing objects shifts list indices.
+  for (let pass = 0; pass < maxPasses; pass++) {
     const { data: files } = await admin.storage.from(bucket).list(folder, {
       limit: pageSize,
       offset: 0,
@@ -208,17 +213,14 @@ async function removeFolder(
       .filter((f: { id?: string }) => f.id)
       .map((f: { name: string }) => `${folder}/${f.name}`);
     if (objects.length > 0) {
-      await admin.storage.from(bucket).remove(objects);
+      const { error: rmErr } = await admin.storage.from(bucket).remove(objects);
+      if (rmErr) throw rmErr;
     }
     for (const dir of nested) {
-      await removeFolder(admin, bucket, `${folder}/${dir.name}`);
+      await removeFolder(admin, bucket, `${folder}/${dir.name}`, maxDepth - 1);
     }
     if (files.length < pageSize) return;
   }
-}
-
-function str(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
 }
 
 function json(body: unknown, status = 200) {

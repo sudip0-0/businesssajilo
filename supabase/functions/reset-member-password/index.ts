@@ -1,26 +1,21 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  buildCorsHeaders,
+  createRateLimiter,
   isUuid,
+  NO_SESSION_CLIENT_OPTIONS,
+  parseJsonObject,
   str,
   validatePassword,
 } from "../_shared/validation.ts";
 
-const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
-if (!allowedOrigin) {
-  throw new Error("ALLOWED_ORIGIN must be set");
-}
-if (allowedOrigin.trim() === "*") {
-  // Wildcard CORS defeats the origin allow-list model; refuse to serve it.
-  throw new Error(
-    "ALLOWED_ORIGIN must be a concrete origin, not '*' — set it via `supabase secrets set ALLOWED_ORIGIN=https://…`",
-  );
-}
+const corsHeaders = buildCorsHeaders(Deno.env.get("ALLOWED_ORIGIN"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": allowedOrigin,
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const isRateLimited = createRateLimiter({
+  windowMs: 60_000,
+  maxPerWindow: 20,
+  maxTrackedKeys: 10_000,
+});
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -40,6 +35,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
   const supabaseUser = createClient(supabaseUrl, anonKey, {
+    ...NO_SESSION_CLIENT_OPTIONS,
     global: { headers: { Authorization: authHeader } },
   });
 
@@ -51,7 +47,15 @@ Deno.serve(async (req) => {
     return json({ error: "Unauthorized" }, 401);
   }
 
-  const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  if (isRateLimited(user.id)) {
+    return json({ error: "Too many attempts. Try again later." }, 429);
+  }
+
+  const supabaseAdmin = createClient(
+    supabaseUrl,
+    serviceKey,
+    NO_SESSION_CLIENT_OPTIONS,
+  );
 
   const { data: caller, error: callerError } = await supabaseAdmin
     .from("members")
@@ -67,10 +71,8 @@ Deno.serve(async (req) => {
     );
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
+  const body = await parseJsonObject(req);
+  if (!body) {
     return json({ error: "Invalid request body" }, 400);
   }
 
@@ -88,11 +90,10 @@ Deno.serve(async (req) => {
     return json({ error: passwordError }, 400);
   }
 
-  // Target must be an active member of the caller's own business, and the
-  // owner cannot reset their own password this way (use email reset).
+  // Target must be an active non-owner member of the caller's own business.
   const { data: target, error: targetError } = await supabaseAdmin
     .from("members")
-    .select("id, business_id, auth_user_id, is_active")
+    .select("id, business_id, auth_user_id, role, is_active")
     .eq("id", memberId)
     .eq("business_id", caller.business_id)
     .eq("is_active", true)
@@ -101,7 +102,7 @@ Deno.serve(async (req) => {
   if (targetError || !target) {
     return json({ error: "Member not found" }, 404);
   }
-  if (target.auth_user_id === user.id) {
+  if (target.auth_user_id === user.id || target.role === "owner") {
     return json({ error: "Use email password reset for your own account" }, 400);
   }
 
@@ -114,7 +115,8 @@ Deno.serve(async (req) => {
     const { error: flagError } = await supabaseAdmin
       .from("members")
       .update({ must_change_password: true })
-      .eq("id", target.id);
+      .eq("id", target.id)
+      .eq("business_id", caller.business_id);
     if (flagError) throw flagError;
 
     // Revoke existing sessions so old devices are signed out immediately.
@@ -124,17 +126,14 @@ Deno.serve(async (req) => {
     );
     if (revokeError) {
       // Non-fatal: password already changed; sessions expire on refresh.
-      console.error(
-        "reset-member-password revoke failed",
-        revokeError.message,
-      );
+      console.error("reset-member-password revoke failed");
     }
 
     return json({ ok: true });
   } catch (error) {
     console.error(
       "reset-member-password failed",
-      error instanceof Error ? error.message : error,
+      error instanceof Error ? error.name : "unknown",
     );
     return json({ error: "Could not reset password. Please try again." }, 500);
   }

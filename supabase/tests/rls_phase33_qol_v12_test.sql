@@ -115,6 +115,9 @@ select ok(
   'owner default prefs mute dues_reminder'
 );
 
+reset role;
+set local role service_role;
+
 select is(
   insert_notification(
     '11111111-1111-1111-1111-111111111111',
@@ -130,6 +133,9 @@ select is(
   'insert_notification skips muted dues_reminder'
 );
 
+reset role;
+select test_set_auth('22222222-2222-2222-2222-222222222222');
+
 select is(
   (select count(*)::int from notifications where type = 'dues_reminder'),
   0,
@@ -140,6 +146,9 @@ select lives_ok(
   $$select update_own_notification_prefs('[]'::jsonb)$$,
   'owner can unmute dues reminders'
 );
+
+reset role;
+set local role service_role;
 
 select ok(
   insert_notification(

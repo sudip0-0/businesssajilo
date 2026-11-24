@@ -17,18 +17,18 @@ Configured in `supabase/config.toml` under `[auth.rate_limit]` (email sign-up, s
 
 ## Edge Functions
 
-- `register-business` — public; relies on Supabase auth rate limits + in-memory IP rate limit.
-- `create-member` — owner JWT required. Derives a synthetic login email
-  (`<phone>@phone.businesssajilo.app`) when no email is given; phone numbers
-  are normalized to `+9779XXXXXXXXX` and globally unique (`members_phone_unique_idx`).
-- `reset-member-password` — owner JWT required; sets a temporary password,
-  flags `members.must_change_password`, and revokes the member's sessions.
-- `delete-account` — member JWT required. `mode: self` anonymizes the member
+- `register-business` — public; relies on Supabase auth rate limits + bounded in-memory IP rate limit (`cf-connecting-ip`/`x-real-ip`/`x-forwarded-for`), normalizes optional Nepali phones (`+9779XXXXXXXXX`), rejects synthetic `@phone.businesssajilo.app` emails, and rolls back business + auth user on partial failure.
+- `create-member` — owner JWT required + per-caller rate limit. Derives a synthetic login email
+  (`<phone>@phone.businesssajilo.app`) when no email is given (rejecting manually supplied synthetic emails); phone numbers
+  are normalized to `+9779XXXXXXXXX` and globally unique (`members_phone_unique_idx`). Staff default active, customers default inactive unless explicitly overridden. `openingBalance` is bounded to `±100,000,000,000` paisa.
+- `reset-member-password` — owner JWT required + per-caller rate limit; blocks resetting own or another owner's password, sets a temporary password,
+  flags `members.must_change_password` (tenant-scoped), and revokes the member's sessions.
+- `delete-account` — member JWT required + per-caller rate limit. `mode: self` anonymizes the member
   (financial snapshots retained); `mode: business` (owner only) purges the
-  whole tenant including storage folders and auth users.
-- `notify` — service role / webhook triggered. `pushed_at` is set only after all FCM sends succeed; invalid tokens are deleted. Repeat invocation is idempotent.
+  whole tenant atomically via `purge_business` BEFORE best-effort storage folder cleanup and auth user deletion.
+- `notify` — service role / webhook triggered (verified via constant-time comparison). Checks FCM config & device tokens before atomically claiming `pushed_at` via SQL `IS NULL` (`.is("pushed_at", null)`), scopes invalid-token deletion to `recipient_member_id`, bounds upstream fetches with timeouts, and releases the `pushed_at` claim if `shouldStampPushedAt(sent, failed)` is false so retries can recover.
 
-All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `supabase/README.md`).
+All five functions **fail closed** if `ALLOWED_ORIGIN` is unset, `*`, or not an exact `http(s)` origin at boot (see `supabase/README.md`), enforce a 64 KiB JSON object body cap (`parseJsonObject`), disable session persistence in stateless isolates, and omit email/phone PII from error logs.
 
 ## Passwords & account recovery
 
@@ -52,6 +52,17 @@ All five functions **fail closed** if `ALLOWED_ORIGIN` is unset at boot (see `su
 - Billing recovery only resolves existing same-business customers by ID or unambiguous identity. It must not provision Auth/member/customer rows; owner credential creation remains in `create-member`.
 - Child tenant columns and composite parent foreign keys are enforced by migration 57. Review its backfill/locking deployment requirements in `handoff.md`; local application is not hosted deployment approval.
 - Migration 58 is additive (search/draft RPC + audit SELECT narrowing) and does not rewrite applied history.
+- Migration 60 hardens database authorization, integrity, and query safety:
+  - `catalog_products` view now uses `security_barrier = true`, explicit tenant (`current_business_id()`) and active-member role filtering, and read-only grants for `authenticated` (closing cross-tenant catalog exposure).
+  - Internal `SECURITY DEFINER` helpers (`insert_notification`, `refresh_bill_status_for`, `insert_audit_log`) are revoked from `PUBLIC`, `anon`, and `authenticated` (`service_role` only). All authenticated-only RPCs revoke `PUBLIC`/`anon` `EXECUTE`; all `public` table/view grants are revoked from `anon`; `credit_note_sequences` is revoked from `authenticated`.
+  - Authenticated column-pinning & direct-write triggers protect `notifications` (only `read_at` mutable by recipient), `businesses` (`id`, `subscription_plan`, `created_at` immutable), and `products` (`stock_cached` and `was_above_threshold` managed exclusively by `stock_movements` triggers; `business_id` immutable).
+  - `guard_stock_movement_refs` validates same-tenant ownership of `ref_bill_id` and `ref_credit_note_id`; `storage.objects` `product-images` policies reject `..` path traversal; `order_items` staff SELECT is narrowed to `owner`/`sales`; remaining trigger functions (`bump_updated_at`, `orders_bump_updated_at`, `validate_order_status_transition`) pin `search_path = public`.
+  - `create_credit_note` locks the target bill `FOR UPDATE`, uses an advisory retry lock, and aggregates duplicate `bill_item_id` entries before checking remaining returnable quantities. `create_bill`, `record_customer_sale`, `send_quote`, and `create_credit_note` enforce array/size/overflow bounds and reject negative embedded payments.
+  - `search_bills` and `list_products_page` escape `%`, `_`, and `\` via `escape_like_pattern()` and cap `p_limit` at 200.
+- Migration 61 adds composite/partial indexes across `bills`, `orders`, `payments`, `credit_notes`, `stock_movements`, `notifications`, `audit_log`, `customer_balance_projections`, `products`, and `quotes`, wraps remaining view/policy auth helpers in `(SELECT ...)` InitPlans, and backs `total_dues()` / `owner_dashboard_stats()` dues reads with the zero-drift `customer_balance_projections` table (local authenticated benchmark: `0.165 ms` vs `2.155 ms` on live view, `0` drift rows).
+- Migration 62 adds two atomic, idempotent P2 RPCs:
+  - `reconcile_stock_count(p jsonb)` — `owner` & `warehouse` only, append-only `adjust` rows in `stock_movements`, idempotent via caller `op_id` in RLS-protected `stock_reconciliations`, zero financial columns exposed.
+  - `create_product_with_stock(p jsonb)` — `owner` & `sales` only (`opening_stock > 0` restricted to `owner` per `product.md §4`), idempotent via caller `op_id` (`products.client_op_id` + internal RLS-protected `product_create_ops` ledger added in migration 63 hashing full payload including `name_np`/`opening_stock` and pinning exact `opening_movement_id`), atomically inserts `stock_in` movement when `opening_stock > 0`.
 - Edge Function shared validators (`supabase/functions/_shared/validation.ts`) have Deno unit tests — run via `scripts/local_hardening_gate.ps1` or `deno test supabase/functions/_shared/validation_test.ts`.
 
 ## Observability

@@ -1,54 +1,26 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { EMAIL_RE, MAX_FIELD_LEN, str } from "../_shared/validation.ts";
+import {
+  buildCorsHeaders,
+  createRateLimiter,
+  EMAIL_RE,
+  getClientIp,
+  isSyntheticPhoneEmail,
+  MAX_FIELD_LEN,
+  NO_SESSION_CLIENT_OPTIONS,
+  normalizePhone,
+  parseJsonObject,
+  str,
+  validatePassword,
+} from "../_shared/validation.ts";
 
-const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN");
-if (!allowedOrigin) {
-  throw new Error("ALLOWED_ORIGIN must be set");
-}
-if (allowedOrigin.trim() === "*") {
-  // Wildcard CORS defeats the origin allow-list model these functions are
-  // written for; refuse to serve it (config.toml defaults to a localhost
-  // origin for local dev).
-  throw new Error(
-    "ALLOWED_ORIGIN must be a concrete origin, not '*' — set it via `supabase secrets set ALLOWED_ORIGIN=https://…`",
-  );
-}
+const corsHeaders = buildCorsHeaders(Deno.env.get("ALLOWED_ORIGIN"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": allowedOrigin,
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_FIELD_LEN = 200;
-
-// Naive in-memory rate limit per isolate (defense in depth; resets on cold start).
-const attempts = new Map<string, { count: number; windowStart: number }>();
-const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 5;
-const MAX_TRACKED_KEYS = 10_000; // bound memory against IP-spoof floods
-
-function rateLimited(key: string): boolean {
-  const now = Date.now();
-  // Evict expired entries (and hard-cap size) before recording a new one so
-  // the map cannot grow unbounded.
-  if (attempts.size > 0 && attempts.size % 100 === 0) {
-    for (const [k, v] of attempts) {
-      if (now - v.windowStart > WINDOW_MS) attempts.delete(k);
-    }
-  }
-  while (attempts.size >= MAX_TRACKED_KEYS) {
-    attempts.delete(attempts.keys().next().value);
-  }
-  const entry = attempts.get(key);
-  if (!entry || now - entry.windowStart > WINDOW_MS) {
-    attempts.set(key, { count: 1, windowStart: now });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > MAX_PER_WINDOW;
-}
+// In-memory rate limit per isolate (defense in depth; resets on cold start).
+const isRateLimited = createRateLimiter({
+  windowMs: 60_000,
+  maxPerWindow: 5,
+  maxTrackedKeys: 10_000,
+});
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -58,16 +30,13 @@ Deno.serve(async (req) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
-  if (rateLimited(ip)) {
+  const ip = getClientIp(req);
+  if (isRateLimited(ip)) {
     return json({ error: "Too many attempts. Try again later." }, 429);
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
+  const body = await parseJsonObject(req);
+  if (!body) {
     return json({ error: "Invalid request body" }, 400);
   }
 
@@ -76,18 +45,32 @@ Deno.serve(async (req) => {
   const displayName = str(body.displayName)?.trim();
   const businessName = str(body.businessName)?.trim();
   const businessNameNp = str(body.businessNameNp)?.trim() || null;
-  const phone = str(body.phone)?.trim() || null;
+  const rawPhone = str(body.phone)?.trim() || null;
   const address = str(body.address)?.trim() || null;
 
   if (!email || !password || !displayName || !businessName) {
     return json({ error: "Missing required fields" }, 400);
   }
-  if (!EMAIL_RE.test(email) || email.length > MAX_FIELD_LEN) {
+  if (
+    !EMAIL_RE.test(email) ||
+    email.length > MAX_FIELD_LEN ||
+    isSyntheticPhoneEmail(email)
+  ) {
     return json({ error: "Invalid email address" }, 400);
   }
-  if (password.length < 8 || password.length > 72) {
-    return json({ error: "Password must be 8-72 characters" }, 400);
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return json({ error: passwordError }, 400);
   }
+
+  let phone: string | null = null;
+  if (rawPhone) {
+    phone = normalizePhone(rawPhone);
+    if (!phone) {
+      return json({ error: "Invalid phone number" }, 400);
+    }
+  }
+
   for (const v of [displayName, businessName, businessNameNp, phone, address]) {
     if (v && v.length > MAX_FIELD_LEN) {
       return json({ error: "Field too long" }, 400);
@@ -97,6 +80,7 @@ Deno.serve(async (req) => {
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    NO_SESSION_CLIENT_OPTIONS,
   );
 
   let userId: string | null = null;
@@ -111,7 +95,7 @@ Deno.serve(async (req) => {
       });
     if (authError) {
       // Duplicate email or weak password — keep the message generic.
-      console.error("register-business createUser failed", authError.message);
+      console.error("register-business createUser failed", authError.status ?? "unknown");
       return json({ error: "Could not create account with this email" }, 400);
     }
     userId = authData.user.id;
@@ -140,14 +124,21 @@ Deno.serve(async (req) => {
       })
       .select("id")
       .single();
-    if (memberError) throw memberError;
+    if (memberError) {
+      if (memberError.code === "23505") {
+        await supabaseAdmin.from("businesses").delete().eq("id", businessId);
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        return json({ error: "Phone number already registered" }, 409);
+      }
+      throw memberError;
+    }
 
     return json({ businessId: business.id, memberId: member.id });
   } catch (error) {
     // Best-effort cleanup so a failed registration leaves no orphans.
     console.error(
       "register-business failed",
-      error instanceof Error ? error.message : error,
+      error instanceof Error ? error.name : "unknown",
     );
     if (businessId) {
       await supabaseAdmin.from("businesses").delete().eq("id", businessId);
